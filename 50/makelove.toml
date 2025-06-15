@@ -1,0 +1,30 @@
+name = "jame-gam-50"
+default_targets = ["win32", "win64", "appimage", "lovejs", "macos"]
+build_directory = "build"
+# icon_file "./assets/images/icon.png"
+
+# love_files = [
+#     "::git-ls-tree::",
+#     # "-*/.*",
+# ]
+
+[hooks]
+# Both hooks are a list of commands to be executed. They use the default shell.
+# For more information, see the README.md
+prebuild = [
+	# "./generate_changelog.py",
+	# "./generate_builddata.py",
+]
+postbuild = [
+	# {build_directory} and {version} will be replaced
+	# This is obviously only for illustrative purposes, you will probaly want to wrap this in a script
+	# "butler push {build_directory}/win32/SuperGame-win32.zip pfirsich/supergame:win32 --userversion {version}",
+    "./push.sh",
+]
+
+[hooks.parameters]
+# This section will not be checked when the config is validated and may contain
+# anything. It is intended as a place for configuration for your hooks.
+[lovejs]
+title = "Amazing Game"  # used on the resulting web page
+memory = "20000000"  # starting memory of the webpage (default is 20 MB)
