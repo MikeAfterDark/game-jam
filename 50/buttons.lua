@@ -83,7 +83,7 @@ function Button:on_mouse_enter()
 	buttonHover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 	buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	self.selected = true
-	self.text:set_text({ { text = "[fgm5]" .. self.button_text, font = pixul_font, alignment = "center" } })
+	self.text:set_text({ { text = "[fgm10]" .. self.button_text, font = pixul_font, alignment = "center" } })
 	self.spring:pull(0.2, 200, 10)
 	if self.mouse_enter then
 		self:mouse_enter()
@@ -123,7 +123,7 @@ function ImageButton:init(args)
 	self.shape =
 		Rectangle(self.x, self.y, args.w or (pixul_font:get_text_width(self.button_text) + 8), pixul_font.h + 4)
 	self.interact_with_mouse = true
-	self.image = Image(args.img_name) -- TODO: IMPLEMENT THIS AND SETUP LEVEL SELECT, MAKE 2 LEVELS FOR NOW
+	self.image = Image(args.img_name) -- TODO: IMPLEMENT THIS AND SETUP LEVEL SELECT
 	self.text = Text(
 		{ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } },
 		global_text_tags

@@ -93,6 +93,7 @@ function engine_run(config)
     ww, wh = 960, 540
   end
 
+  love.window.resizable = true;
   love.window.setIcon(love.image.newImageData("assets/images/icon.png"))
   love.graphics.setBackgroundColor(0, 0, 0, 1)
   love.graphics.setColor(1, 1, 1, 1)

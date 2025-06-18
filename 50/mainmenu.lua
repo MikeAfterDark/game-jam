@@ -8,7 +8,7 @@ end
 
 function MainMenu:on_enter(from)
 	slow_amount = 1
-	-- trigger:tween(2, main_song_instance, { volume = 0.5, pitch = 1 }, math.linear)
+	trigger:tween(2, main_song_instance, { volume = 0.5, pitch = 1 }, math.linear)
 
 	self.floor = Group()
 	self.main = Group():set_as_physics_world(
@@ -28,7 +28,7 @@ function MainMenu:on_enter(from)
 	self.w, self.h = self.x2 - self.x1, self.y2 - self.y1
 
 	self.title_text =
-		Text({ { text = "[wavy_mid, fg]HI MOM", font = fat_font, alignment = "center" } }, global_text_tags)
+		Text({ { text = "[wavy_mid, fg]JAME GAM 50!!!", font = fat_font, alignment = "center" } }, global_text_tags)
 
 	self.play = Button({
 		group = self.main_ui,
@@ -36,8 +36,8 @@ function MainMenu:on_enter(from)
 		y = gh / 2 - 10,
 		force_update = true,
 		button_text = "play",
-		fg_color = "bg10",
-		bg_color = "bg",
+		fg_color = "bg",
+		bg_color = "green",
 		action = function(b)
 			ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 			ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
@@ -51,7 +51,9 @@ function MainMenu:on_enter(from)
 					self.transitioning = true
 					slow_amount = 1
 					system.save_state()
-					main:go_to("level_select")
+					-- main:go_to("level_select")
+					main:add(Game("game"))
+					main:go_to("game")
 				end,
 				text = Text({
 					{
@@ -85,8 +87,8 @@ function MainMenu:on_enter(from)
 		y = gh / 2 + 34,
 		force_update = true,
 		button_text = "quit",
-		fg_color = "bg10",
-		bg_color = "bg",
+		fg_color = "bg",
+		bg_color = "red",
 		action = function(b)
 			system.save_state()
 			love.event.quit()
@@ -152,11 +154,20 @@ function MainMenu:on_exit()
 end
 
 function MainMenu:update(dt)
-	-- if main_song_instance:isStopped() then
-	-- main_song_instance = _G[random:table({ "song1", "song2", "song3", "song4", "song5" })]:play({ volume = 0.5 })
-	-- end
+	if main_song_instance:isStopped() then
+		main_song_instance = _G[random:table({ "song1", "song2", "song3", "song4", "song5" })]:play({ volume = 0.3 })
+	end
 
 	self:update_game_object(dt * slow_amount)
+	main_song_instance.pitch = math.clamp(slow_amount * music_slow_amount, 0.05, 1)
+
+	if input.escape.pressed and not self.transitioning and not self.in_credits then
+		if not self.paused then
+			open_options(self)
+		else
+			close_options(self)
+		end
+	end
 
 	if not self.paused and not self.transitioning then
 		-- star_group:update(dt * slow_amount)
@@ -189,7 +200,7 @@ function MainMenu:draw()
 	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 
 	self.main_ui:draw()
-	self.title_text:draw(60, gh / 2 - 40)
+	self.title_text:draw(gw / 2, gh / 2 - 40)
 	if self.paused then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 	end

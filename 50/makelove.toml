@@ -1,12 +1,12 @@
 name = "jame-gam-50"
 default_targets = ["win32", "win64", "appimage", "lovejs", "macos"]
-build_directory = "build"
+build_directory = "../build"
 # icon_file "./assets/images/icon.png"
 
-# love_files = [
-#     "::git-ls-tree::",
-#     # "-*/.*",
-# ]
+love_files = [
+    "::git-ls-tree::",
+    "./*",
+]
 
 [hooks]
 # Both hooks are a list of commands to be executed. They use the default shell.
