@@ -6,7 +6,7 @@ function Game:init(name)
 	self:init_game_object()
 end
 
-function Game:on_enter(from, level)
+function Game:on_enter(from)
 	self.hfx:add("condition1", 1)
 	self.hfx:add("condition2", 1)
 	self.level = level or 1
@@ -36,34 +36,39 @@ function Game:on_enter(from, level)
 	self.x2, self.y2 = gw / 2 + 0.8 * gw / 2, gh / 2 + 0.8 * gh / 2
 	self.w, self.h = self.x2 - self.x1, self.y2 - self.y1
 
-	Wall({ group = self.main, vertices = math.to_rectangle_vertices(-40, -40, self.x1, gh + 40), color = bg[-1] })
-	Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x2, -40, gw + 40, gh + 40), color = bg[-1] })
-	Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x1, -40, self.x2, self.y1), color = bg[-1] })
-	Wall({
+	self.player = Player({
 		group = self.main,
-		vertices = math.to_rectangle_vertices(self.x1, self.y2, self.x2, gh + 40),
-		color = bg[-1],
+		x = gw / 2,
+		y = gh / 2 + 16,
 	})
-	WallCover({
-		group = self.post_main,
-		vertices = math.to_rectangle_vertices(-40, -40, self.x1, gh + 40),
-		color = bg[-1],
-	})
-	WallCover({
-		group = self.post_main,
-		vertices = math.to_rectangle_vertices(self.x2, -40, gw + 40, gh + 40),
-		color = bg[-1],
-	})
-	WallCover({
-		group = self.post_main,
-		vertices = math.to_rectangle_vertices(self.x1, -40, self.x2, self.y1),
-		color = bg[-1],
-	})
-	WallCover({
-		group = self.post_main,
-		vertices = math.to_rectangle_vertices(self.x1, self.y2, self.x2, gh + 40),
-		color = bg[-1],
-	})
+	-- Wall({ group = self.main, vertices = math.to_rectangle_vertices(-40, -40, self.x1, gh + 40), color = bg[-1] })
+	-- Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x2, -40, gw + 40, gh + 40), color = bg[-1] })
+	-- Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x1, -40, self.x2, self.y1), color = bg[-1] })
+	-- Wall({
+	-- 	group = self.main,
+	-- 	vertices = math.to_rectangle_vertices(self.x1, self.y2, self.x2, gh + 40),
+	-- 	color = bg[-1],
+	-- })
+	-- WallCover({
+	-- 	group = self.post_main,
+	-- 	vertices = math.to_rectangle_vertices(-40, -40, self.x1, gh + 40),
+	-- 	color = bg[-1],
+	-- })
+	-- WallCover({
+	-- 	group = self.post_main,
+	-- 	vertices = math.to_rectangle_vertices(self.x2, -40, gw + 40, gh + 40),
+	-- 	color = bg[-1],
+	-- })
+	-- WallCover({
+	-- 	group = self.post_main,
+	-- 	vertices = math.to_rectangle_vertices(self.x1, -40, self.x2, self.y1),
+	-- 	color = bg[-1],
+	-- })
+	-- WallCover({
+	-- 	group = self.post_main,
+	-- 	vertices = math.to_rectangle_vertices(self.x1, self.y2, self.x2, gh + 40),
+	-- 	color = bg[-1],
+	-- })
 end
 
 function Game:on_exit()
@@ -122,7 +127,7 @@ function Game:update(dt)
 					locked_state = nil
 					system.save_run()
 					main:add(Game("game"))
-					main:go_to("game", self.level)
+					main:go_to("game")
 				end,
 				text = Text({
 					{
@@ -149,8 +154,8 @@ function Game:update(dt)
 	self:update_game_object(dt * slow_amount)
 	main_song_instance.pitch = math.clamp(slow_amount * music_slow_amount, 0.05, 1)
 
-	-- star_group:update(dt * slow_amount)
-	-- self.floor:update(dt * slow_amount)
+	star_group:update(dt * slow_amount)
+	self.floor:update(dt * slow_amount)
 	self.main:update(dt * slow_amount * self.main_slow_amount)
 	self.post_main:update(dt * slow_amount)
 	self.effects:update(dt * slow_amount)

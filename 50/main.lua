@@ -1,12 +1,9 @@
 require("engine")
 require("mainmenu")
-require("levelselect")
 require("game")
--- require("shared")
+require("player")
 require("renderer")
--- require("arena")
 -- require("objects")
--- require("player")
 -- require("media")
 
 function init()
@@ -44,8 +41,8 @@ function init()
 	run_time = 0
 
 	main = Main()
+
 	main:add(MainMenu("mainmenu"))
-	-- main:add(LevelSelect("level_select")) -- TODO:
 	main:go_to("mainmenu")
 end
 
@@ -235,7 +232,7 @@ function open_options(self)
 							main:add(Game("game"))
 							locked_state = nil
 							system.save_run()
-							main:go_to(Game("game"), 1)
+							main:go_to(Game("game"))
 						end,
 						text = Text({
 							{
@@ -251,20 +248,20 @@ function open_options(self)
 			})
 		end
 
-		-- self.mouse_button = Button({
-		-- 	group = self.ui,
-		-- 	x = gw / 2 - 113,
-		-- 	y = gh - 150,
-		-- 	force_update = true,
-		-- 	button_text = "mouse control: " .. tostring(state.mouse_control and "yes" or "no"),
-		-- 	fg_color = "bg10",
-		-- 	bg_color = "bg",
-		-- 	action = function(b)
-		-- 		ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-		-- 		state.mouse_control = not state.mouse_control
-		-- 		b:set_text("mouse control: " .. tostring(state.mouse_control and "yes" or "no"))
-		-- 	end,
-		-- })
+		self.mouse_button = Button({
+			group = self.ui,
+			x = gw / 2 - 113,
+			y = gh - 150,
+			force_update = true,
+			button_text = "mouse control: " .. tostring(state.mouse_control and "yes" or "no"),
+			fg_color = "bg10",
+			bg_color = "bg",
+			action = function(b)
+				ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+				state.mouse_control = not state.mouse_control
+				b:set_text("mouse control: " .. tostring(state.mouse_control and "yes" or "no"))
+			end,
+		})
 
 		self.dark_transition_button = Button({
 			group = self.ui,
@@ -461,6 +458,22 @@ function open_options(self)
 			end,
 		})
 
+		self.arrow_snake_button = Button({
+			group = self.ui,
+			x = gw / 2 + 36,
+			y = gh - 75,
+			w = 70,
+			force_update = true,
+			button_text = "[bg10]arrow: " .. tostring(state.arrow_snake and "yes" or "no"),
+			fg_color = "bg10",
+			bg_color = "bg",
+			action = function(b)
+				ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+				state.arrow_snake = not state.arrow_snake
+				b:set_text("arrow: " .. tostring(state.arrow_snake and "yes" or "no"))
+			end,
+		})
+
 		self.screen_movement_button = Button({
 			group = self.ui,
 			x = gw / 2 - 69,
@@ -556,10 +569,10 @@ function close_options(self)
 			self.restart_button.dead = true
 			self.restart_button = nil
 		end
-		-- if self.mouse_button then
-		-- 	self.mouse_button.dead = true
-		-- 	self.mouse_button = nil
-		-- end
+		if self.mouse_button then
+			self.mouse_button.dead = true
+			self.mouse_button = nil
+		end
 		if self.dark_transition_button then
 			self.dark_transition_button.dead = true
 			self.dark_transition_button = nil
