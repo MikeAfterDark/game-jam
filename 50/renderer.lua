@@ -46,6 +46,7 @@ function renderer_init()
 	end
 
 	fat_font = Font("FatPixelFont", 8)
+	fat_title_font = Font("FatPixelFont", 16)
 	pixul_font = Font("PixulBrush", 8)
 	background_canvas = Canvas(gw, gh)
 	main_canvas = Canvas(gw, gh, { stencil = true })
@@ -102,7 +103,9 @@ function renderer_draw(draw_action)
 
 	local x, y = 0, 0
 	background_canvas:draw(x, y, 0, sx, sy)
-	shadow_canvas:draw(x + 1.5 * sx, y + 1.5 * sy, 0, sx, sy)
+
+	local shadow_offset = 2.5
+	shadow_canvas:draw(x + shadow_offset * sx, y + shadow_offset * sy, 0, sx, sy)
 	main_canvas:draw(x, y, 0, sx, sy)
 end
 
@@ -121,6 +124,7 @@ function ColorRamp:init(color, step)
 	end
 end
 
+local invisible = Color(1, 1, 1, 0)
 global_text_tags = {
 	red = TextTag({
 		draw = function(c, i, text)
@@ -471,4 +475,132 @@ end
 
 function WallCover:draw()
 	self.shape:draw(self.color)
+end
+
+--
+--
+--
+--
+HitCircle = Object:extend()
+HitCircle:implement(GameObject)
+function HitCircle:init(args)
+	self:init_game_object(args)
+	self.rs = self.rs or 8
+	self.duration = self.duration or 0.05
+	self.color = self.color or fg[0]
+	self.t:after(self.duration, function()
+		self.dead = true
+	end, "die")
+	return self
+end
+
+function HitCircle:update(dt)
+	self:update_game_object(dt)
+end
+
+function HitCircle:draw()
+	graphics.circle(self.x, self.y, self.rs, self.color)
+end
+
+function HitCircle:scale_down(duration)
+	duration = duration or 0.2
+	self.t:cancel("die")
+	self.t:tween(self.duration, self, { rs = 0 }, math.cubic_in_out, function()
+		self.dead = true
+	end)
+	return self
+end
+
+function HitCircle:change_color(delay_multiplier, target_color)
+	delay_multiplier = delay_multiplier or 0.5
+	self.t:after(delay_multiplier * self.duration, function()
+		self.color = target_color
+	end)
+	return self
+end
+
+--
+--
+--
+--
+HitParticle = Object:extend()
+HitParticle:implement(GameObject)
+function HitParticle:init(args)
+	self:init_game_object(args)
+	self.v = self.v or random:float(50, 150)
+	self.r = args.r or random:float(0, 2 * math.pi)
+	self.duration = self.duration or random:float(0.2, 0.6)
+	self.w = self.w or random:float(3.5, 7)
+	self.h = self.h or self.w / 2
+	self.color = self.color or fg[0]
+	self.t:tween(self.duration, self, { w = 2, h = 2, v = 0 }, math.cubic_in_out, function()
+		self.dead = true
+	end)
+end
+
+function HitParticle:update(dt)
+	self:update_game_object(dt)
+	self.x = self.x + self.v * math.cos(self.r) * dt
+	self.y = self.y + self.v * math.sin(self.r) * dt
+end
+
+function HitParticle:draw()
+	graphics.push(self.x, self.y, self.r)
+	if self.parent and not self.parent.dead then
+		graphics.rectangle(self.x, self.y, self.w, self.h, 2, 2, self.parent.hfx.hit.f and fg[0] or self.color)
+	else
+		graphics.rectangle(self.x, self.y, self.w, self.h, 2, 2, self.color)
+	end
+	graphics.pop()
+end
+
+function HitParticle:change_color(delay_multiplier, target_color)
+	delay_multiplier = delay_multiplier or 0.5
+	self.t:after(delay_multiplier * self.duration, function()
+		self.color = target_color
+	end)
+	return self
+end
+
+--
+--
+--
+
+Text2 = Object:extend()
+Text2:implement(GameObject)
+function Text2:init(args)
+	self:init_game_object(args)
+	self.text = Text(args.lines, global_text_tags)
+	self.w, self.h = args.width or self.text.w, args.height or self.text.h
+end
+
+function Text2:update(dt)
+	self:update_game_object(dt)
+	self.text:update(dt)
+end
+
+function Text2:draw()
+	self.text:draw(self.x, self.y, self.r, self.spring.x * self.sx, self.spring.x * self.sy)
+end
+
+function Text2:pull(...)
+	self.spring:pull(...)
+	self.r = random:table({ -math.pi / 24, math.pi / 24 })
+	self.t:tween(0.2, self, { r = 0 }, math.linear)
+end
+
+--
+--
+--
+--
+-- misc
+
+function slow(amount, duration, tween_method)
+	amount = amount or 0.5
+	duration = duration or 0.5
+	tween_method = tween_method or math.cubic_in_out
+	slow_amount = amount
+	trigger:tween(duration, _G, { slow_amount = 1 }, tween_method, function()
+		slow_amount = 1
+	end, "slow")
 end

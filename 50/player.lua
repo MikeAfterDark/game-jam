@@ -12,6 +12,14 @@ function Player:init(args)
 	self:set_as_rectangle(9, 9, "dynamic", "player")
 	self.visual_shape = "rectangle"
 	self.damage_dealt = 0
+	self.thrust = 0
+	self.dmg = 1
+	self.def = 0
+	self.hp = 5
+	self.max_hp = 5
+
+	self.firing = nil
+	self.fireDelayCounter = 1
 
 	self:calculate_stats(true)
 
@@ -25,14 +33,10 @@ end
 
 function Player:update(dt)
 	self:update_game_object(dt)
-
-	if self.haste then
-		if self.hasted then
-			self.haste_mvspd_m = math.clamp(math.remap(love.timer.getTime() - self.hasted, 0, 4, 1.5, 1), 1, 1.5)
-		else
-			self.haste_mvspd_m = 1
-		end
-	end
+	-- if self.x < 0 or self.x > gw or self.y < 0 or self.y > gh then
+	-- 	self.x = self.x % gw
+	-- 	self.y = self.y % gh
+	-- end
 
 	if not main.current:is(MainMenu) then
 		if input.move_left.pressed and not self.move_right_pressed then
@@ -48,30 +52,68 @@ function Player:update(dt)
 			self.move_right_pressed = nil
 		end
 
+		local turnRate = 2.7 --1.66
 		if state.mouse_control then
 			self.mouse_control_v = Vector(math.cos(self.r), math.sin(self.r))
 				:perpendicular()
 				:dot(Vector(math.cos(self:angle_to_mouse()), math.sin(self:angle_to_mouse())))
-			self.r = self.r + math.sign(self.mouse_control_v) * 1.66 * math.pi * dt
-			table.insert(self.mouse_control_v_buffer, 1, self.mouse_control_v)
-			if #self.mouse_control_v_buffer > 64 then
-				self.mouse_control_v_buffer[65] = nil
+
+			if math.abs(self.mouse_control_v) > 0.1 then
+				self.r = self.r + math.sign(self.mouse_control_v) * turnRate * math.pi * dt
 			end
+			-- table.insert(self.mouse_control_v_buffer, 1, self.mouse_control_v)
+			-- if #self.mouse_control_v_buffer > 64 then
+			-- 	self.mouse_control_v_buffer[65] = nil
+			-- end
 		else
 			if input.move_left.down then
-				self.r = self.r - 1.66 * math.pi * dt
+				self.r = self.r - turnRate * math.pi * dt
 			end
 			if input.move_right.down then
-				self.r = self.r + 1.66 * math.pi * dt
+				self.r = self.r + turnRate * math.pi * dt
 			end
+		end
+
+		if input.move_forward.pressed then
+			self.thrust = 0.1
+		end
+		if input.move_forward.released then
+			self.thrust = 0
+		end
+		if input.shoot.pressed then
+			self.firing = love.timer.getTime()
+		end
+		if input.shoot.released then
+			self.firing = nil
+			self.fireDelayCounter = 1
+		end
+		if input.shield.pressed then -- TODO: forcefield
+			self.shielded = love.timer.getTime()
+		end
+		if input.shield.released then
+			self.shielded = nil
 		end
 	end
 
-	local total_v = self.max_v
+	local friction = 0.974
+	local total_v = self.thrust * self.max_v
 	self.total_v = total_v
-	self:set_velocity(total_v * math.cos(self.r), total_v * math.sin(self.r))
+
+	local vx, vy = self:get_velocity()
+	vx = vx * friction + total_v * math.cos(self.r)
+	vy = vy * friction + total_v * math.sin(self.r)
+
+	self:set_velocity(vx, vy)
+
+	local fireDelay = { 0.1, 0.1, 0.1, 0.2, 0.5 }
+	self.fireDelayCounter = self.fireDelayCounter or 1
 
 	if not main.current.won and not main.current.choosing_passives then
+		if self.firing ~= nil and self.firing < love.timer.getTime() - fireDelay[self.fireDelayCounter] then
+			self:shoot(self.r, {})
+			self.firing = self.firing + fireDelay[self.fireDelayCounter]
+			self.fireDelayCounter = self.fireDelayCounter < #fireDelay - 1 and self.fireDelayCounter + 1 or #fireDelay
+		end
 		if not state.no_screen_movement then
 			local vx, vy = self:get_velocity()
 			local hd = math.remap(math.abs(self.x - gw / 2), 0, 192, 1, 0)
@@ -126,6 +168,80 @@ function Player:shoot(r, mods)
 	mods = mods or {}
 	camera:spring_shake(2, r)
 	self.hfx:use("shoot", 0.25)
+
+	local crit = 0.25
+	HitCircle({
+		group = main.current.effects,
+		x = self.x + 0.8 * self.shape.w * math.cos(r),
+		y = self.y + 0.8 * self.shape.w * math.sin(r),
+		rs = 6,
+	})
+	local t = {
+		group = main.current.main,
+		x = self.x + 1.6 * self.shape.w * math.cos(r),
+		y = self.y + 1.6 * self.shape.w * math.sin(r),
+		v = 250,
+		r = r,
+		color = self.color,
+		dmg = self.dmg,
+		crit = crit,
+		character = self.character,
+		parent = self,
+		level = self.level,
+	}
+	Projectile(table.merge(t, mods or {}))
+	shoot1:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+end
+
+function Player:on_collision_enter(other, contact)
+	local x, y = contact:getPositions()
+
+	if other:is(Wall) then
+		self.hfx:use("hit", 0.15, 200, 10, 0.1)
+		self:bounce(contact:getNormal())
+	elseif table.any(main.current.enemies, function(v)
+		return other:is(v)
+	end) then
+		other:push(random:float(25, 35) * (self.knockback_m or 1), self:angle_to_object(other))
+		self:push(random:float(25, 35) * (self.knockback_m or 1), self:angle_to_object(other) + math.pi)
+		-- other:hit(self.dmg)
+		if other.headbutting then
+			self:hit(2 * other.dmg)
+			other.headbutting = false
+		else
+			self:hit(other.dmg)
+		end
+		HitCircle({ group = main.current.effects, x = x, y = y, rs = 6, color = fg[0], duration = 0.1 })
+		for i = 1, 2 do
+			HitParticle({ group = main.current.effects, x = x, y = y, color = self.color })
+		end
+		for i = 1, 2 do
+			HitParticle({ group = main.current.effects, x = x, y = y, color = other.color })
+		end
+	end
+end
+
+function Player:push(f, r, push_invulnerable)
+	local n = 1
+	if self.tank then
+		n = 0.7
+	end
+	if self.boss then
+		n = 0.2
+	end
+	if self.level % 25 == 0 and self.boss then
+		n = 0.7
+	end
+	self.push_invulnerable = push_invulnerable
+	self.push_force = n * f
+	self.being_pushed = true
+	self.steering_enabled = false
+	self:apply_impulse(n * f * math.cos(r), n * f * math.sin(r))
+	self:apply_angular_impulse(
+		random:table({ random:float(-12 * math.pi, -4 * math.pi), random:float(4 * math.pi, 12 * math.pi) })
+	)
+	self:set_damping(1.5 * (1 / n))
+	self:set_angular_damping(1.5 * (1 / n))
 end
 
 function Player:attack(area, mods)
@@ -145,24 +261,34 @@ function Player:attack(area, mods)
 		parent = self,
 	}
 	Area(table.merge(t, mods))
+end
 
-	if
-		self.character == "swordsman"
-		or self.character == "barbarian"
-		or self.character == "juggernaut"
-		or self.character == "highlander"
-	then
-		_G[random:table({ "swordsman1", "swordsman2" })]:play({ pitch = random:float(0.9, 1.1), volume = 0.75 })
-	elseif self.character == "elementor" then
-		elementor1:play({ pitch = random:float(0.9, 1.1), volume = 0.5 })
-	elseif self.character == "psychic" then
-		psychic1:play({ pitch = random:float(0.9, 1.1), volume = 0.4 })
-	elseif self.character == "launcher" then
-		buff1:play({ pitch == random:float(0.9, 1.1), volume = 0.5 })
+function Player:hit(damage, from_undead)
+	if self.dead then
+		return
 	end
+	self.hfx:use("hit", 0.25, 200, 10)
+	self:show_hp()
 
-	if self.character == "juggernaut" then
-		elementor1:play({ pitch = random:float(0.9, 1.1), volume = 0.5 })
+	local actual_damage = math.max(self:calculate_damage(damage), 0)
+	self.hp = self.hp - self.max_hp / 5 --actual_damage
+	_G[random:table({ "player_hit1", "player_hit2" })]:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	camera:shake(4, 0.5)
+	-- main.current.damage_taken = main.current.damage_taken + actual_damage
+	self.character_hp:change_hp()
+
+	if self.hp <= 0 then
+		hit4:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+		slow(0.25, 1)
+		for i = 1, random:int(4, 6) do
+			HitParticle({ group = main.current.effects, x = self.x, y = self.y, color = self.color })
+		end
+		HitCircle({ group = main.current.effects, x = self.x, y = self.y, rs = 12 })
+			:scale_down(0.3)
+			:change_color(0.5, self.color)
+		if main.current:die() then
+			self.dead = true
+		end
 	end
 end
 
@@ -193,10 +319,16 @@ function Projectile:init(args)
 
 	self.distance_travelled = 0
 	self.distance_dmg_m = 1
+	self.dmg = args.dmg
 end
 
 function Projectile:update(dt)
 	self:update_game_object(dt)
+	self:set_angle(self.r)
+	self:move_along_angle(self.v, self.r + (self.orbit_r or 0))
+	if self.x < 0 or self.x > gw or self.y < 0 or self.y > gh then
+		self:die(x, y, r, 0)
+	end
 end
 
 function Projectile:draw()
@@ -222,6 +354,7 @@ function Projectile:die(x, y, r, n)
 		})
 	end
 	HitCircle({ group = main.current.effects, x = x, y = y }):scale_down()
+	ui_switch2:play({ pitch = random:float(0.9, 1.1), volume = 0.2 })
 	self.dead = true
 end
 
@@ -243,5 +376,25 @@ function Projectile:on_collision_enter(other, contact)
 		self:die(x, y, r, random:int(2, 3))
 		proj_hit_wall1:play({ pitch = random:float(0.9, 1.1), volume = 0.2 })
 	end
-	-- TODO: else if outside of bounds
+end
+
+function Projectile:on_trigger_enter(other, contact)
+	if table.any(main.current.enemies, function(v)
+		return other:is(v)
+	end) then
+		hit1:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+		if self.pierce <= 0 and self.chain <= 0 then
+			self:die(self.x, self.y, nil, random:int(2, 3))
+		end
+
+		HitCircle({ group = main.current.effects, x = self.x, y = self.y, rs = 6, color = fg[0], duration = 0.1 })
+		HitParticle({ group = main.current.effects, x = self.x, y = self.y, color = self.color })
+		HitParticle({ group = main.current.effects, x = self.x, y = self.y, color = other.color })
+
+		if self.knockback then
+			other:push(self.knockback * (self.knockback_m or 1), self.r)
+		end
+
+		other:hit(self.dmg, self)
+	end
 end

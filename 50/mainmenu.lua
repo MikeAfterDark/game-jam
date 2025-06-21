@@ -8,6 +8,7 @@ end
 
 function MainMenu:on_enter(from)
 	slow_amount = 1
+	music_slow_amount = 1
 	trigger:tween(2, main_song_instance, { volume = 0.5, pitch = 1 }, math.linear)
 
 	self.floor = Group()
@@ -27,12 +28,29 @@ function MainMenu:on_enter(from)
 	self.x2, self.y2 = gw / 2 + 0.8 * gw / 2, gh / 2 + 0.8 * gh / 2
 	self.w, self.h = self.x2 - self.x1, self.y2 - self.y1
 
-	self.title_text =
-		Text({ { text = "[wavy_mid, fg]JAME GAM 50!!!", font = fat_font, alignment = "center" } }, global_text_tags)
+	self.jam_name = Text2({
+		group = self.ui,
+		x = gw / 2,
+		y = 20,
+		force_update = true,
+		lines = {
+			{
+				text = "[wavy_mid, fg]JAME GAM 50!!!",
+				font = pixul_font,
+				alignment = "center",
+			},
+		},
+	})
 
-	self.play = Button({
+	self.title_text =
+		Text({ { text = "[wavy, blue]LONGE WHAL", font = fat_title_font, alignment = "center" } }, global_text_tags)
+
+	self.t:every(2, function()
+		self.play_button.spring:pull(0.1, 200, 10)
+	end)
+	self.play_button = Button({
 		group = self.main_ui,
-		x = 39,
+		x = gw / 2,
 		y = gh / 2 - 10,
 		force_update = true,
 		button_text = "play",
@@ -67,7 +85,7 @@ function MainMenu:on_enter(from)
 	})
 	self.options_button = Button({
 		group = self.main_ui,
-		x = 47,
+		x = gw / 2,
 		y = gh / 2 + 12,
 		force_update = true,
 		button_text = "options",
@@ -83,7 +101,7 @@ function MainMenu:on_enter(from)
 	})
 	self.quit_button = Button({
 		group = self.main_ui,
-		x = 37,
+		x = gw / 2,
 		y = gh / 2 + 34,
 		force_update = true,
 		button_text = "quit",
@@ -94,15 +112,15 @@ function MainMenu:on_enter(from)
 			love.event.quit()
 		end,
 	})
-	self.t:every(2, function()
-		self.soundtrack_button.spring:pull(0.025, 200, 10)
-	end)
-	self.soundtrack_button = Button({
+	-- self.t:every(2, function()
+	-- 	self.inspiration_button.spring:pull(0.025, 200, 10)
+	-- end)
+	self.inspiration_button = Button({
 		group = self.main_ui,
-		x = gw - 72,
+		x = gw / 2,
 		y = gh - 40,
 		force_update = true,
-		button_text = "buy the soundtrack!",
+		button_text = "Check out the inspiration: SNKRX",
 		fg_color = "bg10",
 		bg_color = "bg",
 		action = function(b)
@@ -110,25 +128,25 @@ function MainMenu:on_enter(from)
 			b.spring:pull(0.2, 200, 10)
 			b.selected = true
 			ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-			system.open_url("https://kubbimusic.com/album/ember")
+			system.open_url("https://store.steampowered.com/app/915310/SNKRX/")
 		end,
 	})
-	self.discord_button = Button({
-		group = self.main_ui,
-		x = gw - 92,
-		y = gh - 17,
-		force_update = true,
-		button_text = "join the community discord!",
-		fg_color = "bg10",
-		bg_color = "bg",
-		action = function(b)
-			ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-			b.spring:pull(0.2, 200, 10)
-			b.selected = true
-			ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-			system.open_url("https://discord.gg/4d6GWmChKY")
-		end,
-	})
+	-- self.discord_button = Button({
+	-- 	group = self.main_ui,
+	-- 	x = gw - 92,
+	-- 	y = gh - 17,
+	-- 	force_update = true,
+	-- 	button_text = "join the community discord!",
+	-- 	fg_color = "bg10",
+	-- 	bg_color = "bg",
+	-- 	action = function(b)
+	-- 		ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	-- 		b.spring:pull(0.2, 200, 10)
+	-- 		b.selected = true
+	-- 		ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	-- 		system.open_url("https://discord.gg/4d6GWmChKY")
+	-- 	end,
+	-- })
 end
 
 function MainMenu:on_exit()

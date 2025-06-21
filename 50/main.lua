@@ -3,6 +3,7 @@ require("mainmenu")
 require("game")
 require("player")
 require("renderer")
+require("boss")
 -- require("objects")
 -- require("media")
 
@@ -12,7 +13,8 @@ function init()
 	input:bind("move_left", { "a", "left", "dpleft", "m1" })
 	input:bind("move_right", { "d", "right", "dpright", "m2" })
 	input:bind("move_forward", { "w", "up", "dpup", "m3" })
-	input:bind("enter", { "space", "return", "fleft", "fdown", "fright" })
+	input:bind("shoot", { "space", "return", "m4" }) -- TODO: figure out controls for controller
+	input:bind("shield", { "s", "lshift", "m5" })
 
 	local s = { tags = { sfx } }
 	-- load sounds:
@@ -23,6 +25,18 @@ function init()
 	ui_switch1 = Sound("ui_switch1.ogg", s)
 	ui_switch2 = Sound("ui_switch2.ogg", s)
 	ui_transition2 = Sound("ui_transition2.ogg", s)
+
+	shoot1 = Sound("pew.ogg", s)
+	hit1 = Sound("hit.ogg", s)
+	hit4 = Sound("hit4.ogg", s)
+
+	enemy_die1 = Sound("enemy_die1.ogg", s)
+	enemy_die2 = Sound("enemy_die2.ogg", s)
+
+	proj_hit_wall1 = Sound("proj_hit_wall1.ogg", s)
+
+	player_hit1 = Sound("player_hit1.ogg", s)
+	player_hit2 = Sound("player_hit2.ogg", s)
 
 	-- load songs
 	song1 = Sound("neon-rush-retro-synthwave-uplifting-daily-vlog-fast-cuts-sv201-360195.mp3", { tags = { music } })
@@ -179,10 +193,10 @@ function open_options(self)
 						self.video_button_4.dead = true
 						self.video_button_4 = nil
 					end
-					if self.quit_button then
-						self.quit_button.dead = true
-						self.quit_button = nil
-					end
+					-- if self.quit_button then
+					-- 	self.quit_button.dead = true
+					-- 	self.quit_button = nil
+					-- end
 					if self.screen_shake_button then
 						self.screen_shake_button.dead = true
 						self.screen_shake_button = nil
@@ -190,6 +204,10 @@ function open_options(self)
 					if self.screen_movement_button then
 						self.screen_movement_button.dead = true
 						self.screen_movement_button = nil
+					end
+					if self.arrow_snake_button then
+						self.arrow_snake_button.dead = true
+						self.arrow_snake_button = nil
 					end
 					if self.main_menu_button then
 						self.main_menu_button.dead = true
@@ -229,10 +247,10 @@ function open_options(self)
 							music_slow_amount = 1
 							run_time = 0
 							main_song_instance:stop()
-							main:add(Game("game"))
 							locked_state = nil
 							system.save_run()
-							main:go_to(Game("game"))
+							main:add(Game("game"))
+							main:go_to("game")
 						end,
 						text = Text({
 							{
@@ -519,7 +537,9 @@ function open_options(self)
 						end,
 						text = Text({
 							{
-								text = "[wavy, " .. tostring(state.dark_transitions and "fg" or "bg") .. "]..",
+								text = "[wavy, "
+									.. tostring(state.dark_transitions and "fg" or "bg")
+									.. "] SPAAAAAAAACE",
 								font = pixul_font,
 								alignment = "center",
 							},
@@ -529,19 +549,19 @@ function open_options(self)
 			})
 		end
 
-		self.quit_button = Button({
-			group = self.ui,
-			x = gw / 2,
-			y = gh - 25,
-			force_update = true,
-			button_text = "quit",
-			fg_color = "bg",
-			bg_color = "red",
-			action = function()
-				system.save_state()
-				love.event.quit()
-			end,
-		})
+		-- self.quit_button = Button({
+		-- 	group = self.ui,
+		-- 	x = gw / 2,
+		-- 	y = gh - 25,
+		-- 	force_update = true,
+		-- 	button_text = "quit",
+		-- 	fg_color = "bg",
+		-- 	bg_color = "red",
+		-- 	action = function()
+		-- 		system.save_state()
+		-- 		love.event.quit()
+		-- 	end,
+		-- })
 	end, "pause")
 end
 
@@ -621,10 +641,10 @@ function close_options(self)
 			self.arrow_snake_button.dead = true
 			self.arrow_snake_button = nil
 		end
-		if self.quit_button then
-			self.quit_button.dead = true
-			self.quit_button = nil
-		end
+		-- if self.quit_button then
+		-- 	self.quit_button.dead = true
+		-- 	self.quit_button = nil
+		-- end
 		if self.ng_plus_plus_button then
 			self.ng_plus_plus_button.dead = true
 			self.ng_plus_plus_button = nil

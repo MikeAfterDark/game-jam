@@ -22,18 +22,42 @@ function Game:on_enter(from)
 		32,
 		0,
 		0,
-		{ "player", "enemy", "projectile", "enemy_projectile", "force_field", "ghost" }
+		{ "player", "boss", "projectile", "boss_projectile" } -- "force_field", "longboss" }
 	)
 	self.post_main = Group()
 	self.effects = Group()
 	self.ui = Group()
 	self.credits = Group()
 
+	self.main:disable_collision_between("player", "player")
+	self.main:disable_collision_between("player", "projectile")
+	self.main:disable_collision_between("player", "boss_projectile")
+
+	self.main:disable_collision_between("projectile", "projectile")
+	self.main:disable_collision_between("projectile", "boss_projectile")
+	self.main:disable_collision_between("projectile", "boss")
+
+	self.main:disable_collision_between("boss_projectile", "boss")
+	self.main:disable_collision_between("boss_projectile", "boss_projectile")
+	self.main:disable_collision_between("boss", "boss")
+	self.main:enable_trigger_between("projectile", "boss")
+
+	-- self.main:disable_collision_between("player", "force_field")
+	-- self.main:disable_collision_between("projectile", "force_field")
+
+	self.main:enable_trigger_between("projectile", "boss")
+	self.main:enable_trigger_between("boss_projectile", "player")
+	self.main:enable_trigger_between("player", "boss_projectile")
+	self.main:enable_trigger_between("boss_projectile", "boss")
+	self.enemies = { LongBoss }
+
 	self.main_slow_amount = 1
 
 	-- Spawn solids and player
-	self.x1, self.y1 = gw / 2 - 0.8 * gw / 2, gh / 2 - 0.8 * gh / 2
-	self.x2, self.y2 = gw / 2 + 0.8 * gw / 2, gh / 2 + 0.8 * gh / 2
+	-- self.x1, self.y1 = gw / 2 - 0.8 * gw / 2, gh / 2 - 0.8 * gh / 2
+	-- self.x2, self.y2 = gw / 2 + 0.8 * gw / 2, gh / 2 + 0.8 * gh / 2
+	self.x1, self.y1 = 0, 0
+	self.x2, self.y2 = gw, gh
 	self.w, self.h = self.x2 - self.x1, self.y2 - self.y1
 
 	self.player = Player({
@@ -41,14 +65,49 @@ function Game:on_enter(from)
 		x = gw / 2,
 		y = gh / 2 + 16,
 	})
-	-- Wall({ group = self.main, vertices = math.to_rectangle_vertices(-40, -40, self.x1, gh + 40), color = bg[-1] })
-	-- Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x2, -40, gw + 40, gh + 40), color = bg[-1] })
-	-- Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x1, -40, self.x2, self.y1), color = bg[-1] })
-	-- Wall({
-	-- 	group = self.main,
-	-- 	vertices = math.to_rectangle_vertices(self.x1, self.y2, self.x2, gh + 40),
-	-- 	color = bg[-1],
-	-- })
+	local chp = CharacterHP({ group = self.effects, x = self.x1 + 8, y = self.y2 + 14, parent = self.player })
+	self.player.character_hp = chp
+
+	-- Init bosses, choose one randomly (except for debugging)
+	local numBosses = 1
+	self.bosses = {}
+
+	local longBossLength = 50
+	for i = 1, longBossLength do
+		if i == 1 then
+			self.bosses[numBosses] = LongBoss({
+				group = self.main,
+				x = random:int(0, gw), -- / 3,
+				y = random:int(0, gh), -- / 2 + 16,
+				leader = true,
+				ii = i,
+			})
+		else
+			self.bosses[numBosses]:add_follower(LongBoss({
+				group = self.main,
+				-- color = red[i % 5],
+				ii = i,
+			}))
+		end
+	end
+	local units = self.bosses[numBosses]:get_all_units()
+	for _, unit in ipairs(units) do
+		local chp =
+			CharacterHP({ group = self.effects, x = self.x1 + 8 + (unit.ii - 1) * 22, y = self.y2 + 14, parent = unit })
+		unit.character_hp = chp
+	end
+
+	numBosses = numBosses + 1
+	self.activeBosses = { 1 }
+
+	Wall({ group = self.main, vertices = math.to_rectangle_vertices(-40, -40, self.x1, gh + 40), color = bg[-1] })
+	Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x2, -40, gw + 40, gh + 40), color = bg[-1] })
+	Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x1, -40, self.x2, self.y1), color = bg[-1] })
+	Wall({
+		group = self.main,
+		vertices = math.to_rectangle_vertices(self.x1, self.y2, self.x2, gh + 40),
+		color = bg[-1],
+	})
 	-- WallCover({
 	-- 	group = self.post_main,
 	-- 	vertices = math.to_rectangle_vertices(-40, -40, self.x1, gh + 40),
@@ -69,6 +128,22 @@ function Game:on_enter(from)
 	-- 	vertices = math.to_rectangle_vertices(self.x1, self.y2, self.x2, gh + 40),
 	-- 	color = bg[-1],
 	-- })
+	--
+	--
+	local debug = false
+	self.t:every(function()
+		if debug then
+			return true
+		end
+		for _, boss in ipairs(self.bosses) do
+			if not boss.dead then
+				return false
+			end
+		end
+		return true
+	end, function()
+		self:quit()
+	end)
 end
 
 function Game:on_exit()
@@ -83,6 +158,9 @@ function Game:on_exit()
 	self.credits = nil
 	self.passives = nil
 	self.flashes = nil
+	self.player = nil
+	self.bosses = nil
+	self.activeBosses = nil
 	self.hfx = nil
 end
 
@@ -154,6 +232,10 @@ function Game:update(dt)
 	self:update_game_object(dt * slow_amount)
 	main_song_instance.pitch = math.clamp(slow_amount * music_slow_amount, 0.05, 1)
 
+	for _, boss in ipairs(self.activeBosses) do
+		self.bosses[boss]:update(dt * slow_amount)
+	end
+
 	star_group:update(dt * slow_amount)
 	self.floor:update(dt * slow_amount)
 	self.main:update(dt * slow_amount * self.main_slow_amount)
@@ -169,13 +251,82 @@ function Game:quit()
 	end
 
 	self.quitting = true
-	if self.level % 25 == 0 then
-		self:gain_gold()
-		if not self.win_text and not self.win_text2 then
-			input:set_mouse_visible(true)
-			self.won = true
-			locked_state = nil
-		end
+	if not self.win_text and not self.win_text2 then
+		input:set_mouse_visible(true)
+		self.won = true
+		locked_state = nil
+		system.save_run()
+		trigger:tween(1, _G, { slow_amount = 0 }, math.linear, function()
+			slow_amount = 0
+		end, "slow_amount")
+		trigger:tween(1, _G, { music_slow_amount = 0 }, math.linear, function()
+			music_slow_amount = 0
+		end, "music_slow_amount")
+		trigger:tween(4, camera, { x = gw / 2, y = gh / 2, r = 0 }, math.linear, function()
+			camera.x, camera.y, camera.r = gw / 2, gh / 2, 0
+		end)
+		self.win_text = Text2({
+			group = self.ui,
+			x = gw / 2,
+			y = gh / 2 - 40,
+			force_update = true,
+			lines = { { text = "[wavy_mid, cbyc2]congratulations!", font = fat_font, alignment = "center" } },
+		})
+		trigger:after(2.5, function()
+			self.win_text2 = Text2({
+				group = self.ui,
+				x = gw / 2,
+				y = gh / 2,
+				force_update = true,
+				lines = {
+					{
+						text = "[fg]you've beaten the game!",
+						font = pixul_font,
+						alignment = "center",
+						height_multiplier = 1.24,
+					},
+					{ text = "[wavy_mid, yellow]thanks for playing!", font = pixul_font, alignment = "center" },
+					{ text = "[wavy_mid, yellow]play again? (r)", font = pixul_font, alignment = "center" },
+				},
+			})
+			self.credits_button = Button({
+				group = self.ui,
+				x = gw / 2,
+				y = gh / 2 + 50,
+				force_update = true,
+				button_text = "credits",
+				fg_color = "bg10",
+				bg_color = "bg",
+				action = function()
+					self:create_credits()
+				end,
+			})
+		end)
+
+		self.t:after(2, function()
+			self.slow_transitioning = true
+			self.t:tween(0.7, self, { main_slow_amount = 0 }, math.linear, function()
+				self.main_slow_amount = 0
+			end)
+			slow_amount = 1
+			music_slow_amount = 1
+		end)
+		-- self.t:after(3, function()
+		-- 	if (self.level - (25 * self.loop)) % 3 == 0 and #self.passives < 8 then
+		-- 		input:set_mouse_visible(true)
+		-- 		trigger:tween(1, _G, { slow_amount = 0 }, math.linear, function()
+		-- 			slow_amount = 0
+		-- 		end, "slow_amount")
+		-- 		trigger:tween(1, _G, { music_slow_amount = 0 }, math.linear, function()
+		-- 			music_slow_amount = 0
+		-- 		end, "music_slow_amount")
+		-- 		trigger:tween(4, camera, { x = gw / 2, y = gh / 2, r = 0 }, math.linear, function()
+		-- 			camera.x, camera.y, camera.r = gw / 2, gh / 2, 0
+		-- 		end)
+		-- 	else
+		-- 		self:transition()
+		-- 	end
+		-- end, "transition")
 	end
 end
 
@@ -211,37 +362,59 @@ function Game:create_credits()
 	})
 
 	self.in_credits = true
-	Text2({ group = self.credits, x = 60, y = 20, lines = { { text = "[bg10]main dev: ", font = pixul_font } } })
+	local yOffset = 20
+	Text2({ group = self.credits, x = 60, y = yOffset, lines = { { text = "[bg10]main dev: ", font = pixul_font } } })
 	Button({
 		group = self.credits,
-		x = 117,
-		y = 20,
-		button_text = "a327ex",
+		x = 125,
+		y = yOffset,
+		button_text = "Mikey",
 		fg_color = "bg10",
 		bg_color = "bg",
 		credits_button = true,
 		action = function(b)
-			open_url(b, "https://store.steampowered.com/dev/a327ex/")
+			open_url(b, "https://gusakm.itch.io/")
 		end,
 	})
-	Text2({ group = self.credits, x = 60, y = 50, lines = { { text = "[bg10]mobile: ", font = pixul_font } } })
+
+	yOffset = yOffset + 30
+	Text2({
+		group = self.credits,
+		x = 70,
+		y = yOffset,
+		lines = { { text = "[bg10]inspiration: ", font = pixul_font } },
+	})
 	Button({
 		group = self.credits,
-		x = 144,
-		y = 50,
-		button_text = "David Khachaturov",
+		x = 135,
+		y = yOffset,
+		button_text = "SNKRX",
 		fg_color = "bg10",
 		bg_color = "bg",
 		credits_button = true,
 		action = function(b)
-			open_url(b, "https://davidobot.net/")
+			open_url(b, "https://store.steampowered.com/app/915310/SNKRX/")
 		end,
 	})
-	Text2({ group = self.credits, x = 60, y = 80, lines = { { text = "[blue]libraries: ", font = pixul_font } } })
+	-- Text2({ group = self.credits, x = 60, y = 50, lines = { { text = "[bg10]mobile: ", font = pixul_font } } })
+	-- Button({
+	-- 	group = self.credits,
+	-- 	x = 144,
+	-- 	y = 50,
+	-- 	button_text = "David Khachaturov",
+	-- 	fg_color = "bg10",
+	-- 	bg_color = "bg",
+	-- 	credits_button = true,
+	-- 	action = function(b)
+	-- 		open_url(b, "https://davidobot.net/")
+	-- 	end,
+	-- })
+	yOffset = yOffset + 30
+	Text2({ group = self.credits, x = 60, y = yOffset, lines = { { text = "[blue]libraries: ", font = pixul_font } } })
 	Button({
 		group = self.credits,
 		x = 113,
-		y = 80,
+		y = yOffset,
 		button_text = "love2d",
 		fg_color = "bluem5",
 		bg_color = "blue",
@@ -253,7 +426,7 @@ function Game:create_credits()
 	Button({
 		group = self.credits,
 		x = 170,
-		y = 80,
+		y = yOffset,
 		button_text = "bakpakin",
 		fg_color = "bluem5",
 		bg_color = "blue",
@@ -265,7 +438,7 @@ function Game:create_credits()
 	Button({
 		group = self.credits,
 		x = 237,
-		y = 80,
+		y = yOffset,
 		button_text = "davisdude",
 		fg_color = "bluem5",
 		bg_color = "blue",
@@ -277,7 +450,7 @@ function Game:create_credits()
 	Button({
 		group = self.credits,
 		x = 306,
-		y = 80,
+		y = yOffset,
 		button_text = "tesselode",
 		fg_color = "bluem5",
 		bg_color = "blue",
@@ -286,43 +459,32 @@ function Game:create_credits()
 			open_url(b, "https://github.com/tesselode/ripple")
 		end,
 	})
-	Text2({ group = self.credits, x = 60, y = 110, lines = { { text = "[green]music: ", font = pixul_font } } })
+
+	yOffset = yOffset + 30
+	Text2({ group = self.credits, x = 60, y = yOffset, lines = { { text = "[green]music: ", font = pixul_font } } })
 	Button({
 		group = self.credits,
-		x = 100,
-		y = 110,
-		button_text = "kubbi",
+		x = 160,
+		y = yOffset,
+		button_text = "pixabay royalty-free",
 		fg_color = "greenm5",
 		bg_color = "green",
 		credits_button = true,
 		action = function(b)
-			open_url(b, "https://kubbimusic.com/album/ember")
+			open_url(b, "https://pixabay.com/music/search/genre/video%20games/")
 		end,
 	})
-	Text2({ group = self.credits, x = 60, y = 140, lines = { { text = "[yellow]sounds: ", font = pixul_font } } })
+
+	yOffset = yOffset + 30
+	Text2({ group = self.credits, x = 60, y = yOffset, lines = { { text = "[yellow]sounds: ", font = pixul_font } } })
 	Button({
 		group = self.credits,
-		x = 135,
-		y = 140,
-		button_text = "sidearm studios",
+		x = 215,
+		y = yOffset,
+		button_text = "BlueYeti Snowball + Audacity + My Mouth",
 		fg_color = "yellowm5",
 		bg_color = "yellow",
 		credits_button = true,
-		action = function(b)
-			open_url(b, "https://sidearm-studios.itch.io/ultimate-sound-fx-bundle")
-		end,
-	})
-	Button({
-		group = self.credits,
-		x = 217,
-		y = 140,
-		button_text = "justinbw",
-		fg_color = "yellowm5",
-		bg_color = "yellow",
-		credits_button = true,
-		action = function(b)
-			open_url(b, "https://freesound.org/people/JustinBW/sounds/80921/")
-		end,
 	})
 end
 
@@ -443,4 +605,152 @@ function Game:draw()
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent_2)
 	end
 	self.credits:draw()
+end
+
+function Game:die()
+	if not self.died_text and not self.won and not self.arena_clear_text then
+		input:set_mouse_visible(true)
+		self.died = true
+		locked_state = nil
+		system.save_run()
+		self.t:tween(2, self, { main_slow_amount = 0 }, math.linear, function()
+			self.main_slow_amount = 0
+		end)
+		self.t:tween(2, _G, { music_slow_amount = 0 }, math.linear, function()
+			music_slow_amount = 0
+		end)
+		self.died_text = Text2({
+			group = self.ui,
+			x = gw / 2,
+			y = gh / 2 - 32,
+			lines = {
+				{
+					text = "[wavy_mid, cbyc]you died...",
+					font = fat_font,
+					alignment = "center",
+					height_multiplier = 1.25,
+				},
+			},
+		})
+
+		self.t:after(2.2, function()
+			self.died_text2 = Text2({
+				group = self.ui,
+				x = gw / 2,
+				y = gh / 2,
+				lines = {
+					{
+						text = "[wavy_mid, cbyc2]try again (r)",
+						font = fat_font,
+						alignment = "center",
+						height_multiplier = 1.25,
+					},
+				},
+			})
+		end)
+		trigger:tween(2, camera, { x = gw / 2, y = gh / 2, r = 0 }, math.linear, function()
+			camera.x, camera.y, camera.r = gw / 2, gh / 2, 0
+		end)
+	end
+	return true
+end
+
+--
+--
+--
+--
+CharacterHP = Object:extend()
+CharacterHP:implement(GameObject)
+function CharacterHP:init(args)
+	self:init_game_object(args)
+	self.hfx:add("hit", 1)
+	self.cooldown_ratio = 0
+end
+
+function CharacterHP:update(dt)
+	self:update_game_object(dt)
+	local t, d = self.parent.t:get_timer_and_delay("shoot")
+	if t and d then
+		local m = self.parent.t:get_every_multiplier("shoot")
+		self.cooldown_ratio = math.min(t / (d * m), 1)
+	end
+	local t, d = self.parent.t:get_timer_and_delay("attack")
+	if t and d then
+		local m = self.parent.t:get_every_multiplier("attack")
+		self.cooldown_ratio = math.min(t / (d * m), 1)
+	end
+	local t, d = self.parent.t:get_timer_and_delay("heal")
+	if t and d then
+		self.cooldown_ratio = math.min(t / d, 1)
+	end
+	local t, d = self.parent.t:get_timer_and_delay("buff")
+	if t and d then
+		self.cooldown_ratio = math.min(t / d, 1)
+	end
+	local t, d = self.parent.t:get_timer_and_delay("spawn")
+	if t and d then
+		self.cooldown_ratio = math.min(t / d, 1)
+	end
+end
+
+function CharacterHP:draw()
+	graphics.push(self.x, self.y, 0, self.hfx.hit.x, self.hfx.hit.x)
+	graphics.rectangle(
+		self.x,
+		self.y - 2,
+		14,
+		4,
+		2,
+		2,
+		self.parent.dead and bg[5] or (self.hfx.hit.f and fg[0] or self.parent.color[-2]),
+		2
+	)
+	if self.parent.hp > 0 then
+		graphics.rectangle2(
+			self.x - 7,
+			self.y - 4,
+			14 * (self.parent.hp / self.parent.max_hp),
+			4,
+			nil,
+			nil,
+			self.parent.dead and bg[5] or (self.hfx.hit.f and fg[0] or self.parent.color[-2])
+		)
+	end
+	if not self.parent.dead then
+		graphics.line(
+			self.x - 8,
+			self.y + 5,
+			self.x - 8 + 15.5 * self.cooldown_ratio,
+			self.y + 5,
+			self.hfx.hit.f and fg[0] or self.parent.color[-2],
+			2
+		)
+	end
+	graphics.pop()
+
+	if state.cooldown_snake then
+		if table.any(non_cooldown_characters, function(v)
+			return v == self.parent.character
+		end) then
+			return
+		end
+		local p = self.parent
+		graphics.push(p.x, p.y, 0, self.hfx.hit.x, self.hfx.hit.y)
+		if not p.dead then
+			graphics.line(p.x - 4, p.y + 8, p.x - 4 + 8, p.y + 8, self.hfx.hit.f and fg[0] or bg[-2], 2)
+			graphics.line(
+				p.x - 4,
+				p.y + 8,
+				p.x - 4 + 8 * self.cooldown_ratio,
+				p.y + 8,
+				self.hfx.hit.f and fg[0] or self.parent.color[-2],
+				2
+			)
+		end
+		graphics.pop()
+	end
+end
+
+function CharacterHP:change_hp()
+	self.hfx:use("hit", 0.5)
 end
