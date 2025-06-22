@@ -22,6 +22,7 @@ function MainMenu:on_enter(from)
 	self.effects = Group()
 	self.main_ui = Group():no_camera()
 	self.ui = Group():no_camera()
+	self.credits = Group()
 
 	-- Spawn solids and player
 	self.x1, self.y1 = gw / 2 - 0.8 * gw / 2, gh / 2 - 0.8 * gh / 2
@@ -29,7 +30,7 @@ function MainMenu:on_enter(from)
 	self.w, self.h = self.x2 - self.x1, self.y2 - self.y1
 
 	self.jam_name = Text2({
-		group = self.ui,
+		group = self.main_ui,
 		x = gw / 2,
 		y = 20,
 		force_update = true,
@@ -71,7 +72,7 @@ function MainMenu:on_enter(from)
 					system.save_state()
 					-- main:go_to("level_select")
 					main:add(Game("game"))
-					main:go_to("game")
+					main:go_to("game", 1)
 				end,
 				text = Text({
 					{
@@ -99,10 +100,22 @@ function MainMenu:on_enter(from)
 			end
 		end,
 	})
-	self.quit_button = Button({
+	self.credits_button = Button({
 		group = self.main_ui,
 		x = gw / 2,
 		y = gh / 2 + 34,
+		force_update = true,
+		button_text = "credits",
+		fg_color = "bg10",
+		bg_color = "bg",
+		action = function()
+			self:create_credits()
+		end,
+	})
+	self.quit_button = Button({
+		group = self.main_ui,
+		x = gw / 2,
+		y = gh / 2 + 55,
 		force_update = true,
 		button_text = "quit",
 		fg_color = "bg",
@@ -112,13 +125,10 @@ function MainMenu:on_enter(from)
 			love.event.quit()
 		end,
 	})
-	-- self.t:every(2, function()
-	-- 	self.inspiration_button.spring:pull(0.025, 200, 10)
-	-- end)
 	self.inspiration_button = Button({
 		group = self.main_ui,
 		x = gw / 2,
-		y = gh - 40,
+		y = gh - 20,
 		force_update = true,
 		button_text = "Check out the inspiration: SNKRX",
 		fg_color = "bg10",
@@ -198,23 +208,37 @@ function MainMenu:update(dt)
 			self.title_text:update(dt)
 		end
 		self.ui:update(dt * slow_amount)
+
+		if input.escape.pressed then
+			self.in_credits = false
+			if self.credits_button then
+				self.credits_button:on_mouse_exit()
+			end
+			for _, object in ipairs(self.credits.objects) do
+				object.dead = true
+			end
+			self.credits:update(0)
+		end
 	else
 		self.ui:update(dt * slow_amount)
 	end
+
+	self.credits:update(dt)
 end
 
 function MainMenu:draw()
-	self.floor:draw()
-	self.main:draw()
-	self.post_main:draw()
-	self.effects:draw()
-	graphics.draw_with_mask(function()
-		star_canvas:draw(0, 0, 0, 1, 1)
-	end, function()
-		camera:attach()
-		graphics.rectangle(gw / 2, gh / 2, self.w, self.h, nil, nil, fg[0])
-		camera:detach()
-	end, true)
+	-- self.floor:draw()
+	-- self.main:draw()
+	-- self.post_main:draw()
+	-- self.effects:draw()
+	-- graphics.draw_with_mask(function()
+	-- 	star_canvas:draw(0, 0, 0, 1, 1)
+	-- end, function()
+	-- 	camera:attach()
+	-- 	graphics.rectangle(gw / 2, gh / 2, self.w, self.h, nil, nil, fg[0])
+	-- 	camera:detach()
+	-- end, true)
+
 	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 
 	self.main_ui:draw()
@@ -223,4 +247,154 @@ function MainMenu:draw()
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 	end
 	self.ui:draw()
+
+	if self.in_credits then
+		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
+	end
+	self.credits:draw()
+end
+
+function MainMenu:create_credits()
+	local open_url = function(b, url)
+		ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+		b.spring:pull(0.2, 200, 10)
+		b.selected = true
+		ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+		system.open_url(url)
+	end
+
+	self.close_button = Button({
+		group = self.credits,
+		x = gw - 20,
+		y = 20,
+		button_text = "x",
+		bg_color = "bg",
+		fg_color = "bg10",
+		credits_button = true,
+		action = function()
+			trigger:after(0.01, function()
+				self.in_credits = false
+				if self.credits_button then
+					self.credits_button:on_mouse_exit()
+				end
+				for _, object in ipairs(self.credits.objects) do
+					object.dead = true
+				end
+				self.credits:update(0)
+			end)
+		end,
+	})
+
+	self.in_credits = true
+	local yOffset = 20
+	Text2({ group = self.credits, x = 60, y = yOffset, lines = { { text = "[bg10]main dev: ", font = pixul_font } } })
+	Button({
+		group = self.credits,
+		x = 125,
+		y = yOffset,
+		button_text = "Mikey",
+		fg_color = "bg10",
+		bg_color = "bg",
+		credits_button = true,
+		action = function(b)
+			open_url(b, "https://gusakm.itch.io/")
+		end,
+	})
+
+	yOffset = yOffset + 30
+	Text2({
+		group = self.credits,
+		x = 70,
+		y = yOffset,
+		lines = { { text = "[bg10]inspiration: ", font = pixul_font } },
+	})
+	Button({
+		group = self.credits,
+		x = 135,
+		y = yOffset,
+		button_text = "SNKRX",
+		fg_color = "bg10",
+		bg_color = "bg",
+		credits_button = true,
+		action = function(b)
+			open_url(b, "https://store.steampowered.com/app/915310/SNKRX/")
+		end,
+	})
+	yOffset = yOffset + 30
+	Text2({ group = self.credits, x = 60, y = yOffset, lines = { { text = "[blue]libraries: ", font = pixul_font } } })
+	Button({
+		group = self.credits,
+		x = 113,
+		y = yOffset,
+		button_text = "love2d",
+		fg_color = "bluem5",
+		bg_color = "blue",
+		credits_button = true,
+		action = function(b)
+			open_url(b, "https://love2d.org")
+		end,
+	})
+	Button({
+		group = self.credits,
+		x = 170,
+		y = yOffset,
+		button_text = "bakpakin",
+		fg_color = "bluem5",
+		bg_color = "blue",
+		credits_button = true,
+		action = function(b)
+			open_url(b, "https://github.com/bakpakin/binser")
+		end,
+	})
+	Button({
+		group = self.credits,
+		x = 237,
+		y = yOffset,
+		button_text = "davisdude",
+		fg_color = "bluem5",
+		bg_color = "blue",
+		credits_button = true,
+		action = function(b)
+			open_url(b, "https://github.com/davisdude/mlib")
+		end,
+	})
+	Button({
+		group = self.credits,
+		x = 306,
+		y = yOffset,
+		button_text = "tesselode",
+		fg_color = "bluem5",
+		bg_color = "blue",
+		credits_button = true,
+		action = function(b)
+			open_url(b, "https://github.com/tesselode/ripple")
+		end,
+	})
+
+	yOffset = yOffset + 30
+	Text2({ group = self.credits, x = 60, y = yOffset, lines = { { text = "[green]music: ", font = pixul_font } } })
+	Button({
+		group = self.credits,
+		x = 160,
+		y = yOffset,
+		button_text = "pixabay royalty-free",
+		fg_color = "greenm5",
+		bg_color = "green",
+		credits_button = true,
+		action = function(b)
+			open_url(b, "https://pixabay.com/music/search/genre/video%20games/")
+		end,
+	})
+
+	yOffset = yOffset + 30
+	Text2({ group = self.credits, x = 60, y = yOffset, lines = { { text = "[yellow]sounds: ", font = pixul_font } } })
+	Button({
+		group = self.credits,
+		x = 215,
+		y = yOffset,
+		button_text = "BlueYeti Snowball + Audacity + My Mouth",
+		fg_color = "yellowm5",
+		bg_color = "yellow",
+		credits_button = true,
+	})
 end

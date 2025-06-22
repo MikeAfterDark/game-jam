@@ -33,10 +33,6 @@ end
 
 function Player:update(dt)
 	self:update_game_object(dt)
-	-- if self.x < 0 or self.x > gw or self.y < 0 or self.y > gh then
-	-- 	self.x = self.x % gw
-	-- 	self.y = self.y % gh
-	-- end
 
 	if not main.current:is(MainMenu) then
 		if input.move_left.pressed and not self.move_right_pressed then
@@ -198,7 +194,7 @@ function Player:on_collision_enter(other, contact)
 
 	if other:is(Wall) then
 		self.hfx:use("hit", 0.15, 200, 10, 0.1)
-		self:bounce(contact:getNormal())
+		-- self:bounce(contact:getNormal())
 	elseif table.any(main.current.enemies, function(v)
 		return other:is(v)
 	end) then

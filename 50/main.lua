@@ -4,8 +4,6 @@ require("game")
 require("player")
 require("renderer")
 require("boss")
--- require("objects")
--- require("media")
 
 function init()
 	renderer_init()
@@ -16,9 +14,8 @@ function init()
 	input:bind("shoot", { "space", "return", "m4" }) -- TODO: figure out controls for controller
 	input:bind("shield", { "s", "lshift", "m5" })
 
-	local s = { tags = { sfx } }
 	-- load sounds:
-	-- explosion1 = Sound('Explosion Grenade_04.ogg', s)
+	local s = { tags = { sfx } }
 	buttonHover = Sound("buttonHover.ogg", s)
 	buttonPop = Sound("buttonPop.ogg", s)
 
@@ -58,6 +55,10 @@ function init()
 
 	main:add(MainMenu("mainmenu"))
 	main:go_to("mainmenu")
+
+	-- set sane defaults:
+	state.mouse_control = true
+	state.arrow_snake = true
 end
 
 function update(dt)
@@ -246,17 +247,20 @@ function open_options(self)
 							slow_amount = 1
 							music_slow_amount = 1
 							run_time = 0
-							main_song_instance:stop()
+							-- main_song_instance:stop()
 							locked_state = nil
 							system.save_run()
 							main:add(Game("game"))
-							main:go_to("game")
+							main:go_to("game", main.current.level)
 						end,
 						text = Text({
 							{
 								text = "[wavy, "
 									.. tostring(state.dark_transitions and "fg" or "bg")
-									.. "]restarting...",
+									.. "] level "
+									.. (main.current.level == 5 and "[red]" or "")
+									.. main.current.level
+									.. "[red]/5",
 								font = pixul_font,
 								alignment = "center",
 							},

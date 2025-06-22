@@ -16,8 +16,11 @@ function LongBoss:init(args)
 	self.def = 0
 	self.max_hp = 1
 	self.hp = 1
+	self.go = false
 
 	if self.leader then
+		self.pattern = "chase"
+		self.rand_angle = 0
 		self.invulnerable = true
 		self.color = blue[0]
 		self.previous_positions = {}
@@ -28,9 +31,13 @@ function LongBoss:init(args)
 				self.previous_positions[2529] = nil
 			end
 		end)
-		-- self.t:every(6, function()
-		-- 	self.r = self:angle_to_object(main.current.player)
-		-- end)
+		self.t:every(6, function()
+			self.pattern = random:table({
+				"chase",
+				"predict",
+			})
+			-- self.pattern = "predict"
+		end)
 	end
 
 	self.mouse_control_v_buffer = {}
@@ -45,16 +52,32 @@ end
 function LongBoss:update(dt)
 	self:update_game_object(dt)
 	if self.leader then
-		local rotation_speed = 0.4
-		if not main.current:is(MainMenu) and not main.current.transitioning then
-			local target_angle = self:angle_to_object(main.current.player)
-			local angle_diff = (target_angle - self.r + math.pi) % (2 * math.pi) - math.pi
-			self.r = self.r + math.sign(angle_diff) * rotation_speed * math.pi * dt
+		if main.current.start_time > 0 then
+			return
 		end
 
 		self.total_v = math.max(self:distance_to_object(main.current.player) + 20, 100)
-		self:set_velocity(self.total_v * math.cos(self.r), self.total_v * math.sin(self.r))
-		self:set_angle(self.r)
+
+		--
+		if self.pattern == "chase" then
+			self:set_colours(blue[0], blue[5])
+			local rotation_speed = 0.4
+			local target_angle = self:angle_to_object(main.current.player)
+			local angle_diff = (target_angle - self.r + math.pi) % (2 * math.pi) - math.pi
+			self.r = self.r + math.sign(angle_diff) * rotation_speed * math.pi * dt
+		elseif self.pattern == "predict" then
+			self:set_colours(purple[0], purple[5])
+			self.rand_angle = math.max(
+				-math.pi / 2,
+				math.min(math.pi / 2, self.rand_angle + ((random:bool(50) and 1 or -1) * math.pi * dt * 1.2))
+			)
+			self.r = self:angle_to_object(main.current.player) + self.rand_angle
+		end
+
+		if not main.current:is(MainMenu) and not main.current.transitioning then
+			self:set_velocity(self.total_v * math.cos(self.r), self.total_v * math.sin(self.r))
+			self:set_angle(self.r)
+		end
 	else
 		local target_distance = 10.4 * (self.follower_index or 0)
 		local distance_sum = 0
@@ -74,7 +97,6 @@ function LongBoss:update(dt)
 			self:set_position(p.x, p.y)
 			self.r = p.r
 			if not self.following then
-				-- spawn1:play({ pitch = random:float(0.8, 1.2), volume = 0.15 })
 				for i = 1, random:int(3, 4) do
 					HitParticle({ group = main.current.effects, x = self.x, y = self.y, color = self.color })
 				end
@@ -190,6 +212,14 @@ function LongBoss:get_all_units()
 		followers = self.parent.followers
 	end
 	return { leader, unpack(followers) }
+end
+
+function LongBoss:set_colours(leader_color, follower_color)
+	local units = self:get_all_units()
+	units[1].color = leader_color
+	for i = 2, #units do
+		units[i].color = follower_color
+	end
 end
 
 function LongBoss:recalculate_followers()

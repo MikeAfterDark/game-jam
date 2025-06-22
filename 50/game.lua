@@ -6,10 +6,18 @@ function Game:init(name)
 	self:init_game_object()
 end
 
-function Game:on_enter(from)
+function Game:on_enter(from, level)
 	self.hfx:add("condition1", 1)
 	self.hfx:add("condition2", 1)
 	self.level = level or 1
+	self.start_time = 4
+	self.t:every(1, function()
+		if self.start_time > -1 then
+			self.start_time = self.start_time - 1
+		end
+	end)
+	camera.x, camera.y = gw / 2, gh / 2
+	camera.r = 0
 
 	if not state.mouse_control then
 		input:set_mouse_visible(false)
@@ -69,36 +77,31 @@ function Game:on_enter(from)
 	self.player.character_hp = chp
 
 	-- Init bosses, choose one randomly (except for debugging)
-	local numBosses = 1
-	self.bosses = {}
-
-	local longBossLength = 50
-	for i = 1, longBossLength do
-		if i == 1 then
-			self.bosses[numBosses] = LongBoss({
-				group = self.main,
-				x = random:int(0, gw), -- / 3,
-				y = random:int(0, gh), -- / 2 + 16,
-				leader = true,
-				ii = i,
-			})
-		else
-			self.bosses[numBosses]:add_follower(LongBoss({
-				group = self.main,
-				-- color = red[i % 5],
-				ii = i,
-			}))
-		end
+	if self.level == 1 then
+		self.bosses = {
+			[1] = self:new_longboss(5),
+		}
+	elseif self.level == 2 then
+		self.bosses = {
+			[1] = self:new_longboss(20),
+		}
+	elseif self.level == 3 then
+		self.bosses = {
+			[1] = self:new_longboss(40),
+			[2] = self:new_longboss(40),
+		}
+	elseif self.level == 4 then
+		self.bosses = {
+			[1] = self:new_longboss(10),
+			[2] = self:new_longboss(15),
+			[3] = self:new_longboss(25),
+			[4] = self:new_longboss(10),
+		}
+	elseif self.level == 5 then
+		self.bosses = {
+			[1] = self:new_longboss(150),
+		}
 	end
-	local units = self.bosses[numBosses]:get_all_units()
-	for _, unit in ipairs(units) do
-		local chp =
-			CharacterHP({ group = self.effects, x = self.x1 + 8 + (unit.ii - 1) * 22, y = self.y2 + 14, parent = unit })
-		unit.character_hp = chp
-	end
-
-	numBosses = numBosses + 1
-	self.activeBosses = { 1 }
 
 	Wall({ group = self.main, vertices = math.to_rectangle_vertices(-40, -40, self.x1, gh + 40), color = bg[-1] })
 	Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x2, -40, gw + 40, gh + 40), color = bg[-1] })
@@ -130,11 +133,7 @@ function Game:on_enter(from)
 	-- })
 	--
 	--
-	local debug = false
 	self.t:every(function()
-		if debug then
-			return true
-		end
 		for _, boss in ipairs(self.bosses) do
 			if not boss.dead then
 				return false
@@ -160,7 +159,6 @@ function Game:on_exit()
 	self.flashes = nil
 	self.player = nil
 	self.bosses = nil
-	self.activeBosses = nil
 	self.hfx = nil
 end
 
@@ -201,15 +199,20 @@ function Game:update(dt)
 				transition_action = function()
 					slow_amount = 1
 					music_slow_amount = 1
-					main_song_instance:stop()
+					-- main_song_instance:stop()
 					locked_state = nil
 					system.save_run()
 					main:add(Game("game"))
-					main:go_to("game")
+					main:go_to("game", self.level)
 				end,
 				text = Text({
 					{
-						text = "[wavy, " .. tostring(state.dark_transitions and "fg" or "bg") .. "]restarting...",
+						text = "[wavy, "
+							.. tostring(state.dark_transitions and "fg" or "bg")
+							.. "] level "
+							.. (main.current.level == 5 and "[red]" or "")
+							.. main.current.level
+							.. "[red]/5",
 						font = pixul_font,
 						alignment = "center",
 					},
@@ -232,10 +235,6 @@ function Game:update(dt)
 	self:update_game_object(dt * slow_amount)
 	main_song_instance.pitch = math.clamp(slow_amount * music_slow_amount, 0.05, 1)
 
-	for _, boss in ipairs(self.activeBosses) do
-		self.bosses[boss]:update(dt * slow_amount)
-	end
-
 	star_group:update(dt * slow_amount)
 	self.floor:update(dt * slow_amount)
 	self.main:update(dt * slow_amount * self.main_slow_amount)
@@ -251,7 +250,59 @@ function Game:quit()
 	end
 
 	self.quitting = true
-	if not self.win_text and not self.win_text2 then
+	if self.level < 5 then
+		if not self.arena_clear_text then
+			self.arena_clear_text = Text2({
+				group = self.ui,
+				x = gw / 2,
+				y = gh / 2 - 48,
+				lines = {
+					{
+						text = "[wavy_mid, fg] Level [green]" .. self.level .. "[red]/5 [wavy_mid, fg] beat",
+						font = fat_font,
+						alignment = "center",
+					},
+				},
+			})
+		end
+		self.t:after(2, function()
+			self.slow_transitioning = true
+			self.t:tween(0.7, self, { main_slow_amount = 0 }, math.linear, function()
+				self.main_slow_amount = 0
+			end)
+		end)
+		self.t:after(3, function()
+			self.transitioning = true
+			ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+			ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+			ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+			TransitionEffect({
+				group = main.transitions,
+				x = gw / 2,
+				y = gh / 2,
+				color = state.dark_transitions and bg[-2] or fg[0],
+				transition_action = function()
+					slow_amount = 1
+					music_slow_amount = 1
+					locked_state = nil
+					system.save_run()
+					main:add(Game("game"))
+					main:go_to("game", self.level + 1)
+				end,
+				text = Text({
+					{
+						text = "[wavy, "
+							.. tostring(state.dark_transitions and "fg" or "bg")
+							.. "] level "
+							.. ((self.level + 1) == 5 and "[red]" .. (self.level + 1) or tostring(self.level + 1))
+							.. "[red]/5",
+						font = pixul_font,
+						alignment = "center",
+					},
+				}, global_text_tags),
+			})
+		end)
+	elseif not self.win_text and not self.win_text2 then
 		input:set_mouse_visible(true)
 		self.won = true
 		locked_state = nil
@@ -286,7 +337,11 @@ function Game:quit()
 						height_multiplier = 1.24,
 					},
 					{ text = "[wavy_mid, yellow]thanks for playing!", font = pixul_font, alignment = "center" },
-					{ text = "[wavy_mid, yellow]play again? (r)", font = pixul_font, alignment = "center" },
+					{
+						text = "[wavy_mid, yellow]victory PCB: [wavy_mid, green]#",
+						font = pixul_font,
+						alignment = "center",
+					},
 				},
 			})
 			self.credits_button = Button({
@@ -311,22 +366,6 @@ function Game:quit()
 			slow_amount = 1
 			music_slow_amount = 1
 		end)
-		-- self.t:after(3, function()
-		-- 	if (self.level - (25 * self.loop)) % 3 == 0 and #self.passives < 8 then
-		-- 		input:set_mouse_visible(true)
-		-- 		trigger:tween(1, _G, { slow_amount = 0 }, math.linear, function()
-		-- 			slow_amount = 0
-		-- 		end, "slow_amount")
-		-- 		trigger:tween(1, _G, { music_slow_amount = 0 }, math.linear, function()
-		-- 			music_slow_amount = 0
-		-- 		end, "music_slow_amount")
-		-- 		trigger:tween(4, camera, { x = gw / 2, y = gh / 2, r = 0 }, math.linear, function()
-		-- 			camera.x, camera.y, camera.r = gw / 2, gh / 2, 0
-		-- 		end)
-		-- 	else
-		-- 		self:transition()
-		-- 	end
-		-- end, "transition")
 	end
 end
 
@@ -396,19 +435,6 @@ function Game:create_credits()
 			open_url(b, "https://store.steampowered.com/app/915310/SNKRX/")
 		end,
 	})
-	-- Text2({ group = self.credits, x = 60, y = 50, lines = { { text = "[bg10]mobile: ", font = pixul_font } } })
-	-- Button({
-	-- 	group = self.credits,
-	-- 	x = 144,
-	-- 	y = 50,
-	-- 	button_text = "David Khachaturov",
-	-- 	fg_color = "bg10",
-	-- 	bg_color = "bg",
-	-- 	credits_button = true,
-	-- 	action = function(b)
-	-- 		open_url(b, "https://davidobot.net/")
-	-- 	end,
-	-- })
 	yOffset = yOffset + 30
 	Text2({ group = self.credits, x = 60, y = yOffset, lines = { { text = "[blue]libraries: ", font = pixul_font } } })
 	Button({
@@ -520,24 +546,6 @@ function Game:draw()
 		graphics.pop()
 	end
 
-	-- if self.boss_level then
-	-- 	if self.start_time <= 0 then
-	-- 		graphics.push(self.x2 - 106, self.y1 - 10, 0, self.hfx.condition2.x, self.hfx.condition2.x)
-	-- 		graphics.print_centered(
-	-- 			"kill the elite",
-	-- 			fat_font,
-	-- 			self.x2 - 106,
-	-- 			self.y1 - 10,
-	-- 			0,
-	-- 			0.6,
-	-- 			0.6,
-	-- 			nil,
-	-- 			nil,
-	-- 			fg[0]
-	-- 		)
-	-- 		graphics.pop()
-	-- 	end
-	-- else
 	if self.win_condition then
 		if self.win_condition == "wave" then
 			if self.start_time <= 0 then
@@ -653,6 +661,30 @@ function Game:die()
 		end)
 	end
 	return true
+end
+
+function Game:new_longboss(length)
+	local boss = LongBoss({
+		group = self.main,
+		x = 0,
+		y = random:int(0, gh),
+		leader = true,
+		ii = 1,
+	})
+	for i = 2, length - 1 do
+		boss:add_follower(LongBoss({
+			group = self.main,
+			ii = i,
+		}))
+	end
+
+	local units = boss:get_all_units()
+	for _, unit in ipairs(units) do
+		local chp =
+			CharacterHP({ group = self.effects, x = self.x1 + 8 + (unit.ii - 1) * 22, y = self.y2 + 14, parent = unit })
+		unit.character_hp = chp
+	end
+	return boss
 end
 
 --
