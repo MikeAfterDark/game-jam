@@ -258,7 +258,7 @@ function Game:quit()
 				y = gh / 2 - 48,
 				lines = {
 					{
-						text = "[wavy_mid, fg] Level [green]" .. self.level .. "[red]/5 [wavy_mid, fg] beat",
+						text = "[wavy_mid, fg] Level [green]" .. self.level .. "[red]/5[wavy_mid, fg] beat",
 						font = fat_font,
 						alignment = "center",
 					},
