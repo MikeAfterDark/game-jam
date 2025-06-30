@@ -6,7 +6,7 @@ function Game:init(name)
 	self:init_game_object()
 end
 
-function Game:on_enter(from, level)
+function Game:on_enter(from, level, num_players, player_inputs)
 	self.hfx:add("condition1", 1)
 	self.hfx:add("condition2", 1)
 	self.level = level or 1
@@ -35,6 +35,7 @@ function Game:on_enter(from, level)
 	self.post_main = Group()
 	self.effects = Group()
 	self.ui = Group()
+	self.options_ui = Group()
 	self.credits = Group()
 
 	self.main:disable_collision_between("player", "player")
@@ -68,13 +69,21 @@ function Game:on_enter(from, level)
 	self.x2, self.y2 = gw, gh
 	self.w, self.h = self.x2 - self.x1, self.y2 - self.y1
 
-	self.player = Player({
-		group = self.main,
-		x = gw / 2,
-		y = gh / 2 + 16,
-	})
-	local chp = CharacterHP({ group = self.effects, x = self.x1 + 8, y = self.y2 + 14, parent = self.player })
-	self.player.character_hp = chp
+	self.players = {}
+	local player_colors = { red[0], yellow[0], green[0], yellow2[0] }
+	for i = 1, num_players do
+		self.players[i] = Player({
+			group = self.main,
+			x = gw / 2 + i * 20,
+			y = gh / 2 + 16,
+			color = player_colors[i],
+			id = i,
+		})
+		local chp = CharacterHP({ group = self.effects, x = self.x1 + 8, y = self.y2 + 14, parent = self.players[i] })
+		self.players[i].character_hp = chp
+	end
+	--temp to keep game working:
+	self.player = self.players[1]
 
 	-- Init bosses, choose one randomly (except for debugging)
 	if self.level == 1 then
@@ -150,10 +159,12 @@ function Game:on_exit()
 	self.post_main:destroy()
 	self.effects:destroy()
 	self.ui:destroy()
+	self.options_ui:destroy()
 	self.main = nil
 	self.post_main = nil
 	self.effects = nil
 	self.ui = nil
+	self.options_ui = nil
 	self.credits = nil
 	self.passives = nil
 	self.flashes = nil
@@ -176,17 +187,12 @@ function Game:update(dt)
 	-- end
 
 	if input.escape.pressed and not self.transitioning and not self.in_credits then
-		if not self.paused then
-			open_options(self)
-		else
+		if not self.paused and not self.died and not self.won then
+			pause_game(self)
+		elseif self.in_options and not self.died and not self.won then
 			close_options(self)
-		end
-	end
-
-	if --[[ self.paused or self.died or self.won and ]]
-		not self.transitioning
-	then
-		if input.r.pressed then
+			self.options_button.selected = true
+		else
 			self.transitioning = true
 			ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 			ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
@@ -197,28 +203,55 @@ function Game:update(dt)
 				y = gh / 2,
 				color = state.dark_transitions and bg[-2] or fg[0],
 				transition_action = function()
-					slow_amount = 1
-					music_slow_amount = 1
-					-- main_song_instance:stop()
-					locked_state = nil
-					system.save_run()
-					main:add(Game("game"))
-					main:go_to("game", self.level)
+					main:add(MainMenu("main_menu"))
+					main:go_to("main_menu")
 				end,
 				text = Text({
 					{
-						text = "[wavy, "
-							.. tostring(state.dark_transitions and "fg" or "bg")
-							.. "] level "
-							.. (main.current.level == 5 and "[red]" or "")
-							.. main.current.level
-							.. "[red]/5",
+						text = "[wavy, " .. tostring(state.dark_transitions and "fg" or "bg") .. "] SPAAAAAAAACE",
 						font = pixul_font,
 						alignment = "center",
 					},
 				}, global_text_tags),
 			})
+			return
 		end
+	end
+
+	if not self.transitioning then
+		-- if input.r.pressed then
+		-- 	self.transitioning = true
+		-- 	ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+		-- 	ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+		-- 	ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+		-- 	TransitionEffect({
+		-- 		group = main.transitions,
+		-- 		x = gw / 2,
+		-- 		y = gh / 2,
+		-- 		color = state.dark_transitions and bg[-2] or fg[0],
+		-- 		transition_action = function()
+		-- 			slow_amount = 1
+		-- 			music_slow_amount = 1
+		-- 			-- main_song_instance:stop()
+		-- 			locked_state = nil
+		-- 			system.save_run()
+		-- 			main:add(Game("game"))
+		-- 			main:go_to("game", self.level, #self.players)
+		-- 		end,
+		-- 		text = Text({
+		-- 			{
+		-- 				text = "[wavy, "
+		-- 					.. tostring(state.dark_transitions and "fg" or "bg")
+		-- 					.. "] level "
+		-- 					.. (main.current.level == 5 and "[red]" or "")
+		-- 					.. main.current.level
+		-- 					.. "[red]/5",
+		-- 				font = pixul_font,
+		-- 				alignment = "center",
+		-- 			},
+		-- 		}, global_text_tags),
+		-- 	})
+		-- end
 
 		if input.escape.pressed then
 			self.in_credits = false
@@ -241,7 +274,8 @@ function Game:update(dt)
 	self.post_main:update(dt * slow_amount)
 	self.effects:update(dt * slow_amount)
 	self.ui:update(dt * slow_amount)
-	self.credits:update(dt)
+	self.options_ui:update(dt * slow_amount)
+	self.credits:update(dt * slow_amount)
 end
 
 function Game:quit()
@@ -287,7 +321,7 @@ function Game:quit()
 					locked_state = nil
 					system.save_run()
 					main:add(Game("game"))
-					main:go_to("game", self.level + 1)
+					main:go_to("game", self.level + 1, #self.players)
 				end,
 				text = Text({
 					{
@@ -337,17 +371,17 @@ function Game:quit()
 						height_multiplier = 1.24,
 					},
 					{ text = "[wavy_mid, yellow]thanks for playing!", font = pixul_font, alignment = "center" },
-					{
-						text = "[wavy_mid, yellow]victory PCB: [wavy_mid, green]#",
-						font = pixul_font,
-						alignment = "center",
-					},
+					-- {
+					-- 	text = "[wavy_mid, yellow]victory PCB: [wavy_mid, green]#",
+					-- 	font = pixul_font,
+					-- 	alignment = "center",
+					-- },
 				},
 			})
 			self.credits_button = Button({
 				group = self.ui,
 				x = gw / 2,
-				y = gh / 2 + 50,
+				y = gh / 2 + 35,
 				force_update = true,
 				button_text = "credits",
 				fg_color = "bg10",
@@ -356,6 +390,7 @@ function Game:quit()
 					self:create_credits()
 				end,
 			})
+			self.credits_button.selected = true
 		end)
 
 		self.t:after(2, function()
@@ -377,39 +412,17 @@ function Game:create_credits()
 		ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 		system.open_url(url)
 	end
-
-	self.close_button = Button({
-		group = self.credits,
-		x = gw - 20,
-		y = 20,
-		button_text = "x",
-		bg_color = "bg",
-		fg_color = "bg10",
-		credits_button = true,
-		action = function()
-			trigger:after(0.01, function()
-				self.in_credits = false
-				if self.credits_button then
-					self.credits_button:on_mouse_exit()
-				end
-				for _, object in ipairs(self.credits.objects) do
-					object.dead = true
-				end
-				self.credits:update(0)
-			end)
-		end,
-	})
-
 	self.in_credits = true
+
 	local yOffset = 20
-	Text2({ group = self.credits, x = 60, y = yOffset, lines = { { text = "[bg10]main dev: ", font = pixul_font } } })
+	Text2({ group = self.credits, x = 60, y = yOffset, lines = { { text = "[fg]dev: ", font = pixul_font } } })
 	Button({
 		group = self.credits,
 		x = 125,
 		y = yOffset,
 		button_text = "Mikey",
-		fg_color = "bg10",
-		bg_color = "bg",
+		fg_color = "bg",
+		bg_color = "fg",
 		credits_button = true,
 		action = function(b)
 			open_url(b, "https://gusakm.itch.io/")
@@ -421,15 +434,15 @@ function Game:create_credits()
 		group = self.credits,
 		x = 70,
 		y = yOffset,
-		lines = { { text = "[bg10]inspiration: ", font = pixul_font } },
+		lines = { { text = "[fg]inspiration: ", font = pixul_font } },
 	})
 	Button({
 		group = self.credits,
 		x = 135,
 		y = yOffset,
 		button_text = "SNKRX",
-		fg_color = "bg10",
-		bg_color = "bg",
+		fg_color = "bg",
+		bg_color = "fg",
 		credits_button = true,
 		action = function(b)
 			open_url(b, "https://store.steampowered.com/app/915310/SNKRX/")
@@ -442,7 +455,7 @@ function Game:create_credits()
 		x = 113,
 		y = yOffset,
 		button_text = "love2d",
-		fg_color = "bluem5",
+		fg_color = "bg",
 		bg_color = "blue",
 		credits_button = true,
 		action = function(b)
@@ -454,7 +467,7 @@ function Game:create_credits()
 		x = 170,
 		y = yOffset,
 		button_text = "bakpakin",
-		fg_color = "bluem5",
+		fg_color = "bg",
 		bg_color = "blue",
 		credits_button = true,
 		action = function(b)
@@ -466,7 +479,7 @@ function Game:create_credits()
 		x = 237,
 		y = yOffset,
 		button_text = "davisdude",
-		fg_color = "bluem5",
+		fg_color = "bg",
 		bg_color = "blue",
 		credits_button = true,
 		action = function(b)
@@ -478,7 +491,7 @@ function Game:create_credits()
 		x = 306,
 		y = yOffset,
 		button_text = "tesselode",
-		fg_color = "bluem5",
+		fg_color = "bg",
 		bg_color = "blue",
 		credits_button = true,
 		action = function(b)
@@ -493,7 +506,7 @@ function Game:create_credits()
 		x = 160,
 		y = yOffset,
 		button_text = "pixabay royalty-free",
-		fg_color = "greenm5",
+		fg_color = "bg",
 		bg_color = "green",
 		credits_button = true,
 		action = function(b)
@@ -508,7 +521,7 @@ function Game:create_credits()
 		x = 215,
 		y = yOffset,
 		button_text = "BlueYeti Snowball + Audacity + My Mouth",
-		fg_color = "yellowm5",
+		fg_color = "bg",
 		bg_color = "yellow",
 		credits_button = true,
 	})
@@ -603,11 +616,19 @@ function Game:draw()
 	if self.choosing_passives or self.won or self.paused or self.died then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 	end
+	if self.paused then
+		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
+	end
 	self.ui:draw()
 
 	if self.shop_text then
 		self.shop_text:draw(gw - 40, gh - 17)
 	end
+
+	if self.in_options then
+		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
+	end
+	self.options_ui:draw()
 
 	if self.in_credits then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent_2)
@@ -648,13 +669,59 @@ function Game:die()
 				y = gh / 2,
 				lines = {
 					{
-						text = "[wavy_mid, cbyc2]try again (r)",
+						text = "[wavy_mid, cbyc2]try again?",
 						font = fat_font,
 						alignment = "center",
 						height_multiplier = 1.25,
 					},
 				},
 			})
+
+			self.died_restart_button = Button({
+				group = self.ui,
+				x = gw / 2,
+				y = gh / 2 + 20,
+				force_update = true,
+				button_text = "restart",
+				fg_color = "bg",
+				bg_color = "green",
+				action = function(b)
+					if not self.transitioning then
+						self.transitioning = true
+						ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+						ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+						ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+						TransitionEffect({
+							group = main.transitions,
+							x = gw / 2,
+							y = gh / 2,
+							color = state.dark_transitions and bg[-2] or fg[0],
+							transition_action = function()
+								slow_amount = 1
+								music_slow_amount = 1
+								-- main_song_instance:stop()
+								locked_state = nil
+								system.save_run()
+								main:add(Game("game"))
+								main:go_to("game", self.level, #self.players)
+							end,
+							text = Text({
+								{
+									text = "[wavy, "
+										.. tostring(state.dark_transitions and "fg" or "bg")
+										.. "] level "
+										.. (main.current.level == 5 and "[red]" or "")
+										.. main.current.level
+										.. "[red]/5",
+									font = pixul_font,
+									alignment = "center",
+								},
+							}, global_text_tags),
+						})
+					end
+				end,
+			})
+			self.died_restart_button.selected = true
 		end)
 		trigger:tween(2, camera, { x = gw / 2, y = gh / 2, r = 0 }, math.linear, function()
 			camera.x, camera.y, camera.r = gw / 2, gh / 2, 0
@@ -685,6 +752,10 @@ function Game:new_longboss(length)
 		unit.character_hp = chp
 	end
 	return boss
+end
+
+function Game:get_random_player()
+	return self.players[math.random(#self.players)]
 end
 
 --

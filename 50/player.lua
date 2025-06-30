@@ -8,7 +8,7 @@ function Player:init(args)
 	self:init_game_object(args)
 	self:init_unit()
 
-	self.color = yellow[0]
+	self.color = args.color or yellow[0]
 	self:set_as_rectangle(9, 9, "dynamic", "player")
 	self.visual_shape = "rectangle"
 	self.damage_dealt = 0
@@ -24,6 +24,7 @@ function Player:init(args)
 	self:calculate_stats(true)
 
 	self.mouse_control_v_buffer = {}
+	self.id = args.id
 
 	if main.current:is(MainMenu) then
 		self.r = random:table({ -math.pi / 4, math.pi / 4, 3 * math.pi / 4, -3 * math.pi / 4 })
@@ -35,60 +36,122 @@ function Player:update(dt)
 	self:update_game_object(dt)
 
 	if not main.current:is(MainMenu) then
-		if input.move_left.pressed and not self.move_right_pressed then
-			self.move_left_pressed = love.timer.getTime()
-		end
-		if input.move_right.pressed and not self.move_left_pressed then
-			self.move_right_pressed = love.timer.getTime()
-		end
-		if input.move_left.released then
-			self.move_left_pressed = nil
-		end
-		if input.move_right.released then
-			self.move_right_pressed = nil
+		local x_dir, y_dir = 0, 0
+
+		local function action(name)
+			return input["p" .. self.id .. "_" .. name]
 		end
 
-		local turnRate = 2.7 --1.66
-		if state.mouse_control then
-			self.mouse_control_v = Vector(math.cos(self.r), math.sin(self.r))
-				:perpendicular()
-				:dot(Vector(math.cos(self:angle_to_mouse()), math.sin(self:angle_to_mouse())))
+		-- Get directional input
+		if action("move_left").down then
+			x_dir = x_dir - 1
+		end
+		if action("move_right").down then
+			x_dir = x_dir + 1
+		end
+		if action("move_up").down then
+			y_dir = y_dir - 1
+		end
+		if action("move_down").down then
+			y_dir = y_dir + 1
+		end
 
-			if math.abs(self.mouse_control_v) > 0.1 then
-				self.r = self.r + math.sign(self.mouse_control_v) * turnRate * math.pi * dt
-			end
-			-- table.insert(self.mouse_control_v_buffer, 1, self.mouse_control_v)
-			-- if #self.mouse_control_v_buffer > 64 then
-			-- 	self.mouse_control_v_buffer[65] = nil
+		-- Move this outside the block
+		local function cross(ax, ay, bx, by)
+			return ax * by - ay * bx
+		end
+
+		if x_dir ~= 0 or y_dir ~= 0 then
+			-- local turn_rate = smooth_turn_speed * math.pi -- TODO: smooth turning option?
+			--
+			-- local function signed_angle_diff(a, b)
+			-- 	local diff = a - b
+			-- 	return math.atan2(math.sin(diff), math.cos(diff))
 			-- end
-		else
-			if input.move_left.down then
-				self.r = self.r - turnRate * math.pi * dt
-			end
-			if input.move_right.down then
-				self.r = self.r + turnRate * math.pi * dt
-			end
+			--
+			-- local function sign(x)
+			-- 	return x < 0 and -1 or 1
+			-- end
+			--
+			local target_angle = math.atan2(y_dir, x_dir)
+			-- local delta = signed_angle_diff(target_angle, self.r)
+			--
+			-- local max_turn = turn_rate * dt
+			-- if math.abs(delta) < max_turn then
+			-- 	self.r = target_angle
+			-- else
+			-- 	self.r = self.r + sign(delta) * max_turn
+			-- end
+			self.r = target_angle
 		end
 
-		if input.move_forward.pressed then
+		if action("move_forward").pressed then
 			self.thrust = 0.1
 		end
-		if input.move_forward.released then
+		if action("move_forward").released then
 			self.thrust = 0
 		end
-		if input.shoot.pressed then
+		if action("shoot").pressed then
 			self.firing = love.timer.getTime()
 		end
-		if input.shoot.released then
+		if action("shoot").released then
 			self.firing = nil
 			self.fireDelayCounter = 1
 		end
-		if input.shield.pressed then -- TODO: forcefield
-			self.shielded = love.timer.getTime()
-		end
-		if input.shield.released then
-			self.shielded = nil
-		end
+
+		-- if input.move_left.pressed and not self.move_right_pressed then
+		-- 	self.move_left_pressed = love.timer.getTime()
+		-- end
+		-- if input.move_right.pressed and not self.move_left_pressed then
+		-- 	self.move_right_pressed = love.timer.getTime()
+		-- end
+		-- if input.move_left.released then
+		-- 	self.move_left_pressed = nil
+		-- end
+		-- if input.move_right.released then
+		-- 	self.move_right_pressed = nil
+		-- end
+
+		-- if state.mouse_control then
+		-- 	self.mouse_control_v = Vector(math.cos(self.r), math.sin(self.r))
+		-- 		:perpendicular()
+		-- 		:dot(Vector(math.cos(self:angle_to_mouse()), math.sin(self:angle_to_mouse())))
+		--
+		-- 	if math.abs(self.mouse_control_v) > 0.1 then
+		-- 		self.r = self.r + math.sign(self.mouse_control_v) * turnRate * math.pi * dt
+		-- 	end
+		-- 	-- table.insert(self.mouse_control_v_buffer, 1, self.mouse_control_v)
+		-- 	-- if #self.mouse_control_v_buffer > 64 then
+		-- 	-- 	self.mouse_control_v_buffer[65] = nil
+		-- 	-- end
+		-- else
+		-- 	if input.move_left.down then
+		-- 		self.r = self.r - turnRate * math.pi * dt
+		-- 	end
+		-- 	if input.move_right.down then
+		-- 		self.r = self.r + turnRate * math.pi * dt
+		-- 	end
+		-- end
+
+		-- if input.move_forward.pressed then
+		-- 	self.thrust = 0.1
+		-- end
+		-- if input.move_forward.released then
+		-- 	self.thrust = 0
+		-- end
+		-- if input.shoot.pressed then
+		-- 	self.firing = love.timer.getTime()
+		-- end
+		-- if input.shoot.released then
+		-- 	self.firing = nil
+		-- 	self.fireDelayCounter = 1
+		-- end
+		-- if input.shield.pressed then -- TODO: forcefield
+		-- 	self.shielded = love.timer.getTime()
+		-- end
+		-- if input.shield.released then
+		-- 	self.shielded = nil
+		-- end
 	end
 
 	local friction = 0.974
@@ -104,30 +167,35 @@ function Player:update(dt)
 	local fireDelay = { 0.1, 0.1, 0.1, 0.2, 0.5 }
 	self.fireDelayCounter = self.fireDelayCounter or 1
 
-	if not main.current.won and not main.current.choosing_passives then
+	if
+		not main.current.won
+		and not main.current.choosing_passives
+		and not main.current.paused
+		and not main.current.transitioning
+	then
 		if self.firing ~= nil and self.firing < love.timer.getTime() - fireDelay[self.fireDelayCounter] then
 			self:shoot(self.r, {})
 			self.firing = self.firing + fireDelay[self.fireDelayCounter]
 			self.fireDelayCounter = self.fireDelayCounter < #fireDelay - 1 and self.fireDelayCounter + 1 or #fireDelay
 		end
-		if not state.no_screen_movement then
+		if not state.no_screen_movement and false then
 			local vx, vy = self:get_velocity()
 			local hd = math.remap(math.abs(self.x - gw / 2), 0, 192, 1, 0)
 			local vd = math.remap(math.abs(self.y - gh / 2), 0, 108, 1, 0)
 			camera.x = camera.x + math.remap(vx, -100, 100, -24 * hd, 24 * hd) * dt
 			camera.y = camera.y + math.remap(vy, -100, 100, -8 * vd, 8 * vd) * dt
-			if input.move_right.down then
-				camera.r = math.lerp_angle_dt(0.01, dt, camera.r, math.pi / 256)
-			elseif input.move_left.down then
-				camera.r = math.lerp_angle_dt(0.01, dt, camera.r, -math.pi / 256)
-				--[[
+			-- if input.move_right.down then
+			-- 	camera.r = math.lerp_angle_dt(0.01, dt, camera.r, math.pi / 256)
+			-- elseif input.move_left.down then
+			-- 	camera.r = math.lerp_angle_dt(0.01, dt, camera.r, -math.pi / 256)
+			--[[
         elseif input.move_down.down then camera.r = math.lerp_angle_dt(0.01, dt, camera.r, math.pi/256)
         elseif input.move_up.down then camera.r = math.lerp_angle_dt(0.01, dt, camera.r, -math.pi/256)
         ]]
-				--
-			else
-				camera.r = math.lerp_angle_dt(0.005, dt, camera.r, 0)
-			end
+			--
+			-- else
+			camera.r = math.lerp_angle_dt(0.005, dt, camera.r, 0)
+			-- end
 		end
 	end
 
@@ -378,7 +446,9 @@ function Projectile:on_trigger_enter(other, contact)
 	if table.any(main.current.enemies, function(v)
 		return other:is(v)
 	end) then
-		hit1:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+		if not (other.leader and #other.followers > 0) then
+			hit1:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+		end
 		if self.pierce <= 0 and self.chain <= 0 then
 			self:die(self.x, self.y, nil, random:int(2, 3))
 		end
@@ -393,4 +463,8 @@ function Projectile:on_trigger_enter(other, contact)
 
 		other:hit(self.dmg, self)
 	end
+end
+
+function math.sign(x)
+	return x > 0 and 1 or (x < 0 and -1 or 0)
 end

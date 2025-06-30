@@ -22,6 +22,7 @@ function MainMenu:on_enter(from)
 	self.effects = Group()
 	self.main_ui = Group():no_camera()
 	self.ui = Group():no_camera()
+	self.options_ui = Group():no_camera()
 	self.credits = Group()
 
 	-- Spawn solids and player
@@ -36,7 +37,7 @@ function MainMenu:on_enter(from)
 		force_update = true,
 		lines = {
 			{
-				text = "[wavy_mid, fg]JAME GAM 50!!!",
+				text = "[wavy_mid, fg]WPG GAME COLLECTIVE!!!",
 				font = pixul_font,
 				alignment = "center",
 			},
@@ -46,55 +47,89 @@ function MainMenu:on_enter(from)
 	self.title_text =
 		Text({ { text = "[wavy, blue]LONGE WHAL", font = fat_title_font, alignment = "center" } }, global_text_tags)
 
-	self.t:every(2, function()
-		self.play_button.spring:pull(0.1, 200, 10)
-	end)
-	self.play_button = Button({
+	-- self.t:every(2, function()
+	-- 	self.play_button1.spring:pull(0.1, 200, 10)
+	-- 	self.t:after(0.5, function()
+	-- 		self.play_button2.spring:pull(0.1, 200, 10)
+	-- 	end)
+	-- 	self.t:after(1, function()
+	-- 		self.play_button3.spring:pull(0.1, 200, 10)
+	-- 	end)
+	-- 	self.t:after(1.5, function()
+	-- 		self.play_button4.spring:pull(0.1, 200, 10)
+	-- 	end)
+	-- end)
+
+	local button_offset = -10
+	local button_dist_apart = 26
+	self.play_button1 = Button({
 		group = self.main_ui,
 		x = gw / 2,
-		y = gh / 2 - 10,
+		y = gh / 2 + button_offset,
 		force_update = true,
-		button_text = "play",
+		button_text = "1 Player",
 		fg_color = "bg",
 		bg_color = "green",
 		action = function(b)
-			ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-			ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-			ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-			TransitionEffect({
-				group = main.transitions,
-				x = gw / 2,
-				y = gh / 2,
-				color = state.dark_transitions and bg[-2] or fg[0],
-				transition_action = function()
-					self.transitioning = true
-					slow_amount = 1
-					system.save_state()
-					-- main:go_to("level_select")
-					main:add(Game("game"))
-					main:go_to("game", 1)
-				end,
-				text = Text({
-					{
-						text = "[wavy, " .. tostring(state.dark_transitions and "fg" or "bg") .. "]Feeding whales...",
-						font = pixul_font,
-						alignment = "center",
-					},
-				}, global_text_tags),
-			})
+			self:play(1)
 		end,
 	})
+
+	button_offset = button_offset + button_dist_apart
+	self.play_button2 = Button({
+		group = self.main_ui,
+		x = gw / 2,
+		y = gh / 2 + button_offset,
+		force_update = true,
+		button_text = "2 Players",
+		fg_color = "bg",
+		bg_color = "green",
+		action = function(b)
+			self:play(2)
+		end,
+	})
+
+	button_offset = button_offset + button_dist_apart
+	self.play_button3 = Button({
+		group = self.main_ui,
+		x = gw / 2,
+		y = gh / 2 + button_offset,
+		force_update = true,
+		button_text = "3 Players",
+		fg_color = "bg",
+		bg_color = "green",
+		action = function(b)
+			self:play(3)
+		end,
+	})
+
+	button_offset = button_offset + button_dist_apart
+	self.play_button4 = Button({
+		group = self.main_ui,
+		x = gw / 2,
+		y = gh / 2 + button_offset,
+		force_update = true,
+		button_text = "4 Players",
+		fg_color = "bg",
+		bg_color = "green",
+		action = function(b)
+			self:play(4)
+		end,
+	})
+
+	button_offset = button_offset + button_dist_apart
 	self.options_button = Button({
 		group = self.main_ui,
 		x = gw / 2,
-		y = gh / 2 + 12,
+		y = gh / 2 + button_offset,
 		force_update = true,
 		button_text = "options",
-		fg_color = "bg10",
-		bg_color = "bg",
+		fg_color = "bg",
+		bg_color = "fg",
 		action = function(b)
 			if not self.paused then
 				open_options(self)
+				self.options_button.selected = false
 			else
 				close_options(self)
 			end
@@ -103,44 +138,76 @@ function MainMenu:on_enter(from)
 	self.credits_button = Button({
 		group = self.main_ui,
 		x = gw / 2,
-		y = gh / 2 + 34,
+		y = gh - 20,
 		force_update = true,
 		button_text = "credits",
-		fg_color = "bg10",
-		bg_color = "bg",
+		fg_color = "bg",
+		bg_color = "fg",
 		action = function()
 			self:create_credits()
 		end,
 	})
-	self.quit_button = Button({
-		group = self.main_ui,
-		x = gw / 2,
-		y = gh / 2 + 55,
-		force_update = true,
-		button_text = "quit",
-		fg_color = "bg",
-		bg_color = "red",
-		action = function(b)
-			system.save_state()
-			love.event.quit()
-		end,
-	})
-	self.inspiration_button = Button({
-		group = self.main_ui,
-		x = gw / 2,
-		y = gh - 20,
-		force_update = true,
-		button_text = "Check out the inspiration: SNKRX",
-		fg_color = "bg10",
-		bg_color = "bg",
-		action = function(b)
-			ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-			b.spring:pull(0.2, 200, 10)
-			b.selected = true
-			ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-			system.open_url("https://store.steampowered.com/app/915310/SNKRX/")
-		end,
-	})
+
+	--setup and hookup buttons for controller:
+	self.play_button1.selected = true
+	self.play_button1.button_up = self.credits_button
+	self.play_button1.button_down = self.play_button2
+
+	self.play_button2.button_up = self.play_button1
+	self.play_button2.button_down = self.play_button3
+
+	self.play_button3.button_up = self.play_button2
+	self.play_button3.button_down = self.play_button4
+
+	self.play_button4.button_up = self.play_button3
+	self.play_button4.button_down = self.options_button
+
+	self.options_button.button_up = self.play_button4
+	self.options_button.button_down = self.credits_button
+
+	self.credits_button.button_up = self.options_button
+	self.credits_button.button_down = self.play_button1
+
+	-- init bounce
+	-- self.play_button1.spring:pull(0.1, 200, 10)
+	-- self.t:after(0.5, function()
+	-- 	self.play_button2.spring:pull(0.1, 200, 10)
+	-- end)
+	-- self.t:after(1, function()
+	-- 	self.play_button3.spring:pull(0.1, 200, 10)
+	-- end)
+	-- self.t:after(1.5, function()
+	-- 	self.play_button4.spring:pull(0.1, 200, 10)
+	-- end)
+	-- self.quit_button = Button({
+	-- 	group = self.main_ui,
+	-- 	x = gw / 2,
+	-- 	y = gh / 2 + 55,
+	-- 	force_update = true,
+	-- 	button_text = "quit",
+	-- 	fg_color = "bg",
+	-- 	bg_color = "red",
+	-- 	action = function(b)
+	-- 		system.save_state()
+	-- 		love.event.quit()
+	-- 	end,
+	-- })
+	-- self.inspiration_button = Button({
+	-- 	group = self.main_ui,
+	-- 	x = gw / 2,
+	-- 	y = gh - 20,
+	-- 	force_update = true,
+	-- 	button_text = "Check out the inspiration: SNKRX",
+	-- 	fg_color = "bg10",
+	-- 	bg_color = "bg",
+	-- 	action = function(b)
+	-- 		ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	-- 		b.spring:pull(0.2, 200, 10)
+	-- 		b.selected = true
+	-- 		ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	-- 		system.open_url("https://store.steampowered.com/app/915310/SNKRX/")
+	-- 	end,
+	-- })
 	-- self.discord_button = Button({
 	-- 	group = self.main_ui,
 	-- 	x = gw - 92,
@@ -159,12 +226,39 @@ function MainMenu:on_enter(from)
 	-- })
 end
 
+function MainMenu:play(num_players)
+	ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	TransitionEffect({
+		group = main.transitions,
+		x = gw / 2,
+		y = gh / 2,
+		color = state.dark_transitions and bg[-2] or fg[0],
+		transition_action = function()
+			self.transitioning = true
+			slow_amount = 1
+			system.save_state()
+			main:add(Game("game"))
+			main:go_to("game", 1, num_players)
+		end,
+		text = Text({
+			{
+				text = "[wavy, " .. tostring(state.dark_transitions and "fg" or "bg") .. "]Feeding whales...",
+				font = pixul_font,
+				alignment = "center",
+			},
+		}, global_text_tags),
+	})
+end
+
 function MainMenu:on_exit()
 	self.floor:destroy()
 	self.main:destroy()
 	self.post_main:destroy()
 	self.effects:destroy()
 	self.ui:destroy()
+	self.options_ui:destroy()
 	self.main_ui:destroy()
 	self.t:destroy()
 	self.floor = nil
@@ -172,6 +266,7 @@ function MainMenu:on_exit()
 	self.post_main = nil
 	self.effects = nil
 	self.ui = nil
+	self.options_ui = nil
 	self.units = nil
 	self.player = nil
 	self.t = nil
@@ -189,12 +284,17 @@ function MainMenu:update(dt)
 	self:update_game_object(dt * slow_amount)
 	main_song_instance.pitch = math.clamp(slow_amount * music_slow_amount, 0.05, 1)
 
-	if input.escape.pressed and not self.transitioning and not self.in_credits then
-		if not self.paused then
-			open_options(self)
-		else
-			close_options(self)
-		end
+	if input.escape.pressed and self.in_options then
+		close_options(self)
+		self.options_button.selected = true
+	elseif input.escape.pressed and not self.transitioning and not self.in_credits and not self.paused then
+		system.save_state()
+		love.event.quit()
+		-- if not self.paused then
+		-- 	open_options(self)
+		-- else
+		-- 	close_options(self)
+		-- end
 	end
 
 	if not self.paused and not self.transitioning then
@@ -208,6 +308,7 @@ function MainMenu:update(dt)
 			self.title_text:update(dt)
 		end
 		self.ui:update(dt * slow_amount)
+		self.options_ui:update(dt * slow_amount)
 
 		if input.escape.pressed then
 			self.in_credits = false
@@ -221,6 +322,7 @@ function MainMenu:update(dt)
 		end
 	else
 		self.ui:update(dt * slow_amount)
+		self.options_ui:update(dt * slow_amount)
 	end
 
 	self.credits:update(dt)
@@ -243,10 +345,11 @@ function MainMenu:draw()
 
 	self.main_ui:draw()
 	self.title_text:draw(gw / 2, gh / 2 - 40)
-	if self.paused then
+	if self.paused or self.in_options then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 	end
 	self.ui:draw()
+	self.options_ui:draw()
 
 	if self.in_credits then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
@@ -263,38 +366,16 @@ function MainMenu:create_credits()
 		system.open_url(url)
 	end
 
-	self.close_button = Button({
-		group = self.credits,
-		x = gw - 20,
-		y = 20,
-		button_text = "x",
-		bg_color = "bg",
-		fg_color = "bg10",
-		credits_button = true,
-		action = function()
-			trigger:after(0.01, function()
-				self.in_credits = false
-				if self.credits_button then
-					self.credits_button:on_mouse_exit()
-				end
-				for _, object in ipairs(self.credits.objects) do
-					object.dead = true
-				end
-				self.credits:update(0)
-			end)
-		end,
-	})
-
 	self.in_credits = true
 	local yOffset = 20
-	Text2({ group = self.credits, x = 60, y = yOffset, lines = { { text = "[bg10]main dev: ", font = pixul_font } } })
+	Text2({ group = self.credits, x = 60, y = yOffset, lines = { { text = "[fg]dev: ", font = pixul_font } } })
 	Button({
 		group = self.credits,
 		x = 125,
 		y = yOffset,
 		button_text = "Mikey",
-		fg_color = "bg10",
-		bg_color = "bg",
+		fg_color = "bg",
+		bg_color = "fg",
 		credits_button = true,
 		action = function(b)
 			open_url(b, "https://gusakm.itch.io/")
@@ -306,15 +387,15 @@ function MainMenu:create_credits()
 		group = self.credits,
 		x = 70,
 		y = yOffset,
-		lines = { { text = "[bg10]inspiration: ", font = pixul_font } },
+		lines = { { text = "[fg]inspiration: ", font = pixul_font } },
 	})
 	Button({
 		group = self.credits,
 		x = 135,
 		y = yOffset,
 		button_text = "SNKRX",
-		fg_color = "bg10",
-		bg_color = "bg",
+		fg_color = "bg",
+		bg_color = "fg",
 		credits_button = true,
 		action = function(b)
 			open_url(b, "https://store.steampowered.com/app/915310/SNKRX/")
@@ -327,7 +408,7 @@ function MainMenu:create_credits()
 		x = 113,
 		y = yOffset,
 		button_text = "love2d",
-		fg_color = "bluem5",
+		fg_color = "bg",
 		bg_color = "blue",
 		credits_button = true,
 		action = function(b)
@@ -339,7 +420,7 @@ function MainMenu:create_credits()
 		x = 170,
 		y = yOffset,
 		button_text = "bakpakin",
-		fg_color = "bluem5",
+		fg_color = "bg",
 		bg_color = "blue",
 		credits_button = true,
 		action = function(b)
@@ -351,7 +432,7 @@ function MainMenu:create_credits()
 		x = 237,
 		y = yOffset,
 		button_text = "davisdude",
-		fg_color = "bluem5",
+		fg_color = "bg",
 		bg_color = "blue",
 		credits_button = true,
 		action = function(b)
@@ -363,7 +444,7 @@ function MainMenu:create_credits()
 		x = 306,
 		y = yOffset,
 		button_text = "tesselode",
-		fg_color = "bluem5",
+		fg_color = "bg",
 		bg_color = "blue",
 		credits_button = true,
 		action = function(b)
@@ -378,7 +459,7 @@ function MainMenu:create_credits()
 		x = 160,
 		y = yOffset,
 		button_text = "pixabay royalty-free",
-		fg_color = "greenm5",
+		fg_color = "bg",
 		bg_color = "green",
 		credits_button = true,
 		action = function(b)
@@ -393,7 +474,7 @@ function MainMenu:create_credits()
 		x = 215,
 		y = yOffset,
 		button_text = "BlueYeti Snowball + Audacity + My Mouth",
-		fg_color = "yellowm5",
+		fg_color = "bg",
 		bg_color = "yellow",
 		credits_button = true,
 	})

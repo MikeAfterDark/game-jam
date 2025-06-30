@@ -6,10 +6,19 @@ function Button:init(args)
 	self.shape =
 		Rectangle(self.x, self.y, args.w or (pixul_font:get_text_width(self.button_text) + 8), pixul_font.h + 4)
 	self.interact_with_mouse = true
+	self.selected = false
 	self.text = Text(
 		{ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } },
 		global_text_tags
 	)
+
+	if controller_mode then
+		self.t:every(0.7, function()
+			if self.selected then
+				self.spring:pull(0.1, 200, 10)
+			end
+		end)
+	end
 end
 
 function Button:update(dt)
@@ -46,6 +55,46 @@ function Button:update(dt)
 			end
 		end
 	end
+
+	if controller_mode then
+		if self.selected then
+			if
+				input.selection.pressed
+				or input.selection_up.pressed
+				or input.selection_down.pressed
+				or input.selection_left.pressed
+				or input.selection_right.pressed
+			then
+				buttonHover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+				buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+			end
+
+			if input.selection.pressed then
+				self:action()
+				self.spring:pull(0.1, 200, 10)
+			elseif input.selection_up.pressed and self.button_up then
+				self.selected = false
+				input.selection_up.pressed = false
+				self.button_up.selected = true
+				self.button_up.spring:pull(0.3, 200, 10)
+			elseif input.selection_down.pressed and self.button_down then
+				self.selected = false
+				input.selection_down.pressed = false
+				self.button_down.selected = true
+				self.button_down.spring:pull(0.3, 200, 10)
+			elseif input.selection_left.pressed and self.button_left then
+				self.selected = false
+				input.selection_left.pressed = false
+				self.button_left.selected = true
+				self.button_left.spring:pull(0.3, 200, 10)
+			elseif input.selection_right.pressed and self.button_right then
+				self.selected = false
+				input.selection_right.pressed = false
+				self.button_right.selected = true
+				self.button_right.spring:pull(0.3, 200, 10)
+			end
+		end
+	end
 end
 
 function Button:draw()
@@ -63,6 +112,32 @@ function Button:draw()
 		)
 		graphics.set_line_width(1)
 	end
+	if controller_mode then
+		if self.selected then
+			local border_size = 10
+			graphics.rectangle(
+				self.x,
+				self.y,
+				self.shape.w + border_size,
+				self.shape.h + border_size,
+				4,
+				4,
+				fg[0] -- haisudo
+			)
+
+			local border_thickness = border_size - 4
+			graphics.rectangle(
+				self.x,
+				self.y,
+				self.shape.w + border_thickness,
+				self.shape.h + border_thickness,
+				4,
+				4,
+				black[0]
+			)
+		end
+	end
+
 	graphics.rectangle(
 		self.x,
 		self.y,
@@ -70,14 +145,15 @@ function Button:draw()
 		self.shape.h,
 		4,
 		4,
-		self.selected and fg[0] or _G[self.bg_color][0]
+		--[[ self.selected and fg[0] or ]]
+		_G[self.bg_color][0]
 	)
 	self.text:draw(self.x, self.y + 1, 0, 1, 1)
 	graphics.pop()
 end
 
 function Button:on_mouse_enter()
-	if main.current.in_credits and not self.credits_button then
+	if main.current.in_credits and not self.credits_button or controller_mode then
 		return
 	end
 	buttonHover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
@@ -91,7 +167,7 @@ function Button:on_mouse_enter()
 end
 
 function Button:on_mouse_exit()
-	if main.current.in_credits and not self.credits_button then
+	if main.current.in_credits and not self.credits_button or controller_mode then
 		return
 	end
 	self.text:set_text({

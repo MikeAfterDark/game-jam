@@ -20,9 +20,11 @@ function LongBoss:init(args)
 
 	if self.leader then
 		self.pattern = "chase"
+		self.target = main.current:get_random_player()
+
 		self.rand_angle = 0
 		self.invulnerable = true
-		self.color = blue[0]
+		self.color = self.target.color
 		self.previous_positions = {}
 		self.followers = {}
 		self.t:every(0.01, function()
@@ -31,11 +33,12 @@ function LongBoss:init(args)
 				self.previous_positions[2529] = nil
 			end
 		end)
-		self.t:every(6, function()
+		self.t:every(3, function()
 			self.pattern = random:table({
 				"chase",
 				"predict",
 			})
+			self.target = main.current:get_random_player()
 			-- self.pattern = "predict"
 		end)
 	end
@@ -50,28 +53,32 @@ function LongBoss:add_follower(unit)
 end
 
 function LongBoss:update(dt)
+	-- if true then
+	-- 	return
+	-- end
+
 	self:update_game_object(dt)
 	if self.leader then
 		if main.current.start_time > 0 then
 			return
 		end
 
-		self.total_v = math.max(self:distance_to_object(main.current.player) + 20, 100)
+		self.total_v = math.max(math.min(self:distance_to_object(self.target) + 20, 140), 100)
 
 		--
 		if self.pattern == "chase" then
-			self:set_colours(blue[0], blue[5])
+			self:set_colors(blue[5])
 			local rotation_speed = 0.4
-			local target_angle = self:angle_to_object(main.current.player)
+			local target_angle = self:angle_to_object(self.target)
 			local angle_diff = (target_angle - self.r + math.pi) % (2 * math.pi) - math.pi
 			self.r = self.r + math.sign(angle_diff) * rotation_speed * math.pi * dt
 		elseif self.pattern == "predict" then
-			self:set_colours(purple[0], purple[5])
+			self:set_colors(purple[5])
 			self.rand_angle = math.max(
 				-math.pi / 2,
 				math.min(math.pi / 2, self.rand_angle + ((random:bool(50) and 1 or -1) * math.pi * dt * 1.2))
 			)
-			self.r = self:angle_to_object(main.current.player) + self.rand_angle
+			self.r = self:angle_to_object(self.target) + self.rand_angle
 		end
 
 		if not main.current:is(MainMenu) and not main.current.transitioning then
@@ -214,9 +221,9 @@ function LongBoss:get_all_units()
 	return { leader, unpack(followers) }
 end
 
-function LongBoss:set_colours(leader_color, follower_color)
+function LongBoss:set_colors(follower_color)
 	local units = self:get_all_units()
-	units[1].color = leader_color
+	units[1].color = self.target.color --leader_color
 	for i = 2, #units do
 		units[i].color = follower_color
 	end
