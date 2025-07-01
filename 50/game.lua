@@ -82,8 +82,6 @@ function Game:on_enter(from, level, num_players, player_inputs)
 		local chp = CharacterHP({ group = self.effects, x = self.x1 + 8, y = self.y2 + 14, parent = self.players[i] })
 		self.players[i].character_hp = chp
 	end
-	--temp to keep game working:
-	self.player = self.players[1]
 
 	-- Init bosses, choose one randomly (except for debugging)
 	if self.level == 1 then
@@ -168,8 +166,8 @@ function Game:on_exit()
 	self.credits = nil
 	self.passives = nil
 	self.flashes = nil
-	self.player = nil
 	self.bosses = nil
+	self.players = nil
 	self.hfx = nil
 end
 
