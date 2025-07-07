@@ -114,9 +114,10 @@ function init()
 	main:add(MainMenu("mainmenu"))
 	main:go_to("mainmenu")
 
-	-- set sane defaults:
+	-- set sane defaultsi for first time launch: (note: they get overwritten by config changes)
 	state.mouse_control = true
 	state.arrow_snake = true
+	state.tutorial = true
 
 	-- smooth_turn_speed = 0
 end

@@ -60,12 +60,12 @@ function MainMenu:on_enter(from)
 	-- 	end)
 	-- end)
 
-	local button_offset = -10
+	local y_offset = -10
 	local button_dist_apart = 26
 	self.play_button1 = Button({
 		group = self.main_ui,
 		x = gw / 2,
-		y = gh / 2 + button_offset,
+		y = gh / 2 + y_offset,
 		force_update = true,
 		button_text = "1 Player",
 		fg_color = "bg",
@@ -75,11 +75,11 @@ function MainMenu:on_enter(from)
 		end,
 	})
 
-	button_offset = button_offset + button_dist_apart
+	y_offset = y_offset + button_dist_apart
 	self.play_button2 = Button({
 		group = self.main_ui,
 		x = gw / 2,
-		y = gh / 2 + button_offset,
+		y = gh / 2 + y_offset,
 		force_update = true,
 		button_text = "2 Players",
 		fg_color = "bg",
@@ -89,11 +89,11 @@ function MainMenu:on_enter(from)
 		end,
 	})
 
-	button_offset = button_offset + button_dist_apart
+	y_offset = y_offset + button_dist_apart
 	self.play_button3 = Button({
 		group = self.main_ui,
 		x = gw / 2,
-		y = gh / 2 + button_offset,
+		y = gh / 2 + y_offset,
 		force_update = true,
 		button_text = "3 Players",
 		fg_color = "bg",
@@ -103,11 +103,11 @@ function MainMenu:on_enter(from)
 		end,
 	})
 
-	button_offset = button_offset + button_dist_apart
+	y_offset = y_offset + button_dist_apart
 	self.play_button4 = Button({
 		group = self.main_ui,
 		x = gw / 2,
-		y = gh / 2 + button_offset,
+		y = gh / 2 + y_offset,
 		force_update = true,
 		button_text = "4 Players",
 		fg_color = "bg",
@@ -117,11 +117,14 @@ function MainMenu:on_enter(from)
 		end,
 	})
 
-	button_offset = button_offset + button_dist_apart
+	y_offset = y_offset + button_dist_apart
+	local x_offset = -80
+	local x_dist_apart = 80
+
 	self.options_button = Button({
 		group = self.main_ui,
-		x = gw / 2,
-		y = gh / 2 + button_offset,
+		x = gw / 2 + x_offset,
+		y = gh / 2 + y_offset,
 		force_update = true,
 		button_text = "options",
 		fg_color = "bg",
@@ -135,10 +138,30 @@ function MainMenu:on_enter(from)
 			end
 		end,
 	})
+
+	x_offset = x_offset + x_dist_apart
+	self.tutorial_button = Button({
+		group = self.main_ui,
+		x = gw / 2 + x_offset,
+		y = gh / 2 + y_offset,
+		force_update = true,
+		button_text = "tutorial: " .. tostring(state.tutorial and "yes" or "no "),
+		fg_color = "bg",
+		bg_color = "fg",
+		action = function(b)
+			state.tutorial = not state.tutorial
+			b:set_text("tutorial: " .. tostring(state.tutorial and "yes" or "no "))
+		end,
+	})
+	self.t:after(0.01, function()
+		self.tutorial_button:set_text("tutorial: " .. tostring(state.tutorial and "yes" or "no "))
+	end)
+
+	x_offset = x_offset + x_dist_apart
 	self.credits_button = Button({
 		group = self.main_ui,
-		x = gw / 2,
-		y = gh - 20,
+		x = gw / 2 + x_offset,
+		y = gh / 2 + y_offset,
 		force_update = true,
 		button_text = "credits",
 		fg_color = "bg",
@@ -150,7 +173,7 @@ function MainMenu:on_enter(from)
 
 	--setup and hookup buttons for controller:
 	self.play_button1.selected = true
-	self.play_button1.button_up = self.credits_button
+	self.play_button1.button_up = self.tutorial_button
 	self.play_button1.button_down = self.play_button2
 
 	self.play_button2.button_up = self.play_button1
@@ -160,13 +183,22 @@ function MainMenu:on_enter(from)
 	self.play_button3.button_down = self.play_button4
 
 	self.play_button4.button_up = self.play_button3
-	self.play_button4.button_down = self.options_button
+	self.play_button4.button_down = self.tutorial_button
 
 	self.options_button.button_up = self.play_button4
-	self.options_button.button_down = self.credits_button
+	self.options_button.button_down = self.play_button1
+	self.options_button.button_left = self.credits_button
+	self.options_button.button_right = self.tutorial_button
 
-	self.credits_button.button_up = self.options_button
+	self.tutorial_button.button_up = self.play_button4
+	self.tutorial_button.button_down = self.play_button1
+	self.tutorial_button.button_left = self.options_button
+	self.tutorial_button.button_right = self.credits_button
+
+	self.credits_button.button_up = self.play_button4
 	self.credits_button.button_down = self.play_button1
+	self.credits_button.button_left = self.tutorial_button
+	self.credits_button.button_right = self.options_button
 
 	-- init bounce
 	-- self.play_button1.spring:pull(0.1, 200, 10)
@@ -239,8 +271,10 @@ function MainMenu:play(num_players)
 			self.transitioning = true
 			slow_amount = 1
 			system.save_state()
+
+			local level = state.tutorial and 0 or 1
 			main:add(Game("game"))
-			main:go_to("game", 1, num_players)
+			main:go_to("game", level, num_players)
 		end,
 		text = Text({
 			{

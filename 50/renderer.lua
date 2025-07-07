@@ -378,6 +378,18 @@ global_text_tags = {
 		end,
 	}),
 
+	tutorial = TextTag({
+		init = function(c, i, text)
+			c.color = invisible
+			text.t:after((i - 1) * 0.025, function()
+				c.color = fg[0]
+			end)
+		end,
+		draw = function(c, i, text)
+			graphics.set_color(c.color)
+		end,
+	}),
+
 	nudge_down = TextTag({
 		init = function(c, i, text)
 			c.oy = -4
@@ -587,6 +599,10 @@ function Text2:pull(...)
 	self.spring:pull(...)
 	self.r = random:table({ -math.pi / 24, math.pi / 24 })
 	self.t:tween(0.2, self, { r = 0 }, math.linear)
+end
+
+function Text2:clear()
+	self.text:set_text({ text = "", font = pixul_font })
 end
 
 --

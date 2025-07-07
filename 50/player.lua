@@ -9,6 +9,7 @@ function Player:init(args)
 	self:init_unit()
 
 	self.color = args.color or yellow[0]
+	self.color_text = args.color_text or "yellow"
 	self:set_as_rectangle(9, 9, "dynamic", "player")
 	self.visual_shape = "rectangle"
 	self.damage_dealt = 0
@@ -29,6 +30,15 @@ function Player:init(args)
 	if main.current:is(MainMenu) then
 		self.r = random:table({ -math.pi / 4, math.pi / 4, 3 * math.pi / 4, -3 * math.pi / 4 })
 		self:set_angle(self.r)
+	end
+
+	if args.tutorial then
+		self.tutorial_player_indicator_text = Text2({
+			group = main.current.tutorial_ui,
+			x = self.x,
+			y = self.y + 20,
+			lines = { { text = "[" .. self.color_text .. "]player " .. tostring(self.id), font = pixul_font } },
+		})
 	end
 end
 
@@ -164,16 +174,17 @@ function Player:update(dt)
 
 	self:set_velocity(vx, vy)
 
-	local fireDelay = { 0.1, 0.1, 0.1, 0.2, 0.5 }
+	local fireDelay = { -0.0001, 0.08, 0.08, 0.15, 0.3 }
 	self.fireDelayCounter = self.fireDelayCounter or 1
 
 	if
 		not main.current.won
+		and not main.current.died
 		and not main.current.choosing_passives
 		and not main.current.paused
 		and not main.current.transitioning
 	then
-		if self.firing ~= nil and self.firing < love.timer.getTime() - fireDelay[self.fireDelayCounter] then
+		if self.firing ~= nil and self.firing <= love.timer.getTime() - fireDelay[self.fireDelayCounter] then
 			self:shoot(self.r, {})
 			self.firing = self.firing + fireDelay[self.fireDelayCounter]
 			self.fireDelayCounter = self.fireDelayCounter < #fireDelay - 1 and self.fireDelayCounter + 1 or #fireDelay
@@ -200,6 +211,11 @@ function Player:update(dt)
 	end
 
 	self:set_angle(self.r)
+
+	if self.tutorial_player_indicator_text ~= nil then
+		self.tutorial_player_indicator_text.x = self.x
+		self.tutorial_player_indicator_text.y = self.y + 16
+	end
 end
 
 function Player:draw()

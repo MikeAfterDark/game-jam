@@ -36,6 +36,7 @@ function Game:on_enter(from, level, num_players, player_inputs)
 	self.effects = Group()
 	self.ui = Group()
 	self.options_ui = Group()
+	self.tutorial_ui = Group()
 	self.credits = Group()
 
 	self.main:disable_collision_between("player", "player")
@@ -71,20 +72,27 @@ function Game:on_enter(from, level, num_players, player_inputs)
 
 	self.players = {}
 	local player_colors = { red[0], yellow[0], green[0], yellow2[0] }
+	local player_colors_text = { "red", "yellow", "green", "yellow2" }
 	for i = 1, num_players do
 		self.players[i] = Player({
 			group = self.main,
-			x = gw / 2 + i * 20,
-			y = gh / 2 + 16,
+			x = gw / 2 + ((i - 1) - (num_players - 1) / 2) * 70,
+			y = gh / 2,
 			color = player_colors[i],
+			color_text = player_colors_text[i],
 			id = i,
+			tutorial = self.level == 0,
 		})
 		local chp = CharacterHP({ group = self.effects, x = self.x1 + 8, y = self.y2 + 14, parent = self.players[i] })
 		self.players[i].character_hp = chp
 	end
 
-	-- Init bosses, choose one randomly (except for debugging)
-	if self.level == 1 then
+	-- Init bosses
+	if self.level == 0 then -- this is tutorial level
+		self.bosses = {
+			[1] = self:new_longboss(10, true),
+		}
+	elseif self.level == 1 then
 		self.bosses = {
 			[1] = self:new_longboss(5),
 		}
@@ -138,8 +146,118 @@ function Game:on_enter(from, level, num_players, player_inputs)
 	-- 	vertices = math.to_rectangle_vertices(self.x1, self.y2, self.x2, gh + 40),
 	-- 	color = bg[-1],
 	-- })
-	--
-	--
+
+	if self.level == 0 then --in tutorial:
+		self.t:after(2, function(b)
+			if main.current.transitioning then
+				return
+			end
+			self.tutorial_controls_title_text = Text2({
+				group = self.tutorial_ui,
+				x = gw / 2,
+				y = 35,
+				force_update = true,
+				lines = {
+					{
+						text = "[wavy, cbyc2] Controls:",
+						alignment = "center",
+						font = pixul_font,
+					},
+				},
+			})
+
+			self.t:after(2, function()
+				if main.current.transitioning then
+					return
+				end
+				buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+				camera:shake(3, 0.075)
+				self.tutorial_controls_text = Text2({
+					group = self.tutorial_ui,
+					x = gw / 2,
+					y = 60,
+					force_update = true,
+					lines = {
+						{
+							text = "[red]Joystick: [wavy_mid2, tutorial]choose a direction",
+							alignment = "center",
+							font = pixul_font,
+						},
+						{
+							text = "[green]Left button: [wavy_mid, tutorial]move",
+							font = pixul_font,
+							alignment = "center",
+						},
+						{
+							text = "[orange]Right button: [wavy_lower, tutorial]shoot (tap/hold)",
+							font = pixul_font,
+							alignment = "center",
+						},
+					},
+				})
+
+				self.t:after(5, function()
+					if main.current.transitioning then
+						return
+					end
+					self.tutorial_goal_title_text = Text2({
+						group = self.tutorial_ui,
+						x = gw / 2,
+						y = gh / 2 + 40,
+						force_update = true,
+						lines = {
+							{
+								text = "[wavy, cbyc]Goal:",
+								font = pixul_font,
+								alignment = "center",
+							},
+						},
+					})
+					self.t:after(2, function()
+						if main.current.transitioning then
+							return
+						end
+						buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+						camera:shake(3, 0.075)
+						self.tutorial_goal_text1 = Text2({
+							group = self.tutorial_ui,
+							x = gw / 2,
+							y = gh / 2 + 55,
+							force_update = true,
+							lines = {
+								{
+									text = "[red]destroy [green]all the [wavy, blue5]WHALs",
+									font = pixul_font,
+									alignment = "center",
+								},
+							},
+						})
+						self.t:after(1, function()
+							if main.current.transitioning then
+								return
+							end
+							buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+							camera:shake(3, 0.075)
+							self.tutorial_goal_text2 = Text2({
+								group = self.tutorial_ui,
+								x = gw / 2,
+								y = gh / 2 + 70,
+								force_update = true,
+								lines = {
+									{
+										text = "[green]before they [red]destroy [wavy, green]YOU",
+										font = pixul_font,
+										alignment = "center",
+									},
+								},
+							})
+						end)
+					end)
+				end)
+			end)
+		end)
+	end
+
 	self.t:every(function()
 		for _, boss in ipairs(self.bosses) do
 			if not boss.dead then
@@ -158,11 +276,13 @@ function Game:on_exit()
 	self.effects:destroy()
 	self.ui:destroy()
 	self.options_ui:destroy()
+	self.tutorial_ui:destroy()
 	self.main = nil
 	self.post_main = nil
 	self.effects = nil
 	self.ui = nil
 	self.options_ui = nil
+	self.tutorial_ui = nil
 	self.credits = nil
 	self.passives = nil
 	self.flashes = nil
@@ -273,6 +393,7 @@ function Game:update(dt)
 	self.effects:update(dt * slow_amount)
 	self.ui:update(dt * slow_amount)
 	self.options_ui:update(dt * slow_amount)
+	self.tutorial_ui:update(dt * slow_amount)
 	self.credits:update(dt * slow_amount)
 end
 
@@ -284,13 +405,35 @@ function Game:quit()
 	self.quitting = true
 	if self.level < 5 then
 		if not self.arena_clear_text then
+			self.transitioning = true
+			if self.level == 0 then
+				if self.tutorial_goal_text1 then
+					self.tutorial_goal_text1:clear()
+				end
+				if self.tutorial_goal_text2 then
+					self.tutorial_goal_text2:clear()
+				end
+				if self.tutorial_controls_text then
+					self.tutorial_controls_text:clear()
+				end
+				if self.tutorial_controls_title_text then
+					self.tutorial_controls_title_text:clear()
+				end
+				if self.tutorial_goal_title_text then
+					self.tutorial_goal_title_text:clear()
+				end
+			end
+
+			local clear_text = self.level == 0 and "[wavy_mid, green] Good Luck! ;)"
+				or "[wavy_mid, fg] Level [green]" .. self.level .. "[red]/5[wavy_mid, fg] beat"
+
 			self.arena_clear_text = Text2({
 				group = self.ui,
 				x = gw / 2,
 				y = gh / 2 - 48,
 				lines = {
 					{
-						text = "[wavy_mid, fg] Level [green]" .. self.level .. "[red]/5[wavy_mid, fg] beat",
+						text = clear_text,
 						font = fat_font,
 						alignment = "center",
 					},
@@ -527,6 +670,7 @@ end
 
 function Game:draw()
 	self.floor:draw()
+	self.tutorial_ui:draw()
 	self.main:draw()
 	self.post_main:draw()
 	self.effects:draw()
@@ -728,18 +872,20 @@ function Game:die()
 	return true
 end
 
-function Game:new_longboss(length)
+function Game:new_longboss(length, is_tutorial)
 	local boss = LongBoss({
 		group = self.main,
-		x = 0,
+		x = 10,
 		y = random:int(0, gh),
 		leader = true,
 		ii = 1,
+		tutorial = is_tutorial,
 	})
 	for i = 2, length - 1 do
 		boss:add_follower(LongBoss({
 			group = self.main,
 			ii = i,
+			tutorial = is_tutorial,
 		}))
 	end
 
