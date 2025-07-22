@@ -590,6 +590,16 @@ function Text2:pull(...)
 	self.t:tween(0.2, self, { r = 0 }, math.linear)
 end
 
+function Text2:clear()
+	self:set_text({
+		{ text = "", font = pixul_font, alignment = "center" },
+	})
+end
+
+function Text2:set_text(new_text)
+	self.text:set_text(new_text)
+end
+
 --
 --
 --

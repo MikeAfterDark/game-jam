@@ -3,27 +3,15 @@ Button = Object:extend()
 Button:implement(GameObject)
 function Button:init(args)
 	self:init_game_object(args)
-	self.shape =
-		Rectangle(self.x, self.y, args.w or (pixul_font:get_text_width(self.button_text) + 8), pixul_font.h + 4)
+	self.shape = Rectangle(self.x, self.y, args.w or (pixul_font:get_text_width(self.button_text) + 8), pixul_font.h + 4)
 	self.interact_with_mouse = true
 	self.selected = false
-	self.text = Text(
-		{ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } },
-		global_text_tags
-	)
-
-	if controller_mode then
-		self.t:every(0.7, function()
-			if self.selected then
-				self.spring:pull(0.1, 200, 10)
-			end
-		end)
-	end
+	self.text = Text({ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } }, global_text_tags)
 end
 
 function Button:update(dt)
 	self:update_game_object(dt)
-	if main.current.in_credits and not self.credits_button then
+	if not on_current_ui_layer(self) then
 		return
 	end
 
@@ -55,46 +43,6 @@ function Button:update(dt)
 			end
 		end
 	end
-
-	if controller_mode then
-		if self.selected then
-			if
-				input.selection.pressed
-				or input.selection_up.pressed
-				or input.selection_down.pressed
-				or input.selection_left.pressed
-				or input.selection_right.pressed
-			then
-				buttonHover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
-				buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-			end
-
-			if input.selection.pressed then
-				self:action()
-				self.spring:pull(0.1, 200, 10)
-			elseif input.selection_up.pressed and self.button_up then
-				self.selected = false
-				input.selection_up.pressed = false
-				self.button_up.selected = true
-				self.button_up.spring:pull(0.3, 200, 10)
-			elseif input.selection_down.pressed and self.button_down then
-				self.selected = false
-				input.selection_down.pressed = false
-				self.button_down.selected = true
-				self.button_down.spring:pull(0.3, 200, 10)
-			elseif input.selection_left.pressed and self.button_left then
-				self.selected = false
-				input.selection_left.pressed = false
-				self.button_left.selected = true
-				self.button_left.spring:pull(0.3, 200, 10)
-			elseif input.selection_right.pressed and self.button_right then
-				self.selected = false
-				input.selection_right.pressed = false
-				self.button_right.selected = true
-				self.button_right.spring:pull(0.3, 200, 10)
-			end
-		end
-	end
 end
 
 function Button:draw()
@@ -112,31 +60,6 @@ function Button:draw()
 		)
 		graphics.set_line_width(1)
 	end
-	if controller_mode then
-		if self.selected then
-			local border_size = 10
-			graphics.rectangle(
-				self.x,
-				self.y,
-				self.shape.w + border_size,
-				self.shape.h + border_size,
-				4,
-				4,
-				fg[0] -- haisudo
-			)
-
-			local border_thickness = border_size - 4
-			graphics.rectangle(
-				self.x,
-				self.y,
-				self.shape.w + border_thickness,
-				self.shape.h + border_thickness,
-				4,
-				4,
-				black[0]
-			)
-		end
-	end
 
 	graphics.rectangle(
 		self.x,
@@ -153,13 +76,19 @@ function Button:draw()
 end
 
 function Button:on_mouse_enter()
-	if main.current.in_credits and not self.credits_button or controller_mode then
+	if not on_current_ui_layer(self) then
 		return
 	end
 	buttonHover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 	buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	self.selected = true
-	self.text:set_text({ { text = "[fgm10]" .. self.button_text, font = pixul_font, alignment = "center" } })
+	self.text:set_text({
+		{
+			text = "[fgm10]" .. self.button_text,
+			font = pixul_font,
+			alignment = "center",
+		},
+	})
 	self.spring:pull(0.2, 200, 10)
 	if self.mouse_enter then
 		self:mouse_enter()
@@ -167,9 +96,10 @@ function Button:on_mouse_enter()
 end
 
 function Button:on_mouse_exit()
-	if main.current.in_credits and not self.credits_button or controller_mode then
-		return
-	end
+	-- if not on_current_ui_layer(self) then
+	-- 	return
+	-- end
+
 	self.text:set_text({
 		{ text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" },
 	})
@@ -191,24 +121,21 @@ end
 --
 --
 --
--- Image Button
-ImageButton = Object:extend()
-ImageButton:implement(GameObject)
-function ImageButton:init(args)
+-- Input button
+InputButton = Object:extend()
+InputButton:implement(GameObject)
+function InputButton:init(args)
 	self:init_game_object(args)
-	self.shape =
-		Rectangle(self.x, self.y, args.w or (pixul_font:get_text_width(self.button_text) + 8), pixul_font.h + 4)
+	self.shape = Rectangle(self.x, self.y, args.w or (pixul_font:get_text_width(self.button_text) + 8), pixul_font.h + 4)
 	self.interact_with_mouse = true
-	self.image = Image(args.img_name) -- TODO: IMPLEMENT THIS AND SETUP LEVEL SELECT
-	self.text = Text(
-		{ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } },
-		global_text_tags
-	)
+	self.selected = false
+	self.action_text = Text({ { text = "[" .. self.fg_color .. "]" .. self.description_text, font = pixul_font, alignment = "center" } }, global_text_tags)
+	self.input_text = Text({ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } }, global_text_tags)
 end
 
-function ImageButton:update(dt)
+function InputButton:update(dt)
 	self:update_game_object(dt)
-	if main.current.in_credits and not self.credits_button then
+	if not on_current_ui_layer(self) then
 		return
 	end
 
@@ -242,7 +169,7 @@ function ImageButton:update(dt)
 	end
 end
 
-function ImageButton:draw()
+function InputButton:draw()
 	graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
 	if self.hold_button and self.press_time then
 		graphics.set_line_width(5)
@@ -257,38 +184,54 @@ function ImageButton:draw()
 		)
 		graphics.set_line_width(1)
 	end
-	graphics.rectangle(
-		self.x,
-		self.y,
-		self.shape.w,
-		self.shape.h,
-		4,
-		4,
-		self.selected and fg[0] or _G[self.bg_color][0]
-	)
-	self.text:draw(self.x, self.y + 1, 0, 1, 1)
+
+	-- graphics.rectangle(
+	-- 	self.x,
+	-- 	self.y,
+	-- 	self.shape.w,
+	-- 	self.shape.h,
+	-- 	4,
+	-- 	4,
+	-- 	--[[ self.selected and fg[0] or ]]
+	-- 	_G["white"][0]
+	-- )
+
+	local text_distance_apart = self.shape.w / 3
+	self.action_text:draw(self.x - text_distance_apart, self.y + 0, 0, 1, 1)
+	self.input_text:draw(self.x + text_distance_apart, self.y + 0, 0, 1, 1)
 	graphics.pop()
+
+	local halfway = self.separator_length
+	local separator_height = self.y + 8
+	graphics.dashed_line(self.x - halfway, separator_height, self.x + halfway, separator_height, 4, 1, _G[self.bg_color][0], 1)
 end
 
-function ImageButton:on_mouse_enter()
-	if main.current.in_credits and not self.credits_button then
+function InputButton:on_mouse_enter()
+	if not on_current_ui_layer(self) then
 		return
 	end
 	buttonHover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 	buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	self.selected = true
-	self.text:set_text({ { text = "[fgm5]" .. self.button_text, font = pixul_font, alignment = "center" } })
+	self.input_text:set_text({
+		{
+			text = "[fgm10]" .. self.button_text,
+			font = pixul_font,
+			alignment = "center",
+		},
+	})
 	self.spring:pull(0.2, 200, 10)
 	if self.mouse_enter then
 		self:mouse_enter()
 	end
 end
 
-function ImageButton:on_mouse_exit()
-	if main.current.in_credits and not self.credits_button then
-		return
-	end
-	self.text:set_text({
+function InputButton:on_mouse_exit()
+	-- if not on_current_ui_layer(self) then
+	-- 	return
+	-- end
+
+	self.input_text:set_text({
 		{ text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" },
 	})
 	self.selected = false
@@ -297,9 +240,9 @@ function ImageButton:on_mouse_exit()
 	end
 end
 
-function ImageButton:set_text(text)
+function InputButton:set_text(text)
 	self.button_text = text
-	self.text:set_text({
+	self.input_text:set_text({
 		{ text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" },
 	})
 	self.spring:pull(0.2, 200, 10)

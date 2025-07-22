@@ -16,6 +16,14 @@ function Game:on_enter(from, args) -- level, num_players, player_inputs)
 			self.start_time = self.start_time - 1
 		end
 	end)
+
+	-- self.ui_layer_stack = Stack:new()
+	main.ui_layer_stack:push({
+		layer = ui_interaction_layer.Main,
+		-- music = self.game_song_instance,
+		layer_has_music = false,
+		ui_elements = self.game_ui_elements,
+	})
 	camera.x, camera.y = gw / 2, gh / 2
 	camera.r = 0
 
@@ -23,7 +31,7 @@ function Game:on_enter(from, args) -- level, num_players, player_inputs)
 		input:set_mouse_visible(false)
 	end
 
-	trigger:tween(2, main_song_instance, { volume = 0.5, pitch = 1 }, math.linear)
+	-- trigger:tween(2, main_song_instance, { volume = 0.5, pitch = 1 }, math.linear)
 
 	self.floor = Group()
 	self.main = Group():set_as_physics_world(
@@ -35,7 +43,9 @@ function Game:on_enter(from, args) -- level, num_players, player_inputs)
 	self.post_main = Group()
 	self.effects = Group()
 	self.ui = Group()
+	self.paused_ui = Group()
 	self.options_ui = Group()
+	self.keybinding_ui = Group()
 	self.credits = Group()
 
 	self.main:disable_collision_between("player", "player")
@@ -51,9 +61,6 @@ function Game:on_enter(from, args) -- level, num_players, player_inputs)
 	self.main:disable_collision_between("boss", "boss")
 	self.main:enable_trigger_between("projectile", "boss")
 
-	-- self.main:disable_collision_between("player", "force_field")
-	-- self.main:disable_collision_between("projectile", "force_field")
-
 	self.main:enable_trigger_between("projectile", "boss")
 	self.main:enable_trigger_between("boss_projectile", "player")
 	self.main:enable_trigger_between("player", "boss_projectile")
@@ -63,8 +70,6 @@ function Game:on_enter(from, args) -- level, num_players, player_inputs)
 	self.main_slow_amount = 1
 
 	-- Spawn solids and player
-	-- self.x1, self.y1 = gw / 2 - 0.8 * gw / 2, gh / 2 - 0.8 * gh / 2
-	-- self.x2, self.y2 = gw / 2 + 0.8 * gw / 2, gh / 2 + 0.8 * gh / 2
 	self.x1, self.y1 = 0, 0
 	self.x2, self.y2 = gw, gh
 	self.w, self.h = self.x2 - self.x1, self.y2 - self.y1
@@ -113,11 +118,7 @@ function Game:on_enter(from, args) -- level, num_players, player_inputs)
 	Wall({ group = self.main, vertices = math.to_rectangle_vertices(-40, -40, self.x1, gh + 40), color = bg[-1] })
 	Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x2, -40, gw + 40, gh + 40), color = bg[-1] })
 	Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x1, -40, self.x2, self.y1), color = bg[-1] })
-	Wall({
-		group = self.main,
-		vertices = math.to_rectangle_vertices(self.x1, self.y2, self.x2, gh + 40),
-		color = bg[-1],
-	})
+	Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x1, self.y2, self.x2, gh + 40), color = bg[-1] })
 	-- WallCover({
 	-- 	group = self.post_main,
 	-- 	vertices = math.to_rectangle_vertices(-40, -40, self.x1, gh + 40),
@@ -157,12 +158,16 @@ function Game:on_exit()
 	self.post_main:destroy()
 	self.effects:destroy()
 	self.ui:destroy()
+	self.paused_ui:destroy()
 	self.options_ui:destroy()
+	self.keybinding_ui:destroy()
 	self.main = nil
 	self.post_main = nil
 	self.effects = nil
 	self.ui = nil
+	self.paused_ui = nil
 	self.options_ui = nil
+	self.keybinding_ui = nil
 	self.credits = nil
 	self.passives = nil
 	self.flashes = nil
@@ -172,7 +177,7 @@ function Game:on_exit()
 end
 
 function Game:update(dt)
-	play_music(0.3)
+	play_music({ volume = 0.3 })
 
 	if not self.paused and not self.stuck and not self.won then
 		run_time = run_time + dt
@@ -186,8 +191,11 @@ function Game:update(dt)
 		if not self.paused and not self.died and not self.won then
 			pause_game(self)
 		elseif self.in_options and not self.died and not self.won then
-			close_options(self)
-			self.options_button.selected = true
+			if self.in_keybinding then
+				close_keybinding(self)
+			else
+				close_options(self)
+			end
 		else
 			self.transitioning = true
 			ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
@@ -251,7 +259,7 @@ function Game:update(dt)
 	end
 
 	self:update_game_object(dt * slow_amount)
-	main_song_instance.pitch = math.clamp(slow_amount * music_slow_amount, 0.05, 1)
+	-- main_song_instance.pitch = math.clamp(slow_amount * music_slow_amount, 0.05, 1) -- TODO: decide on this, try without slow_amount to see if play_music works
 
 	star_group:update(dt * slow_amount)
 	self.floor:update(dt * slow_amount)
@@ -259,8 +267,42 @@ function Game:update(dt)
 	self.post_main:update(dt * slow_amount)
 	self.effects:update(dt * slow_amount)
 	self.ui:update(dt * slow_amount)
+	self.paused_ui:update(dt * slow_amount)
 	self.options_ui:update(dt * slow_amount)
+
+	if self.in_keybinding then
+		update_keybind_button_display(self)
+	end
+	self.keybinding_ui:update(dt * slow_amount)
 	self.credits:update(dt * slow_amount)
+
+	-- if input.m2.pressed then
+	-- 	if not self.counter then
+	-- 		self.counter = 1
+	-- 	end
+	-- 	if not self.debug then
+	-- 		self.debug = Text2({
+	-- 			group = self.ui,
+	-- 			x = 100,
+	-- 			y = 20,
+	-- 			force_update = true,
+	-- 			lines = {
+	-- 				{
+	-- 					-- text = tostring(main.current_music_type),
+	-- 					text = tostring(main.debug),
+	-- 					-- text = tostring(self.counter),
+	-- 					font = pixul_font,
+	-- 					alignment = "center",
+	-- 				},
+	-- 			},
+	-- 		})
+	-- 	end
+	-- end
+	-- if input.m3.pressed and self.debug then
+	-- 	self.debug:clear()
+	-- 	self.debug = nil
+	-- 	-- self.counter = self.counter + 1
+	-- end
 end
 
 function Game:quit()
@@ -300,20 +342,11 @@ function Game:quit()
 			music_slow_amount = 1
 			locked_state = nil
 			local next_level = self.level + 1 -- new var for clarity
-			scene_transition(
-				self,
-				gw / 2,
-				gh / 2,
-				Game("game"),
-				{ destination = "game", args = { level = next_level, num_players = #self.players } },
-				{
-					text = " level " .. ((self.level + 1) == 5 and "[red]" .. (self.level + 1) or tostring(
-						self.level + 1
-					)) .. "[red]/5",
-					font = pixul_font,
-					alignment = "center",
-				}
-			)
+			scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = next_level, num_players = #self.players } }, {
+				text = " level " .. ((self.level + 1) == 5 and "[red]" .. (self.level + 1) or tostring(self.level + 1)) .. "[red]/5",
+				font = pixul_font,
+				alignment = "center",
+			})
 		end)
 	elseif not self.win_text and not self.win_text2 then
 		input:set_mouse_visible(true)
@@ -369,7 +402,9 @@ function Game:quit()
 					self:create_credits()
 				end,
 			})
-			self.credits_button.selected = true
+			if controller_mode then
+				self.credits_button.selected = true
+			end
 		end)
 
 		self.t:after(2, function()
@@ -523,18 +558,7 @@ function Game:draw()
 	camera:attach()
 	if self.start_time and self.start_time > 0 and not self.choosing_passives then
 		graphics.push(gw / 2, gh / 2 - 48, 0, self.hfx.condition1.x, self.hfx.condition1.x)
-		graphics.print_centered(
-			tostring(self.start_time),
-			fat_font,
-			gw / 2,
-			gh / 2 - 48,
-			0,
-			1,
-			1,
-			nil,
-			nil,
-			self.hfx.condition1.f and fg[0] or red[0]
-		)
+		graphics.print_centered(tostring(self.start_time), fat_font, gw / 2, gh / 2 - 48, 0, 1, 1, nil, nil, self.hfx.condition1.f and fg[0] or red[0])
 		graphics.pop()
 	end
 
@@ -574,18 +598,7 @@ function Game:draw()
 	-- end
 
 	if state.run_timer then
-		graphics.print_centered(
-			math.round(run_time, 0),
-			fat_font,
-			self.x2 - 12,
-			self.y2 + 16,
-			0,
-			0.6,
-			0.6,
-			nil,
-			nil,
-			fg[0]
-		)
+		graphics.print_centered(math.round(run_time, 0), fat_font, self.x2 - 12, self.y2 + 16, 0, 0.6, 0.6, nil, nil, fg[0])
 	end
 	camera:detach()
 
@@ -595,6 +608,7 @@ function Game:draw()
 	if self.choosing_passives or self.won or self.paused or self.died then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 	end
+
 	if self.paused then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 	end
@@ -604,10 +618,20 @@ function Game:draw()
 		self.shop_text:draw(gw - 40, gh - 17)
 	end
 
-	if self.in_options then
+	if self.paused then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 	end
+	self.paused_ui:draw()
+
+	if self.in_options then
+		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent_2)
+	end
 	self.options_ui:draw()
+
+	if self.in_keybinding then
+		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
+	end
+	self.keybinding_ui:draw()
 
 	if self.in_credits then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent_2)
@@ -681,10 +705,7 @@ function Game:die()
 							Game("game"),
 							{ destination = "game", args = { level = self.level, num_players = #self.players } },
 							{
-								text = "level "
-									.. (main.current.level == 5 and "[red]" or "")
-									.. main.current.level
-									.. "[red]/5",
+								text = "level " .. (main.current.level == 5 and "[red]" or "") .. main.current.level .. "[red]/5",
 								font = pixul_font,
 								alignment = "center",
 							}
@@ -692,7 +713,9 @@ function Game:die()
 					end
 				end,
 			})
-			self.died_restart_button.selected = true
+			if controller_mode then
+				self.died_restart_button.selected = true
+			end
 		end)
 		trigger:tween(2, camera, { x = gw / 2, y = gh / 2, r = 0 }, math.linear, function()
 			camera.x, camera.y, camera.r = gw / 2, gh / 2, 0
@@ -718,8 +741,12 @@ function Game:new_longboss(length)
 
 	local units = boss:get_all_units()
 	for _, unit in ipairs(units) do
-		local chp =
-			CharacterHP({ group = self.effects, x = self.x1 + 8 + (unit.ii - 1) * 22, y = self.y2 + 14, parent = unit })
+		local chp = CharacterHP({
+			group = self.effects,
+			x = self.x1 + 8 + (unit.ii - 1) * 22,
+			y = self.y2 + 14,
+			parent = unit,
+		})
 		unit.character_hp = chp
 	end
 	return boss
@@ -769,16 +796,7 @@ end
 
 function CharacterHP:draw()
 	graphics.push(self.x, self.y, 0, self.hfx.hit.x, self.hfx.hit.x)
-	graphics.rectangle(
-		self.x,
-		self.y - 2,
-		14,
-		4,
-		2,
-		2,
-		self.parent.dead and bg[5] or (self.hfx.hit.f and fg[0] or self.parent.color[-2]),
-		2
-	)
+	graphics.rectangle(self.x, self.y - 2, 14, 4, 2, 2, self.parent.dead and bg[5] or (self.hfx.hit.f and fg[0] or self.parent.color[-2]), 2)
 	if self.parent.hp > 0 then
 		graphics.rectangle2(
 			self.x - 7,
@@ -791,35 +809,21 @@ function CharacterHP:draw()
 		)
 	end
 	if not self.parent.dead then
-		graphics.line(
-			self.x - 8,
-			self.y + 5,
-			self.x - 8 + 15.5 * self.cooldown_ratio,
-			self.y + 5,
-			self.hfx.hit.f and fg[0] or self.parent.color[-2],
-			2
-		)
+		graphics.line(self.x - 8, self.y + 5, self.x - 8 + 15.5 * self.cooldown_ratio, self.y + 5, self.hfx.hit.f and fg[0] or self.parent.color[-2], 2)
 	end
 	graphics.pop()
 
 	if state.cooldown_snake then
 		if table.any(non_cooldown_characters, function(v)
-				return v == self.parent.character
-			end) then
+			return v == self.parent.character
+		end) then
 			return
 		end
 		local p = self.parent
 		graphics.push(p.x, p.y, 0, self.hfx.hit.x, self.hfx.hit.y)
 		if not p.dead then
 			graphics.line(p.x - 4, p.y + 8, p.x - 4 + 8, p.y + 8, self.hfx.hit.f and fg[0] or bg[-2], 2)
-			graphics.line(
-				p.x - 4,
-				p.y + 8,
-				p.x - 4 + 8 * self.cooldown_ratio,
-				p.y + 8,
-				self.hfx.hit.f and fg[0] or self.parent.color[-2],
-				2
-			)
+			graphics.line(p.x - 4, p.y + 8, p.x - 4 + 8 * self.cooldown_ratio, p.y + 8, self.hfx.hit.f and fg[0] or self.parent.color[-2], 2)
 		end
 		graphics.pop()
 	end

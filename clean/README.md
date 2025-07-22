@@ -1,31 +1,38 @@
 # Requirements:
 
-- Web build
-[ WIP ] Figure out how UI's should work
+[X] Figure out how UI's should work
     [X] TransitioningEffect - cleaned up into `function scene_transition(...)`
-    [ ] options buttons, layout stuffs, ties into OPTIONS REVAMP
-- Figure out background, colours, images, noise, anything
-- Options revamp:
-    - SFX, Music
-    - Fullscreen/Windowed
+    [X] options buttons, layout stuffs, ties into OPTIONS REVAMP
+    [X] UI interaction layers
+        [X] Looping music on layers
+[X] Options revamp:
+    [X] SFX, Music
+    [X] Fullscreen/Windowed
     - Brightness?
     - Resolution multiplier? (factors of the pixel resolution, resizing = false, keeps pixels square)
-    - Vsync
-    - Controls
+    [X] Vsync
+    [X] Controls
         - Kb-Mouse Keybinds
-        - make sure to leave a way to have controller/whatever options
-    - Game Options
+        - make sure to leave a way to have controller/whatever options in teh future
+    [X] Game Options
         - Game specifics
+[ ] Web build
+[ ] Figure out background, colours, text, images, noise, anything
 
+# Sources:
 
+### Music:
 
-[X] shooting feels inconsistennt 
-    - firing on button press and not waiting 0.1s before first shot
-[X] tutorial/Controls explained
-    - Tutorial button in main menu, `state.tutorial`
-    - level 0 is tutorial level
-    - snake is slower in level 0
-    - tutorial text ui
-[X] Misc:
-    - stop pausing during transition
-    - player id ui to tutorial ui layer
+// Main Music
+
+https://pixabay.com/music/video-games-8-bit-gaming-background-music-358443
+https://pixabay.com/music/edm003-retro-edm-gamepixel-racer-358045/
+https://pixabay.com/music/synthwave-neon-rush-retro-synthwave-uplifting-daily-vlog-fast-cuts-sv201-360195/
+https://pixabay.com/music/video-games-pixel-fantasia-355123/
+https://pixabay.com/music/video-games-pixel-fight-8-bit-arcade-music-background-music-for-video-208775/
+
+// Pause Music
+
+https://pixabay.com/music/upbeat-for-elevator-jazz-music-124005/
+https://pixabay.com/music/smooth-jazz-glass-of-wine-143532/
+https://pixabay.com/music/smooth-jazz-jazzy-slow-background-music-244598/
