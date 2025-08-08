@@ -1,7 +1,11 @@
 #!/bin/bash
 
-# butler push ../build/lovejs gusakm/jamegam50:web
-butler push ../build/win32 gusakm/jamegam50:win32-winnitron
-butler push ../build/win64 gusakm/jamegam50:win64-winnitron
-butler push ../build/macos gusakm/jamegam50:macos-winnitron
-butler push ../build/appimage gusakm/jamegam50:linux-winnitron
+name="gusakm"
+project="gmtk2025"
+type=""
+
+butler push ../build/lovejs ${name}/${project}:web${type}
+butler push ../build/win32 ${name}/${project}:win32${type}
+butler push ../build/win64 ${name}/${project}:win64${type}
+butler push ../build/macos ${name}/${project}:macos${type}
+butler push ../build/appimage ${name}/${project}:linux${type}

@@ -6,16 +6,24 @@ function Game:init(name)
 	self:init_game_object()
 end
 
-function Game:on_enter(from, level, num_players, player_inputs)
+function Game:on_enter(from, args) -- level, num_players, player_inputs)
 	self.hfx:add("condition1", 1)
 	self.hfx:add("condition2", 1)
-	self.level = level or 1
+	self.level = args.level or 1
 	self.start_time = 4
 	self.t:every(1, function()
 		if self.start_time > -1 then
 			self.start_time = self.start_time - 1
 		end
 	end)
+
+	-- self.ui_layer_stack = Stack:new()
+	main.ui_layer_stack:push({
+		layer = ui_interaction_layer.Main,
+		-- music = self.game_song_instance,
+		layer_has_music = false,
+		ui_elements = self.game_ui_elements,
+	})
 	camera.x, camera.y = gw / 2, gh / 2
 	camera.r = 0
 
@@ -23,7 +31,7 @@ function Game:on_enter(from, level, num_players, player_inputs)
 		input:set_mouse_visible(false)
 	end
 
-	trigger:tween(2, main_song_instance, { volume = 0.5, pitch = 1 }, math.linear)
+	-- trigger:tween(2, main_song_instance, { volume = 0.5, pitch = 1 }, math.linear)
 
 	self.floor = Group()
 	self.main = Group():set_as_physics_world(
@@ -34,10 +42,11 @@ function Game:on_enter(from, level, num_players, player_inputs)
 	)
 	self.post_main = Group()
 	self.effects = Group()
-	self.ui = Group()
-	self.options_ui = Group()
-	self.tutorial_ui = Group()
-	self.credits = Group()
+	self.ui = Group():no_camera()
+	self.paused_ui = Group():no_camera()
+	self.options_ui = Group():no_camera()
+	self.keybinding_ui = Group():no_camera()
+	self.credits = Group():no_camera()
 
 	self.main:disable_collision_between("player", "player")
 	self.main:disable_collision_between("player", "projectile")
@@ -52,9 +61,6 @@ function Game:on_enter(from, level, num_players, player_inputs)
 	self.main:disable_collision_between("boss", "boss")
 	self.main:enable_trigger_between("projectile", "boss")
 
-	-- self.main:disable_collision_between("player", "force_field")
-	-- self.main:disable_collision_between("projectile", "force_field")
-
 	self.main:enable_trigger_between("projectile", "boss")
 	self.main:enable_trigger_between("boss_projectile", "player")
 	self.main:enable_trigger_between("player", "boss_projectile")
@@ -64,35 +70,26 @@ function Game:on_enter(from, level, num_players, player_inputs)
 	self.main_slow_amount = 1
 
 	-- Spawn solids and player
-	-- self.x1, self.y1 = gw / 2 - 0.8 * gw / 2, gh / 2 - 0.8 * gh / 2
-	-- self.x2, self.y2 = gw / 2 + 0.8 * gw / 2, gh / 2 + 0.8 * gh / 2
 	self.x1, self.y1 = 0, 0
 	self.x2, self.y2 = gw, gh
 	self.w, self.h = self.x2 - self.x1, self.y2 - self.y1
 
 	self.players = {}
 	local player_colors = { red[0], yellow[0], green[0], yellow2[0] }
-	local player_colors_text = { "red", "yellow", "green", "yellow2" }
-	for i = 1, num_players do
+	for i = 1, args.num_players do
 		self.players[i] = Player({
 			group = self.main,
-			x = gw / 2 + ((i - 1) - (num_players - 1) / 2) * 70,
-			y = gh / 2,
+			x = gw / 2 + i * 20,
+			y = gh / 2 + 16,
 			color = player_colors[i],
-			color_text = player_colors_text[i],
 			id = i,
-			tutorial = self.level == 0,
 		})
 		local chp = CharacterHP({ group = self.effects, x = self.x1 + 8, y = self.y2 + 14, parent = self.players[i] })
 		self.players[i].character_hp = chp
 	end
 
-	-- Init bosses
-	if self.level == 0 then -- this is tutorial level
-		self.bosses = {
-			[1] = self:new_longboss(10, true),
-		}
-	elseif self.level == 1 then
+	-- Init bosses, choose one randomly (except for debugging)
+	if self.level == 1 then
 		self.bosses = {
 			[1] = self:new_longboss(5),
 		}
@@ -118,14 +115,11 @@ function Game:on_enter(from, level, num_players, player_inputs)
 		}
 	end
 
-	Wall({ group = self.main, vertices = math.to_rectangle_vertices(-40, -40, self.x1, gh + 40), color = bg[-1] })
-	Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x2, -40, gw + 40, gh + 40), color = bg[-1] })
-	Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x1, -40, self.x2, self.y1), color = bg[-1] })
-	Wall({
-		group = self.main,
-		vertices = math.to_rectangle_vertices(self.x1, self.y2, self.x2, gh + 40),
-		color = bg[-1],
-	})
+	-- Wall({ group = self.main, vertices = math.to_rectangle_vertices(-40, -40, self.x1, gh + 40), color = bg[-1] })
+	-- Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x2, -40, gw + 40, gh + 40), color = bg[-1] })
+	-- Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x1, -40, self.x2, self.y1), color = bg[-1] })
+	-- Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x1, self.y2, self.x2, gh + 40), color = bg[-1] })
+
 	-- WallCover({
 	-- 	group = self.post_main,
 	-- 	vertices = math.to_rectangle_vertices(-40, -40, self.x1, gh + 40),
@@ -146,118 +140,8 @@ function Game:on_enter(from, level, num_players, player_inputs)
 	-- 	vertices = math.to_rectangle_vertices(self.x1, self.y2, self.x2, gh + 40),
 	-- 	color = bg[-1],
 	-- })
-
-	if self.level == 0 then --in tutorial:
-		self.t:after(2, function(b)
-			if main.current.transitioning then
-				return
-			end
-			self.tutorial_controls_title_text = Text2({
-				group = self.tutorial_ui,
-				x = gw / 2,
-				y = 35,
-				force_update = true,
-				lines = {
-					{
-						text = "[wavy, cbyc2] Controls:",
-						alignment = "center",
-						font = pixul_font,
-					},
-				},
-			})
-
-			self.t:after(2, function()
-				if main.current.transitioning then
-					return
-				end
-				buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
-				camera:shake(3, 0.075)
-				self.tutorial_controls_text = Text2({
-					group = self.tutorial_ui,
-					x = gw / 2,
-					y = 60,
-					force_update = true,
-					lines = {
-						{
-							text = "[red]Joystick: [wavy_mid2, tutorial]choose a direction",
-							alignment = "center",
-							font = pixul_font,
-						},
-						{
-							text = "[green]Left button: [wavy_mid, tutorial]move",
-							font = pixul_font,
-							alignment = "center",
-						},
-						{
-							text = "[orange]Right button: [wavy_lower, tutorial]shoot (tap/hold)",
-							font = pixul_font,
-							alignment = "center",
-						},
-					},
-				})
-
-				self.t:after(5, function()
-					if main.current.transitioning then
-						return
-					end
-					self.tutorial_goal_title_text = Text2({
-						group = self.tutorial_ui,
-						x = gw / 2,
-						y = gh / 2 + 40,
-						force_update = true,
-						lines = {
-							{
-								text = "[wavy, cbyc]Goal:",
-								font = pixul_font,
-								alignment = "center",
-							},
-						},
-					})
-					self.t:after(2, function()
-						if main.current.transitioning then
-							return
-						end
-						buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
-						camera:shake(3, 0.075)
-						self.tutorial_goal_text1 = Text2({
-							group = self.tutorial_ui,
-							x = gw / 2,
-							y = gh / 2 + 55,
-							force_update = true,
-							lines = {
-								{
-									text = "[red]destroy [green]all the [wavy, blue5]WHALs",
-									font = pixul_font,
-									alignment = "center",
-								},
-							},
-						})
-						self.t:after(1, function()
-							if main.current.transitioning then
-								return
-							end
-							buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
-							camera:shake(3, 0.075)
-							self.tutorial_goal_text2 = Text2({
-								group = self.tutorial_ui,
-								x = gw / 2,
-								y = gh / 2 + 70,
-								force_update = true,
-								lines = {
-									{
-										text = "[green]before they [red]destroy [wavy, green]YOU",
-										font = pixul_font,
-										alignment = "center",
-									},
-								},
-							})
-						end)
-					end)
-				end)
-			end)
-		end)
-	end
-
+	--
+	--
 	self.t:every(function()
 		for _, boss in ipairs(self.bosses) do
 			if not boss.dead then
@@ -275,14 +159,16 @@ function Game:on_exit()
 	self.post_main:destroy()
 	self.effects:destroy()
 	self.ui:destroy()
+	self.paused_ui:destroy()
 	self.options_ui:destroy()
-	self.tutorial_ui:destroy()
+	self.keybinding_ui:destroy()
 	self.main = nil
 	self.post_main = nil
 	self.effects = nil
 	self.ui = nil
+	self.paused_ui = nil
 	self.options_ui = nil
-	self.tutorial_ui = nil
+	self.keybinding_ui = nil
 	self.credits = nil
 	self.passives = nil
 	self.flashes = nil
@@ -292,9 +178,7 @@ function Game:on_exit()
 end
 
 function Game:update(dt)
-	if main_song_instance:isStopped() then
-		main_song_instance = _G[random:table({ "song1", "song2", "song3", "song4", "song5" })]:play({ volume = 0.3 })
-	end
+	play_music({ volume = 0.3 })
 
 	if not self.paused and not self.stuck and not self.won then
 		run_time = run_time + dt
@@ -308,69 +192,27 @@ function Game:update(dt)
 		if not self.paused and not self.died and not self.won then
 			pause_game(self)
 		elseif self.in_options and not self.died and not self.won then
-			close_options(self)
-			self.options_button.selected = true
+			if self.in_keybinding then
+				close_keybinding(self)
+			else
+				close_options(self)
+			end
 		else
 			self.transitioning = true
 			ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 			ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 			ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-			TransitionEffect({
-				group = main.transitions,
-				x = gw / 2,
-				y = gh / 2,
-				color = state.dark_transitions and bg[-2] or fg[0],
-				transition_action = function()
-					main:add(MainMenu("main_menu"))
-					main:go_to("main_menu")
-				end,
-				text = Text({
-					{
-						text = "[wavy, " .. tostring(state.dark_transitions and "fg" or "bg") .. "] SPAAAAAAAACE",
-						font = pixul_font,
-						alignment = "center",
-					},
-				}, global_text_tags),
+
+			scene_transition(self, gw / 2, gh / 2, MainMenu("main_menu"), { destination = "main_menu", args = {} }, {
+				text = "SPAAAAAAAACE",
+				font = pixul_font,
+				alignment = "center",
 			})
 			return
 		end
 	end
 
 	if not self.transitioning then
-		-- if input.r.pressed then
-		-- 	self.transitioning = true
-		-- 	ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-		-- 	ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-		-- 	ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-		-- 	TransitionEffect({
-		-- 		group = main.transitions,
-		-- 		x = gw / 2,
-		-- 		y = gh / 2,
-		-- 		color = state.dark_transitions and bg[-2] or fg[0],
-		-- 		transition_action = function()
-		-- 			slow_amount = 1
-		-- 			music_slow_amount = 1
-		-- 			-- main_song_instance:stop()
-		-- 			locked_state = nil
-		-- 			system.save_run()
-		-- 			main:add(Game("game"))
-		-- 			main:go_to("game", self.level, #self.players)
-		-- 		end,
-		-- 		text = Text({
-		-- 			{
-		-- 				text = "[wavy, "
-		-- 					.. tostring(state.dark_transitions and "fg" or "bg")
-		-- 					.. "] level "
-		-- 					.. (main.current.level == 5 and "[red]" or "")
-		-- 					.. main.current.level
-		-- 					.. "[red]/5",
-		-- 				font = pixul_font,
-		-- 				alignment = "center",
-		-- 			},
-		-- 		}, global_text_tags),
-		-- 	})
-		-- end
-
 		if input.escape.pressed then
 			self.in_credits = false
 			if self.credits_button then
@@ -384,7 +226,7 @@ function Game:update(dt)
 	end
 
 	self:update_game_object(dt * slow_amount)
-	main_song_instance.pitch = math.clamp(slow_amount * music_slow_amount, 0.05, 1)
+	-- main_song_instance.pitch = math.clamp(slow_amount * music_slow_amount, 0.05, 1) -- TODO: decide on this, try without slow_amount to see if play_music works
 
 	star_group:update(dt * slow_amount)
 	self.floor:update(dt * slow_amount)
@@ -392,9 +234,42 @@ function Game:update(dt)
 	self.post_main:update(dt * slow_amount)
 	self.effects:update(dt * slow_amount)
 	self.ui:update(dt * slow_amount)
+	self.paused_ui:update(dt * slow_amount)
 	self.options_ui:update(dt * slow_amount)
-	self.tutorial_ui:update(dt * slow_amount)
+
+	if self.in_keybinding then
+		update_keybind_button_display(self)
+	end
+	self.keybinding_ui:update(dt * slow_amount)
 	self.credits:update(dt * slow_amount)
+
+	-- if input.m2.pressed then
+	-- 	if not self.counter then
+	-- 		self.counter = 1
+	-- 	end
+	-- 	if not self.debug then
+	-- 		self.debug = Text2({
+	-- 			group = self.ui,
+	-- 			x = 100,
+	-- 			y = 20,
+	-- 			force_update = true,
+	-- 			lines = {
+	-- 				{
+	-- 					-- text = tostring(main.current_music_type),
+	-- 					text = tostring(main.debug),
+	-- 					-- text = tostring(self.counter),
+	-- 					font = pixul_font,
+	-- 					alignment = "center",
+	-- 				},
+	-- 			},
+	-- 		})
+	-- 	end
+	-- end
+	-- if input.m3.pressed and self.debug then
+	-- 	self.debug:clear()
+	-- 	self.debug = nil
+	-- 	-- self.counter = self.counter + 1
+	-- end
 end
 
 function Game:quit()
@@ -405,35 +280,13 @@ function Game:quit()
 	self.quitting = true
 	if self.level < 5 then
 		if not self.arena_clear_text then
-			self.transitioning = true
-			if self.level == 0 then
-				if self.tutorial_goal_text1 then
-					self.tutorial_goal_text1:clear()
-				end
-				if self.tutorial_goal_text2 then
-					self.tutorial_goal_text2:clear()
-				end
-				if self.tutorial_controls_text then
-					self.tutorial_controls_text:clear()
-				end
-				if self.tutorial_controls_title_text then
-					self.tutorial_controls_title_text:clear()
-				end
-				if self.tutorial_goal_title_text then
-					self.tutorial_goal_title_text:clear()
-				end
-			end
-
-			local clear_text = self.level == 0 and "[wavy_mid, green] Good Luck! ;)"
-				or "[wavy_mid, fg] Level [green]" .. self.level .. "[red]/5[wavy_mid, fg] beat"
-
 			self.arena_clear_text = Text2({
 				group = self.ui,
 				x = gw / 2,
 				y = gh / 2 - 48,
 				lines = {
 					{
-						text = clear_text,
+						text = "[wavy_mid, fg] Level [green]" .. self.level .. "[red]/5[wavy_mid, fg] beat",
 						font = fat_font,
 						alignment = "center",
 					},
@@ -451,30 +304,17 @@ function Game:quit()
 			ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 			ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 			ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-			TransitionEffect({
-				group = main.transitions,
-				x = gw / 2,
-				y = gh / 2,
-				color = state.dark_transitions and bg[-2] or fg[0],
-				transition_action = function()
-					slow_amount = 1
-					music_slow_amount = 1
-					locked_state = nil
-					system.save_run()
-					main:add(Game("game"))
-					main:go_to("game", self.level + 1, #self.players)
-				end,
-				text = Text({
-					{
-						text = "[wavy, "
-							.. tostring(state.dark_transitions and "fg" or "bg")
-							.. "] level "
-							.. ((self.level + 1) == 5 and "[red]" .. (self.level + 1) or tostring(self.level + 1))
-							.. "[red]/5",
-						font = pixul_font,
-						alignment = "center",
-					},
-				}, global_text_tags),
+
+			slow_amount = 1
+			music_slow_amount = 1
+			locked_state = nil
+			local next_level = self.level + 1 -- new var for clarity
+			scene_transition(self, gw / 2, gh / 2, Game("game"),
+				{ destination = "game", args = { level = next_level, num_players = #self.players } }, {
+				text = " level " ..
+				((self.level + 1) == 5 and "[red]" .. (self.level + 1) or tostring(self.level + 1)) .. "[red]/5",
+				font = pixul_font,
+				alignment = "center",
 			})
 		end)
 	elseif not self.win_text and not self.win_text2 then
@@ -531,7 +371,6 @@ function Game:quit()
 					self:create_credits()
 				end,
 			})
-			self.credits_button.selected = true
 		end)
 
 		self.t:after(2, function()
@@ -670,7 +509,6 @@ end
 
 function Game:draw()
 	self.floor:draw()
-	self.tutorial_ui:draw()
 	self.main:draw()
 	self.post_main:draw()
 	self.effects:draw()
@@ -738,6 +576,7 @@ function Game:draw()
 	if self.choosing_passives or self.won or self.paused or self.died then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 	end
+
 	if self.paused then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 	end
@@ -747,15 +586,30 @@ function Game:draw()
 		self.shop_text:draw(gw - 40, gh - 17)
 	end
 
-	if self.in_options then
+	if self.paused then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 	end
+	self.paused_ui:draw()
+
+	if self.in_options then
+		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent_2)
+	end
 	self.options_ui:draw()
+
+	if self.in_keybinding then
+		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
+	end
+	self.keybinding_ui:draw()
 
 	if self.in_credits then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent_2)
 	end
 	self.credits:draw()
+end
+
+function Game:close_die_ui()
+	main.current.in_death = false
+	pop_ui_layer(self)
 end
 
 function Game:die()
@@ -770,7 +624,20 @@ function Game:die()
 		self.t:tween(2, _G, { music_slow_amount = 0 }, math.linear, function()
 			music_slow_amount = 0
 		end)
-		self.died_text = Text2({
+
+		-- main.current.in_death = true
+		-- local ui_layer = ui_interaction_layer.GameLoss
+		-- local ui_group = self.game_loss_ui
+		-- self.game_loss_ui_elements = {}
+		-- main.ui_layer_stack:push({
+		-- 	layer = ui_layer,
+		-- 	layer_has_music = false,
+		-- 	ui_elements = self.game_loss_ui_elements,
+		-- })
+		--
+		-- self.died_text = collect_into( -- TODO: stopped here, gotta make this ui group, responsive
+		-- 	self.options_ui_elements,
+		Text2({
 			group = self.ui,
 			x = gw / 2,
 			y = gh / 2 - 32,
@@ -783,6 +650,7 @@ function Game:die()
 				},
 			},
 		})
+		-- )
 
 		self.t:after(2.2, function()
 			self.died_text2 = Text2({
@@ -813,37 +681,26 @@ function Game:die()
 						ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 						ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 						ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-						TransitionEffect({
-							group = main.transitions,
-							x = gw / 2,
-							y = gh / 2,
-							color = state.dark_transitions and bg[-2] or fg[0],
-							transition_action = function()
-								slow_amount = 1
-								music_slow_amount = 1
-								-- main_song_instance:stop()
-								locked_state = nil
-								system.save_run()
-								main:add(Game("game"))
-								main:go_to("game", self.level, #self.players)
-							end,
-							text = Text({
-								{
-									text = "[wavy, "
-										.. tostring(state.dark_transitions and "fg" or "bg")
-										.. "] level "
-										.. (main.current.level == 5 and "[red]" or "")
-										.. main.current.level
-										.. "[red]/5",
-									font = pixul_font,
-									alignment = "center",
-								},
-							}, global_text_tags),
-						})
+
+						slow_amount = 1
+						music_slow_amount = 1
+						locked_state = nil
+						scene_transition(
+							self,
+							gw / 2,
+							gh / 2,
+							Game("game"),
+							{ destination = "game", args = { level = self.level, num_players = #self.players } },
+							{
+								text = "level " ..
+								(main.current.level == 5 and "[red]" or "") .. main.current.level .. "[red]/5",
+								font = pixul_font,
+								alignment = "center",
+							}
+						)
 					end
 				end,
 			})
-			self.died_restart_button.selected = true
 		end)
 		trigger:tween(2, camera, { x = gw / 2, y = gh / 2, r = 0 }, math.linear, function()
 			camera.x, camera.y, camera.r = gw / 2, gh / 2, 0
@@ -852,27 +709,29 @@ function Game:die()
 	return true
 end
 
-function Game:new_longboss(length, is_tutorial)
+function Game:new_longboss(length)
 	local boss = LongBoss({
 		group = self.main,
-		x = 10,
+		x = 0,
 		y = random:int(0, gh),
 		leader = true,
 		ii = 1,
-		tutorial = is_tutorial,
 	})
 	for i = 2, length - 1 do
 		boss:add_follower(LongBoss({
 			group = self.main,
 			ii = i,
-			tutorial = is_tutorial,
 		}))
 	end
 
 	local units = boss:get_all_units()
 	for _, unit in ipairs(units) do
-		local chp = CharacterHP({ group = self.effects, x = self.x1 + 8 + (unit.ii - 1) * 22, y = self.y2 + 14, parent =
-		unit })
+		local chp = CharacterHP({
+			group = self.effects,
+			x = self.x1 + 8 + (unit.ii - 1) * 22,
+			y = self.y2 + 14,
+			parent = unit,
+		})
 		unit.character_hp = chp
 	end
 	return boss

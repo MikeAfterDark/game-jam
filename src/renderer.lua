@@ -1,4 +1,5 @@
 require("buttons")
+require("sliders")
 
 -- Shared functions and classes for projects using JUGGLRX's visual style.
 function renderer_init()
@@ -70,28 +71,28 @@ function renderer_draw(draw_action)
 
 	background_canvas:draw_to(function()
 		camera:attach()
-		for i = 1, 32 do
-			for j = 1, 18 do
-				if j % 2 == 0 then
-					if i % 2 == 1 then
-						graphics.rectangle2(0 + (i - 1) * 22, 0 + (j - 1) * 22, 22, 22, nil, nil, bg_off)
-					end
-				else
-					if i % 2 == 0 then
-						graphics.rectangle2(0 + (i - 1) * 22, 0 + (j - 1) * 22, 22, 22, nil, nil, bg_off)
-					end
-				end
-			end
-		end
+		-- for i = 1, 32 do
+		-- 	for j = 1, 18 do
+		-- 		if j % 2 == 0 then
+		-- 			if i % 2 == 1 then
+		-- 				graphics.rectangle2(0 + (i - 1) * 22, 0 + (j - 1) * 22, 22, 22, nil, nil, bg_off)
+		-- 			end
+		-- 		else
+		-- 			if i % 2 == 0 then
+		-- 				graphics.rectangle2(0 + (i - 1) * 22, 0 + (j - 1) * 22, 22, 22, nil, nil, bg_off)
+		-- 			end
+		-- 		end
+		-- 	end
+		-- end
 		bg_gradient:draw(gw / 2, gh / 2, 480, 270)
 		camera:detach()
 	end)
 
 	main_canvas:draw_to(function()
 		draw_action()
-		if flashing then
-			graphics.rectangle(gw / 2, gh / 2, gw, gh, nil, nil, flash_color)
-		end
+		-- if flashing then
+		-- 	graphics.rectangle(gw / 2, gh / 2, gw, gh, nil, nil, flash_color)
+		-- end
 	end)
 
 	shadow_canvas:draw_to(function()
@@ -378,18 +379,6 @@ global_text_tags = {
 		end,
 	}),
 
-	tutorial = TextTag({
-		init = function(c, i, text)
-			c.color = invisible
-			text.t:after((i - 1) * 0.025, function()
-				c.color = fg[0]
-			end)
-		end,
-		draw = function(c, i, text)
-			graphics.set_color(c.color)
-		end,
-	}),
-
 	nudge_down = TextTag({
 		init = function(c, i, text)
 			c.oy = -4
@@ -602,7 +591,13 @@ function Text2:pull(...)
 end
 
 function Text2:clear()
-	self.text:set_text({ text = "", font = pixul_font })
+	self:set_text({
+		{ text = "", font = pixul_font, alignment = "center" },
+	})
+end
+
+function Text2:set_text(new_text)
+	self.text:set_text(new_text)
 end
 
 --

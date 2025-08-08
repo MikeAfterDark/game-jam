@@ -9,7 +9,6 @@ function Player:init(args)
 	self:init_unit()
 
 	self.color = args.color or yellow[0]
-	self.color_text = args.color_text or "yellow"
 	self:set_as_rectangle(9, 9, "dynamic", "player")
 	self.visual_shape = "rectangle"
 	self.damage_dealt = 0
@@ -30,15 +29,6 @@ function Player:init(args)
 	if main.current:is(MainMenu) then
 		self.r = random:table({ -math.pi / 4, math.pi / 4, 3 * math.pi / 4, -3 * math.pi / 4 })
 		self:set_angle(self.r)
-	end
-
-	if args.tutorial then
-		self.tutorial_player_indicator_text = Text2({
-			group = main.current.tutorial_ui,
-			x = self.x,
-			y = self.y + 20,
-			lines = { { text = "[" .. self.color_text .. "]player " .. tostring(self.id), font = pixul_font } },
-		})
 	end
 end
 
@@ -174,22 +164,21 @@ function Player:update(dt)
 
 	self:set_velocity(vx, vy)
 
-	local fireDelay = { -0.0001, 0.08, 0.08, 0.15, 0.3 }
+	local fireDelay = { 0.1, 0.1, 0.1, 0.2, 0.5 }
 	self.fireDelayCounter = self.fireDelayCounter or 1
 
-	if
-		not main.current.won
-		and not main.current.died
-		and not main.current.choosing_passives
-		and not main.current.paused
-		and not main.current.transitioning
-	then
-		if self.firing ~= nil and self.firing <= love.timer.getTime() - fireDelay[self.fireDelayCounter] then
+	if not main.current.won and not main.current.choosing_passives and not main.current.paused and not main.current.transitioning then
+		if self.firing ~= nil and self.firing < love.timer.getTime() - fireDelay[self.fireDelayCounter] then
 			self:shoot(self.r, {})
 			self.firing = self.firing + fireDelay[self.fireDelayCounter]
-			self.fireDelayCounter = self.fireDelayCounter < #fireDelay - 1 and self.fireDelayCounter + 1 or #fireDelay
+			self.fireDelayCounter = self.fireDelayCounter < #fireDelay - 1 and self.fireDelayCounter + 1 or
+			#fireDelay
 		end
-		if not state.no_screen_movement and false then
+
+		if not state.no_screen_movement then
+			camera.x = self.x
+			camera.y = self.y
+		elseif false then
 			local vx, vy = self:get_velocity()
 			local hd = math.remap(math.abs(self.x - gw / 2), 0, 192, 1, 0)
 			local vd = math.remap(math.abs(self.y - gh / 2), 0, 108, 1, 0)
@@ -211,11 +200,6 @@ function Player:update(dt)
 	end
 
 	self:set_angle(self.r)
-
-	if self.tutorial_player_indicator_text ~= nil then
-		self.tutorial_player_indicator_text.x = self.x
-		self.tutorial_player_indicator_text.y = self.y + 16
-	end
 end
 
 function Player:draw()
@@ -224,15 +208,8 @@ function Player:draw()
 		if self.shielded then
 			graphics.rectangle(self.x, self.y, self.shape.w, self.shape.h, 3, 3, blue_transparent)
 		else
-			graphics.rectangle(
-				self.x,
-				self.y,
-				self.shape.w,
-				self.shape.h,
-				3,
-				3,
-				(self.hfx.hit.f or self.hfx.shoot.f) and fg[0] or self.color
-			)
+			graphics.rectangle(self.x, self.y, self.shape.w, self.shape.h, 3, 3,
+				(self.hfx.hit.f or self.hfx.shoot.f) and fg[0] or self.color)
 		end
 
 		if state.arrow_snake then
@@ -280,8 +257,8 @@ function Player:on_collision_enter(other, contact)
 		self.hfx:use("hit", 0.15, 200, 10, 0.1)
 		-- self:bounce(contact:getNormal())
 	elseif table.any(main.current.enemies, function(v)
-		return other:is(v)
-	end) then
+		    return other:is(v)
+	    end) then
 		other:push(random:float(25, 35) * (self.knockback_m or 1), self:angle_to_object(other))
 		self:push(random:float(25, 35) * (self.knockback_m or 1), self:angle_to_object(other) + math.pi)
 		-- other:hit(self.dmg)
@@ -317,9 +294,8 @@ function Player:push(f, r, push_invulnerable)
 	self.being_pushed = true
 	self.steering_enabled = false
 	self:apply_impulse(n * f * math.cos(r), n * f * math.sin(r))
-	self:apply_angular_impulse(
-		random:table({ random:float(-12 * math.pi, -4 * math.pi), random:float(4 * math.pi, 12 * math.pi) })
-	)
+	self:apply_angular_impulse(random:table({ random:float(-12 * math.pi, -4 * math.pi), random:float(4 * math.pi,
+		12 * math.pi) }))
 	self:set_damping(1.5 * (1 / n))
 	self:set_angular_damping(1.5 * (1 / n))
 end
@@ -363,9 +339,8 @@ function Player:hit(damage, from_undead)
 		for i = 1, random:int(4, 6) do
 			HitParticle({ group = main.current.effects, x = self.x, y = self.y, color = self.color })
 		end
-		HitCircle({ group = main.current.effects, x = self.x, y = self.y, rs = 12 })
-			:scale_down(0.3)
-			:change_color(0.5, self.color)
+		HitCircle({ group = main.current.effects, x = self.x, y = self.y, rs = 12 }):scale_down(0.3)
+		    :change_color(0.5, self.color)
 		if main.current:die() then
 			self.dead = true
 		end
@@ -460,8 +435,8 @@ end
 
 function Projectile:on_trigger_enter(other, contact)
 	if table.any(main.current.enemies, function(v)
-		return other:is(v)
-	end) then
+		    return other:is(v)
+	    end) then
 		if not (other.leader and #other.followers > 0) then
 			hit1:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
 		end

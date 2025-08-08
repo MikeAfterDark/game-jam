@@ -17,7 +17,6 @@ function LongBoss:init(args)
 	self.max_hp = 1
 	self.hp = 1
 	self.go = false
-	self.tutorial = args.tutorial or false
 
 	if self.leader then
 		self.pattern = "chase"
@@ -34,23 +33,11 @@ function LongBoss:init(args)
 				self.previous_positions[2529] = nil
 			end
 		end)
-
-		if self.tutorial then
-			self.tutorial_boss_indicator_text = Text2({
-				group = main.current.tutorial_ui,
-				x = self.x,
-				y = self.y + 20,
-				lines = { { text = "[blue5]WHAL", font = pixul_font } },
-			})
-		end
-
 		self.t:every(3, function()
-			if not self.tutorial then
-				self.pattern = random:table({
-					"chase",
-					"predict",
-				})
-			end
+			self.pattern = random:table({
+				"chase",
+				"predict",
+			})
 			self.target = main.current:get_random_player()
 			-- self.pattern = "predict"
 		end)
@@ -76,12 +63,12 @@ function LongBoss:update(dt)
 			return
 		end
 
-		self.total_v = self.tutorial and 20 or math.max(math.min(self:distance_to_object(self.target) + 20, 140), 100)
+		self.total_v = math.max(math.min(self:distance_to_object(self.target) + 20, 140), 100)
 
 		--
 		if self.pattern == "chase" then
 			self:set_colors(blue[5])
-			local rotation_speed = self.tutorial and 0.1 or 0.4
+			local rotation_speed = 0.4
 			local target_angle = self:angle_to_object(self.target)
 			local angle_diff = (target_angle - self.r + math.pi) % (2 * math.pi) - math.pi
 			self.r = self.r + math.sign(angle_diff) * rotation_speed * math.pi * dt
@@ -128,11 +115,6 @@ function LongBoss:update(dt)
 		else
 			self.r = self:get_angle()
 		end
-	end
-
-	if self.tutorial_boss_indicator_text ~= nil then
-		self.tutorial_boss_indicator_text.x = self.x
-		self.tutorial_boss_indicator_text.y = self.y + 16
 	end
 end
 
@@ -193,9 +175,6 @@ function LongBoss:hit(damage, projectile, dot, from_enemy)
 			self.dead = true
 			slow(0.25, 1)
 			_G[random:table({ "enemy_die1", "enemy_die2" })]:play({ pitch = random:float(0.9, 1.1), volume = 0.5 })
-			if self.tutorial_boss_indicator_text ~= nil then
-				self.tutorial_boss_indicator_text:clear()
-			end
 		else
 			_G[random:table({ "enemy_die1", "enemy_die2" })]:play({ pitch = random:float(0.9, 1.1), volume = 0.5 })
 			self.dead = true
