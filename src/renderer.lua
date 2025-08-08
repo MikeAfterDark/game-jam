@@ -46,9 +46,10 @@ function renderer_init()
 		music.volume = 0
 	end
 
-	fat_font = Font("FatPixelFont", 8)
-	fat_title_font = Font("FatPixelFont", 16)
-	pixul_font = Font("PixulBrush", 8)
+	fat_font = Font("FatPixelFont", 8 * global_game_scale)
+	fat_title_font = Font("FatPixelFont", 12 * global_game_scale)
+	pixul_font = Font("PixulBrush", 8 * global_game_scale)
+	mystery_font = Font("BoldPixels", 8 * global_game_scale)
 	background_canvas = Canvas(gw, gh)
 	main_canvas = Canvas(gw, gh, { stencil = true })
 	shadow_canvas = Canvas(gw, gh)
@@ -84,7 +85,7 @@ function renderer_draw(draw_action)
 		-- 		end
 		-- 	end
 		-- end
-		bg_gradient:draw(gw / 2, gh / 2, 480, 270)
+		bg_gradient:draw(gw / 2, gh / 2, global_game_width, global_game_height)
 		camera:detach()
 	end)
 
@@ -378,6 +379,8 @@ global_text_tags = {
 			graphics.set_color(c.color)
 		end,
 	}),
+
+	-- tutorial = TextTag()
 
 	nudge_down = TextTag({
 		init = function(c, i, text)

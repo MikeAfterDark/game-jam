@@ -68,7 +68,7 @@ function engine_run(config)
 			anisotropy = config.anisotropy
 		end
 
-		gw, gh = config.game_width or 480, config.game_height or 270
+		gw, gh = config.game_width or global_game_width, config.game_height or global_game_height
 		ww, wh = window_width, window_height
 		sx, sy = ww / gw, wh / gh
 
@@ -91,7 +91,7 @@ function engine_run(config)
 		setWindow(windowArgs)
 		love.window.setTitle(config.game_name)
 	else
-		gw, gh = config.game_width or 480, config.game_height or 270
+		gw, gh = config.game_width or global_game_width, config.game_height or global_game_height
 		ww, wh = 960, 540
 		sx, sy = ww / gw, wh / gh
 		state = {}
@@ -102,8 +102,7 @@ function engine_run(config)
 	love.graphics.setColor(1, 1, 1, 1)
 	love.joystick.loadGamepadMappings("engine/gamecontrollerdb.txt")
 	graphics.set_line_style(config.line_style or "rough")
-	graphics.set_default_filter(config.default_filter or "nearest", config.default_filter or "nearest",
-		anisotropy or 0)
+	graphics.set_default_filter(config.default_filter or "nearest", config.default_filter or "nearest", anisotropy or 0)
 
 	combine = Shader("default.vert", "combine.frag")
 	replace = Shader("default.vert", "replace.frag")
@@ -189,8 +188,7 @@ function engine_run(config)
 					input:textinput(a)
 				elseif name == "resize" then
 					local window_width, window_height = love.graphics.getDimensions()
-					sx, sy = window_width / (config.game_width or 480),
-					    window_height / (config.game_height or 270)
+					sx, sy = window_width / (config.game_width or global_game_width), window_height / (config.game_height or global_game_height)
 					state.sx, state.sy = sx, sy
 					if system and system.save_state then
 						system.save_state()

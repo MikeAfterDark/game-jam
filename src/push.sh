@@ -1,7 +1,7 @@
 #!/bin/bash
 
 name="gusakm"
-project="gmtk2025"
+project="spottyconnections"
 type=""
 
 butler push ../build/lovejs ${name}/${project}:web${type}

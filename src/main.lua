@@ -75,17 +75,23 @@ function init()
 	if not state.input then
 		state.input = {}
 	end
+	controls_text = {
+		cancel_rail = "Delete Rail",
+		draw_rail = "Draw Rail",
+	}
 	controls = {
-		left = state.input.left or "a",
-		right = state.input.right or "d",
-		climb = state.input.climb or "w",
-		jump = state.input.jump or "space",
+		cancel_rail = state.input.cancel_rail or "m2",
+		draw_rail = state.input.draw_rail or "m1",
+		-- right = state.input.right or "d",
+		-- climb = state.input.climb or "w",
+		-- jump = state.input.jump or "space",
 	}
 	default_controls = { -- copy controls above
-		left = "a",
-		right = "d",
-		climb = "w",
-		jump = "space",
+		cancel_rail = "m2",
+		draw_rail = "m1",
+		-- right = "d",
+		-- climb = "w",
+		-- jump = "space",
 	}
 	for action, key in pairs(controls) do
 		input:bind(action, key)
@@ -112,12 +118,20 @@ function init()
 	player_hit1 = Sound("player_hit1.ogg", s)
 	player_hit2 = Sound("player_hit2.ogg", s)
 
+	success = Sound("success.ogg", s)
+
 	-- load songs
-	song1 = Sound("neon-rush-retro-synthwave-uplifting-daily-vlog-fast-cuts-sv201-360195.mp3", { tags = { music } })
-	song2 = Sound("8-bit-gaming-background-music-358443.mp3", { tags = { music } })
-	song3 = Sound("edm003-retro-edm-_-gamepixel-racer-358045.mp3", { tags = { music } })
-	song4 = Sound("pixel-fantasia-355123.mp3", { tags = { music } })
-	song5 = Sound("pixel-fight-8-bit-arcade-music-background-music-for-video-208775.mp3", { tags = { music } })
+	-- song1 = Sound("neon-rush-retro-synthwave-uplifting-daily-vlog-fast-cuts-sv201-360195.mp3", { tags = { music } })
+	-- song2 = Sound("8-bit-gaming-background-music-358443.mp3", { tags = { music } })
+	-- song3 = Sound("edm003-retro-edm-_-gamepixel-racer-358045.mp3", { tags = { music } })
+	-- song4 = Sound("pixel-fantasia-355123.mp3", { tags = { music } })
+	-- song5 = Sound("pixel-fight-8-bit-arcade-music-background-music-for-video-208775.mp3", { tags = { music } })
+
+	song1 = Sound("funk-smooth-party-stylish-379509.mp3", { tags = { music } })
+	song2 = Sound("groovy-ambient-funk-201745.mp3", { tags = { music } })
+	song3 = Sound("drunk-on-funk-273910.mp3", { tags = { music } })
+	song4 = Sound("midnight-quirk-255361.mp3", { tags = { music } })
+	song5 = Sound("funky_main-187356.mp3", { tags = { music } })
 
 	pause_song1 = Sound("jazzy-slow-background-music-244598.mp3", { tags = { music } })
 	pause_song2 = Sound("glass-of-wine-143532.mp3", { tags = { music } })
@@ -125,11 +139,9 @@ function init()
 
 	music_songs = {
 		main = { "song1", "song2", "song3", "song4", "song5" },
-		-- pause = { "pause_song1", "pause_song2", "pause_song3" },
-		-- cheapout: use the same 'pause music' list for all 3 below
-		paused = { "buttonPop" },
-		options = { "buttonHover" },
-		credits = { "hit1" },
+		paused = { "pause_song1", "pause_song2", "pause_song3" },
+		options = { "pause_song1", "pause_song2", "pause_song3" },
+		credits = { "pause_song1", "pause_song2", "pause_song3" },
 	}
 
 	-- load images:
@@ -147,6 +159,8 @@ function init()
 		Credits = 2,
 		Paused = 3,
 		KeyBinding = 4,
+		Win = 5,
+		Loss = 6,
 
 		Test = 10,
 	}
@@ -167,10 +181,12 @@ function init()
 
 	main:add(MainMenu("mainmenu"))
 	main:go_to("mainmenu")
+	-- main:add(Game("game"))
+	-- main:go_to("game", {})
 
 	-- set sane defaults:
-	state.mouse_control = true
-	state.arrow_snake = true
+	state.timed_mode = true
+	state.tutorial = true
 
 	-- smooth_turn_speed = 0
 end
@@ -204,6 +220,9 @@ end
 
 function love.run()
 	web = love.system.getOS() == "Web"
+	global_game_scale = 2
+	global_game_width = 480 * global_game_scale
+	global_game_height = 270 * global_game_scale
 
 	return engine_run({
 		game_name = "GMTK 2025",
@@ -227,7 +246,7 @@ function open_options(self)
 	main.ui_layer_stack:push({
 		layer = ui_layer,
 		-- music = self.options_menu_song_instance,
-		layer_has_music = true,
+		layer_has_music = not main.current.paused,
 		music_type = "options",
 		ui_elements = self.options_ui_elements,
 	})
@@ -241,8 +260,8 @@ function open_options(self)
 
 	local column_x = { gw / 4, gw / 2, 3 * gw / 4 }
 
-	local button_offset = -65
-	local button_distance = 20
+	local button_offset = -125
+	local button_distance = 35
 
 	local column = 1
 	self.dark_mode_button = collect_into(
@@ -250,7 +269,7 @@ function open_options(self)
 		Button({
 			x = column_x[column],
 			y = gh / 2 + button_offset,
-			w = 65,
+			w = 65 * global_game_scale,
 			button_text = tostring(state.dark and " dark" or "light") .. " mode",
 			fg_color = "bg",
 			bg_color = "fg",
@@ -263,16 +282,16 @@ function open_options(self)
 	)
 	button_offset = button_offset + button_distance
 
-	local slider_length = 100
-	local slider_spacing = 2
+	local slider_length = 100 * global_game_scale
+	local slider_spacing = 2 * global_game_scale
 	self.sfx_slider = collect_into(
 		self.options_ui_elements,
 		Slider({
 			group = ui_group,
-			x = column_x[column] - 15,
-			y = gh / 2 + 55,
+			x = column_x[column] - 35,
+			y = gh / 2 + 55 * global_game_scale,
 			length = slider_length,
-			thickness = 10,
+			thickness = 50,
 			fg_color = "fg",
 			bg_color = "bg",
 			rotation = 3 * math.pi / 2,
@@ -290,7 +309,7 @@ function open_options(self)
 		Text2({
 			group = ui_group,
 			x = self.sfx_slider.x,
-			y = self.sfx_slider.y + 57,
+			y = self.sfx_slider.y + 57 * global_game_scale,
 			lines = { { text = "[fg]SFX", font = pixul_font } },
 		})
 	)
@@ -299,10 +318,10 @@ function open_options(self)
 		self.options_ui_elements,
 		Slider({
 			group = ui_group,
-			x = column_x[column] + 15,
-			y = gh / 2 + 55,
+			x = column_x[column] + 35,
+			y = gh / 2 + 55 * global_game_scale,
 			length = slider_length,
-			thickness = 10,
+			thickness = 50,
 			fg_color = "fg",
 			bg_color = "bg",
 			rotation = 3 * math.pi / 2,
@@ -320,7 +339,7 @@ function open_options(self)
 		Text2({
 			group = ui_group,
 			x = self.music_slider.x,
-			y = self.music_slider.y + 57,
+			y = self.music_slider.y + 57 * global_game_scale,
 			lines = { { text = "[fg]Music", font = pixul_font } },
 		})
 	)
@@ -330,7 +349,7 @@ function open_options(self)
 		Button({
 			x = column_x[column],
 			y = gh / 2 + button_offset,
-			w = 65,
+			w = 65 * global_game_scale,
 			button_text = tostring(state.fullscreen and "fullscreen" or "windowed"),
 			fg_color = "bg",
 			bg_color = "fg",
@@ -347,7 +366,7 @@ function open_options(self)
 				end
 
 				ww, wh = screen_width, screen_height
-				sx, sy = screen_width / 480, screen_height / 270
+				sx, sy = screen_width / global_game_width, screen_height / global_game_height
 				state.sx, state.sy = sx, sy
 				setWindow({ width = screen_width, height = screen_height })
 			end,
@@ -360,7 +379,7 @@ function open_options(self)
 		Button({
 			x = column_x[column],
 			y = gh / 2 + button_offset,
-			w = 65,
+			w = 65 * global_game_scale,
 			button_text = tostring(state.vsync and "vsync" or "no vsync"),
 			fg_color = "bg",
 			bg_color = "fg",
@@ -379,7 +398,7 @@ function open_options(self)
 		Button({
 			x = column_x[column],
 			y = gh / 2 + button_offset,
-			w = 65,
+			w = 65 * global_game_scale,
 			button_text = tostring(state.no_screen_shake and "no shake" or "yes shake"),
 			fg_color = "bg",
 			bg_color = "fg",
@@ -396,8 +415,8 @@ function open_options(self)
 	-- next column: Controls
 	--
 	column = 2
-	button_offset = -65
-	button_distance = 20
+	button_offset = -125
+	button_distance = 35
 
 	self.controls_text = collect_into(
 		self.options_ui_elements,
@@ -416,9 +435,9 @@ function open_options(self)
 			InputButton({
 				x = column_x[column],
 				y = gh / 2 + button_offset,
-				w = 85,
-				separator_length = 50,
-				description_text = action,
+				w = 85 * global_game_scale,
+				separator_length = 50 * global_game_scale,
+				description_text = controls_text[action],
 				button_text = string.upper(key),
 				fg_color = "fg",
 				bg_color = "bg",
@@ -428,16 +447,15 @@ function open_options(self)
 				end,
 			})
 		)
-		button_offset = button_offset + button_distance -
-		3                                             --for some reason this is needed for the last button to work (for 4 controls)
+		button_offset = button_offset + button_distance - 3 --for some reason this is needed for the last button to work (for 4 controls)
 	end
 
 	--
 	-- next column: Game-specific options
 	--
 	column = 3
-	button_offset = -65
-	button_distance = 20
+	button_offset = -125
+	button_distance = 35
 
 	self.games_options_text = collect_into(
 		self.options_ui_elements,
@@ -450,19 +468,37 @@ function open_options(self)
 	)
 	button_offset = button_offset + button_distance
 
-	self.game_button = collect_into(
+	self.timed_mode_button = collect_into(
 		self.options_ui_elements,
 		Button({
 			x = column_x[column],
 			y = gh / 2 + button_offset,
-			w = 65,
-			button_text = tostring(state.game_thing and "no thing" or "yes thing"),
+			w = 75 * global_game_scale,
+			button_text = tostring(state.timed_mode and "timed mode" or "chill mode"),
 			fg_color = "bg",
 			bg_color = "fg",
 			action = function(b)
 				ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-				state.game_thing = not state.game_thing
-				b:set_text(tostring(state.game_thing and "no thing" or "yes thing"))
+				state.timed_mode = not state.timed_mode
+				b:set_text(tostring(state.timed_mode and "timed mode" or "chill mode"))
+			end,
+		})
+	)
+
+	button_offset = button_offset + button_distance
+	self.tutorial_button = collect_into(
+		self.options_ui_elements,
+		Button({
+			x = column_x[column],
+			y = gh / 2 + button_offset,
+			w = 75 * global_game_scale,
+			button_text = tostring(state.tutorial and "  tutorial  " or "no tutorial"),
+			fg_color = "bg",
+			bg_color = "fg",
+			action = function(b)
+				ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+				state.tutorial = not state.tutorial
+				b:set_text(tostring(state.tutorial and "  tutorial  " or "no tutorial"))
 			end,
 		})
 	)
@@ -511,8 +547,8 @@ function set_action_keybind(self, action, key)
 		Text2({
 			group = ui_group,
 			x = gw / 2,
-			y = gh / 2 - 30,
-			lines = { { text = "[wavy_mid2, yellow] Bind '" .. action .. "' (press any key)", font = pixul_font, alignment = "center" } },
+			y = gh / 2 - 30 * global_game_scale,
+			lines = { { text = "[wavy_mid2, yellow] Bind '" .. controls_text[action] .. "' (press any key)", font = pixul_font, alignment = "center" } },
 		})
 	)
 
@@ -528,24 +564,8 @@ function set_action_keybind(self, action, key)
 		})
 	)
 
-	-- if key ~= default_controls[action] then
-	-- 	self.default_key = collect_into(
-	-- 		self.key_binding_ui_elements,
-	-- 		Text2({
-	-- 			group = ui_group,
-	-- 			x = gw / 2 + 60,
-	-- 			y = gh / 2,
-	-- 			sx = 0.6,
-	-- 			sy = 0.6,
-	-- 			lines = {
-	-- 				{ text = "[fg]default: " .. default_controls[action], font = fat_font, alignment = "center" },
-	-- 			},
-	-- 		})
-	-- 	)
-	-- end
-
-	local button_y_offset = 20
-	local button_x_offset = 30
+	local button_y_offset = 20 * global_game_scale
+	local button_x_offset = 30 * global_game_scale
 	self.cancel = collect_into(
 		self.key_binding_ui_elements,
 		Button({
@@ -583,6 +603,8 @@ function set_action_keybind(self, action, key)
 
 					state.input[action] = new_key -- update config
 					controls[action] = new_key
+					input:bind(action, new_key)
+					-- print("for action: " .. action .. ", state: " .. state.input[action] .. " and controls: " .. controls[action])
 					new_key = nil
 					system.save_state()
 
@@ -609,7 +631,7 @@ function close_options(self)
 	if self:is(MainMenu) then
 		input:set_mouse_visible(true)
 	elseif self:is(Game) then
-		input:set_mouse_visible(state.mouse_control or false)
+		input:set_mouse_visible(true)
 	end
 end
 
@@ -634,17 +656,19 @@ function pause_game(self)
 		-- play_music({})
 		-- self.paused = true
 
-		-- text = escape to go back to main menu (lose all progress)
-		self.paused_ingame_text = collect_into(
+		self.paused_menu_title_text = collect_into(
 			self.paused_ui_elements,
 			Text2({
-				group = self.paused_ui,
+				group = ui_group,
 				x = gw / 2,
-				y = 20,
-				force_update = true,
-				sx = 0.6,
-				sy = 0.6,
-				lines = { { text = "Back to go to main-menu (lose all progress)", font = fat_font, alignment = "center" } },
+				y = gh / 2 - 40 * global_game_scale,
+				lines = {
+					{
+						text = "[wavy_mid, green] Paused",
+						font = fat_font,
+						alignment = "center",
+					},
+				},
 			})
 		)
 
@@ -652,12 +676,12 @@ function pause_game(self)
 			self.paused_ui_elements,
 			Button({
 				group = ui_group,
-				x = gw / 2 - 35,
-				y = gh / 2 - 10,
+				x = gw / 2, --- 35 * global_game_scale,
+				y = gh / 2,
 				force_update = true,
 				button_text = "continue",
 				fg_color = "bg",
-				bg_color = "yellow",
+				bg_color = "green",
 				action = function(b)
 					unpause_game(self)
 				end,
@@ -668,8 +692,8 @@ function pause_game(self)
 			self.paused_ui_elements,
 			Button({
 				group = ui_group,
-				x = gw / 2 + 35,
-				y = gh / 2 - 10,
+				x = gw / 2, --+ 35 * global_game_scale,
+				y = gh / 2 + 20 * global_game_scale,
 				force_update = true,
 				button_text = "options",
 				fg_color = "bg",
@@ -681,20 +705,20 @@ function pause_game(self)
 			})
 		)
 
-		self.restart_text = collect_into(
+		self.credits_button = collect_into(
 			self.paused_ui_elements,
-			Text2({
+			Button({
 				group = ui_group,
-				x = gw / 2,
-				y = gh / 2 - 48,
-				lines = {
-					{
-						text = "[wavy_mid, fg] restart level " ..
-						(self.level ~= 5 and "[green]" or "[red]") .. self.level .. "[red]/5[wavy_mid, fg]?",
-						font = fat_font,
-						alignment = "center",
-					},
-				},
+				x = gw / 2, --+ 35 * global_game_scale,
+				y = gh / 2 + 40 * global_game_scale,
+				force_update = true,
+				button_text = "credits",
+				fg_color = "bg",
+				bg_color = "yellow",
+				action = function(b)
+					open_credits(self)
+					b.selected = true
+				end,
 			})
 		)
 
@@ -703,58 +727,13 @@ function pause_game(self)
 			Button({
 				group = ui_group,
 				x = gw / 2,
-				y = gh / 2 + 30,
+				y = gh / 2 + 60 * global_game_scale,
 				force_update = true,
-				button_text = "1 player",
+				button_text = "restart",
 				fg_color = "bg",
-				bg_color = "green",
+				bg_color = "orange",
 				action = function()
 					restart_level_with_X_players(self, 1)
-				end,
-			})
-		)
-		self.restart_with_2_player_button = collect_into(
-			self.paused_ui_elements,
-			Button({
-				group = ui_group,
-				x = gw / 2,
-				y = gh / 2 + 55,
-				force_update = true,
-				button_text = "2 players",
-				fg_color = "bg",
-				bg_color = "green",
-				action = function()
-					restart_level_with_X_players(self, 2)
-				end,
-			})
-		)
-		self.restart_with_3_player_button = collect_into(
-			self.paused_ui_elements,
-			Button({
-				group = ui_group,
-				x = gw / 2,
-				y = gh / 2 + 80,
-				force_update = true,
-				button_text = "3 players",
-				fg_color = "bg",
-				bg_color = "green",
-				action = function()
-					restart_level_with_X_players(self, 3)
-				end,
-			})
-		)
-		self.restart_with_4_player_button = collect_into(
-			self.paused_ui_elements,
-			Button({
-				group = ui_group,
-				x = gw / 2,
-				y = gh / 2 + 105,
-				force_update = true,
-				button_text = "4 players",
-				fg_color = "bg",
-				bg_color = "green",
-				action = function()
-					restart_level_with_X_players(self, 4)
 				end,
 			})
 		)
@@ -803,11 +782,10 @@ function open_credits(self)
 	main.ui_layer_stack:push({
 		layer = ui_layer,
 		-- music = self.credits_menu_song_instance,
-		layer_has_music = true,
+		layer_has_music = not main.current.paused,
 		music_type = "credits",
 		ui_elements = self.credits_ui_elements,
 	})
-	-- play_music({ })
 	self.in_credits = true
 
 	local open_url = function(b, url)
@@ -818,15 +796,18 @@ function open_credits(self)
 		system.open_url(url)
 	end
 
-	local yOffset = 20
-	self.dev_section =
-		collect_into(self.credits_ui_elements,
-			Text2({ group = ui_group, x = 60, y = yOffset, lines = { { text = "[fg]dev: ", font = pixul_font } } }))
+	local yOffset = gh * 0.3
+	local y_dist = 40
+	local columns = { gw / 4, 2 * gw / 3 }
+	self.dev_section = collect_into(
+		self.credits_ui_elements,
+		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[fg]dev: ", font = pixul_font } } })
+	)
 	self.dev_button = collect_into(
 		self.credits_ui_elements,
 		Button({
 			group = ui_group,
-			x = 125,
+			x = columns[2],
 			y = yOffset,
 			button_text = "Mikey",
 			fg_color = "bg",
@@ -838,12 +819,12 @@ function open_credits(self)
 		})
 	)
 
-	yOffset = yOffset + 30
+	yOffset = yOffset + y_dist
 	self.inspiration_section = collect_into(
 		self.credits_ui_elements,
 		Text2({
 			group = ui_group,
-			x = 70,
+			x = columns[1],
 			y = yOffset,
 			lines = { { text = "[fg]inspiration: ", font = pixul_font } },
 		})
@@ -852,7 +833,7 @@ function open_credits(self)
 		self.credits_ui_elements,
 		Button({
 			group = self.credits,
-			x = 135,
+			x = columns[2],
 			y = yOffset,
 			button_text = "SNKRX",
 			fg_color = "bg",
@@ -864,16 +845,19 @@ function open_credits(self)
 		})
 	)
 
-	yOffset = yOffset + 30
+	yOffset = yOffset + y_dist
 	self.libraries_section = collect_into(
 		self.credits_ui_elements,
-		Text2({ group = ui_group, x = 60, y = yOffset, lines = { { text = "[blue]libraries: ", font = pixul_font } } })
+		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[blue]libraries: ", font = pixul_font } } })
 	)
+
+	local x_offset = -200
+	local x_dist = 130
 	self.libraries_button1 = collect_into(
 		self.credits_ui_elements,
 		Button({
 			group = ui_group,
-			x = 113,
+			x = columns[2] + x_offset,
 			y = yOffset,
 			button_text = "love2d",
 			fg_color = "bg",
@@ -884,11 +868,13 @@ function open_credits(self)
 			end,
 		})
 	)
+	x_offset = x_offset + x_dist
+
 	self.libraries_button2 = collect_into(
 		self.credits_ui_elements,
 		Button({
 			group = ui_group,
-			x = 170,
+			x = columns[2] + x_offset,
 			y = yOffset,
 			button_text = "bakpakin",
 			fg_color = "bg",
@@ -899,11 +885,12 @@ function open_credits(self)
 			end,
 		})
 	)
+	x_offset = x_offset + x_dist
 	self.libraries_button3 = collect_into(
 		self.credits_ui_elements,
 		Button({
 			group = ui_group,
-			x = 237,
+			x = columns[2] + x_offset,
 			y = yOffset,
 			button_text = "davisdude",
 			fg_color = "bg",
@@ -914,11 +901,12 @@ function open_credits(self)
 			end,
 		})
 	)
+	x_offset = x_offset + x_dist
 	self.libraries_button4 = collect_into(
 		self.credits_ui_elements,
 		Button({
 			group = ui_group,
-			x = 306,
+			x = columns[2] + x_offset,
 			y = yOffset,
 			button_text = "tesselode",
 			fg_color = "bg",
@@ -930,15 +918,16 @@ function open_credits(self)
 		})
 	)
 
-	yOffset = yOffset + 30
-	self.music_section =
-		collect_into(self.credits_ui_elements,
-			Text2({ group = ui_group, x = 60, y = yOffset, lines = { { text = "[green]music: ", font = pixul_font } } }))
+	yOffset = yOffset + y_dist
+	self.music_section = collect_into(
+		self.credits_ui_elements,
+		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[green]music: ", font = pixul_font } } })
+	)
 	self.music_button1 = collect_into(
 		self.credits_ui_elements,
 		Button({
 			group = ui_group,
-			x = 160,
+			x = columns[2],
 			y = yOffset,
 			button_text = "pixabay royalty-free",
 			fg_color = "bg",
@@ -950,16 +939,16 @@ function open_credits(self)
 		})
 	)
 
-	yOffset = yOffset + 30
+	yOffset = yOffset + y_dist
 	self.sound_section = collect_into(
 		self.credits_ui_elements,
-		Text2({ group = ui_group, x = 60, y = yOffset, lines = { { text = "[yellow]sounds: ", font = pixul_font } } })
+		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[yellow]sounds: ", font = pixul_font } } })
 	)
 	self.sound_button1 = collect_into(
 		self.credits_ui_elements,
 		Button({
 			group = self.credits,
-			x = 215,
+			x = columns[2],
 			y = yOffset,
 			button_text = "BlueYeti Snowball + Audacity + My Mouth",
 			fg_color = "bg",
@@ -986,9 +975,8 @@ function restart_level_with_X_players(self, num_players)
 	music_slow_amount = 1
 	run_time = 0
 	locked_state = nil
-	scene_transition(self, gw / 2, gh / 2, Game("game"),
-		{ destination = "game", args = { level = main.current.level, num_players = num_players } }, {
-		text = "level " .. (main.current.level == 5 and "[red]" or "") .. main.current.level .. "[red]/5",
+	scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = main.current.level, num_players = num_players } }, {
+		text = "stay hydrated!",
 		font = pixul_font,
 		alignment = "center",
 	})

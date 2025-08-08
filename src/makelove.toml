@@ -1,7 +1,7 @@
 name = "gmtk2025" # WARN: also change for setup_web_build
 
-# default_targets = ["win32", "win64", "appimage", "lovejs", "macos"]
-default_targets = ["lovejs"]
+default_targets = ["win32", "win64", "appimage", "lovejs", "macos"]
+# default_targets = ["lovejs"
 build_directory = "../build"
 # icon_file "./assets/images/icon.png"
 

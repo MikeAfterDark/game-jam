@@ -1,23 +1,24 @@
-# Requirements:
+### Theme: Loop
 
-[X] Figure out how UI's should work
-    [X] TransitioningEffect - cleaned up into `function scene_transition(...)`
-    [X] options buttons, layout stuffs, ties into OPTIONS REVAMP
-    [X] UI interaction layers
-        [X] Looping music on layers
-[X] Options revamp:
-    [X] SFX, Music
-    [X] Fullscreen/Windowed
-    - Brightness?
-    - Resolution multiplier? (factors of the pixel resolution, resizing = false, keeps pixels square)
-    [X] Vsync
-    [X] Controls
-        - Kb-Mouse Keybinds
-        - make sure to leave a way to have controller/whatever options in teh future
-    [X] Game Options
-        - Game specifics
-[ WIP ] Web build
-[ ] Figure out background, colours, text, images, noise, anything
+## Idea:
+
+Train Looper: 
+<= Build =>
+- Points appear one at a time at some random location
+- Points have a 'message box' with what connections they need and where
+Connections:
+1. Direct, from point A -> B, no intermediary
+2. Indirect, can be A -> D -> C -> B 
+- Sections of road can be build from any location and will be directional, 
+  can be connected to another road in same direction or cross if across or wrong direction
+- Sections can be deleted
+- Once all Points are satisfied, 'play' round starts on 'Continue' button press
+
+<= Play => 
+- Trains will start moving for X amount of time, must complete a 'loop' of some points
+- Any intersections will be managable to allow one path or another, a blocked path stops a train if its slow, crashes if fast
+- If crash or ran out of time, prompt to re-path or try again
+- Once all the trains are done after X time, start Build phase with current tracks
 
 # Sources:
 
@@ -25,11 +26,11 @@
 
 // Main Music
 
-https://pixabay.com/music/video-games-8-bit-gaming-background-music-358443
-https://pixabay.com/music/edm003-retro-edm-gamepixel-racer-358045/
-https://pixabay.com/music/synthwave-neon-rush-retro-synthwave-uplifting-daily-vlog-fast-cuts-sv201-360195/
-https://pixabay.com/music/video-games-pixel-fantasia-355123/
-https://pixabay.com/music/video-games-pixel-fight-8-bit-arcade-music-background-music-for-video-208775/
+https://pixabay.com/music/funk-funk-smooth-party-stylish-379509/
+https://pixabay.com/music/funk-groovy-ambient-funk-201745/
+https://pixabay.com/music/funk-drunk-on-funk-273910/
+https://pixabay.com/music/beats-midnight-quirk-255361/
+https://pixabay.com/music/funk-funky-main-187356/
 
 // Pause Music
 

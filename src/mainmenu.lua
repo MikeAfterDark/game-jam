@@ -37,7 +37,7 @@ function MainMenu:play(num_players)
 		gh / 2,
 		Game("game"),
 		{ destination = "game", args = { level = 1, num_players = num_players } },
-		{ text = "Feeding whales...", font = pixul_font, alignment = "center" }
+		{ text = "posture check!", font = pixul_font, alignment = "center" }
 	)
 end
 
@@ -184,12 +184,13 @@ function MainMenu:setup_main_menu_ui()
 		})
 	)
 
-	self.title_text =
-		collect_into(self.main_ui_elements,
-			Text({ { text = "[wavy, blue]LONGE WHAL", font = fat_title_font, alignment = "center" } }, global_text_tags))
+	self.title_text = collect_into(
+		self.main_ui_elements,
+		Text({ { text = "[wavy, green]Spotty Connections", font = fat_title_font, alignment = "center" } }, global_text_tags)
+	)
 
-	local button_offset = -10
-	local button_dist_apart = 26
+	local button_offset = 20
+	local button_dist_apart = 40
 	self.play_button1 = collect_into(
 		self.main_ui_elements,
 		Button({
