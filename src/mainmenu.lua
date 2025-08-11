@@ -176,7 +176,7 @@ function MainMenu:setup_main_menu_ui()
 			y = 20,
 			lines = {
 				{
-					text = "[wavy_mid, fg]GMTK 2025!!!",
+					text = "[wavy_mid, fg]SLOW JAM 2025!!",
 					font = pixul_font,
 					alignment = "center",
 				},
@@ -186,7 +186,7 @@ function MainMenu:setup_main_menu_ui()
 
 	self.title_text = collect_into(
 		self.main_ui_elements,
-		Text({ { text = "[wavy, green]Spotty Connections", font = fat_title_font, alignment = "center" } }, global_text_tags)
+		Text({ { text = "[wavy, green]RHYTHM GO BRRR", font = fat_title_font, alignment = "center" } }, global_text_tags)
 	)
 
 	local button_offset = 20

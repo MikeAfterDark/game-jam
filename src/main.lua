@@ -9,92 +9,28 @@ require("boss")
 function init()
 	renderer_init()
 
-	-- Input bindings per player
-	local input_sets = {
-		player1 = {
-			move_up = { "up" },
-			move_down = { "down" },
-			move_left = { "left" },
-			move_right = { "right" },
-			move_forward = { "." },
-			shoot = { "/" },
-		},
-		player2 = {
-			move_up = { "w" },
-			move_down = { "s" },
-			move_left = { "a" },
-			move_right = { "d" },
-			move_forward = { "`" },
-			shoot = { "1" },
-		},
-		player3 = {
-			move_up = { "i" },
-			move_down = { "k" },
-			move_left = { "j" },
-			move_right = { "l" },
-			move_forward = { "g" },
-			shoot = { "h" },
-		},
-		player4 = {
-			move_up = { "kp8" },
-			move_down = { "kp5" },
-			move_left = { "kp4" },
-			move_right = { "kp6" },
-			move_forward = { "kp1" },
-			shoot = { "kp2" },
-		},
-	}
-
-	-- Bind each player's actions with unique names like "p1_move_up"
-	for pname, bindings in pairs(input_sets) do
-		local pid = pname:match("player(%d)")
-		for action, keys in pairs(bindings) do
-			local action_name = "p" .. pid .. "_" .. action
-			input:bind(action_name, keys)
-		end
-	end
-
-	-- add selection bindings too
-	for selection_action, move_action in pairs({
-		selection_up = "move_up",
-		selection_down = "move_down",
-		selection_left = "move_left",
-		selection_right = "move_right",
-		selection = "move_forward",
-	}) do
-		local keys = {}
-		for _, p in pairs(input_sets) do
-			for _, key in ipairs(p[move_action]) do
-				table.insert(keys, key)
-			end
-		end
-		input:bind(selection_action, keys)
-	end
-
-	-- new input system
 	if not state.input then
 		state.input = {}
 	end
-	controls_text = {
-		cancel_rail = "Delete Rail",
-		draw_rail = "Draw Rail",
-	}
 	controls = {
-		cancel_rail = state.input.cancel_rail or "m2",
-		draw_rail = state.input.draw_rail or "m1",
-		-- right = state.input.right or "d",
-		-- climb = state.input.climb or "w",
-		-- jump = state.input.jump or "space",
-	}
-	default_controls = { -- copy controls above
-		cancel_rail = "m2",
-		draw_rail = "m1",
-		-- right = "d",
-		-- climb = "w",
-		-- jump = "space",
+		save_recording = {
+			text = "Save Recording",
+			default = "w",
+			input = state.input.save_recording,
+		},
+		strong_hit = {
+			text = "Strong Hit",
+			default = "a",
+			input = state.input.strong_hit,
+		},
+		basic_hit = {
+			text = "Basic Hit",
+			default = "space",
+			input = state.input.basic_hit,
+		},
 	}
 	for action, key in pairs(controls) do
-		input:bind(action, key)
+		input:bind(action, key.input or key.default)
 	end
 
 	-- load sounds:
@@ -179,10 +115,10 @@ function init()
 	main.current_music_type = "silence"
 	play_music({ type = "main", volume = 0.3 })
 
-	main:add(MainMenu("mainmenu"))
-	main:go_to("mainmenu")
-	-- main:add(Game("game"))
-	-- main:go_to("game", {})
+	-- main:add(MainMenu("mainmenu"))
+	-- main:go_to("mainmenu")
+	main:add(Game("game"))
+	main:go_to("game", { folder = "U.N.Owen_was_her", countdown = 3.5 })
 
 	-- set sane defaults:
 	state.timed_mode = true
@@ -225,7 +161,7 @@ function love.run()
 	global_game_height = 270 * global_game_scale
 
 	return engine_run({
-		game_name = "GMTK 2025",
+		game_name = "Slow Jam 2025",
 		window_width = "max",
 		window_height = "max",
 	})
@@ -437,17 +373,18 @@ function open_options(self)
 				y = gh / 2 + button_offset,
 				w = 85 * global_game_scale,
 				separator_length = 50 * global_game_scale,
-				description_text = controls_text[action],
-				button_text = string.upper(key),
+				description_text = key.text,
+				button_text = string.upper(key.input or key.default),
 				fg_color = "fg",
 				bg_color = "bg",
 				action = function(b)
 					set_action_keybind(self, action, key)
-					b:set_text(string.upper(controls[action]))
+					b:set_text(string.upper(controls[action].input or key.default))
 				end,
 			})
 		)
-		button_offset = button_offset + button_distance - 3 --for some reason this is needed for the last button to work (for 4 controls)
+		button_offset = button_offset + button_distance -
+		3                                             --for some reason this is needed for the last button to work (for 4 controls)
 	end
 
 	--
@@ -548,7 +485,7 @@ function set_action_keybind(self, action, key)
 			group = ui_group,
 			x = gw / 2,
 			y = gh / 2 - 30 * global_game_scale,
-			lines = { { text = "[wavy_mid2, yellow] Bind '" .. controls_text[action] .. "' (press any key)", font = pixul_font, alignment = "center" } },
+			lines = { { text = "[wavy_mid2, yellow] Bind '" .. controls[action].text .. "' (press any key)", font = pixul_font, alignment = "center" } },
 		})
 	)
 
@@ -560,7 +497,7 @@ function set_action_keybind(self, action, key)
 			y = gh / 2,
 			-- sx = 1.3,
 			-- sy = 1.3,
-			lines = { { text = "[fg]" .. string.upper(controls[action]), font = fat_font, alignment = "center" } },
+			lines = { { text = "[fg]" .. string.upper(controls[action].input or controls[action].default), font = fat_font, alignment = "center" } },
 		})
 	)
 
@@ -595,21 +532,20 @@ function set_action_keybind(self, action, key)
 				if new_key then
 					-- clear any controls that already use new_key
 					for k, v in pairs(controls) do
-						if v == new_key then
+						if v.input == new_key then
 							state.input[k] = ""
-							controls[k] = ""
+							controls[k].input = ""
 						end
 					end
 
-					state.input[action] = new_key -- update config
-					controls[action] = new_key
+					state.input[action] = new_key
+					controls[action].input = new_key
 					input:bind(action, new_key)
-					-- print("for action: " .. action .. ", state: " .. state.input[action] .. " and controls: " .. controls[action])
 					new_key = nil
 					system.save_state()
 
 					for input_action, _ in pairs(controls) do
-						self["input_" .. input_action]:set_text(string.upper(controls[input_action]))
+						self["input_" .. input_action]:set_text(string.upper(controls[input_action].input or ""))
 					end
 				end
 				pop_ui_layer(self)
@@ -975,7 +911,8 @@ function restart_level_with_X_players(self, num_players)
 	music_slow_amount = 1
 	run_time = 0
 	locked_state = nil
-	scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = main.current.level, num_players = num_players } }, {
+	scene_transition(self, gw / 2, gh / 2, Game("game"),
+		{ destination = "game", args = { level = main.current.level, num_players = num_players } }, {
 		text = "stay hydrated!",
 		font = pixul_font,
 		alignment = "center",
@@ -1009,6 +946,9 @@ function scene_transition(self, x_pos, y_pos, addition, go_to, text_args)
 end
 
 function play_music(args)
+	if true then
+		return
+	end
 	--[[
 	Overview:
 	1. Check the topmost layer with music (layer_has_music == true)
@@ -1063,6 +1003,9 @@ function play_music(args)
 end
 
 function stop_current_music()
+	if true then
+		return
+	end
 	if main.ui_layer_stack:peek().music ~= nil then
 		main.ui_layer_stack:peek().music:stop()
 	end
