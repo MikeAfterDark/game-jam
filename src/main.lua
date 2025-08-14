@@ -82,6 +82,19 @@ function init()
 
 	-- load images:
 	-- image1 = Image('name')
+	bug_crusher = {
+		animation_speed = 0.5,
+		sprites = {
+			Image("bug_open"),
+			Image("bug_close"),
+		},
+	}
+	rock_bug = {
+		animation_speed = 0,
+		sprites = {
+			Image("enemy_single"),
+		},
+	}
 
 	-- set logic init
 	-- main_song_instance = _G[random:table({ "song1", "song2", "song3", "song4", "song5" })]:play({ volume = 0.3 })

@@ -65,6 +65,13 @@ function Game:on_enter(from, args) -- level, num_players, player_inputs)
 			alignment = "left",
 		},
 	}, global_text_tags)
+	self.accuracy_text = Text({
+		{
+			text = "[fg]beep/boop",
+			font = mystery_font,
+			alignment = "left",
+		},
+	}, global_text_tags)
 	self.time_text = Text({
 		{
 			text = "[fg]ti:me",
@@ -77,8 +84,7 @@ function Game:on_enter(from, args) -- level, num_players, player_inputs)
 		group = self.main,
 		x = gw * 0.5,
 		y = gh * 0.8,
-		w = 100,
-		h = 30,
+		asset = bug_crusher,
 		color = blue[0],
 	})
 
@@ -153,6 +159,17 @@ function Game:update(dt)
 				},
 			})
 			self.score_text:update(dt * slow_amount)
+		end
+
+		if self.accuracy_text then
+			self.accuracy_text:set_text({
+				{
+					text = "[fg]" .. string.format("%.2f", self.map.accuracy or 0) .. "/" .. self.map.hits,
+					font = pixul_font,
+					alignment = "left",
+				},
+			})
+			self.accuracy_text:update(dt * slow_amount)
 		end
 
 		if self.time_text then
@@ -358,7 +375,7 @@ end
 function Game:draw()
 	self.floor:draw()
 	self.main:draw()
-	-- self.main:get_objects_by_class(HitIndicator)[1]:draw()
+	self.main:get_objects_by_class(HitIndicator)[1]:draw()
 	self.post_main:draw()
 	self.effects:draw()
 

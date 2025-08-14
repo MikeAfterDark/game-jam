@@ -4,7 +4,7 @@ function Map:init(args)
 	self:init_game_object(args)
 
 	self.folder = args.folder
-	self.song = Map_Song(self.folder, { { tags = map } })
+	self.song = Map_Song(self.folder, { { tags = music } })
 	self.data = self:load_map_data()
 	self.floor = args.floor
 	self.recording = args.recording
@@ -18,6 +18,7 @@ function Map:init(args)
 	self.beat = 1
 
 	self.score = 0
+	self.accuracy = 0
 	self.hits = 0
 	self.misses = 0
 
@@ -30,8 +31,9 @@ function Map:init(args)
 				name = i,
 				x = gw * 0.5,
 				y = self.floor - note.time * self.speed * 10, -- /1000  temporarily cuz im dumb and data is in ms instead of seconds
-				size = 10,
+				size = 0.3,
 				speed = self.speed,
+				asset = rock_bug,
 			})
 		end
 		self.notes[self.beat].color = red[0]
@@ -112,6 +114,7 @@ end
 
 function Map:update_score()
 	local score = 0
+	local accuracy = 0
 	local hits = 0
 	local misses = 0
 	for _, note in ipairs(self.notes) do
@@ -120,12 +123,14 @@ function Map:update_score()
 		elseif note.hit then
 			hits = hits + 1
 			if note.score then
-				score = score + note.score
+				accuracy = accuracy + note.score
+				score = score + math.abs(note.score)
 			end
 		end
 	end
 
-	self.score = score / hits
+	self.score = score
+	self.accuracy = accuracy / hits
 	self.hits = hits
 	self.misses = misses
 end
@@ -177,8 +182,10 @@ function HitIndicator:init(args)
 	self:init_game_object(args)
 
 	self.group = args.group
-	self:set_as_rectangle(self.w, self.h, "static", "indicator")
+	-- self:set_as_rectangle(self.w, self.h, "static", "indicator")
 	self.color = self.color or fg[0]
+
+	self.asset = args.asset
 end
 
 function HitIndicator:update(dt)
@@ -187,9 +194,18 @@ end
 
 function HitIndicator:draw()
 	graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
-	self.shape:draw(self.color)
-	self:draw_physics(nil, 1) -- draws physics shape
-	graphics.rectangle(self.x, self.y, self.shape.w, 3, 0, 0, black[0])
+	-- graphics.rectangle(self.x, self.y, self.shape.w, 3, 0, 0, black[0])
+
+	-- Draw self.asset animation
+	local time = love.timer.getTime()
+	local asset = self.asset
+	local frame_count = #asset.sprites
+	local frame = math.floor(time / asset.animation_speed) % frame_count + 1
+	local sprite = asset.sprites[frame]
+
+	local scale = 0.3
+	sprite:draw(self.x, self.y, 0, scale, scale)
+
 	graphics.pop()
 end
 
@@ -206,8 +222,9 @@ function Note:init(args)
 	self.time = args.time
 	self.size = args.size
 	self.speed = args.speed
+	self.asset = args.asset
 
-	self:set_as_circle(self.size, "dynamic", "note")
+	-- self:set_as_circle(self.size, "dynamic", "note")
 	self.color = self.color or fg[0]
 
 	self.moving = false
@@ -255,8 +272,10 @@ end
 
 function Note:draw()
 	graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
-	self.shape:draw(self.color)
-	self:draw_physics(nil, 1) -- draws physics shape
+	-- self.shape:draw(self.color)
+	-- self:draw_physics(nil, 1) -- draws physics shape
+
+	self.asset.sprites[1]:draw(self.x, self.y, 0, self.size)
 
 	if self.missed or self.hit then
 		self.note_text:draw(self.x + 50, self.y, self.r, self.sx * self.spring.x, self.sy * self.spring.x)
