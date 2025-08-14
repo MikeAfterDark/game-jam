@@ -92,6 +92,8 @@ function Map:basic_hit()
 	end
 end
 
+-- TODO: add the background, indicator line, heart animation (cover up the heart on the bug)
+
 function Map:update_note_tracking()
 	local current = self:get_current_note()
 	if not current then
@@ -100,6 +102,10 @@ function Map:update_note_tracking()
 
 	local current_time = current.time - self.song_position
 	if current_time < self.crotchet / 2 and current_time > -self.crotchet / 2 then
+		if not current.color == green[0] then
+			-- current.spring:pull(0.03, 100, 10)
+			current.spring:pull(0.2, 200, 10)
+		end
 		current.color = green[0] -- hittable
 	elseif current_time < -self.crotchet / 2 then
 		current.color = blue[0] -- Missed
@@ -182,7 +188,7 @@ function HitIndicator:init(args)
 	self:init_game_object(args)
 
 	self.group = args.group
-	-- self:set_as_rectangle(self.w, self.h, "static", "indicator")
+	self:set_as_rectangle(self.w, self.h, "static", "indicator")
 	self.color = self.color or fg[0]
 
 	self.asset = args.asset
@@ -194,7 +200,8 @@ end
 
 function HitIndicator:draw()
 	graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
-	-- graphics.rectangle(self.x, self.y, self.shape.w, 3, 0, 0, black[0])
+	self.shape:draw(self.color)
+	graphics.rectangle(self.x, self.y, self.shape.w, 3, 0, 0, black[0])
 
 	-- Draw self.asset animation
 	local time = love.timer.getTime()
@@ -204,7 +211,7 @@ function HitIndicator:draw()
 	local sprite = asset.sprites[frame]
 
 	local scale = 0.3
-	sprite:draw(self.x, self.y, 0, scale, scale)
+	sprite:draw(self.x, self.y + 15, 0, scale, scale)
 
 	graphics.pop()
 end
@@ -245,6 +252,9 @@ function Note:start()
 end
 
 function Note:update(dt)
+	if self.y > gh + 20 then
+		return
+	end
 	self:update_game_object(dt)
 
 	if self.hit then
@@ -271,6 +281,9 @@ function Note:update(dt)
 end
 
 function Note:draw()
+	if self.y > gh + 20 then
+		return
+	end
 	graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
 	-- self.shape:draw(self.color)
 	-- self:draw_physics(nil, 1) -- draws physics shape

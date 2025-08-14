@@ -84,6 +84,8 @@ function Game:on_enter(from, args) -- level, num_players, player_inputs)
 		group = self.main,
 		x = gw * 0.5,
 		y = gh * 0.8,
+		w = 100,
+		h = 30,
 		asset = bug_crusher,
 		color = blue[0],
 	})
