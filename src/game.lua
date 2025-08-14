@@ -58,6 +58,21 @@ function Game:on_enter(from, args) -- level, num_players, player_inputs)
 		},
 	}, global_text_tags)
 
+	self.score_text = Text({
+		{
+			text = "[fg]beep boop",
+			font = mystery_font,
+			alignment = "left",
+		},
+	}, global_text_tags)
+	self.time_text = Text({
+		{
+			text = "[fg]ti:me",
+			font = mystery_font,
+			alignment = "left",
+		},
+	}, global_text_tags)
+
 	self.hit_indicator = HitIndicator({
 		group = self.main,
 		x = gw * 0.5,
@@ -72,7 +87,7 @@ function Game:on_enter(from, args) -- level, num_players, player_inputs)
 		group = self.main,
 		folder = args.folder,
 
-		floor = self.hit_indicator.y,
+		floor = gh * 0.8, -- self.hit_indicator.y,
 		-- recording = true,
 	})
 
@@ -127,6 +142,28 @@ function Game:update(dt)
 				})
 				self.countdown_text:update(dt * slow_amount)
 			end
+		end
+
+		if self.score_text then
+			self.score_text:set_text({
+				{
+					text = "[fg]" .. string.format("%.2f", self.map.score or 0),
+					font = pixul_font,
+					alignment = "left",
+				},
+			})
+			self.score_text:update(dt * slow_amount)
+		end
+
+		if self.time_text then
+			self.time_text:set_text({
+				{
+					text = "[fg]" .. string.format("%.1f", self.map.song_position or 0),
+					font = pixul_font,
+					alignment = "left",
+				},
+			})
+			self.time_text:update(dt * slow_amount)
 		end
 	end
 
@@ -378,6 +415,13 @@ function Game:draw()
 	if self.countdown_text then
 		self.countdown_text:draw(gw / 2, gh / 2)
 	end
+
+	if self.score_text then
+		self.score_text:draw(gw * 0.9, gh * 0.05)
+	end
+	if self.time_text then
+		self.time_text:draw(gw * 0.9, gh * 0.1)
+	end
 	camera:detach()
 
 	if self.level == 20 and self.trailer then
@@ -517,8 +561,7 @@ function Game:die()
 							slow_amount = 1
 							music_slow_amount = 1
 							locked_state = nil
-							scene_transition(self, gw / 2, gh / 2, Game("game"),
-								{ destination = "game", args = { level = 1, num_players = 1 } }, {
+							scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = 1, num_players = 1 } }, {
 								text = "chill mode will pause the timer [wavy]forever",
 								font = pixul_font,
 								alignment = "center",
