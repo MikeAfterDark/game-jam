@@ -10,7 +10,7 @@ function Map:init(args)
 	self.recording = args.recording
 
 	self.bpm = self.data.bpm
-	self.offset = self.data.offset
+	self.offset = not web and self.data.offset or 0 -- cuz it seems web doesn't support playing audio files at specific locations or smth, idk (rip preview)
 	self.speed = self.data.speed
 
 	self.song_position = self.offset
@@ -31,7 +31,7 @@ function Map:init(args)
 				time = note.time,
 				name = i,
 				x = gw * 0.5,
-				y = self.floor - (note.time - self.offset) * self.speed * 10 * spacing, -- /1000  temporarily cuz im dumb and data is in ms instead of seconds
+				y = self.floor - (note.time - self.offset) * self.speed * 10 * spacing,
 				size = 0.3,
 				speed = self.speed,
 				asset = rock_bug,

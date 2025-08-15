@@ -175,6 +175,9 @@ end
 
 function love.run()
 	web = love.system.getOS() == "Web"
+	-- print("Running on: " .. love.system.getOS())
+	-- print("Is web? " .. tostring(web))
+
 	global_game_scale = 2
 	global_game_width = 480 * global_game_scale
 	global_game_height = 270 * global_game_scale
