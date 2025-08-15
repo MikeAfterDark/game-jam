@@ -23,6 +23,7 @@ function Map:init(args)
 	self.misses = 0
 
 	self.notes = {}
+	spacing = 2
 	if not self.recording then
 		for i, note in ipairs(self.data.notes) do
 			self.notes[i] = Note({
@@ -30,7 +31,7 @@ function Map:init(args)
 				time = note.time,
 				name = i,
 				x = gw * 0.5,
-				y = self.floor - note.time * self.speed * 10, -- /1000  temporarily cuz im dumb and data is in ms instead of seconds
+				y = self.floor - (note.time - self.offset) * self.speed * 10 * spacing, -- /1000  temporarily cuz im dumb and data is in ms instead of seconds
 				size = 0.3,
 				speed = self.speed,
 				asset = rock_bug,
@@ -102,13 +103,15 @@ function Map:update_note_tracking()
 
 	local current_time = current.time - self.song_position
 	if current_time < self.crotchet / 2 and current_time > -self.crotchet / 2 then
-		if not current.color == green[0] then
+		if not current.pulled then
 			-- current.spring:pull(0.03, 100, 10)
 			current.spring:pull(0.2, 200, 10)
+			current.pulled = true
 		end
 		current.color = green[0] -- hittable
 	elseif current_time < -self.crotchet / 2 then
 		current.color = blue[0] -- Missed
+		camera:shake(2, 0.5)
 		current.missed = true
 		self.beat = self.beat + 1
 		local note = self:get_current_note()
@@ -126,11 +129,12 @@ function Map:update_score()
 	for _, note in ipairs(self.notes) do
 		if note.missed then
 			misses = misses + 1
+			score = score - 1
 		elseif note.hit then
 			hits = hits + 1
 			if note.score then
 				accuracy = accuracy + note.score
-				score = score + math.abs(note.score)
+				score = score + (1 - math.abs(note.score))
 			end
 		end
 	end
@@ -149,6 +153,11 @@ function Map:attempt_note_hit(time)
 
 	if math.abs(current.time - time) < self.crotchet / 2 then
 		current.hit = time
+
+		HitCircle({ group = main.current.effects, x = current.x, y = current.y, rs = 9, color = fg[0], duration = self.crotchet / 4 })
+		for i = 1, random:int(10, 20) do
+			HitParticle({ group = main.current.effects, x = current.x, y = current.y, w = 10, color = current.color, duration = self.crotchet })
+		end
 		self.beat = self.beat + 1
 		local next = self:get_current_note()
 		if next then
@@ -200,15 +209,17 @@ end
 
 function HitIndicator:draw()
 	graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
-	self.shape:draw(self.color)
-	graphics.rectangle(self.x, self.y, self.shape.w, 3, 0, 0, black[0])
+	-- self.shape:draw(self.color)
+	self:draw_physics(nil, 1) -- draws physics shape
+	graphics.rectangle(self.x, self.y, gw, 3, 0, 0, red[0])
 
 	-- Draw self.asset animation
-	local time = love.timer.getTime()
-	local asset = self.asset
-	local frame_count = #asset.sprites
-	local frame = math.floor(time / asset.animation_speed) % frame_count + 1
-	local sprite = asset.sprites[frame]
+	-- local time = love.timer.getTime()
+	-- local asset = self.asset
+	-- local frame_count = #asset.sprites
+	-- local frame = math.floor(time / asset.animation_speed) % frame_count + 1
+	local frame = input.basic_hit.down and 2 or 1
+	local sprite = self.asset.sprites[frame]
 
 	local scale = 0.3
 	sprite:draw(self.x, self.y + 15, 0, scale, scale)
@@ -275,7 +286,7 @@ function Note:update(dt)
 
 	if self.moving then
 		-- self:move_along_angle(self.speed, math.pi / 2)
-		self.y = self.y + dt * 100 -- self.speed
+		self.y = self.y + dt * 100 * spacing -- self.speed
 		self:set_position(self.x, self.y) -- ignores the physics collision detection
 	end
 end
@@ -288,7 +299,9 @@ function Note:draw()
 	-- self.shape:draw(self.color)
 	-- self:draw_physics(nil, 1) -- draws physics shape
 
-	self.asset.sprites[1]:draw(self.x, self.y, 0, self.size)
+	if not self.hit then
+		self.asset.sprites[1]:draw(self.x, self.y, 0, self.size)
+	end
 
 	if self.missed or self.hit then
 		self.note_text:draw(self.x + 50, self.y, self.r, self.sx * self.spring.x, self.sy * self.spring.x)

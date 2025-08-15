@@ -65,6 +65,13 @@ function Game:on_enter(from, args) -- level, num_players, player_inputs)
 			alignment = "left",
 		},
 	}, global_text_tags)
+	self.missed_text = Text({
+		{
+			text = "[fg]missed: xxx",
+			font = mystery_font,
+			alignment = "left",
+		},
+	}, global_text_tags)
 	self.accuracy_text = Text({
 		{
 			text = "[fg]beep/boop",
@@ -155,7 +162,7 @@ function Game:update(dt)
 		if self.score_text then
 			self.score_text:set_text({
 				{
-					text = "[fg]" .. string.format("%.2f", self.map.score or 0),
+					text = "[fg]score: " .. string.format("%.2f", self.map.score or 0),
 					font = pixul_font,
 					alignment = "left",
 				},
@@ -163,10 +170,21 @@ function Game:update(dt)
 			self.score_text:update(dt * slow_amount)
 		end
 
+		if self.missed_text then
+			self.missed_text:set_text({
+				{
+					text = "[fg]misses: " .. string.format("%.0f", self.map.misses or 0),
+					font = pixul_font,
+					alignment = "left",
+				},
+			})
+			self.missed_text:update(dt * slow_amount)
+		end
+
 		if self.accuracy_text then
 			self.accuracy_text:set_text({
 				{
-					text = "[fg]" .. string.format("%.2f", self.map.accuracy or 0) .. "/" .. self.map.hits,
+					text = "[fg]accuracy: " .. string.format("%.2f", self.map.accuracy or 0) .. "/" .. self.map.hits,
 					font = pixul_font,
 					alignment = "left",
 				},
@@ -177,7 +195,7 @@ function Game:update(dt)
 		if self.time_text then
 			self.time_text:set_text({
 				{
-					text = "[fg]" .. string.format("%.1f", self.map.song_position or 0),
+					text = "[fg]time: " .. string.format("%.1f", self.map.song_position or 0),
 					font = pixul_font,
 					alignment = "left",
 				},
@@ -375,9 +393,11 @@ function Game:quit()
 end
 
 function Game:draw()
+	background_image.sprites[1]:draw(gw / 2, gh / 2, 0, 0.345)
+
 	self.floor:draw()
 	self.main:draw()
-	self.main:get_objects_by_class(HitIndicator)[1]:draw()
+	-- self.main:get_objects_by_class(HitIndicator)[1]:draw()
 	self.post_main:draw()
 	self.effects:draw()
 
@@ -436,10 +456,16 @@ function Game:draw()
 	end
 
 	if self.score_text then
-		self.score_text:draw(gw * 0.9, gh * 0.05)
+		self.score_text:draw(gw * 0.8, gh * 0.05)
 	end
 	if self.time_text then
-		self.time_text:draw(gw * 0.9, gh * 0.1)
+		self.time_text:draw(gw * 0.8, gh * 0.1)
+	end
+	if self.accuracy_text then
+		self.accuracy_text:draw(gw * 0.8, gh * 0.15)
+	end
+	if self.missed_text then
+		self.missed_text:draw(gw * 0.8, gh * 0.2)
 	end
 	camera:detach()
 
