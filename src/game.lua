@@ -134,6 +134,12 @@ function Game:on_exit()
 	self.hfx = nil
 end
 
+function Game:unpause_in(time)
+	if self.started then
+		self.countdown = time
+	end
+end
+
 function Game:update(dt)
 	-- play_music({ volume = 0.3 })
 
@@ -143,16 +149,17 @@ function Game:update(dt)
 			self.countdown = self.countdown - dt * slow_amount
 			if self.countdown < 0 then
 				self.countdown = 0
-				self.countdown_text.dead = true
-				self.countdown_text = nil
-			end
-
-			if self.countdown_text then
+				self.countdown_text:set_text({ text = "", font = pixul_font })
+				self.map:unpause()
+				self.started = true
+				-- self.countdown_text.dead = true
+				-- self.countdown_text = nil
+			elseif self.countdown_text then
 				self.countdown_text:set_text({
 					{
 						text = "[fg]" .. string.format("%.1f", self.countdown),
 						font = pixul_font,
-						alignment = "left",
+						alignment = "right",
 					},
 				})
 				self.countdown_text:update(dt * slow_amount)
@@ -208,6 +215,7 @@ function Game:update(dt)
 
 	if input.escape.pressed and not self.transitioning and not self.in_credits then
 		if not self.paused and not self.died and not self.won then
+			self.map:pause()
 			pause_game(self)
 		elseif self.in_options and not self.died and not self.won then
 			if self.in_keybinding then
@@ -606,7 +614,8 @@ function Game:die()
 							slow_amount = 1
 							music_slow_amount = 1
 							locked_state = nil
-							scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = 1, num_players = 1 } }, {
+							scene_transition(self, gw / 2, gh / 2, Game("game"),
+								{ destination = "game", args = { level = 1, num_players = 1 } }, {
 								text = "chill mode will pause the timer [wavy]forever",
 								font = pixul_font,
 								alignment = "center",

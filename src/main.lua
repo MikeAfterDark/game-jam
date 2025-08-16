@@ -405,7 +405,8 @@ function open_options(self)
 				end,
 			})
 		)
-		button_offset = button_offset + button_distance - 3 --for some reason this is needed for the last button to work (for 4 controls)
+		button_offset = button_offset + button_distance -
+		3                                             --for some reason this is needed for the last button to work (for 4 controls)
 	end
 
 	--
@@ -709,6 +710,10 @@ function unpause_game(self)
 	trigger:tween(0.25, _G, { slow_amount = 1 }, math.linear, function()
 		slow_amount = 1
 		self.paused = false
+
+		if main.current:is(Game) then
+			main.current:unpause_in(3)
+		end
 		pop_ui_layer(self)
 	end)
 end
@@ -932,7 +937,8 @@ function restart_level_with_X_players(self, num_players)
 	music_slow_amount = 1
 	run_time = 0
 	locked_state = nil
-	scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = main.current.level, num_players = num_players } }, {
+	scene_transition(self, gw / 2, gh / 2, Game("game"),
+		{ destination = "game", args = { level = main.current.level, num_players = num_players } }, {
 		text = "stay hydrated!",
 		font = pixul_font,
 		alignment = "center",

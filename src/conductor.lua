@@ -10,7 +10,8 @@ function Map:init(args)
 	self.recording = args.recording
 
 	self.bpm = self.data.bpm
-	self.offset = not web and self.data.offset or 0 -- cuz it seems web doesn't support playing audio files at specific locations or smth, idk (rip preview)
+	self.offset = not web and self.data.offset or
+	0                                            -- cuz it seems web doesn't support playing audio files at specific locations or smth, idk (rip preview)
 	self.speed = self.data.speed
 
 	self.song_position = self.offset
@@ -85,6 +86,24 @@ function Map:update()
 	self:update_score()
 end
 
+function Map:pause()
+	self.song:pause()
+	self.was_paused = true
+	self.pause_start_time = love.timer.getTime()
+end
+
+function Map:unpause()
+	if not self.was_paused then
+		return
+	end
+	self.was_paused = false
+
+	local pause_duration = love.timer.getTime() - (self.pause_start_time or love.timer.getTime())
+	self.total_paused_time = (self.total_paused_time or 0) + pause_duration
+	self.pause_start_time = nil
+	self.song:resume()
+end
+
 function Map:basic_hit()
 	if self.recording then
 		self:add_recorded_note(self.song_position)
@@ -154,9 +173,11 @@ function Map:attempt_note_hit(time)
 	if math.abs(current.time - time) < self.crotchet / 2 then
 		current.hit = time
 
-		HitCircle({ group = main.current.effects, x = current.x, y = current.y, rs = 9, color = fg[0], duration = self.crotchet / 4 })
+		HitCircle({ group = main.current.effects, x = current.x, y = current.y, rs = 9, color = fg[0], duration = self
+		.crotchet / 4 })
 		for i = 1, random:int(10, 20) do
-			HitParticle({ group = main.current.effects, x = current.x, y = current.y, w = 10, color = current.color, duration = self.crotchet })
+			HitParticle({ group = main.current.effects, x = current.x, y = current.y, w = 10, color = current.color, duration =
+			self.crotchet })
 		end
 		self.beat = self.beat + 1
 		local next = self:get_current_note()
@@ -177,13 +198,34 @@ end
 
 function Map:get_song_position()
 	local instance = self.song._instances[#self.song._instances]
+
 	if instance and not instance:isStopped() then
 		local tell = instance._source:tell()
-		local now = love.timer.getTime() - (self.song_start_time or now)
+
+		local current_time = love.timer.getTime()
+		local paused_duration = self.total_paused_time or 0
+
+		-- If currently paused, also add time since it was paused
+		if self.was_paused and self.pause_start_time then
+			paused_duration = paused_duration + (current_time - self.pause_start_time)
+		end
+
+		local now = current_time - (self.song_start_time or current_time) - paused_duration
 		return math.max(tell, now)
 	end
+
 	return 0
 end
+
+-- function Map:get_song_position()
+-- 	local instance = self.song._instances[#self.song._instances]
+-- 	if instance and not instance:isStopped() then
+-- 		local tell = instance._source:tell()
+-- 		local now = love.timer.getTime() - (self.song_start_time or now)
+-- 		return math.max(tell, now)
+-- 	end
+-- 	return 0
+-- end
 
 function Map:draw() end
 
@@ -263,7 +305,7 @@ function Note:start()
 end
 
 function Note:update(dt)
-	if self.y > gh + 20 then
+	if self.y > gh + 20 or main.current.map.was_paused then
 		return
 	end
 	self:update_game_object(dt)
