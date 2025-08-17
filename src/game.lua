@@ -257,7 +257,7 @@ function Game:update(dt)
 	self.options_ui:update(dt * slow_amount)
 
 	self.map.song:update(dt * slow_amount)
-	if input.basic_hit.pressed then
+	if not self.paused and self.countdown <= 0 and input.basic_hit.pressed then
 		self.map:basic_hit()
 	elseif input.save_recording.pressed then
 		self.map:save_map_data()

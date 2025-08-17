@@ -15,17 +15,17 @@ function init()
 	controls = {
 		save_recording = {
 			text = "Save Recording",
-			default = "w",
+			default = { "w" },
 			input = state.input.save_recording,
 		},
 		strong_hit = {
 			text = "Strong Hit",
-			default = "a",
+			default = { "a" },
 			input = state.input.strong_hit,
 		},
 		basic_hit = {
 			text = "Basic Hit",
-			default = "space",
+			default = { "space" },
 			input = state.input.basic_hit,
 		},
 	}
@@ -388,6 +388,9 @@ function open_options(self)
 	button_offset = button_offset + button_distance
 
 	for action, key in pairs(controls) do
+		local keys = key.input or key.default
+		local keys_string = table.concat(keys, ", ")
+
 		self["input_" .. action] = collect_into(
 			self.options_ui_elements,
 			InputButton({
@@ -396,12 +399,13 @@ function open_options(self)
 				w = 85 * global_game_scale,
 				separator_length = 50 * global_game_scale,
 				description_text = key.text,
-				button_text = string.upper(key.input or key.default),
+				button_text = string.upper(keys_string),
 				fg_color = "fg",
 				bg_color = "bg",
 				action = function(b)
 					set_action_keybind(self, action, key)
-					b:set_text(string.upper(controls[action].input or key.default))
+					local updated_keys = controls[action].input or key.default
+					b:set_text(string.upper(table.concat(updated_keys, ", ")))
 				end,
 			})
 		)
@@ -507,9 +511,12 @@ function set_action_keybind(self, action, key)
 			group = ui_group,
 			x = gw / 2,
 			y = gh / 2 - 30 * global_game_scale,
-			lines = { { text = "[wavy_mid2, yellow] Bind '" .. controls[action].text .. "' (press any key)", font = pixul_font, alignment = "center" } },
+			lines = { { text = "[wavy_mid2, yellow] Bind '" .. controls[action].text .. "' (press any keys)", font = pixul_font, alignment = "center" } },
 		})
 	)
+
+	local keys = controls[action].input or controls[action].default
+	local keys_string = string.upper(table.concat(keys, ", "))
 
 	self.current_key = collect_into(
 		self.key_binding_ui_elements,
@@ -517,14 +524,18 @@ function set_action_keybind(self, action, key)
 			group = ui_group,
 			x = gw / 2,
 			y = gh / 2,
-			-- sx = 1.3,
-			-- sy = 1.3,
-			lines = { { text = "[fg]" .. string.upper(controls[action].input or controls[action].default), font = fat_font, alignment = "center" } },
+			lines = {
+				{
+					text = "[fg]" .. keys_string,
+					font = fat_font,
+					alignment = "center",
+				},
+			},
 		})
 	)
 
 	local button_y_offset = 20 * global_game_scale
-	local button_x_offset = 30 * global_game_scale
+	local button_x_offset = 50 * global_game_scale
 	self.cancel = collect_into(
 		self.key_binding_ui_elements,
 		Button({
@@ -536,6 +547,25 @@ function set_action_keybind(self, action, key)
 			bg_color = "red",
 			action = function(b)
 				close_keybinding(self)
+			end,
+		})
+	)
+	self.clear = collect_into(
+		self.key_binding_ui_elements,
+		Button({
+			group = ui_group,
+			x = gw / 2,
+			y = gh / 2 + button_y_offset,
+			button_text = "clear",
+			fg_color = "bg",
+			bg_color = "orange",
+			action = function(b)
+				state.input[action] = {}
+				controls[action].input = {}
+				input:unbind(action)
+				system.save_state()
+
+				self["input_" .. action]:set_text("")
 			end,
 		})
 	)
@@ -567,7 +597,9 @@ function set_action_keybind(self, action, key)
 					system.save_state()
 
 					for input_action, _ in pairs(controls) do
-						self["input_" .. input_action]:set_text(string.upper(controls[input_action].input or ""))
+						local a_keys = controls[input_action].input or controls[input_action].default or {}
+						local a_keys_string = string.upper(table.concat(a_keys, ", "))
+						self["input_" .. input_action]:set_text(a_keys_string)
 					end
 				end
 				pop_ui_layer(self)

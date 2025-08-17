@@ -10,9 +10,8 @@ function Map:init(args)
 	self.recording = args.recording
 
 	self.bpm = self.data.bpm
-	self.offset = not web and self.data.offset or
-	0                                            -- cuz it seems web doesn't support playing audio files at specific locations or smth, idk (rip preview)
-	self.speed = self.data.speed
+	self.offset = not web and self.data.offset or 0 -- no seek in web
+	self.speed = self.data.speed or 10
 
 	self.song_position = self.offset
 	self.crotchet = 60 / self.bpm
@@ -24,7 +23,6 @@ function Map:init(args)
 	self.misses = 0
 
 	self.notes = {}
-	spacing = 2
 	if not self.recording then
 		for i, note in ipairs(self.data.notes) do
 			self.notes[i] = Note({
@@ -32,9 +30,10 @@ function Map:init(args)
 				time = note.time,
 				name = i,
 				x = gw * 0.5,
-				y = self.floor - (note.time - self.offset) * self.speed * 10 * spacing,
+				y = self.floor - (note.time - self.offset) * self.speed * 10,
 				size = 0.3,
 				speed = self.speed,
+				spacing = self.spacing,
 				asset = rock_bug,
 			})
 		end
@@ -328,7 +327,7 @@ function Note:update(dt)
 
 	if self.moving then
 		-- self:move_along_angle(self.speed, math.pi / 2)
-		self.y = self.y + dt * 100 * spacing -- self.speed
+		self.y = self.y + dt * 10 * self.speed
 		self:set_position(self.x, self.y) -- ignores the physics collision detection
 	end
 end
