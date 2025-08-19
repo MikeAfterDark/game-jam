@@ -259,8 +259,11 @@ function HitIndicator:draw()
 	-- local asset = self.asset
 	-- local frame_count = #asset.sprites
 	-- local frame = math.floor(time / asset.animation_speed) % frame_count + 1
-	local frame = input.basic_hit.down and 2 or 1
-	local sprite = self.asset.sprites[frame]
+	local released = input.red_hit.released or input.blue_hit.released
+	local pressed = input.red_hit.pressed or input.blue_hit.pressed
+	self.frame = released and 1 or pressed and 2 or self.frame or 1
+	-- local frame = input.basic_hit.down and 2 or 1
+	local sprite = self.asset.sprites[self.frame]
 
 	local scale = 0.3
 	sprite:draw(self.x, self.y + 15, 0, scale, scale)

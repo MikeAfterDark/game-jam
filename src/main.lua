@@ -9,6 +9,7 @@ require("boss")
 function init()
 	renderer_init()
 
+	new_keys = {} -- init for rebinding options
 	if not state.input then
 		state.input = {}
 	end
@@ -18,15 +19,15 @@ function init()
 			default = { "w" },
 			input = state.input.save_recording,
 		},
-		strong_hit = {
-			text = "Strong Hit",
-			default = { "a" },
-			input = state.input.strong_hit,
+		red_hit = {
+			text = "[red]Red [fg]Hit",
+			default = { "z", "x" },
+			input = state.input.red_hit,
 		},
-		basic_hit = {
-			text = "Basic Hit",
-			default = { "space" },
-			input = state.input.basic_hit,
+		blue_hit = {
+			text = "[blue]Blue [fg]Hit",
+			default = { "c", "v" },
+			input = state.input.blue_hit,
 		},
 	}
 	for action, key in pairs(controls) do
@@ -479,11 +480,16 @@ function open_options(self)
 end
 
 function update_keybind_button_display(self)
-	if input.last_key_pressed and not (self.confirm.selected and input.last_key_pressed == "m1") then
+	if input.last_key_pressed and not ((self.confirm.selected or self.clear.selected) and input.last_key_pressed == "m1") then
+		for _, key in ipairs(new_keys) do
+			if key == input.last_key_pressed then
+				return
+			end
+		end
+		table.insert(new_keys, input.last_key_pressed)
 		self.current_key:set_text({
-			{ text = input.last_key_pressed, font = fat_font, alignment = "center" },
+			{ text = string.upper(table.concat(new_keys, ",")), font = fat_font, alignment = "center" },
 		})
-		new_key = input.last_key_pressed
 	end
 end
 
@@ -560,12 +566,14 @@ function set_action_keybind(self, action, key)
 			fg_color = "bg",
 			bg_color = "orange",
 			action = function(b)
+				new_keys = {}
 				state.input[action] = {}
 				controls[action].input = {}
-				input:unbind(action)
+				input:bind(action, {})
 				system.save_state()
 
 				self["input_" .. action]:set_text("")
+				self.current_key:set_text({ text = "", font = fat_font })
 			end,
 		})
 	)
@@ -581,25 +589,56 @@ function set_action_keybind(self, action, key)
 			bg_color = "green",
 			action = function(b)
 				main.current.in_keybinding = false
-				if new_key then
+				if #new_keys > 0 then
 					-- clear any controls that already use new_key
-					for k, v in pairs(controls) do
-						if v.input == new_key then
-							state.input[k] = ""
-							controls[k].input = ""
+					for other_action, control in pairs(controls) do
+						if other_action ~= action then
+							local current = control.input or {}
+							local new_controls = {}
+
+							for _, key in ipairs(current) do
+								local found = false
+								for _, new_key in ipairs(new_keys) do
+									if key == new_key then
+										found = true
+										break
+									end
+								end
+								if not found then
+									table.insert(new_controls, key)
+								end
+							end
+
+							-- If any keys were removed, update bindings
+							if #new_controls ~= #current then
+								controls[other_action].input = new_controls
+								state.input[other_action] = { unpack(new_controls) }
+								input:bind(other_action, new_controls)
+							end
 						end
 					end
+					state.input[action] = { unpack(new_keys) }
+					controls[action].input = { unpack(new_keys) }
+					input:bind(action, controls[action].input)
 
-					state.input[action] = new_key
-					controls[action].input = new_key
-					input:bind(action, new_key)
-					new_key = nil
+					-- Clear new_keys in-place to preserve references
+					for i = #new_keys, 1, -1 do
+						new_keys[i] = nil
+					end
+
 					system.save_state()
 
+					-- Update UI display for each input action
 					for input_action, _ in pairs(controls) do
 						local a_keys = controls[input_action].input or controls[input_action].default or {}
 						local a_keys_string = string.upper(table.concat(a_keys, ", "))
-						self["input_" .. input_action]:set_text(a_keys_string)
+						local label = self["input_" .. input_action]
+
+						if label and label.set_text then
+							label:set_text(a_keys_string)
+						else
+							print("Warning: Missing label for input_" .. input_action)
+						end
 					end
 				end
 				pop_ui_layer(self)
