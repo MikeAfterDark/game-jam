@@ -63,6 +63,8 @@ function renderer_init()
 	for i = -30, gw, 15 do
 		table.insert(star_positions, { x = i, y = gh + 40 })
 	end
+
+	beat_alpha = 0
 end
 
 function renderer_draw(draw_action)
@@ -91,9 +93,14 @@ function renderer_draw(draw_action)
 
 	main_canvas:draw_to(function()
 		draw_action()
-		-- if flashing then
-		-- 	graphics.rectangle(gw / 2, gh / 2, gw, gh, nil, nil, flash_color)
-		-- end
+		if beat then
+			trigger:tween(0.05, _G, { beat_alpha = 0.2 }, math.cubic_out, function()
+				trigger:tween(0.4, _G, { beat_alpha = 0 }, math.cubic_in, nil, "beat_flash")
+			end, "beat_flash")
+		end
+		if beat_alpha > 0 then
+			graphics.rectangle(gw / 2, gh / 2, gw, gh, nil, nil, Color(1, 1, 1, beat_alpha))
+		end
 	end)
 
 	shadow_canvas:draw_to(function()
@@ -109,6 +116,7 @@ function renderer_draw(draw_action)
 	local shadow_offset = 2.5
 	shadow_canvas:draw(x + shadow_offset * sx, y + shadow_offset * sy, 0, sx, sy)
 	main_canvas:draw(x, y, 0, sx, sy)
+	background_canvas:draw(x, y, 0, sx, sy)
 end
 
 ColorRamp = Object:extend()

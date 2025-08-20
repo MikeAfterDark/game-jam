@@ -106,6 +106,8 @@ function Game:on_enter(from, args) -- level, num_players, player_inputs)
 		-- recording = true,
 	})
 
+	self.held_notes = { red = nil, blue = nil }
+
 	self.t:after(self.countdown, function()
 		self.map:start()
 	end)
@@ -257,8 +259,24 @@ function Game:update(dt)
 	self.options_ui:update(dt * slow_amount)
 
 	self.map.song:update(dt * slow_amount)
-	if not self.paused and self.countdown <= 0 and (input.red_hit.pressed or input.blue_hit.pressed) then
-		self.map:basic_hit()
+
+	if not self.paused and self.countdown <= 0 then
+		if input.red_hit.pressed then
+			self.held_notes.red = {
+				start_time = self.map:get_song_position(),
+				active = true,
+			}
+		end
+
+		if input.blue_hit.pressed then
+			self.held_notes.blue = {
+				start_time = self.map:get_song_position(),
+				active = true,
+			}
+		end
+
+		self:handle_note_release("red", input.red_hit.released)
+		self:handle_note_release("blue", input.blue_hit.released)
 	elseif input.save_recording.pressed then
 		self.map:save_map_data()
 	end
@@ -299,6 +317,26 @@ function Game:update(dt)
 		self.debug:clear()
 		self.debug = nil
 		-- self.counter = self.counter + 1
+	end
+end
+
+function Game:handle_note_release(color, released_input)
+	local held = self.held_notes[color]
+	if released_input and held and held.active then
+		held.active = false
+
+		local current_time = self.map:get_song_position()
+		local duration = current_time - held.start_time
+		local beats = duration / self.map.crotchet
+
+		if beats <= 1 then
+			self.map:basic_hit(color)
+		else
+			print("long hit with " ..
+			beats ..
+			" beats: " .. current_time .. "-" .. held.start_time .. " = " .. duration .. "/" .. self.map.crotchet)
+			self.map:long_hit(color, beats)
+		end
 	end
 end
 

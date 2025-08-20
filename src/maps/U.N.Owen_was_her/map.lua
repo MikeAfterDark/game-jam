@@ -1,5 +1,5 @@
 return {
-	bpm = 151,
+	bpm = 151 * 2,
 	offset = 0.98,
 	speed = 20,
 	notes = {

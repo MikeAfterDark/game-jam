@@ -28,16 +28,21 @@ function Map:init(args)
 			self.notes[i] = Note({
 				group = self.group,
 				time = note.time,
+				note_color = note.color,
+				lane = note.lane,
+				beats = note.beats,
 				name = i,
-				x = gw * 0.5,
+				x = gw * 0.5 + gw * 0.2 * (note.lane - 1.5),
 				y = self.floor - (note.time - self.offset) * self.speed * 10,
 				size = 0.3,
 				speed = self.speed,
 				spacing = self.spacing,
-				asset = rock_bug,
+				asset = note.color == "red" and red_rock_bug or blue_rock_bug,
 			})
 		end
-		self.notes[self.beat].color = red[0]
+		if #self.notes > 0 then
+			self.notes[self.beat].color = red[0]
+		end
 	end
 end
 
@@ -53,14 +58,16 @@ function Map:load_map_data()
 	return data
 end
 
-function Map:save_map_data()
+function Map:save_map_data() --time color lane beats
 	local file = io.open("maps/" .. self.folder .. "/map2.lua", "w")
 	file:write("return {\n  notes = {\n")
 	for _, note in ipairs(self.notes) do
-		file:write(string.format("    { time = %.2f },\n", note.time))
+		file:write(string.format('    { time = %.2f, color = "%s", lane = %d, beats = %d },\n', note.time, note.color,
+			note.lane, note.beats or 1))
 	end
 	file:write("  }\n}")
 	file:close()
+	print("written to file succesfully... I think")
 end
 
 function Map:start()
@@ -83,6 +90,16 @@ function Map:update()
 	self:update_note_tracking()
 
 	self:update_score()
+
+	local current_beat = math.floor(self.song_position / self.crotchet)
+	self._last_beat = self._last_beat or -1
+	if current_beat > self._last_beat then
+		beat_alpha = 0.05 -- immediate flash value
+		trigger:tween(0.3, _G, { beat_alpha = 0 }, math.cubic_out, nil, "beat_flash")
+		self._last_beat = current_beat
+	else
+		beat = false
+	end
 end
 
 function Map:pause()
@@ -102,16 +119,6 @@ function Map:unpause()
 	self.pause_start_time = nil
 	self.song:resume()
 end
-
-function Map:basic_hit()
-	if self.recording then
-		self:add_recorded_note(self.song_position)
-	else
-		self:attempt_note_hit(self.song_position)
-	end
-end
-
--- TODO: add the background, indicator line, heart animation (cover up the heart on the bug)
 
 function Map:update_note_tracking()
 	local current = self:get_current_note()
@@ -163,31 +170,106 @@ function Map:update_score()
 	self.misses = misses
 end
 
-function Map:attempt_note_hit(time)
-	local current = self:get_current_note()
-	if not current then
+function Map:basic_hit(color)
+	if self.recording then
+		self:add_recorded_note(self.song_position, color)
+	else
+		self:attempt_note_hit(self.song_position, color)
+	end
+end
+
+function Map:long_hit(color, beats)
+	print("long hit with " .. beats .. " beats")
+	if self.recording then
+		self:add_recorded_note(self.song_position, color, beats)
+	else
+		self:attempt_note_hit(self.song_position, color, beats)
+	end
+end
+
+function Map:attempt_note_hit(time, color, beats)
+	local note = self:get_current_note()
+	if not note then
 		return
 	end
 
-	if math.abs(current.time - time) < self.crotchet / 2 then
-		current.hit = time
+	-- Skip if already hit
+	print("note: ", note.note_color .. ", color: ", color)
+	if not note.hit and note.note_color == color then
+		if math.abs(note.time - time) < self.crotchet / 2 then
+			note.hit = time
 
-		HitCircle({ group = main.current.effects, x = current.x, y = current.y, rs = 9, color = fg[0], duration = self
-		.crotchet / 4 })
-		for i = 1, random:int(10, 20) do
-			HitParticle({ group = main.current.effects, x = current.x, y = current.y, w = 10, color = current.color, duration =
-			self.crotchet })
-		end
-		self.beat = self.beat + 1
-		local next = self:get_current_note()
-		if next then
-			next.color = red[0]
+			-- Mark as long note if beats > 1
+			if beats and beats > 1 then
+				note.beats = beats
+			end
+
+			-- Visual effects
+			HitCircle({
+				group = main.current.effects,
+				x = note.x,
+				y = note.y,
+				rs = 9,
+				color = fg[0],
+				duration = self.crotchet / 4,
+			})
+
+			for j = 1, random:int(10, 20) do
+				HitParticle({
+					group = main.current.effects,
+					x = note.x,
+					y = note.y,
+					w = 10,
+					color = note.color,
+					duration = self.crotchet,
+				})
+			end
+
+			self.beat = self.beat + 1
+
+			-- Optional: break if you only want to hit one matching note per call
 		end
 	end
 end
 
-function Map:add_recorded_note(time)
-	self.notes[self.beat] = { time = time }
+-- function Map:attempt_note_hit(time, color, beats)
+-- 	local current = self:get_current_note()
+-- 	if not current then
+-- 		return
+-- 	end
+--
+-- 	if math.abs(current.time - time) < self.crotchet / 2 then
+-- 		current.hit = time
+--
+-- 		HitCircle({ group = main.current.effects, x = current.x, y = current.y, rs = 9, color = fg[0], duration = self
+-- 		.crotchet / 4 })
+-- 		for i = 1, random:int(10, 20) do
+-- 			HitParticle({ group = main.current.effects, x = current.x, y = current.y, w = 10, color = current.color, duration =
+-- 			self.crotchet })
+-- 		end
+-- 		self.beat = self.beat + 1
+-- 		local next = self:get_current_note()
+-- 		if next then
+-- 			next.color = red[0]
+-- 		end
+-- 	end
+-- end
+
+function Map:add_recorded_note(time, color, beats)
+	local lane = input.last_key_released == controls[color .. "_hit"].default[1] and 1 or 2
+
+	local note = {
+		time = time,
+		color = color,
+		lane = lane,
+	}
+
+	if beats and beats > 1 then
+		print("beats:" .. beats)
+		note.beats = beats
+	end
+
+	self.notes[self.beat] = note
 	self.beat = self.beat + 1
 end
 
@@ -261,7 +343,7 @@ function HitIndicator:draw()
 	-- local frame = math.floor(time / asset.animation_speed) % frame_count + 1
 	local released = input.red_hit.released or input.blue_hit.released
 	local pressed = input.red_hit.pressed or input.blue_hit.pressed
-	self.frame = released and 1 or pressed and 2 or self.frame or 1
+	self.frame = pressed and 2 or released and 1 or self.frame or 1
 	-- local frame = input.basic_hit.down and 2 or 1
 	local sprite = self.asset.sprites[self.frame]
 

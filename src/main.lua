@@ -90,6 +90,18 @@ function init()
 			Image("bug_close"),
 		},
 	}
+	red_rock_bug = {
+		animation_speed = 0,
+		sprites = {
+			Image("enemy_single_red"),
+		},
+	}
+	blue_rock_bug = {
+		animation_speed = 0,
+		sprites = {
+			Image("enemy_single_blue"),
+		},
+	}
 	rock_bug = {
 		animation_speed = 0,
 		sprites = {
@@ -138,7 +150,8 @@ function init()
 	-- main:add(MainMenu("mainmenu"))
 	-- main:go_to("mainmenu")
 	main:add(Game("game"))
-	main:go_to("game", { folder = "U.N.Owen_was_her", countdown = 1.5 })
+	main:go_to("game", { folder = "Im_Blue", countdown = 1.5 })
+	-- main:go_to("game", { folder = "U.N.Owen_was_her", countdown = 1.5 })
 
 	-- set sane defaults:
 	state.timed_mode = true
