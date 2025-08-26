@@ -31,14 +31,10 @@ function MainMenu:play(num_players)
 	ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 
-	scene_transition(
-		self,
-		gw / 2,
-		gh / 2,
-		Game("game"),
-		{ destination = "game", args = { level = 1, num_players = num_players } },
-		{ text = "posture check!", font = pixul_font, alignment = "center" }
-	)
+	scene_transition(self, gw / 2, gh / 2, Game("game"), {
+		destination = "game",
+		args = { folder = game_songs[song_index], countdown = start_countdown },
+	}, { text = "posture check!", font = pixul_font, alignment = "center" })
 end
 
 function MainMenu:on_exit()
@@ -102,6 +98,10 @@ function MainMenu:update(dt)
 	self.keybinding_ui:update(dt * slow_amount)
 	self.credits:update(dt)
 
+	if self.artist_button then
+		self.artist_button:update(dt)
+	end
+
 	-- if input.m2.pressed then
 	-- 	if not self.counter then
 	-- 		self.counter = 1
@@ -132,9 +132,10 @@ end
 
 function MainMenu:draw()
 	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
+	titlescreen.sprites[1]:draw(gw / 2, gh / 2, 0, 0.258 * global_game_scale)
 
 	self.main_menu_ui:draw()
-	self.title_text:draw(gw / 2, gh / 2 - 40)
+	self.title_text:draw(gw / 2, gh * 0.5)
 
 	if self.in_options then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent_2)
@@ -201,7 +202,7 @@ function MainMenu:setup_main_menu_ui()
 			fg_color = "bg",
 			bg_color = "green",
 			action = function(b)
-				self:play(1)
+				play(self, 1)
 			end,
 		})
 	)

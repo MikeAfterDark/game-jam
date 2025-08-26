@@ -14,6 +14,7 @@ function Button:update(dt)
 	if not on_current_ui_layer(self) then
 		return
 	end
+	self.text:update(dt)
 
 	if self.hold_button then
 		if self.selected and input.m1.pressed then

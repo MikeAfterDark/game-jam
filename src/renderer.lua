@@ -93,13 +93,15 @@ function renderer_draw(draw_action)
 
 	main_canvas:draw_to(function()
 		draw_action()
-		if beat then
-			trigger:tween(0.05, _G, { beat_alpha = 0.2 }, math.cubic_out, function()
-				trigger:tween(0.4, _G, { beat_alpha = 0 }, math.cubic_in, nil, "beat_flash")
-			end, "beat_flash")
-		end
-		if beat_alpha > 0 then
-			graphics.rectangle(gw / 2, gh / 2, gw, gh, nil, nil, Color(1, 1, 1, beat_alpha))
+		if state.screen_flashes then
+			if beat then
+				trigger:tween(0.05, _G, { beat_alpha = 0.2 }, math.cubic_out, function()
+					trigger:tween(0.4, _G, { beat_alpha = 0 }, math.cubic_in, nil, "beat_flash")
+				end, "beat_flash")
+			end
+			if beat_alpha > 0 then
+				graphics.rectangle(gw / 2, gh / 2, gw, gh, nil, nil, Color(1, 1, 1, beat_alpha))
+			end
 		end
 	end)
 
@@ -345,6 +347,25 @@ global_text_tags = {
 	wavy_title = TextTag({
 		update = function(c, dt, i, text)
 			c.oy = math.sin(time * 4 + i * 0.9) * 10
+		end,
+	}),
+	wavy_rainbow = TextTag({
+		init = function(c, i, text)
+			c.color = white[0]
+		end,
+
+		update = function(c, dt, i, text)
+			c.oy = math.sin(time * 4 + i * 0.9) * 4
+
+			-- Rainbow wave
+			local t = time * 1.5 + i * 0.3
+			c.color.r = 0.5 + 0.5 * math.cos(t)
+			c.color.g = 0.5 + 0.5 * math.cos(t + 2 * math.pi / 3)
+			c.color.b = 0.5 + 0.5 * math.cos(t + 4 * math.pi / 3)
+		end,
+
+		draw = function(c, i, text)
+			graphics.set_color(c.color)
 		end,
 	}),
 

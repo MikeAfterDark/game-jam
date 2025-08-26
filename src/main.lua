@@ -124,6 +124,11 @@ function init()
 			Image("bg"),
 		},
 	}
+	titlescreen = {
+		sprites = {
+			Image("titlescreen"),
+		},
+	}
 
 	-- set logic init
 	-- main_song_instance = _G[random:table({ "song1", "song2", "song3", "song4", "song5" })]:play({ volume = 0.3 })
@@ -157,14 +162,28 @@ function init()
 	main.current_music_type = "silence"
 	play_music({ type = "main", volume = 0.3 })
 
-	-- main:add(MainMenu("mainmenu"))
-	-- main:go_to("mainmenu")
-	main:add(Game("game"))
-	main:go_to("game", { folder = "Im_Blue", countdown = 1.5 })
+	-- TODO:
+	-- - set up the song maps,
+	-- - make sure restart works,
+	-- if enough time, setup a UI for all the songs so you can select them in game
+	start_countdown = 2.5
+	game_songs = {
+		"bad_apple", -- 1
+		"Im_Blue", -- 2
+		"Megalovania", -- 3
+		"U.N.Owen_was_her", -- 4
+		"wii_shop", -- 5
+	}
+	song_index = 2
+
+	main:add(MainMenu("mainmenu"))
+	main:go_to("mainmenu")
+	-- main:add(Game("game"))
+	-- main:go_to("game", { folder = "Im_Blue", countdown = 1.5 })
 	-- main:go_to("game", { folder = "U.N.Owen_was_her", countdown = 1.5 })
 
 	-- set sane defaults:
-	state.timed_mode = true
+	state.screen_flashes = true
 	state.tutorial = true
 
 	-- smooth_turn_speed = 0
@@ -454,42 +473,42 @@ function open_options(self)
 	)
 	button_offset = button_offset + button_distance
 
-	self.timed_mode_button = collect_into(
+	self.screen_flashes_button = collect_into(
 		self.options_ui_elements,
 		Button({
 			x = column_x[column],
 			y = gh / 2 + button_offset,
-			w = 75 * global_game_scale,
-			button_text = tostring(state.timed_mode and "timed mode" or "chill mode"),
+			w = gw * 0.20,
+			button_text = tostring(state.screen_flashes and "screen flashes" or "no flashes"),
 			fg_color = "bg",
 			bg_color = "fg",
 			action = function(b)
 				ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-				state.timed_mode = not state.timed_mode
-				b:set_text(tostring(state.timed_mode and "timed mode" or "chill mode"))
+				state.screen_flashes = not state.screen_flashes
+				b:set_text(tostring(state.screen_flashes and "sreen flashes" or "no flashes"))
 			end,
 		})
 	)
 
-	button_offset = button_offset + button_distance
-	self.tutorial_button = collect_into(
-		self.options_ui_elements,
-		Button({
-			x = column_x[column],
-			y = gh / 2 + button_offset,
-			w = 75 * global_game_scale,
-			button_text = tostring(state.tutorial and "  tutorial  " or "no tutorial"),
-			fg_color = "bg",
-			bg_color = "fg",
-			action = function(b)
-				ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-				state.tutorial = not state.tutorial
-				b:set_text(tostring(state.tutorial and "  tutorial  " or "no tutorial"))
-			end,
-		})
-	)
-	button_offset = button_offset + button_distance
+	-- button_offset = button_offset + button_distance
+	-- self.tutorial_button = collect_into(
+	-- 	self.options_ui_elements,
+	-- 	Button({
+	-- 		x = column_x[column],
+	-- 		y = gh / 2 + button_offset,
+	-- 		w = gw * 0.20,
+	-- 		button_text = tostring(state.tutorial and "  tutorial  " or "no tutorial"),
+	-- 		fg_color = "bg",
+	-- 		bg_color = "fg",
+	-- 		action = function(b)
+	-- 			ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	-- 			state.tutorial = not state.tutorial
+	-- 			b:set_text(tostring(state.tutorial and "  tutorial  " or "no tutorial"))
+	-- 		end,
+	-- 	})
+	-- )
 
+	-- button_offset = button_offset + button_distance
 	for _, v in pairs(self.options_ui_elements) do
 		v.group = ui_group
 		ui_group:add(v)
@@ -784,7 +803,7 @@ function pause_game(self)
 				fg_color = "bg",
 				bg_color = "orange",
 				action = function()
-					restart_level_with_X_players(self, 1)
+					play(self, 1)
 				end,
 			})
 		)
@@ -797,6 +816,17 @@ function pause_game(self)
 			v.force_update = true
 		end
 	end, "pause")
+end
+
+function play(self, num_players)
+	ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+
+	scene_transition(self, gw / 2, gh / 2, Game("game"), {
+		destination = "game",
+		args = { folder = game_songs[song_index], countdown = start_countdown },
+	}, { text = "chomp those rock bugs!", font = pixul_font, alignment = "center" })
 end
 
 function unpause_game(self)
@@ -890,27 +920,28 @@ function open_credits(self)
 			group = self.credits,
 			x = columns[2],
 			y = yOffset,
-			button_text = "Teirue",
+			w = gw * 0.1,
+			button_text = "[wavy_rainbow]Teirue",
 			fg_color = "bg",
-			bg_color = "fg",
+			bg_color = "black",
 			credits_button = true,
 			action = function(b)
-				open_url(b, "https://example.com")
+				open_url(b, "https://www.instagram.com/teirue.byte/")
 			end,
 		})
 	)
 
 	yOffset = yOffset + y_dist
-	self.inspiration_section = collect_into(
+	self.code_basis_section = collect_into(
 		self.credits_ui_elements,
 		Text2({
 			group = ui_group,
 			x = columns[1],
 			y = yOffset,
-			lines = { { text = "[fg]inspiration: ", font = pixul_font } },
+			lines = { { text = "[fg]code based off: ", font = pixul_font } },
 		})
 	)
-	self.inspiration_button = collect_into(
+	self.code_basis_button = collect_into(
 		self.credits_ui_elements,
 		Button({
 			group = self.credits,
@@ -1036,7 +1067,7 @@ function open_credits(self)
 			group = self.credits,
 			x = columns[2],
 			y = yOffset,
-			button_text = "BlueYeti Snowball + Audacity + My Mouth",
+			button_text = "BlueYeti Snowball + Audacity + Mikey's Mouth",
 			fg_color = "bg",
 			bg_color = "yellow",
 			credits_button = true,

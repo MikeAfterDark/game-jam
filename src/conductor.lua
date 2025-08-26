@@ -87,6 +87,9 @@ function Map:start()
 end
 
 function Map:update()
+	local volume = (music and music.volume or state.music_volume or 0.1)
+	self.song.volume = volume
+
 	self.song_position = self:get_song_position()
 	self:update_note_tracking()
 
@@ -229,6 +232,48 @@ function Map:attempt_note_hit(time, color, beats)
 
 			-- Optional: break if you only want to hit one matching note per call
 		end
+	end
+end
+
+function Map:destroy()
+	-- Stop the song and release it
+	if self.song then
+		self.song:stop()
+		self.song = nil
+	end
+
+	-- Clear notes
+	if self.notes then
+		for _, note in ipairs(self.notes) do
+			if note.destroy then
+				note:destroy()
+			end
+		end
+	end
+	self.notes = nil
+
+	-- Reset related references
+	self.group = nil
+	self.floor = nil
+	self.recording = nil
+
+	-- Optional: stop any tweens, effects, or timers if they are global or lingering
+	trigger:cancel("beat_flash")
+
+	-- Optional: clear any effects or visuals (depends on implementation)
+	-- if main and main.current and main.current.effects then
+	-- 	main.current.effects:clear()
+	-- end
+
+	-- Reset internal state
+	self._last_beat = nil
+	self.song_start_time = nil
+	self.pause_start_time = nil
+	self.total_paused_time = nil
+
+	-- Help garbage collector
+	for k in pairs(self) do
+		self[k] = nil
 	end
 end
 

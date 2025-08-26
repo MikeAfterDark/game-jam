@@ -44,11 +44,15 @@ function Game:on_enter(from, args) -- level, num_players, player_inputs)
 
 	self.main_slow_amount = 1
 
-	-- Spawn solids and player
 	self.x1, self.y1 = 0, 0
 	self.x2, self.y2 = gw, gh
 	self.w, self.h = self.x2 - self.x1, self.y2 - self.y1
 
+	self.paused = false
+	self.stuck = false
+	self.won = false
+
+	self.started = false
 	self.countdown = args.countdown
 	self.countdown_text = Text({
 		{
@@ -121,6 +125,12 @@ function Game:on_exit()
 	self.paused_ui:destroy()
 	self.options_ui:destroy()
 	self.keybinding_ui:destroy()
+	self.hit_indicator:destroy()
+	self.map:destroy()
+	self.countdown_text.dead = true
+	self.countdown_text = nil
+	self.map = nil
+	self.hit_indicator = nil
 	self.main = nil
 	self.post_main = nil
 	self.effects = nil
@@ -154,8 +164,6 @@ function Game:update(dt)
 				self.countdown_text:set_text({ text = "", font = pixul_font })
 				self.map:unpause()
 				self.started = true
-				-- self.countdown_text.dead = true
-				-- self.countdown_text = nil
 			elseif self.countdown_text then
 				self.countdown_text:set_text({
 					{
