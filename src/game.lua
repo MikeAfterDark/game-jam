@@ -107,7 +107,7 @@ function Game:on_enter(from, args) -- level, num_players, player_inputs)
 		folder = args.folder,
 
 		floor = gh * 0.8, -- self.hit_indicator.y,
-		-- recording = true,
+		recording = recording,
 	})
 
 	self.held_notes = { red = nil, blue = nil }
@@ -331,17 +331,21 @@ end
 function Game:handle_note(color, pressed, released)
 	local note = self.map:get_current_note()
 	local held = self.held_notes[color]
-	if note and note.beats == 1 and note.note_color == color and pressed then
+	if not recording and note and note.beats == 1 and note.note_color == color and pressed then
 		self.map:basic_hit(color)
 		held.active = false
-	elseif released and held and held.active and note.note_color == color then
+	elseif released and ((held and held.active and note and note.note_color == color) or recording) then
 		held.active = false
 
 		local current_time = self.map:get_song_position()
 		local duration = current_time - held.start_time
 		local beats = duration / self.map.crotchet
 
-		self.map:long_hit(color, beats)
+		if recording and beats < 2 then
+			self.map:basic_hit(color)
+		else
+			self.map:long_hit(color, beats)
+		end
 	end
 end
 
@@ -657,7 +661,8 @@ function Game:die()
 							slow_amount = 1
 							music_slow_amount = 1
 							locked_state = nil
-							scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = 1, num_players = 1 } }, {
+							scene_transition(self, gw / 2, gh / 2, Game("game"),
+								{ destination = "game", args = { level = 1, num_players = 1 } }, {
 								text = "chill mode will pause the timer [wavy]forever",
 								font = pixul_font,
 								alignment = "center",

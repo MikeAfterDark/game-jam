@@ -60,15 +60,28 @@ function Map:load_map_data()
 	return data
 end
 
-function Map:save_map_data() --time color lane beats
-	local file = io.open("maps/" .. self.folder .. "/map2.lua", "w")
-	file:write("return {\n  notes = {\n")
+function Map:save_map_data()
+	local data_str = "return {\n"
+
+	data_str = data_str .. string.format("bpm = %d, \n", self.bpm or 120)
+	data_str = data_str .. string.format("speed = %d, \n", self.speed or 30)
+
+	data_str = data_str .. string.format("notes = {\n")
 	for _, note in ipairs(self.notes) do
-		file:write(string.format('    { time = %.2f, color = "%s", lane = %d, beats = %d },\n', note.time, note.color, note.lane, note.beats or 1))
+		data_str = data_str
+			.. string.format('    { time = %.2f, color = "%s", lane = %d, beats = %d },\n', note.time, note.color, note.lane, note.beats or 1)
 	end
-	file:write("  }\n}")
-	file:close()
-	print("written to file succesfully... I think")
+	data_str = data_str .. "  }\n}"
+
+	local path = "maps/" .. self.folder .. "/map.lua"
+	local file = io.open(path, "w")
+	if file then
+		file:write(data_str)
+		file:close()
+		print("written to file successfully at: " .. path)
+	else
+		print("failed to open file for writing at: " .. path)
+	end
 end
 
 function Map:start()

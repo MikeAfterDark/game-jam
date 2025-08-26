@@ -9,6 +9,27 @@ require("boss")
 function init()
 	renderer_init()
 
+	game_songs = {
+		"Always_Running", --------  1
+		"Bad_Apple",      --------  2 -- recorded - hard
+		"Castle_Of_Glass", -------  3
+		"Dont_Forget",    --------  4
+		"Dont_Look_Down", --------  5
+		"Hello_AI",       --------  6
+		"Im_Blue",        --------  7 -- recorded - medium
+		"Megalovania",    --------  8 -- recorded - hard
+		"Skies_Forever",  --------  9
+		"U.N.Owen_was_her", ------ 10 -- recorded - hard
+		"Wasting_Time",   -------- 11
+		"Wicked_Fate",    -------- 12
+		"Wii_Shop",       -------- 13 -- recorded - beats only
+		"Wildfire",       -------- 14
+		"Zombies_On_Your_Lawn", -- 15
+		"Dragon_Roost_Island", --- 16
+	}
+	song_index = 7
+	-- recording = true
+
 	new_keys = {} -- init for rebinding options
 	if not state.input then
 		state.input = {}
@@ -26,7 +47,7 @@ function init()
 		},
 		blue_hit = {
 			text = "[blue]Blue [fg]Hit",
-			default = { "c", "v" },
+			default = { "n", "m" },
 			input = state.input.blue_hit,
 		},
 	}
@@ -162,19 +183,7 @@ function init()
 	main.current_music_type = "silence"
 	play_music({ type = "main", volume = 0.3 })
 
-	-- TODO:
-	-- - set up the song maps,
-	-- - make sure restart works,
-	-- if enough time, setup a UI for all the songs so you can select them in game
 	start_countdown = 2.5
-	game_songs = {
-		"bad_apple", -- 1
-		"Im_Blue", -- 2
-		"Megalovania", -- 3
-		"U.N.Owen_was_her", -- 4
-		"wii_shop", -- 5
-	}
-	song_index = 2
 
 	main:add(MainMenu("mainmenu"))
 	main:go_to("mainmenu")
@@ -452,7 +461,8 @@ function open_options(self)
 				end,
 			})
 		)
-		button_offset = button_offset + button_distance - 3 --for some reason this is needed for the last button to work (for 4 controls)
+		button_offset = button_offset + button_distance -
+		3                                             --for some reason this is needed for the last button to work (for 4 controls)
 	end
 
 	--
@@ -835,7 +845,7 @@ function unpause_game(self)
 		self.paused = false
 
 		if main.current:is(Game) then
-			main.current:unpause_in(3)
+			main.current:unpause_in(start_countdown)
 		end
 		pop_ui_layer(self)
 	end)
@@ -1092,7 +1102,8 @@ function restart_level_with_X_players(self, num_players)
 	music_slow_amount = 1
 	run_time = 0
 	locked_state = nil
-	scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = main.current.level, num_players = num_players } }, {
+	scene_transition(self, gw / 2, gh / 2, Game("game"),
+		{ destination = "game", args = { level = main.current.level, num_players = num_players } }, {
 		text = "stay hydrated!",
 		font = pixul_font,
 		alignment = "center",
