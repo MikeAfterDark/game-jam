@@ -336,6 +336,17 @@ global_text_tags = {
 			c.oy = 0.25 * math.sin(2 * time + i)
 		end,
 	}),
+	wavy_smooth = TextTag({
+		update = function(c, dt, i, text)
+			c.oy = math.sin(time * 4 + i * 0.4) * 8.5
+			-- c.ox = math.cos(time * 2 + i * 0.4) * 0.5
+		end,
+	}),
+	wavy_title = TextTag({
+		update = function(c, dt, i, text)
+			c.oy = math.sin(time * 4 + i * 0.9) * 10
+		end,
+	}),
 
 	steam_link = TextTag({
 		init = function(c, i, text)

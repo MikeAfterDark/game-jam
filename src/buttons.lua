@@ -71,7 +71,7 @@ function Button:draw()
 		--[[ self.selected and fg[0] or ]]
 		_G[self.bg_color][0]
 	)
-	self.text:draw(self.x, self.y + 1, 0, 1, 1)
+	self.text:draw(self.x, self.y + 5, 0, 1, 1)
 	graphics.pop()
 end
 

@@ -91,8 +91,8 @@ function Game:on_enter(from, args) -- level, num_players, player_inputs)
 		group = self.main,
 		x = gw * 0.5,
 		y = gh * 0.8,
-		w = 100,
-		h = 30,
+		w = gw * 0.25,
+		h = gh * 0.1,
 		asset = bug_crusher,
 		color = blue[0],
 	})
@@ -275,8 +275,8 @@ function Game:update(dt)
 			}
 		end
 
-		self:handle_note_release("red", input.red_hit.released)
-		self:handle_note_release("blue", input.blue_hit.released)
+		self:handle_note("red", input.red_hit.pressed, input.red_hit.released)
+		self:handle_note("blue", input.blue_hit.pressed, input.blue_hit.released)
 	elseif input.save_recording.pressed then
 		self.map:save_map_data()
 	end
@@ -320,23 +320,20 @@ function Game:update(dt)
 	end
 end
 
-function Game:handle_note_release(color, released_input)
+function Game:handle_note(color, pressed, released)
+	local note = self.map:get_current_note()
 	local held = self.held_notes[color]
-	if released_input and held and held.active then
+	if note and note.beats == 1 and note.note_color == color and pressed then
+		self.map:basic_hit(color)
+		held.active = false
+	elseif released and held and held.active and note.note_color == color then
 		held.active = false
 
 		local current_time = self.map:get_song_position()
 		local duration = current_time - held.start_time
 		local beats = duration / self.map.crotchet
 
-		if beats <= 1 then
-			self.map:basic_hit(color)
-		else
-			print("long hit with " ..
-			beats ..
-			" beats: " .. current_time .. "-" .. held.start_time .. " = " .. duration .. "/" .. self.map.crotchet)
-			self.map:long_hit(color, beats)
-		end
+		self.map:long_hit(color, beats)
 	end
 end
 
@@ -439,7 +436,7 @@ function Game:quit()
 end
 
 function Game:draw()
-	background_image.sprites[1]:draw(gw / 2, gh / 2, 0, 0.345)
+	background_image.sprites[1]:draw(gw / 2, gh / 2, 0, 0.175 * global_game_scale)
 
 	self.floor:draw()
 	self.main:draw()
@@ -652,8 +649,7 @@ function Game:die()
 							slow_amount = 1
 							music_slow_amount = 1
 							locked_state = nil
-							scene_transition(self, gw / 2, gh / 2, Game("game"),
-								{ destination = "game", args = { level = 1, num_players = 1 } }, {
+							scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = 1, num_players = 1 } }, {
 								text = "chill mode will pause the timer [wavy]forever",
 								font = pixul_font,
 								alignment = "center",

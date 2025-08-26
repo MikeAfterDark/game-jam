@@ -91,25 +91,35 @@ function init()
 		},
 	}
 	red_rock_bug = {
-		animation_speed = 0,
 		sprites = {
 			Image("enemy_single_red"),
 		},
 	}
 	blue_rock_bug = {
-		animation_speed = 0,
 		sprites = {
 			Image("enemy_single_blue"),
 		},
 	}
 	rock_bug = {
-		animation_speed = 0,
 		sprites = {
 			Image("enemy_single"),
 		},
 	}
+	red_centipede = {
+		sprites = {
+			Image("head_red"),
+			Image("mid_red"),
+			Image("tail_red"),
+		},
+	}
+	blue_centipede = {
+		sprites = {
+			Image("head_blue"),
+			Image("mid_blue"),
+			Image("tail_blue"),
+		},
+	}
 	background_image = {
-		animation_speed = 0,
 		sprites = {
 			Image("bg"),
 		},
@@ -192,7 +202,7 @@ function love.run()
 	-- print("Running on: " .. love.system.getOS())
 	-- print("Is web? " .. tostring(web))
 
-	global_game_scale = 2
+	global_game_scale = 4
 	global_game_width = 480 * global_game_scale
 	global_game_height = 270 * global_game_scale
 
@@ -232,8 +242,8 @@ function open_options(self)
 
 	local column_x = { gw / 4, gw / 2, 3 * gw / 4 }
 
-	local button_offset = -125
-	local button_distance = 35
+	local button_offset = -gh * 0.2
+	local button_distance = gh * 0.06
 
 	local column = 1
 	self.dark_mode_button = collect_into(
@@ -260,10 +270,10 @@ function open_options(self)
 		self.options_ui_elements,
 		Slider({
 			group = ui_group,
-			x = column_x[column] - 35,
+			x = column_x[column] - gw * 0.04,
 			y = gh / 2 + 55 * global_game_scale,
 			length = slider_length,
-			thickness = 50,
+			thickness = gw * 0.05,
 			fg_color = "fg",
 			bg_color = "bg",
 			rotation = 3 * math.pi / 2,
@@ -290,10 +300,10 @@ function open_options(self)
 		self.options_ui_elements,
 		Slider({
 			group = ui_group,
-			x = column_x[column] + 35,
+			x = column_x[column] + gw * 0.04,
 			y = gh / 2 + 55 * global_game_scale,
 			length = slider_length,
-			thickness = 50,
+			thickness = gw * 0.05,
 			fg_color = "fg",
 			bg_color = "bg",
 			rotation = 3 * math.pi / 2,
@@ -387,8 +397,8 @@ function open_options(self)
 	-- next column: Controls
 	--
 	column = 2
-	button_offset = -125
-	button_distance = 35
+	button_offset = -gh * 0.2
+	button_distance = gh * 0.06
 
 	self.controls_text = collect_into(
 		self.options_ui_elements,
@@ -423,16 +433,15 @@ function open_options(self)
 				end,
 			})
 		)
-		button_offset = button_offset + button_distance -
-		3                                             --for some reason this is needed for the last button to work (for 4 controls)
+		button_offset = button_offset + button_distance - 3 --for some reason this is needed for the last button to work (for 4 controls)
 	end
 
 	--
 	-- next column: Game-specific options
 	--
 	column = 3
-	button_offset = -125
-	button_distance = 35
+	button_offset = -gh * 0.2
+	button_distance = gh * 0.06
 
 	self.games_options_text = collect_into(
 		self.options_ui_elements,
@@ -706,7 +715,7 @@ function pause_game(self)
 				y = gh / 2 - 40 * global_game_scale,
 				lines = {
 					{
-						text = "[wavy_mid, green] Paused",
+						text = "[wavy_smooth, green]Paused",
 						font = fat_font,
 						alignment = "center",
 					},
@@ -843,7 +852,7 @@ function open_credits(self)
 	end
 
 	local yOffset = gh * 0.3
-	local y_dist = 40
+	local y_dist = gh * 0.08
 	local columns = { gw / 4, 2 * gw / 3 }
 	self.dev_section = collect_into(
 		self.credits_ui_elements,
@@ -861,6 +870,32 @@ function open_credits(self)
 			credits_button = true,
 			action = function(b)
 				open_url(b, "https://gusakm.itch.io/")
+			end,
+		})
+	)
+
+	yOffset = yOffset + y_dist
+	self.artist_section = collect_into(
+		self.credits_ui_elements,
+		Text2({
+			group = ui_group,
+			x = columns[1],
+			y = yOffset,
+			lines = { { text = "[fg]artist: ", font = pixul_font } },
+		})
+	)
+	self.artist_button = collect_into(
+		self.credits_ui_elements,
+		Button({
+			group = self.credits,
+			x = columns[2],
+			y = yOffset,
+			button_text = "Teirue",
+			fg_color = "bg",
+			bg_color = "fg",
+			credits_button = true,
+			action = function(b)
+				open_url(b, "https://example.com")
 			end,
 		})
 	)
@@ -897,14 +932,16 @@ function open_credits(self)
 		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[blue]libraries: ", font = pixul_font } } })
 	)
 
-	local x_offset = -200
-	local x_dist = 130
+	local x_offset = -gw * 0.2
+	local x_dist = gw * 0.143
+	local x_width = gw * 0.134
 	self.libraries_button1 = collect_into(
 		self.credits_ui_elements,
 		Button({
 			group = ui_group,
 			x = columns[2] + x_offset,
 			y = yOffset,
+			w = x_width,
 			button_text = "love2d",
 			fg_color = "bg",
 			bg_color = "blue",
@@ -922,6 +959,7 @@ function open_credits(self)
 			group = ui_group,
 			x = columns[2] + x_offset,
 			y = yOffset,
+			w = x_width,
 			button_text = "bakpakin",
 			fg_color = "bg",
 			bg_color = "blue",
@@ -938,6 +976,7 @@ function open_credits(self)
 			group = ui_group,
 			x = columns[2] + x_offset,
 			y = yOffset,
+			w = x_width,
 			button_text = "davisdude",
 			fg_color = "bg",
 			bg_color = "blue",
@@ -954,6 +993,7 @@ function open_credits(self)
 			group = ui_group,
 			x = columns[2] + x_offset,
 			y = yOffset,
+			w = x_width,
 			button_text = "tesselode",
 			fg_color = "bg",
 			bg_color = "blue",
@@ -967,7 +1007,7 @@ function open_credits(self)
 	yOffset = yOffset + y_dist
 	self.music_section = collect_into(
 		self.credits_ui_elements,
-		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[green]music: ", font = pixul_font } } })
+		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[green]music:", font = pixul_font } } })
 	)
 	self.music_button1 = collect_into(
 		self.credits_ui_elements,
@@ -975,12 +1015,12 @@ function open_credits(self)
 			group = ui_group,
 			x = columns[2],
 			y = yOffset,
-			button_text = "pixabay royalty-free",
+			button_text = "archive.org",
 			fg_color = "bg",
 			bg_color = "green",
 			credits_button = true,
 			action = function(b)
-				open_url(b, "https://pixabay.com/music/search/genre/video%20games/")
+				open_url(b, "https://archive.org")
 			end,
 		})
 	)
@@ -988,7 +1028,7 @@ function open_credits(self)
 	yOffset = yOffset + y_dist
 	self.sound_section = collect_into(
 		self.credits_ui_elements,
-		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[yellow]sounds: ", font = pixul_font } } })
+		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[yellow]sounds:", font = pixul_font } } })
 	)
 	self.sound_button1 = collect_into(
 		self.credits_ui_elements,
@@ -1021,8 +1061,7 @@ function restart_level_with_X_players(self, num_players)
 	music_slow_amount = 1
 	run_time = 0
 	locked_state = nil
-	scene_transition(self, gw / 2, gh / 2, Game("game"),
-		{ destination = "game", args = { level = main.current.level, num_players = num_players } }, {
+	scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = main.current.level, num_players = num_players } }, {
 		text = "stay hydrated!",
 		font = pixul_font,
 		alignment = "center",

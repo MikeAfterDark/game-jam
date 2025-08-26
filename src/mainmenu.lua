@@ -173,7 +173,7 @@ function MainMenu:setup_main_menu_ui()
 		Text2({
 			group = ui_group,
 			x = gw / 2,
-			y = 20,
+			y = gh * 0.05,
 			lines = {
 				{
 					text = "[wavy_mid, fg]SLOW JAM 2025!!",
@@ -186,11 +186,11 @@ function MainMenu:setup_main_menu_ui()
 
 	self.title_text = collect_into(
 		self.main_ui_elements,
-		Text({ { text = "[wavy, green]RHYTHM GO BRRR", font = fat_title_font, alignment = "center" } }, global_text_tags)
+		Text({ { text = "[wavy_title, green]CHOMP-CHOMP ROCK", font = fat_title_font, alignment = "center" } }, global_text_tags)
 	)
 
-	local button_offset = 20
-	local button_dist_apart = 40
+	local button_offset = gh * 0.1
+	local button_dist_apart = gh * 0.08
 	self.play_button1 = collect_into(
 		self.main_ui_elements,
 		Button({
@@ -279,7 +279,7 @@ function MainMenu:setup_main_menu_ui()
 		Button({
 			group = ui_group,
 			x = gw / 2,
-			y = gh - 20,
+			y = gh * 0.95,
 			button_text = "credits",
 			fg_color = "bg",
 			bg_color = "fg",

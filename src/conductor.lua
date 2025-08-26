@@ -25,6 +25,8 @@ function Map:init(args)
 	self.notes = {}
 	if not self.recording then
 		for i, note in ipairs(self.data.notes) do
+			local asset = note.beats > 1 and (note.color == "red" and red_centipede or blue_centipede)
+				or (note.color == "red" and red_rock_bug or blue_rock_bug)
 			self.notes[i] = Note({
 				group = self.group,
 				time = note.time,
@@ -32,12 +34,12 @@ function Map:init(args)
 				lane = note.lane,
 				beats = note.beats,
 				name = i,
-				x = gw * 0.5 + gw * 0.2 * (note.lane - 1.5),
+				x = gw * 0.5 + (gw * 0.2 * (note.lane - 1.5)) * (note.color == "red" and 0.6 or 1),
 				y = self.floor - (note.time - self.offset) * self.speed * 10,
-				size = 0.3,
+				size = 0.2 * global_game_scale,
 				speed = self.speed,
 				spacing = self.spacing,
-				asset = note.color == "red" and red_rock_bug or blue_rock_bug,
+				asset = asset,
 			})
 		end
 		if #self.notes > 0 then
@@ -62,8 +64,7 @@ function Map:save_map_data() --time color lane beats
 	local file = io.open("maps/" .. self.folder .. "/map2.lua", "w")
 	file:write("return {\n  notes = {\n")
 	for _, note in ipairs(self.notes) do
-		file:write(string.format('    { time = %.2f, color = "%s", lane = %d, beats = %d },\n', note.time, note.color,
-			note.lane, note.beats or 1))
+		file:write(string.format('    { time = %.2f, color = "%s", lane = %d, beats = %d },\n', note.time, note.color, note.lane, note.beats or 1))
 	end
 	file:write("  }\n}")
 	file:close()
@@ -130,7 +131,7 @@ function Map:update_note_tracking()
 	if current_time < self.crotchet / 2 and current_time > -self.crotchet / 2 then
 		if not current.pulled then
 			-- current.spring:pull(0.03, 100, 10)
-			current.spring:pull(0.2, 200, 10)
+			-- current.spring:pull(0.2, 200, 10)
 			current.pulled = true
 		end
 		current.color = green[0] -- hittable
@@ -194,7 +195,6 @@ function Map:attempt_note_hit(time, color, beats)
 	end
 
 	-- Skip if already hit
-	print("note: ", note.note_color .. ", color: ", color)
 	if not note.hit and note.note_color == color then
 		if math.abs(note.time - time) < self.crotchet / 2 then
 			note.hit = time
@@ -333,7 +333,7 @@ end
 function HitIndicator:draw()
 	graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
 	-- self.shape:draw(self.color)
-	self:draw_physics(nil, 1) -- draws physics shape
+	self:draw_physics(nil, global_game_scale) -- draws physics shape
 	graphics.rectangle(self.x, self.y, gw, 3, 0, 0, red[0])
 
 	-- Draw self.asset animation
@@ -345,10 +345,10 @@ function HitIndicator:draw()
 	local pressed = input.red_hit.pressed or input.blue_hit.pressed
 	self.frame = pressed and 2 or released and 1 or self.frame or 1
 	-- local frame = input.basic_hit.down and 2 or 1
+	--
 	local sprite = self.asset.sprites[self.frame]
 
-	local scale = 0.3
-	sprite:draw(self.x, self.y + 15, 0, scale, scale)
+	sprite:draw(self.x, self.y + 15, 0, 0.2 * global_game_scale)
 
 	graphics.pop()
 end
@@ -426,7 +426,39 @@ function Note:draw()
 	-- self:draw_physics(nil, 1) -- draws physics shape
 
 	if not self.hit then
-		self.asset.sprites[1]:draw(self.x, self.y, 0, self.size)
+		if self.beats == 1 then
+			if self.pulled and not self.missed then
+				local song_pos = main.current.map.song_position
+				local hit_time = self.time
+				local max_distance = 0.1 -- X: max distance for full transition (adjust as needed)
+
+				-- Compute normalized distance (0 = perfect hit, 1 = max distance or more)
+				local dist = math.abs(song_pos - hit_time)
+				local t = math.min(dist / max_distance, 1)
+
+				-- Interpolate color from green (perfect) to red (off-timing)
+				-- Red = (1, 0.1, 0.1), Green = (0.1, 1, 0.1)
+				local r = 0.1 + 0.9 * t -- goes from 0.1 → 1 as t goes 0 → 1
+				local g = 1 - 0.9 * t -- goes from 1 → 0.1 as t goes 0 → 1
+				local b = 0.1
+				local a = 1
+
+				local indicator_color = Color(r, g, b, a)
+				graphics.circle(self.x, self.y, self.size + 10 * global_game_scale, indicator_color)
+			end
+			self.asset.sprites[1]:draw(self.x, self.y, 0, self.size)
+		else
+			-- long note, draw head at self.beats ahead of tail
+			local pixels_per_beat = 1.2 * global_game_scale * self.speed -- pixels per beat
+			local pixels_per_segment = 8 * global_game_scale
+			local bottom_y = self.y + pixels_per_beat * self.beats
+
+			self.asset.sprites[1]:draw(self.x, bottom_y, 0, self.size)
+			for y = self.y + pixels_per_segment, bottom_y - pixels_per_segment, pixels_per_segment do
+				self.asset.sprites[2]:draw(self.x, y, 0, self.size)
+			end
+			self.asset.sprites[3]:draw(self.x, self.y, 0, self.size)
+		end
 	end
 
 	if self.missed or self.hit then
