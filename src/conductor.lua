@@ -69,7 +69,9 @@ function Map:save_map_data()
 	data_str = data_str .. string.format("notes = {\n")
 	for _, note in ipairs(self.notes) do
 		data_str = data_str
-			.. string.format('    { time = %.2f, color = "%s", lane = %d, beats = %d },\n', note.time, note.color, note.lane, note.beats or 1)
+			..
+			string.format('    { time = %.2f, color = "%s", lane = %d, beats = %d },\n', note.time, note.color, note
+			.lane, note.beats or 1)
 	end
 	data_str = data_str .. "  }\n}"
 
@@ -86,7 +88,7 @@ end
 
 function Map:start()
 	self.song:play({
-		volume = 0.1 or state.music_volume,
+		volume = 1 or state.music_volume,
 		seek = self.offset,
 		fadeDuration = 0,
 	})

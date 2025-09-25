@@ -21,13 +21,13 @@ function init()
 		"Skies_Forever",  --------  9
 		"U.N.Owen_was_her", ------ 10 -- recorded - hard
 		"Wasting_Time",   -------- 11
-		"Wicked_Fate",    -------- 12
+		"Wicked_Fate",    -------- 12 -- recorded - medium
 		"Wii_Shop",       -------- 13 -- recorded - beats only
 		"Wildfire",       -------- 14
 		"Zombies_On_Your_Lawn", -- 15
-		"Dragon_Roost_Island", --- 16
+		"Dragon_Roost_Island", --- 16 -- recorded - medium
 	}
-	song_index = 7
+	song_index = 13
 	-- recording = true
 
 	new_keys = {} -- init for rebinding options

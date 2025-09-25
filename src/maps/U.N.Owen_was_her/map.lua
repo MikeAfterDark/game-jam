@@ -1,6 +1,6 @@
 return {
 	bpm = 151,
-	speed = 50,
+	speed = 120,
 	notes = {
 		{ time = 1.30,   color = "blue", lane = 2, beats = 1 },
 		{ time = 3.16,   color = "blue", lane = 2, beats = 1 },
