@@ -1,5 +1,3 @@
-require("conductor")
-
 Game = Object:extend()
 Game:implement(State)
 Game:implement(GameObject)
@@ -8,7 +6,7 @@ function Game:init(name)
 	self:init_game_object()
 end
 
-function Game:on_enter(from, args) -- level, num_players, player_inputs)
+function Game:on_enter(from, args)
 	self.hfx:add("condition1", 1)
 	self.hfx:add("condition2", 1)
 
@@ -48,73 +46,9 @@ function Game:on_enter(from, args) -- level, num_players, player_inputs)
 	self.x2, self.y2 = gw, gh
 	self.w, self.h = self.x2 - self.x1, self.y2 - self.y1
 
-	self.paused = false
+	self.in_pause = false
 	self.stuck = false
 	self.won = false
-
-	self.started = false
-	self.countdown = args.countdown
-	self.countdown_text = Text({
-		{
-			text = "[fg]" .. self.countdown,
-			font = mystery_font,
-			alignment = "left",
-		},
-	}, global_text_tags)
-
-	self.score_text = Text({
-		{
-			text = "[fg]beep boop",
-			font = mystery_font,
-			alignment = "left",
-		},
-	}, global_text_tags)
-	self.missed_text = Text({
-		{
-			text = "[fg]missed: xxx",
-			font = mystery_font,
-			alignment = "left",
-		},
-	}, global_text_tags)
-	self.accuracy_text = Text({
-		{
-			text = "[fg]beep/boop",
-			font = mystery_font,
-			alignment = "left",
-		},
-	}, global_text_tags)
-	self.time_text = Text({
-		{
-			text = "[fg]ti:me",
-			font = mystery_font,
-			alignment = "left",
-		},
-	}, global_text_tags)
-
-	self.hit_indicator = HitIndicator({
-		group = self.main,
-		x = gw * 0.5,
-		y = gh * 0.8,
-		w = gw * 0.25,
-		h = gh * 0.1,
-		asset = bug_crusher,
-		color = blue[0],
-	})
-
-	-- load map + music
-	self.map = Map({
-		group = self.main,
-		folder = args.folder,
-
-		floor = gh * 0.8, -- self.hit_indicator.y,
-		recording = recording,
-	})
-
-	self.held_notes = { red = nil, blue = nil }
-
-	self.t:after(self.countdown, function()
-		self.map:start()
-	end)
 end
 
 function Game:on_exit()
@@ -125,12 +59,6 @@ function Game:on_exit()
 	self.paused_ui:destroy()
 	self.options_ui:destroy()
 	self.keybinding_ui:destroy()
-	self.hit_indicator:destroy()
-	self.map:destroy()
-	self.countdown_text.dead = true
-	self.countdown_text = nil
-	self.map = nil
-	self.hit_indicator = nil
 	self.main = nil
 	self.post_main = nil
 	self.effects = nil
@@ -139,10 +67,7 @@ function Game:on_exit()
 	self.options_ui = nil
 	self.keybinding_ui = nil
 	self.credits = nil
-	self.passives = nil
 	self.flashes = nil
-	self.bosses = nil
-	self.players = nil
 	self.hfx = nil
 end
 
@@ -153,79 +78,12 @@ function Game:unpause_in(time)
 end
 
 function Game:update(dt)
-	-- play_music({ volume = 0.3 })
-
-	if not self.paused and not self.stuck and not self.won then
+	if not self.in_pause and not self.stuck and not self.won then
 		run_time = run_time + dt
-		if self.countdown > 0 then
-			self.countdown = self.countdown - dt * slow_amount
-			if self.countdown < 0 then
-				self.countdown = 0
-				self.countdown_text:set_text({ text = "", font = pixul_font })
-				self.map:unpause()
-				self.started = true
-			elseif self.countdown_text then
-				self.countdown_text:set_text({
-					{
-						text = "[fg]" .. string.format("%.1f", self.countdown),
-						font = pixul_font,
-						alignment = "right",
-					},
-				})
-				self.countdown_text:update(dt * slow_amount)
-			end
-		end
-
-		if self.score_text then
-			self.score_text:set_text({
-				{
-					text = "[fg]score: " .. string.format("%.2f", self.map.score or 0),
-					font = pixul_font,
-					alignment = "left",
-				},
-			})
-			self.score_text:update(dt * slow_amount)
-		end
-
-		if self.missed_text then
-			self.missed_text:set_text({
-				{
-					text = "[fg]misses: " .. string.format("%.0f", self.map.misses or 0),
-					font = pixul_font,
-					alignment = "left",
-				},
-			})
-			self.missed_text:update(dt * slow_amount)
-		end
-
-		if self.accuracy_text then
-			self.accuracy_text:set_text({
-				{
-					text = "[fg]accuracy: " .. string.format("%.2f", self.map.accuracy or 0) .. "/" .. self.map.hits,
-					font = pixul_font,
-					alignment = "left",
-				},
-			})
-			self.accuracy_text:update(dt * slow_amount)
-		end
-
-		if self.time_text then
-			self.time_text:set_text({
-				{
-					text = "[fg]time: " .. string.format("%.1f", self.map.song_position or 0),
-					font = pixul_font,
-					alignment = "left",
-				},
-			})
-			self.time_text:update(dt * slow_amount)
-		end
 	end
 
-	-- game elements here
-
 	if input.escape.pressed and not self.transitioning and not self.in_credits then
-		if not self.paused and not self.died and not self.won then
-			self.map:pause()
+		if not self.in_pause and not self.died and not self.won then
 			pause_game(self)
 		elseif self.in_options and not self.died and not self.won then
 			if self.in_keybinding then
@@ -266,29 +124,6 @@ function Game:update(dt)
 	self.paused_ui:update(dt * slow_amount)
 	self.options_ui:update(dt * slow_amount)
 
-	self.map.song:update(dt * slow_amount)
-
-	if not self.paused and self.countdown <= 0 then
-		if input.red_hit.pressed then
-			self.held_notes.red = {
-				start_time = self.map:get_song_position(),
-				active = true,
-			}
-		end
-
-		if input.blue_hit.pressed then
-			self.held_notes.blue = {
-				start_time = self.map:get_song_position(),
-				active = true,
-			}
-		end
-
-		self:handle_note("red", input.red_hit.pressed, input.red_hit.released)
-		self:handle_note("blue", input.blue_hit.pressed, input.blue_hit.released)
-	elseif input.save_recording.pressed then
-		self.map:save_map_data()
-	end
-
 	-------------------------------------------------------------
 	----------------------- UI MENU STUFF -----------------------
 	-------------------------------------------------------------
@@ -299,7 +134,7 @@ function Game:update(dt)
 	self.keybinding_ui:update(dt * slow_amount)
 	self.credits:update(dt * slow_amount)
 
-	if input.m2.pressed then
+	if input.m2.pressed then -- NOTE: PLAYTIME DEBUG TEXT
 		if not self.counter then
 			self.counter = 1
 		end
@@ -312,8 +147,8 @@ function Game:update(dt)
 				lines = {
 					{
 						-- text = tostring(main.current_music_type),
-						text = string.format("%.2f", self.map.song_position),
-						-- text = tostring(self.counter),
+						-- text = string.format("%.2f", self.map.song_position),
+						text = tostring("hi"),
 						font = pixul_font,
 						alignment = "center",
 					},
@@ -324,28 +159,6 @@ function Game:update(dt)
 	if input.m3.pressed and self.debug then
 		self.debug:clear()
 		self.debug = nil
-		-- self.counter = self.counter + 1
-	end
-end
-
-function Game:handle_note(color, pressed, released)
-	local note = self.map:get_current_note()
-	local held = self.held_notes[color]
-	if not recording and note and note.beats == 1 and note.note_color == color and pressed then
-		self.map:basic_hit(color)
-		held.active = false
-	elseif released and ((held and held.active and note and note.note_color == color) or recording) then
-		held.active = false
-
-		local current_time = self.map:get_song_position()
-		local duration = current_time - held.start_time
-		local beats = duration / self.map.crotchet
-
-		if recording and beats < 2 then
-			self.map:basic_hit(color)
-		else
-			self.map:long_hit(color, beats)
-		end
 	end
 end
 
@@ -448,11 +261,8 @@ function Game:quit()
 end
 
 function Game:draw()
-	background_image.sprites[1]:draw(gw / 2, gh / 2, 0, 0.175 * global_game_scale)
-
 	self.floor:draw()
 	self.main:draw()
-	-- self.main:get_objects_by_class(HitIndicator)[1]:draw()
 	self.post_main:draw()
 	self.effects:draw()
 
@@ -464,83 +274,12 @@ function Game:draw()
 		camera:detach()
 	end, true)
 
-	camera:attach()
-	-- if self.start_time and self.start_time > 0 and not self.choosing_passives then
-	-- 	graphics.push(gw / 2, gh / 2 - 48, 0, self.hfx.condition1.x, self.hfx.condition1.x)
-	-- 	graphics.print_centered(tostring(self.start_time), fat_font, gw / 2, gh / 2 - 48, 0, 1, 1, nil, nil, self.hfx.condition1.f and fg[0] or red[0])
-	-- 	graphics.pop()
-	-- end
-
-	if self.win_condition then
-		if self.win_condition == "wave" then
-			if self.start_time <= 0 then
-				graphics.push(self.x2 - 50, self.y1 - 10, 0, self.hfx.condition2.x, self.hfx.condition2.x)
-				graphics.print_centered("wave:", fat_font, self.x2 - 50, self.y1 - 10, 0, 0.6, 0.6, nil, nil, fg[0])
-				graphics.pop()
-				local wave = self.wave
-				if wave > self.max_waves then
-					wave = self.max_waves
-				end
-				graphics.push(
-					self.x2 - 25 + fat_font:get_text_width(wave .. "/" .. self.max_waves) / 2,
-					self.y1 - 8,
-					0,
-					self.hfx.condition1.x,
-					self.hfx.condition1.x
-				)
-				graphics.print(
-					wave .. "/" .. self.max_waves,
-					fat_font,
-					self.x2 - 25,
-					self.y1 - 8,
-					0,
-					0.75,
-					0.75,
-					nil,
-					fat_font.h / 2,
-					self.hfx.condition1.f and fg[0] or yellow[0]
-				)
-				graphics.pop()
-			end
-		end
-	end
-	-- end
-
-	if self.countdown_text then
-		self.countdown_text:draw(gw / 2, gh / 2)
-	end
-
-	if self.score_text then
-		self.score_text:draw(gw * 0.8, gh * 0.05)
-	end
-	if self.time_text then
-		self.time_text:draw(gw * 0.8, gh * 0.1)
-	end
-	if self.accuracy_text then
-		self.accuracy_text:draw(gw * 0.8, gh * 0.15)
-	end
-	if self.missed_text then
-		self.missed_text:draw(gw * 0.8, gh * 0.2)
-	end
-	camera:detach()
-
-	if self.level == 20 and self.trailer then
-		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
-	end
-	if self.choosing_passives or self.won or self.paused or self.died then
-		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
-	end
-
-	if self.paused then
+	if self.in_pause then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 	end
 	self.ui:draw()
 
-	if self.shop_text then
-		self.shop_text:draw(gw - 40, gh - 17)
-	end
-
-	if self.paused then
+	if self.in_pause then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 	end
 	self.paused_ui:draw()
@@ -561,24 +300,12 @@ function Game:draw()
 	self.credits:draw()
 end
 
-function Game:close_die_ui()
-	main.current.in_death = false
-	pop_ui_layer(self)
-end
-
 function Game:die()
 	if not self.died_text then
 		input:set_mouse_visible(true)
 		self.died = true
 		locked_state = nil
 		system.save_run()
-
-		-- trigger:tween(1, _G, { slow_amount = 0 }, math.linear, function()
-		-- 	slow_amount = 0
-		-- end, "slow_amount")
-		-- trigger:tween(1, _G, { music_slow_amount = 0 }, math.linear, function()
-		-- 	music_slow_amount = 0
-		-- end, "music_slow_amount")
 
 		self.t:tween(2, self, { main_slow_amount = 0 }, math.linear, function()
 			self.main_slow_amount = 0
@@ -661,8 +388,7 @@ function Game:die()
 							slow_amount = 1
 							music_slow_amount = 1
 							locked_state = nil
-							scene_transition(self, gw / 2, gh / 2, Game("game"),
-								{ destination = "game", args = { level = 1, num_players = 1 } }, {
+							scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = 1, num_players = 1 } }, {
 								text = "chill mode will pause the timer [wavy]forever",
 								font = pixul_font,
 								alignment = "center",

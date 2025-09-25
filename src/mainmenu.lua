@@ -26,17 +26,6 @@ function MainMenu:on_enter(from)
 	self:setup_main_menu_ui()
 end
 
-function MainMenu:play(num_players)
-	ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-	ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-	ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-
-	scene_transition(self, gw / 2, gh / 2, Game("game"), {
-		destination = "game",
-		args = { folder = game_songs[song_index], countdown = start_countdown },
-	}, { text = "posture check!", font = pixul_font, alignment = "center" })
-end
-
 function MainMenu:on_exit()
 	self.options_ui:destroy()
 	self.keybinding_ui:destroy()
@@ -72,7 +61,7 @@ function MainMenu:update(dt)
 		end
 	end
 
-	if not self.paused and not self.transitioning then
+	if not self.in_pause and not self.transitioning then
 		self.main_menu_ui:update(dt * slow_amount)
 		if self.title_text then
 			self.title_text:update(dt)
@@ -132,7 +121,6 @@ end
 
 function MainMenu:draw()
 	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
-	titlescreen.sprites[1]:draw(gw / 2, gh / 2, 0, 0.258 * global_game_scale)
 
 	self.main_menu_ui:draw()
 	self.title_text:draw(gw / 2, gh * 0.5)
@@ -177,7 +165,7 @@ function MainMenu:setup_main_menu_ui()
 			y = gh * 0.05,
 			lines = {
 				{
-					text = "[wavy_mid, fg]SLOW JAM 2025!!",
+					text = "[wavy_mid, fg]beep boop",
 					font = pixul_font,
 					alignment = "center",
 				},
@@ -185,10 +173,8 @@ function MainMenu:setup_main_menu_ui()
 		})
 	)
 
-	self.title_text = collect_into(
-		self.main_ui_elements,
-		Text({ { text = "[wavy_title, green]CHOMP-CHOMP ROCK", font = fat_title_font, alignment = "center" } }, global_text_tags)
-	)
+	self.title_text =
+		collect_into(self.main_ui_elements, Text({ { text = "[wavy_title, green]title", font = fat_title_font, alignment = "center" } }, global_text_tags))
 
 	local button_offset = gh * 0.1
 	local button_dist_apart = gh * 0.08
@@ -208,54 +194,6 @@ function MainMenu:setup_main_menu_ui()
 	)
 	button_offset = button_offset + button_dist_apart
 
-	-- self.play_button2 = collect_into(
-	-- 	self.main_ui_elements,
-	-- 	Button({
-	-- 		group = ui_group,
-	-- 		x = gw / 2,
-	-- 		y = gh / 2 + button_offset,
-	-- 		button_text = "2 Players",
-	-- 		fg_color = "bg",
-	-- 		bg_color = "green",
-	-- 		action = function(b)
-	-- 			self:play(2)
-	-- 		end,
-	-- 	})
-	-- )
-	-- button_offset = button_offset + button_dist_apart
-	--
-	-- self.play_button3 = collect_into(
-	-- 	self.main_ui_elements,
-	-- 	Button({
-	-- 		group = ui_group,
-	-- 		x = gw / 2,
-	-- 		y = gh / 2 + button_offset,
-	-- 		button_text = "3 Players",
-	-- 		fg_color = "bg",
-	-- 		bg_color = "green",
-	-- 		action = function(b)
-	-- 			self:play(3)
-	-- 		end,
-	-- 	})
-	-- )
-	-- button_offset = button_offset + button_dist_apart
-	--
-	-- self.play_button4 = collect_into(
-	-- 	self.main_ui_elements,
-	-- 	Button({
-	-- 		group = ui_group,
-	-- 		x = gw / 2,
-	-- 		y = gh / 2 + button_offset,
-	-- 		button_text = "4 Players",
-	-- 		fg_color = "bg",
-	-- 		bg_color = "green",
-	-- 		action = function(b)
-	-- 			self:play(4)
-	-- 		end,
-	-- 	})
-	-- )
-	-- button_offset = button_offset + button_dist_apart
-
 	self.options_button = collect_into(
 		self.main_ui_elements,
 		Button({
@@ -266,7 +204,7 @@ function MainMenu:setup_main_menu_ui()
 			fg_color = "bg",
 			bg_color = "fg",
 			action = function(b)
-				if not self.paused then
+				if not self.in_pause then
 					open_options(self)
 					b.selected = true
 				else

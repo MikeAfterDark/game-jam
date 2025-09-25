@@ -1,34 +1,11 @@
 require("engine")
 require("mainmenu")
 require("game")
-require("player")
 require("renderer")
-require("boss")
 
 -- on linux, state is at: ~/.local/share/{love, project_name}/state.txt
 function init()
 	renderer_init()
-
-	game_songs = {
-		"Always_Running", --------  1
-		"Bad_Apple",      --------  2 -- recorded - hard
-		"Castle_Of_Glass", -------  3
-		"Dont_Forget",    --------  4
-		"Dont_Look_Down", --------  5
-		"Hello_AI",       --------  6
-		"Im_Blue",        --------  7 -- recorded - medium
-		"Megalovania",    --------  8 -- recorded - hard
-		"Skies_Forever",  --------  9
-		"U.N.Owen_was_her", ------ 10 -- recorded - hard
-		"Wasting_Time",   -------- 11
-		"Wicked_Fate",    -------- 12 -- recorded - medium
-		"Wii_Shop",       -------- 13 -- recorded - beats only
-		"Wildfire",       -------- 14
-		"Zombies_On_Your_Lawn", -- 15
-		"Dragon_Roost_Island", --- 16 -- recorded - medium
-	}
-	song_index = 13
-	-- recording = true
 
 	new_keys = {} -- init for rebinding options
 	if not state.input then
@@ -56,6 +33,7 @@ function init()
 	end
 
 	-- load sounds:
+	-- TODO: move all sounds and music data to some data file and load *that*
 	local s = { tags = { sfx } }
 	buttonHover = Sound("buttonHover.ogg", s)
 	buttonPop = Sound("buttonPop.ogg", s)
@@ -104,52 +82,6 @@ function init()
 
 	-- load images:
 	-- image1 = Image('name')
-	bug_crusher = {
-		animation_speed = 0.5,
-		sprites = {
-			Image("bug_open"),
-			Image("bug_close"),
-		},
-	}
-	red_rock_bug = {
-		sprites = {
-			Image("enemy_single_red"),
-		},
-	}
-	blue_rock_bug = {
-		sprites = {
-			Image("enemy_single_blue"),
-		},
-	}
-	rock_bug = {
-		sprites = {
-			Image("enemy_single"),
-		},
-	}
-	red_centipede = {
-		sprites = {
-			Image("head_red"),
-			Image("mid_red"),
-			Image("tail_red"),
-		},
-	}
-	blue_centipede = {
-		sprites = {
-			Image("head_blue"),
-			Image("mid_blue"),
-			Image("tail_blue"),
-		},
-	}
-	background_image = {
-		sprites = {
-			Image("bg"),
-		},
-	}
-	titlescreen = {
-		sprites = {
-			Image("titlescreen"),
-		},
-	}
 
 	-- set logic init
 	-- main_song_instance = _G[random:table({ "song1", "song2", "song3", "song4", "song5" })]:play({ volume = 0.3 })
@@ -188,8 +120,6 @@ function init()
 	main:add(MainMenu("mainmenu"))
 	main:go_to("mainmenu")
 	-- main:add(Game("game"))
-	-- main:go_to("game", { folder = "Im_Blue", countdown = 1.5 })
-	-- main:go_to("game", { folder = "U.N.Owen_was_her", countdown = 1.5 })
 
 	-- set sane defaults:
 	state.screen_flashes = true
@@ -200,23 +130,6 @@ end
 
 function update(dt)
 	main:update(dt)
-
-	-- update window max sizing
-	-- if input.k.pressed then
-	-- 	if sx > 1 and sy > 1 then
-	-- 		sx, sy = sx - 0.5, sy - 0.5
-	-- 		love.window.setMode(480 * sx, 270 * sy)
-	-- 		state.sx, state.sy = sx, sy
-	-- 		state.fullscreen = false
-	-- 	end
-	-- end
-	--
-	-- if input.l.pressed then
-	-- 	sx, sy = sx + 0.5, sy + 0.5
-	-- 	love.window.setMode(480 * sx, 270 * sy)
-	-- 	state.sx, state.sy = sx, sy
-	-- 	state.fullscreen = false
-	-- end
 end
 
 function draw()
@@ -227,15 +140,13 @@ end
 
 function love.run()
 	web = love.system.getOS() == "Web"
-	-- print("Running on: " .. love.system.getOS())
-	-- print("Is web? " .. tostring(web))
 
 	global_game_scale = 4
 	global_game_width = 480 * global_game_scale
 	global_game_height = 270 * global_game_scale
 
 	return engine_run({
-		game_name = "Slow Jam 2025",
+		game_name = "WPG Comicon 2025",
 		window_width = "max",
 		window_height = "max",
 	})
@@ -255,18 +166,10 @@ function open_options(self)
 	self.options_ui_elements = {}
 	main.ui_layer_stack:push({
 		layer = ui_layer,
-		-- music = self.options_menu_song_instance,
-		layer_has_music = not main.current.paused,
+		layer_has_music = not main.current.in_pause,
 		music_type = "options",
 		ui_elements = self.options_ui_elements,
 	})
-	-- play_music({
-	-- 	type = "pause" --[[ , force = true ]],
-	-- })
-
-	-- trigger:tween(0.25, _G, { slow_amount = 0 }, math.linear, function()
-	-- 	slow_amount = 0
-	-- self.paused = true
 
 	local column_x = { gw / 4, gw / 2, 3 * gw / 4 }
 
@@ -461,8 +364,7 @@ function open_options(self)
 				end,
 			})
 		)
-		button_offset = button_offset + button_distance -
-		3                                             --for some reason this is needed for the last button to work (for 4 controls)
+		button_offset = button_offset + button_distance - 3 --for some reason this is needed for the last button to work (for 4 controls)
 	end
 
 	--
@@ -727,14 +629,10 @@ function pause_game(self)
 		music_type = "paused",
 		ui_elements = self.paused_ui_elements,
 	})
-	-- trigger:tween(0.25, _G, { slow_amount = 0 }, math.linear, function()
-	-- slow_amount = 0
 
 	trigger:tween(0.25, _G, { slow_amount = 0 }, math.linear, function()
 		slow_amount = 0
-		self.paused = true
-		-- play_music({})
-		-- self.paused = true
+		self.in_pause = true
 
 		self.paused_menu_title_text = collect_into(
 			self.paused_ui_elements,
@@ -835,18 +733,15 @@ function play(self, num_players)
 
 	scene_transition(self, gw / 2, gh / 2, Game("game"), {
 		destination = "game",
-		args = { folder = game_songs[song_index], countdown = start_countdown },
-	}, { text = "chomp those rock bugs!", font = pixul_font, alignment = "center" })
+		args = {},
+	}, { text = "todo text", font = pixul_font, alignment = "center" })
 end
 
 function unpause_game(self)
 	trigger:tween(0.25, _G, { slow_amount = 1 }, math.linear, function()
 		slow_amount = 1
-		self.paused = false
+		self.in_pause = false
 
-		if main.current:is(Game) then
-			main.current:unpause_in(start_countdown)
-		end
 		pop_ui_layer(self)
 	end)
 end
@@ -877,7 +772,7 @@ function open_credits(self)
 	main.ui_layer_stack:push({
 		layer = ui_layer,
 		-- music = self.credits_menu_song_instance,
-		layer_has_music = not main.current.paused,
+		layer_has_music = not main.current.in_pause,
 		music_type = "credits",
 		ui_elements = self.credits_ui_elements,
 	})
@@ -1102,8 +997,7 @@ function restart_level_with_X_players(self, num_players)
 	music_slow_amount = 1
 	run_time = 0
 	locked_state = nil
-	scene_transition(self, gw / 2, gh / 2, Game("game"),
-		{ destination = "game", args = { level = main.current.level, num_players = num_players } }, {
+	scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = main.current.level, num_players = num_players } }, {
 		text = "stay hydrated!",
 		font = pixul_font,
 		alignment = "center",
