@@ -3,6 +3,9 @@ require("mainmenu")
 require("game")
 require("renderer")
 
+require("player")
+require("wall")
+
 -- on linux, state is at: ~/.local/share/{love, project_name}/state.txt
 function init()
 	renderer_init()
@@ -12,21 +15,12 @@ function init()
 		state.input = {}
 	end
 	controls = {
-		save_recording = {
-			text = "Save Recording",
-			default = { "w" },
-			input = state.input.save_recording,
-		},
-		red_hit = {
-			text = "[red]Red [fg]Hit",
-			default = { "z", "x" },
-			input = state.input.red_hit,
-		},
-		blue_hit = {
-			text = "[blue]Blue [fg]Hit",
-			default = { "n", "m" },
-			input = state.input.blue_hit,
-		},
+		jump = { text = "Jump", default = { "z" }, input = state.input.jump },
+		undo = { text = "Undo", default = { "x" }, input = state.input.undo },
+		up = { text = "Up", default = { "up", "w" }, input = state.input.up },
+		down = { text = "Down", default = { "down", "s" }, input = state.input.down },
+		left = { text = "Left", default = { "left", "a" }, input = state.input.left },
+		right = { text = "Right", default = { "right", "d" }, input = state.input.right },
 	}
 	for action, key in pairs(controls) do
 		input:bind(action, key.input or key.default)
@@ -117,9 +111,10 @@ function init()
 
 	start_countdown = 2.5
 
-	main:add(MainMenu("mainmenu"))
-	main:go_to("mainmenu")
-	-- main:add(Game("game"))
+	-- main:add(MainMenu("mainmenu"))
+	-- main:go_to("mainmenu")
+	main:add(Game("game")) -- TODO: TEMP
+	main:go_to("game", { level = 1, num_players = 1 })
 
 	-- set sane defaults:
 	state.screen_flashes = true
@@ -146,7 +141,7 @@ function love.run()
 	global_game_height = 270 * global_game_scale
 
 	return engine_run({
-		game_name = "WPG Comicon 2025",
+		game_name = "Bob",
 		window_width = "max",
 		window_height = "max",
 	})
@@ -364,7 +359,8 @@ function open_options(self)
 				end,
 			})
 		)
-		button_offset = button_offset + button_distance - 3 --for some reason this is needed for the last button to work (for 4 controls)
+		button_offset = button_offset + button_distance -
+		3                                             --for some reason this is needed for the last button to work (for 4 controls)
 	end
 
 	--
@@ -997,7 +993,8 @@ function restart_level_with_X_players(self, num_players)
 	music_slow_amount = 1
 	run_time = 0
 	locked_state = nil
-	scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = main.current.level, num_players = num_players } }, {
+	scene_transition(self, gw / 2, gh / 2, Game("game"),
+		{ destination = "game", args = { level = main.current.level, num_players = num_players } }, {
 		text = "stay hydrated!",
 		font = pixul_font,
 		alignment = "center",

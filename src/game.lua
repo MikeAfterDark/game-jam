@@ -20,11 +20,11 @@ function Game:on_enter(from, args)
 
 	self.floor = Group()
 	self.main = Group():set_as_physics_world(
-		32 * global_game_scale,
+		800 * global_game_scale,
 		0,
 		0, --
 		-- { "indicator", "note" }
-		{ "note", "indicator" }
+		{ "player", "wall" }
 	)
 	self.post_main = Group()
 	self.effects = Group()
@@ -34,17 +34,72 @@ function Game:on_enter(from, args)
 	self.keybinding_ui = Group():no_camera()
 	self.credits = Group():no_camera()
 
-	self.main:disable_collision_between("indicator", "note")
-	self.main:disable_collision_between("note", "note")
+	self.main:disable_collision_between("player", "wall")
+	self.main:disable_collision_between("wall", "wall")
 
-	self.main:enable_trigger_between("indicator", "note")
-	self.main:enable_trigger_between("note", "indicator")
+	self.main:enable_trigger_between("player", "wall")
+	self.main:enable_trigger_between("wall", "player")
 
 	self.main_slow_amount = 1
 
 	self.x1, self.y1 = 0, 0
 	self.x2, self.y2 = gw, gh
 	self.w, self.h = self.x2 - self.x1, self.y2 - self.y1
+
+	-- load level
+	-- spawn walls/env
+	-- spawn player
+	self.player = Player({
+		group = self.main,
+		x = gw / 2,
+		y = gh / 2,
+		size = 10 * global_game_scale,
+		speed = 200 * global_game_scale,
+		color = red[0],
+		color_text = "black",
+		tutorial = self.level == 0 or true,
+	})
+
+	Wall({
+		group = self.main,
+		type = wall_type.Sticky,
+		x = gw * 0.2,
+		y = gh * 0.2,
+		w = gw * 0.4,
+		h = gh * 0.1,
+		-- vertices = math.to_rectangle_vertices(gw * 0.2, gh * 0.2, gw * 0.5, gh * 0.3),
+		color = green[-4],
+	})
+	Wall({
+		group = self.main,
+		type = wall_type.Sticky,
+		x = gw * 0.2,
+		y = gh * 0.6,
+		w = gw * 0.3,
+		h = gh * 0.1,
+		-- vertices = math.to_rectangle_vertices(gw * 0.2, gh * 0.5, gw * 0.5, gh * 0.6),
+		color = green[-8],
+	})
+
+	Wall({
+		group = self.main,
+		type = wall_type.Sticky,
+		x = gw * 0.8,
+		y = gh * 0.5,
+		w = gw * 0.1,
+		h = gh * 0.5,
+		vertices = math.to_rectangle_vertices(gw * 0.7, gh * 0.2, gw * 0.8, gh * 0.7),
+		color = green[-3],
+	})
+
+	-- Wall({ group = self.main, vertices = math.to_rectangle_vertices(-40, -40, self.x1, gh + 40), color = bg[-1] })
+	-- Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x2, -40, gw + 40, gh + 40), color = bg[-1] })
+	-- Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x1, -40, self.x2, self.y1), color = bg[-1] })
+	-- Wall({
+	-- 	group = self.main,
+	-- 	vertices = math.to_rectangle_vertices(self.x1, self.y2, self.x2, gh + 40),
+	-- 	color = bg[-1],
+	-- })
 
 	self.in_pause = false
 	self.stuck = false
@@ -388,7 +443,8 @@ function Game:die()
 							slow_amount = 1
 							music_slow_amount = 1
 							locked_state = nil
-							scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = 1, num_players = 1 } }, {
+							scene_transition(self, gw / 2, gh / 2, Game("game"),
+								{ destination = "game", args = { level = 1, num_players = 1 } }, {
 								text = "chill mode will pause the timer [wavy]forever",
 								font = pixul_font,
 								alignment = "center",

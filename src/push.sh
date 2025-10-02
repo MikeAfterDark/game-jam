@@ -1,7 +1,7 @@
 #!/bin/bash
 
 name="gusakm"
-project="slowjam2025"
+project="Bob"
 type=""
 
 butler push ../build/lovejs ${name}/${project}:web${type}
