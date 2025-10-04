@@ -46,60 +46,59 @@ function Game:on_enter(from, args)
 	self.x2, self.y2 = gw, gh
 	self.w, self.h = self.x2 - self.x1, self.y2 - self.y1
 
-	-- load level
-	-- spawn walls/env
-	-- spawn player
-	self.player = Player({
-		group = self.main,
-		x = gw / 2,
-		y = gh / 2,
-		size = 10 * global_game_scale,
-		speed = 200 * global_game_scale,
-		color = red[0],
-		color_text = "black",
-		tutorial = self.level == 0 or true,
-	})
+	-- NOTE: constants:
+	self._player_speed = 200 * global_game_scale
+	self._player_size = 10 * global_game_scale
 
-	Wall({
-		group = self.main,
-		type = wall_type.Sticky,
-		x = gw * 0.2,
-		y = gh * 0.2,
-		w = gw * 0.4,
-		h = gh * 0.1,
-		-- vertices = math.to_rectangle_vertices(gw * 0.2, gh * 0.2, gw * 0.5, gh * 0.3),
-		color = green[-4],
-	})
-	Wall({
-		group = self.main,
-		type = wall_type.Sticky,
-		x = gw * 0.2,
-		y = gh * 0.6,
-		w = gw * 0.3,
-		h = gh * 0.1,
-		-- vertices = math.to_rectangle_vertices(gw * 0.2, gh * 0.5, gw * 0.5, gh * 0.6),
-		color = green[-8],
-	})
+	self.creator_mode = args.creator_mode or false
+	if self.creator_mode then
+		print("creator mode")
+		-- self.selection = 0
+	else
+		print("play mode")
+		-- load level
+		-- spawn walls/env
+		-- spawn player
 
-	Wall({
-		group = self.main,
-		type = wall_type.Sticky,
-		x = gw * 0.8,
-		y = gh * 0.5,
-		w = gw * 0.1,
-		h = gh * 0.5,
-		vertices = math.to_rectangle_vertices(gw * 0.7, gh * 0.2, gw * 0.8, gh * 0.7),
-		color = green[-3],
-	})
-
-	-- Wall({ group = self.main, vertices = math.to_rectangle_vertices(-40, -40, self.x1, gh + 40), color = bg[-1] })
-	-- Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x2, -40, gw + 40, gh + 40), color = bg[-1] })
-	-- Wall({ group = self.main, vertices = math.to_rectangle_vertices(self.x1, -40, self.x2, self.y1), color = bg[-1] })
-	-- Wall({
-	-- 	group = self.main,
-	-- 	vertices = math.to_rectangle_vertices(self.x1, self.y2, self.x2, gh + 40),
-	-- 	color = bg[-1],
-	-- })
+		self.player = Player({
+			group = self.main,
+			x = gw / 2,
+			y = gh / 2,
+			size = self._player_size,
+			speed = self._player_speed,
+			color = red[0],
+			color_text = "black",
+			tutorial = self.level == 0 or true,
+		})
+		Wall({
+			group = self.main,
+			type = wall_type.Sticky,
+			x = gw * 0.2,
+			y = gh * 0.2,
+			w = gw * 0.4,
+			h = gh * 0.1,
+			r = math.pi * 3 / 4,
+			color = green[-4],
+		})
+		Wall({
+			group = self.main,
+			type = wall_type.Sticky,
+			x = gw * 0.2,
+			y = gh * 0.6,
+			w = gw * 0.3,
+			h = gh * 0.1,
+			color = green[-8],
+		})
+		Wall({
+			group = self.main,
+			type = wall_type.Icy,
+			x = gw * 0.8,
+			y = gh * 0.5,
+			w = gw * 0.1,
+			h = gh * 0.5,
+			color = blue[-3],
+		})
+	end
 
 	self.in_pause = false
 	self.stuck = false
@@ -114,6 +113,7 @@ function Game:on_exit()
 	self.paused_ui:destroy()
 	self.options_ui:destroy()
 	self.keybinding_ui:destroy()
+
 	self.main = nil
 	self.post_main = nil
 	self.effects = nil
@@ -166,6 +166,116 @@ function Game:update(dt)
 			self.credits_button:on_mouse_exit()
 		end
 		self.credits:update(0)
+	end
+
+	if self.creator_mode then
+		local previous_selection = self.selection or -1
+
+		local wheel_input = (input.wheel_up.pressed and -1 or 0) + (input.wheel_down.pressed and 1 or 0)
+		self.selection = ((self.selection or 0) + wheel_input) % #wall_type_order
+
+		-- local mouse_x, mouse_y = self.main:get_mouse_position()
+		local grid_size = 64
+		local mouse_x, mouse_y = self.main:get_mouse_position()
+
+		mouse_x = math.floor(mouse_x / grid_size) * grid_size
+		mouse_y = math.floor(mouse_y / grid_size) * grid_size
+
+		-- now you can use snapped_x, snapped_y to place objects or draw highlights
+		if previous_selection ~= self.selection or not self.hovered then -- new selection
+			if self.hovered then
+				self.hovered = nil
+			end
+
+			if self.selection == 0 then -- player
+				self.hovered = Circle(mouse_x, mouse_y, self._player_size)
+				self.hovered.color = red[0]
+			else -- choose a wall
+				self.hovered = Rectangle(mouse_x, mouse_y, gh * 0.1, gh * 0.1)
+				self.hovered.color = _G[wall_type[wall_type_order[self.selection]].color][0]
+				self.hovered.xy_scale = Vector(1, 1)
+				self.hovered.rotated = 0
+			end
+		else
+			self.hovered:move_to(mouse_x, mouse_y)
+		end
+
+		if not self.hovered then
+			return
+		end
+
+		local increment = gh * 0.01
+		local fraction = 0.1
+
+		if input.z.pressed then
+			if self.selection == 0 then -- player
+				-- self.hovered.rs = self.hovered.rs - increment
+				self.hovered.rs = self.hovered.rs * (1 - fraction)
+			else
+				self.hovered:scale((1 - fraction), 1, mouse_x, mouse_y)
+				self.hovered.xy_scale = Vector(
+					self.hovered.xy_scale.x * (1 - (self.hovered.rotated % 4 == 0 and fraction or 0)),
+					self.hovered.xy_scale.y * (1 - ((self.hovered.rotated + 2) % 4 == 0 and fraction or 0))
+				)
+			end
+		end
+
+		if input.x.pressed then
+			if self.selection == 0 then -- player
+				-- self.hovered.rs = self.hovered.rs - increment
+				self.hovered.rs = self.hovered.rs * (1 + fraction)
+			else
+				self.hovered:scale(1 + fraction, 1, mouse_x, mouse_y)
+				self.hovered.xy_scale = Vector(
+					self.hovered.xy_scale.x * (1 + (self.hovered.rotated % 4 == 0 and fraction or 0)),
+					self.hovered.xy_scale.y * (1 + ((self.hovered.rotated + 2) % 4 == 0 and fraction or 0))
+				)
+			end
+		end
+
+		if input.c.pressed then
+			if self.selection ~= 0 then -- player
+				self.hovered:rotate(math.pi / 4, mouse_x, mouse_y)
+				self.hovered.rotated = self.hovered.rotated + 1
+			end
+		end
+
+		if input.m1.pressed then
+			if not self.map_builder then
+				self.map_builder = {}
+			end
+
+			if self.selection == 0 then
+				table.insert(
+					self.map_builder,
+					Player({
+						group = self.main,
+						x = self.hovered.x,
+						y = self.hovered.y,
+						size = self.hovered.rs,
+						speed = self.hovered.speed or self._player_speed,
+						color = red[0],
+						color_text = "black",
+						tutorial = self.level == 0 or true,
+					})
+				)
+			else
+				table.insert(
+					self.map_builder,
+					Wall({
+						group = self.main,
+						type = self.hovered.type,
+						x = self.hovered.x,
+						y = self.hovered.y,
+						w = gh * 0.1 * self.hovered.xy_scale.x,
+						h = gh * 0.1 * self.hovered.xy_scale.y,
+						r = self.hovered.rotated * math.pi / 4,
+						color = self.hovered.color,
+					})
+				)
+			end
+			self.hovered = nil
+		end
 	end
 
 	self:update_game_object(dt * slow_amount)
@@ -320,6 +430,10 @@ function Game:draw()
 	self.main:draw()
 	self.post_main:draw()
 	self.effects:draw()
+
+	if self.hovered then
+		self.hovered:draw(self.hovered.color)
+	end
 
 	graphics.draw_with_mask(function()
 		star_canvas:draw(0, 0, 0, 1, 1)

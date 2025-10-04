@@ -16,7 +16,7 @@ function init()
 	end
 	controls = {
 		jump = { text = "Jump", default = { "z" }, input = state.input.jump },
-		undo = { text = "Undo", default = { "x" }, input = state.input.undo },
+		reset = { text = "Reset", default = { "x" }, input = state.input.reset },
 		up = { text = "Up", default = { "up", "w" }, input = state.input.up },
 		down = { text = "Down", default = { "down", "s" }, input = state.input.down },
 		left = { text = "Left", default = { "left", "a" }, input = state.input.left },
@@ -696,18 +696,34 @@ function pause_game(self)
 			})
 		)
 
-		self.restart_with_1_player_button = collect_into(
+		self.creator_button = collect_into(
 			self.paused_ui_elements,
 			Button({
 				group = ui_group,
 				x = gw / 2,
 				y = gh / 2 + 60 * global_game_scale,
 				force_update = true,
+				button_text = "creator",
+				fg_color = "bg",
+				bg_color = "green",
+				action = function()
+					play(self, true)
+				end,
+			})
+		)
+
+		self.restart_button = collect_into(
+			self.paused_ui_elements,
+			Button({
+				group = ui_group,
+				x = gw / 2,
+				y = gh / 2 + 80 * global_game_scale,
+				force_update = true,
 				button_text = "restart",
 				fg_color = "bg",
 				bg_color = "orange",
 				action = function()
-					play(self, 1)
+					play(self)
 				end,
 			})
 		)
@@ -722,14 +738,14 @@ function pause_game(self)
 	end, "pause")
 end
 
-function play(self, num_players)
+function play(self, creator_mode)
 	ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 
 	scene_transition(self, gw / 2, gh / 2, Game("game"), {
 		destination = "game",
-		args = {},
+		args = { creator_mode = creator_mode },
 	}, { text = "todo text", font = pixul_font, alignment = "center" })
 end
 

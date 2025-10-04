@@ -40,6 +40,10 @@ function Player:update(dt)
         and not main.current.paused
         and not main.current.transitioning
     then
+        if Vector(self:get_velocity()) == Vector:zero() then -- NOTE: gamedesign, if remove make sure can only move on grid-intervals
+            self.ready = true                          -------- used to set 'ready' on_collision_enter
+        end
+
         if self.collided then
             self.collided = false
 
@@ -52,28 +56,39 @@ function Player:update(dt)
         end
 
         local x, y = 0, 0
-
-        if input.left.down and self.wall.normal.x <= 0 then
+        if input.left.down then
             x = x - 1
         end
-        if input.right.down and self.wall.normal.x >= 0 then
+        if input.right.down then
             x = x + 1
         end
-        if input.up.down and self.wall.normal.y <= 0 then
+        if input.up.down then
             y = y - 1
         end
-        if input.down.down and self.wall.normal.y >= 0 then
+        if input.down.down then
             y = y + 1
         end
 
         if x ~= 0 or y ~= 0 then
-            self.r = math.atan2(y, x)
+            local input_dir = Vector(x, y)
+            local n = self.wall.normal
+            local dot = input_dir:dot(n)
+
+            if dot > -0.0001 then
+                self.r = math.atan2(y, x)
+            elseif dot > -0.99 then -- QoL: so that 'partly-invalid' directions are corrected to valid ones
+                local tangent = Vector(-n.y, n.x)
+                if input_dir:dot(tangent) < 0 then
+                    tangent = tangent:invert()
+                end
+                self.r = math.atan2(tangent.y, tangent.x)
+            end
+
             self:set_angle(self.r)
-        else
         end
 
         self.ready = true -- NOTE: temp
-        if self.ready and input.jump.pressed then
+        if self.ready and input.jump.down then
             self:move_along_angle(self.speed, self.r)
             self.wall.normal = Vector:zero() -- NOTE: temp
             self.ready = false
@@ -87,13 +102,12 @@ function Player:update(dt)
 end
 
 function Player:draw()
-    -- graphics.rectangle(self.x, self.y, self.shape.w, self.shape.h, 3, 3,
-    --     (self.hfx.hit.f or self.hfx.shoot.f) and fg[0] or self.color)
     graphics.circle(self.x, self.y, self.size, self.color)
     self.tutorial_player_indicator_text:draw()
 
     if self.ready then
         graphics.push(self.x, self.y, self.r, self.hfx.hit.x * self.hfx.shoot.x, self.hfx.hit.x * self.hfx.shoot.x)
+        -- NOTE: Facing direction arrow
         local x, y = self.x + 0.9 * self.shape.w * global_game_scale, self.y
         local size = 3 * global_game_scale
         graphics.polyline(self.color, size, x + size, y, x, y - size, x, y + size, x + size, y)
@@ -105,6 +119,7 @@ function Player:draw()
         local scale = math.max(0.01, self.hfx.hit.x * self.hfx.shoot.x)
 
         graphics.push(self.x, self.y, self.wall.normal.theta, scale, scale)
+        -- NOTE: Wall normal arrow
         local x, y = self.x + 0.9 * self.shape.w * global_game_scale, self.y
         local length = 7 * global_game_scale
         local thickness = 1.5 * global_game_scale
@@ -118,7 +133,6 @@ end
 function Player:on_collision_enter(other, contact)
     if other:is(Wall) then
         self.hfx:use("hit", 0.15, 200, 10, 0.1)
-        self.ready = true
         self.collided = true
         self.wall = other
         self.wall.normal = Vector(contact:getNormal())

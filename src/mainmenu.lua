@@ -174,7 +174,8 @@ function MainMenu:setup_main_menu_ui()
 	)
 
 	self.title_text =
-		collect_into(self.main_ui_elements, Text({ { text = "[wavy_title, green]title", font = fat_title_font, alignment = "center" } }, global_text_tags))
+		collect_into(self.main_ui_elements,
+			Text({ { text = "[wavy_title, green]title", font = fat_title_font, alignment = "center" } }, global_text_tags))
 
 	local button_offset = gh * 0.1
 	local button_dist_apart = gh * 0.08
@@ -188,7 +189,7 @@ function MainMenu:setup_main_menu_ui()
 			fg_color = "bg",
 			bg_color = "green",
 			action = function(b)
-				play(self, 1)
+				play(self)
 			end,
 		})
 	)
