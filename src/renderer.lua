@@ -64,7 +64,7 @@ function renderer_init()
 		table.insert(star_positions, { x = i, y = gh + 40 })
 	end
 
-	beat_alpha = 0
+	death_flash_alpha = 0
 end
 
 function renderer_draw(draw_action)
@@ -87,6 +87,18 @@ function renderer_draw(draw_action)
 		-- 		end
 		-- 	end
 		-- end
+		for i = 1, gw / grid_size do
+			for j = 1, gh / grid_size do
+				local row = j * grid_size
+				local column = i * grid_size
+
+				local gray_val = 0.3
+				local color = Color(gray_val, gray_val, gray_val, 1)
+				local line_width = 3
+				graphics.line(column, 0, column, gh, color, line_width)
+				graphics.line(0, row, gw, row, color, line_width)
+			end
+		end
 		bg_gradient:draw(gw / 2, gh / 2, global_game_width, global_game_height)
 		camera:detach()
 	end)
@@ -94,13 +106,8 @@ function renderer_draw(draw_action)
 	main_canvas:draw_to(function()
 		draw_action()
 		if state.screen_flashes then
-			if beat then
-				trigger:tween(0.05, _G, { beat_alpha = 0.2 }, math.cubic_out, function()
-					trigger:tween(0.4, _G, { beat_alpha = 0 }, math.cubic_in, nil, "beat_flash")
-				end, "beat_flash")
-			end
-			if beat_alpha > 0 then
-				graphics.rectangle(gw / 2, gh / 2, gw, gh, nil, nil, Color(1, 1, 1, beat_alpha))
+			if death_flash_alpha > 0 then
+				graphics.rectangle(gw / 2, gh / 2, gw, gh, nil, nil, Color(0.8, 0, 0, death_flash_alpha))
 			end
 		end
 	end)
@@ -118,7 +125,6 @@ function renderer_draw(draw_action)
 	local shadow_offset = 2.5
 	shadow_canvas:draw(x + shadow_offset * sx, y + shadow_offset * sy, 0, sx, sy)
 	main_canvas:draw(x, y, 0, sx, sy)
-	background_canvas:draw(x, y, 0, sx, sy)
 end
 
 ColorRamp = Object:extend()

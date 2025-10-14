@@ -20,7 +20,7 @@ function Game:on_enter(from, args)
 
 	self.floor = Group()
 	self.main = Group():set_as_physics_world(
-		800 * global_game_scale,
+		8 * global_game_scale,
 		0,
 		0, --
 		-- { "indicator", "note" }
@@ -29,76 +29,45 @@ function Game:on_enter(from, args)
 	self.post_main = Group()
 	self.effects = Group()
 	self.ui = Group():no_camera()
+	self.win_ui = Group():no_camera()
 	self.paused_ui = Group():no_camera()
 	self.options_ui = Group():no_camera()
 	self.keybinding_ui = Group():no_camera()
 	self.credits = Group():no_camera()
 
-	self.main:disable_collision_between("player", "wall")
-	self.main:disable_collision_between("wall", "wall")
-
-	self.main:enable_trigger_between("player", "wall")
-	self.main:enable_trigger_between("wall", "player")
+	self.main:disable_collision_between("player", "player")
+	-- self.main:disable_collision_between("wall", "wall")
+	--
+	-- self.main:enable_trigger_between("player", "wall")
+	-- self.main:enable_trigger_between("wall", "player")
 
 	self.main_slow_amount = 1
+	slow_amount = 1
 
 	self.x1, self.y1 = 0, 0
 	self.x2, self.y2 = gw, gh
 	self.w, self.h = self.x2 - self.x1, self.y2 - self.y1
 
 	-- NOTE: constants:
+	grid_size = 32
+	min_player_size = 16
+	max_player_size = 64
 	self._player_speed = 200 * global_game_scale
-	self._player_size = 10 * global_game_scale
+	self._player_size = 32
 
 	self.creator_mode = args.creator_mode or false
 	if self.creator_mode then
-		print("creator mode")
-		-- self.selection = 0
+		-- creator setup if any
 	else
-		print("play mode")
-		-- load level
-		-- spawn walls/env
-		-- spawn player
-
-		self.player = Player({
-			group = self.main,
-			x = gw / 2,
-			y = gh / 2,
-			size = self._player_size,
-			speed = self._player_speed,
-			color = red[0],
-			color_text = "black",
-			tutorial = self.level == 0 or true,
-		})
-		Wall({
-			group = self.main,
-			type = wall_type.Sticky,
-			x = gw * 0.2,
-			y = gh * 0.2,
-			w = gw * 0.4,
-			h = gh * 0.1,
-			r = math.pi * 3 / 4,
-			color = green[-4],
-		})
-		Wall({
-			group = self.main,
-			type = wall_type.Sticky,
-			x = gw * 0.2,
-			y = gh * 0.6,
-			w = gw * 0.3,
-			h = gh * 0.1,
-			color = green[-8],
-		})
-		Wall({
-			group = self.main,
-			type = wall_type.Icy,
-			x = gw * 0.8,
-			y = gh * 0.5,
-			w = gw * 0.1,
-			h = gh * 0.5,
-			color = blue[-3],
-		})
+		self:load_map("map.lua")
 	end
+
+	Wall({ -- border wall, it'll "keep all the illegals out" /s
+		group = self.main,
+		type = wall_type.Death,
+		loop = false,
+		vertices = { 0, 0, gw, 0, gw, gh, 0, gh, 0, 0 },
+	})
 
 	self.in_pause = false
 	self.stuck = false
@@ -110,6 +79,7 @@ function Game:on_exit()
 	self.post_main:destroy()
 	self.effects:destroy()
 	self.ui:destroy()
+	self.win_ui:destroy()
 	self.paused_ui:destroy()
 	self.options_ui:destroy()
 	self.keybinding_ui:destroy()
@@ -118,6 +88,7 @@ function Game:on_exit()
 	self.post_main = nil
 	self.effects = nil
 	self.ui = nil
+	self.win_ui = nil
 	self.paused_ui = nil
 	self.options_ui = nil
 	self.keybinding_ui = nil
@@ -126,15 +97,17 @@ function Game:on_exit()
 	self.hfx = nil
 end
 
-function Game:unpause_in(time)
-	if self.started then
-		self.countdown = time
-	end
-end
-
 function Game:update(dt)
 	if not self.in_pause and not self.stuck and not self.won then
 		run_time = run_time + dt
+	end
+
+	if input.reset.pressed then
+		play(self, self.creator_mode)
+	end
+
+	if self.win then
+		self:quit()
 	end
 
 	if input.escape.pressed and not self.transitioning and not self.in_credits then
@@ -168,18 +141,31 @@ function Game:update(dt)
 		self.credits:update(0)
 	end
 
+	if self.spawn then
+		local a = Player({
+			group = self.main, --
+			x = self.spawn.x,
+			y = self.spawn.y,
+			size = self.spawn.size,
+			speed = self.spawn.speed,
+			color = self.spawn.color,
+			color_text = "black",
+			init_wall_normal = self.spawn.init_wall_normal,
+			tutorial = true,
+		})
+		a:set_velocity(self.spawn.vx, self.spawn.vy)
+		self.spawn = nil
+	end
+
 	if self.creator_mode then
 		local previous_selection = self.selection or -1
 
 		local wheel_input = (input.wheel_up.pressed and -1 or 0) + (input.wheel_down.pressed and 1 or 0)
 		self.selection = ((self.selection or 0) + wheel_input) % #wall_type_order
 
-		-- local mouse_x, mouse_y = self.main:get_mouse_position()
-		local grid_size = 64
-		local mouse_x, mouse_y = self.main:get_mouse_position()
-
-		mouse_x = math.floor(mouse_x / grid_size) * grid_size
-		mouse_y = math.floor(mouse_y / grid_size) * grid_size
+		self.mouse_x, self.mouse_y = self.main:get_mouse_position()
+		self.mouse_x = math.floor(self.mouse_x / grid_size) * grid_size
+		self.mouse_y = math.floor(self.mouse_y / grid_size) * grid_size
 
 		-- now you can use snapped_x, snapped_y to place objects or draw highlights
 		if previous_selection ~= self.selection or not self.hovered then -- new selection
@@ -188,55 +174,35 @@ function Game:update(dt)
 			end
 
 			if self.selection == 0 then -- player
-				self.hovered = Circle(mouse_x, mouse_y, self._player_size)
+				self.hovered = Circle(self.mouse_x, self.mouse_y, self._player_size)
 				self.hovered.color = red[0]
 			else -- choose a wall
-				self.hovered = Rectangle(mouse_x, mouse_y, gh * 0.1, gh * 0.1)
+				self.hovered = Chain(false, { self.mouse_x, self.mouse_y }) --Rectangle(mouse_x, mouse_y, gh * 0.1, gh * 0.1)
 				self.hovered.color = _G[wall_type[wall_type_order[self.selection]].color][0]
-				self.hovered.xy_scale = Vector(1, 1)
-				self.hovered.rotated = 0
+				-- self.hovered.xy_scale = Vector(1, 1)
+				-- self.hovered.rotated = 0
 			end
 		else
-			self.hovered:move_to(mouse_x, mouse_y)
+			if self.selection == 0 then
+				self.hovered:move_to(self.mouse_x, self.mouse_y)
+			else
+				self.hovered.vertices[#self.hovered.vertices - 1] = self.mouse_x
+				self.hovered.vertices[#self.hovered.vertices] = self.mouse_y
+			end
 		end
 
 		if not self.hovered then
 			return
 		end
 
-		local increment = gh * 0.01
 		local fraction = 0.1
-
-		if input.z.pressed then
-			if self.selection == 0 then -- player
-				-- self.hovered.rs = self.hovered.rs - increment
+		if self.selection == 0 then
+			if input.z.pressed then
 				self.hovered.rs = self.hovered.rs * (1 - fraction)
-			else
-				self.hovered:scale((1 - fraction), 1, mouse_x, mouse_y)
-				self.hovered.xy_scale = Vector(
-					self.hovered.xy_scale.x * (1 - (self.hovered.rotated % 4 == 0 and fraction or 0)),
-					self.hovered.xy_scale.y * (1 - ((self.hovered.rotated + 2) % 4 == 0 and fraction or 0))
-				)
 			end
-		end
 
-		if input.x.pressed then
-			if self.selection == 0 then -- player
-				-- self.hovered.rs = self.hovered.rs - increment
+			if input.x.pressed then
 				self.hovered.rs = self.hovered.rs * (1 + fraction)
-			else
-				self.hovered:scale(1 + fraction, 1, mouse_x, mouse_y)
-				self.hovered.xy_scale = Vector(
-					self.hovered.xy_scale.x * (1 + (self.hovered.rotated % 4 == 0 and fraction or 0)),
-					self.hovered.xy_scale.y * (1 + ((self.hovered.rotated + 2) % 4 == 0 and fraction or 0))
-				)
-			end
-		end
-
-		if input.c.pressed then
-			if self.selection ~= 0 then -- player
-				self.hovered:rotate(math.pi / 4, mouse_x, mouse_y)
-				self.hovered.rotated = self.hovered.rotated + 1
 			end
 		end
 
@@ -259,22 +225,56 @@ function Game:update(dt)
 						tutorial = self.level == 0 or true,
 					})
 				)
+				self.hovered = nil
 			else
-				table.insert(
-					self.map_builder,
-					Wall({
-						group = self.main,
-						type = self.hovered.type,
-						x = self.hovered.x,
-						y = self.hovered.y,
-						w = gh * 0.1 * self.hovered.xy_scale.x,
-						h = gh * 0.1 * self.hovered.xy_scale.y,
-						r = self.hovered.rotated * math.pi / 4,
-						color = self.hovered.color,
-					})
-				)
+				if
+					#self.hovered.vertices <= 2
+					or self.mouse_x ~= self.hovered.vertices[#self.hovered.vertices - 3]
+					or self.mouse_y ~= self.hovered.vertices[#self.hovered.vertices - 2]
+				then
+					if #self.hovered.vertices >= 8 and self.mouse_x == self.hovered.vertices[1] and self.mouse_y == self.hovered.vertices[2] then
+						-- table.remove(self.hovered.vertices) -- remove duplicate starting point at end of list
+						-- table.remove(self.hovered.vertices) -- only for loop = true
+
+						table.insert(
+							self.map_builder,
+							Wall({
+								group = self.main,
+								type = wall_type[wall_type_order[self.selection]],
+								loop = false,
+								vertices = self.hovered.vertices,
+								color = self.hovered.color,
+							})
+						)
+						self.hovered = nil
+					end
+
+					if self.hovered then
+						table.insert(self.hovered.vertices, self.mouse_x)
+						table.insert(self.hovered.vertices, self.mouse_y)
+					end
+				end
 			end
+		end
+
+		if input.space.pressed and self.hovered and #self.hovered.vertices >= 4 then
+			table.remove(self.hovered.vertices) -- remove duplicate starting point at end of list
+			table.remove(self.hovered.vertices)
+			table.insert(
+				self.map_builder,
+				Wall({
+					group = self.main,
+					type = wall_type[wall_type_order[self.selection]],
+					loop = false,
+					vertices = self.hovered.vertices,
+					color = self.hovered.color,
+				})
+			)
 			self.hovered = nil
+		end
+
+		if input.s.pressed then
+			self:save_map(self.map_builder)
 		end
 	end
 
@@ -286,6 +286,7 @@ function Game:update(dt)
 	self.post_main:update(dt * slow_amount)
 	self.effects:update(dt * slow_amount)
 	self.ui:update(dt * slow_amount)
+	self.win_ui:update(dt * slow_amount)
 	self.paused_ui:update(dt * slow_amount)
 	self.options_ui:update(dt * slow_amount)
 
@@ -327,10 +328,105 @@ function Game:update(dt)
 	end
 end
 
-function Game:quit()
-	if self.died then
-		return
+function Game:load_map(filename)
+	local path = "maps/" .. filename
+
+	local chunk, err = love.filesystem.load(path)
+	if not chunk then
+		error("Failed to load map for (" .. self.folder .. "): " .. err)
 	end
+
+	local data = chunk()
+
+	Player({
+		group = self.main,
+		x = data.player.x,
+		y = data.player.y,
+		size = data.player.size,
+		speed = data.player.speed,
+		color = red[0],
+		color_text = "black",
+		tutorial = self.level == 0 or true,
+	})
+
+	for _, wall in ipairs(data.walls) do
+		Wall({
+			group = self.main,
+			type = wall_type[wall.type],
+			loop = wall.loop,
+			vertices = wall.vertices,
+		})
+	end
+end
+
+function Game:save_map(map)
+	local player_data = nil
+	local walls_data = {}
+
+	for _, obj in ipairs(map) do
+		if obj.dead ~= true then
+			if obj:is(Player) then
+				player_data = {
+					x = obj.spawn.x,
+					y = obj.spawn.y,
+					size = obj.size,
+					speed = obj.speed,
+				}
+			elseif obj:is(Wall) then
+				table.insert(walls_data, {
+					type = obj.type.name,
+					loop = obj.loop,
+					vertices = obj.vertices,
+				})
+			end
+		end
+	end
+
+	local function table_to_lua(t, indent)
+		indent = indent or 0
+		local indent_str = string.rep("    ", indent)
+		local result = "{\n"
+
+		for k, v in pairs(t) do
+			local key = type(k) == "string" and k .. " = " or ""
+			if type(v) == "table" then
+				result = result .. indent_str .. "    " .. key .. table_to_lua(v, indent + 1) .. ",\n"
+			elseif type(v) == "string" then
+				result = result .. indent_str .. "    " .. key .. string.format("%q", v) .. ",\n"
+			else
+				result = result .. indent_str .. "    " .. key .. tostring(v) .. ",\n"
+			end
+		end
+
+		result = result .. indent_str .. "}"
+		return result
+	end
+
+	local output = "return {\n"
+	output = output .. "    player = " .. table_to_lua(player_data, 1) .. ",\n"
+	output = output .. "    walls = " .. table_to_lua(walls_data, 1) .. "\n"
+	output = output .. "}"
+
+	local path = "maps/map.lua"
+	local file = io.open(path, "w")
+	if file then
+		file:write(output)
+		file:close()
+		print("written to file successfully at: " .. path)
+	else
+		print("failed to open file for writing at: " .. path)
+	end
+
+	-- local file = love.filesystem.newFile("map.lua", "w")
+	-- file:write(output)
+	-- file:close()
+	-- print("finished writing")
+end
+
+function Game:quit()
+	-- if self.died then
+	-- 	return
+	-- end
 
 	self.quitting = true
 	if not self.win_text and not self.win_text2 and self.win then
@@ -349,56 +445,52 @@ function Game:quit()
 		end)
 
 		ui_layer = ui_interaction_layer.Win
-		local ui_group = self.ui
 		self.win_ui_elements = {}
 		main.ui_layer_stack:push({
 			layer = ui_layer,
-			-- music = self.options_menu_song_instance,
 			layer_has_music = false,
 			ui_elements = self.win_ui_elements,
 		})
 
-		self.win_text = Text2({
-			group = self.ui,
-			x = gw / 2,
-			y = gh / 2 - 40 * global_game_scale,
-			force_update = true,
-			lines = { { text = "[wavy_mid, cbyc2]congratulations!", font = fat_font, alignment = "center" } },
-		})
-		trigger:after(2.5, function()
+		self.win_text = collect_into(
+			self.win_ui_elements,
+			Text2({
+				group = self.win_ui,
+				x = gw / 2,
+				y = gh / 2 - 40 * global_game_scale,
+				force_update = true,
+				lines = { { text = "[wavy_mid, cbyc2]congratulations!", font = fat_font, alignment = "center" } },
+			})
+		)
+
+		trigger:after(0.5, function()
 			self.win_text2 = collect_into(
 				self.win_ui_elements,
 				Text2({
-					group = self.ui,
+					group = self.win_ui,
 					x = gw / 2,
 					y = gh / 2,
 					force_update = true,
 					lines = {
 						{
-							text = "[fg]you've beaten the game!",
+							text = "[fg]level beat",
 							font = pixul_font,
 							alignment = "center",
 							height_multiplier = 1.24,
 						},
-						{ text = "[wavy_mid, yellow]thanks for playing!", font = pixul_font, alignment = "center" },
-						-- {
-						-- 	text = "[wavy_mid, yellow]victory PCB: [wavy_mid, green]#",
-						-- 	font = pixul_font,
-						-- 	alignment = "center",
-						-- },
 					},
 				})
 			)
 			self.credits_button = collect_into(
 				self.win_ui_elements,
 				Button({
-					group = self.ui,
+					group = self.win_ui,
 					x = gw / 2,
 					y = gh / 2 + 35 * global_game_scale,
 					force_update = true,
 					button_text = "credits",
-					fg_color = "bg10",
-					bg_color = "bg",
+					fg_color = "bg",
+					bg_color = "fg",
 					action = function()
 						open_credits(self)
 					end,
@@ -406,8 +498,8 @@ function Game:quit()
 			)
 
 			for _, v in pairs(self.win_ui_elements) do
-				v.group = ui_group
-				ui_group:add(v)
+				-- v.group = ui_group
+				-- ui_group:add(v)
 
 				v.layer = ui_layer
 				v.force_update = true
@@ -432,8 +524,10 @@ function Game:draw()
 	self.effects:draw()
 
 	if self.hovered then
-		self.hovered:draw(self.hovered.color)
+		self.hovered:draw(self.hovered.color, 10)
+		graphics.circle(self.mouse_x, self.mouse_y, 10, self.hovered.color, 5)
 	end
+	self.ui:draw()
 
 	graphics.draw_with_mask(function()
 		star_canvas:draw(0, 0, 0, 1, 1)
@@ -443,10 +537,10 @@ function Game:draw()
 		camera:detach()
 	end, true)
 
-	if self.in_pause then
+	if self.win then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 	end
-	self.ui:draw()
+	self.win_ui:draw()
 
 	if self.in_pause then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
@@ -557,8 +651,7 @@ function Game:die()
 							slow_amount = 1
 							music_slow_amount = 1
 							locked_state = nil
-							scene_transition(self, gw / 2, gh / 2, Game("game"),
-								{ destination = "game", args = { level = 1, num_players = 1 } }, {
+							scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = 1, num_players = 1 } }, {
 								text = "chill mode will pause the timer [wavy]forever",
 								font = pixul_font,
 								alignment = "center",
