@@ -12,7 +12,6 @@ wall_type = {
 			gravity = 50,
 			radius_min = 5,
 			radius_max = 7,
-			color = Color(0, 1, 0, 1),
 		},
 
 		_particle_impact_settings = {
@@ -24,7 +23,6 @@ wall_type = {
 			gravity = 600,
 			radius_min = 6,
 			radius_max = 6,
-			color = Color(0, 1, 0, 1),
 		},
 
 		collision_behavior = function(other, contact, self)
@@ -62,7 +60,6 @@ wall_type = {
 			local dt = love.timer.getDelta()
 			local verts = self.shape.vertices
 
-			-- === SPAWN dripping slime ===
 			local spawn_rate = drip_settings.spawn_rate
 			for i = 1, #verts - 3, 2 do
 				local x1, y1 = verts[i], verts[i + 1]
@@ -92,7 +89,6 @@ wall_type = {
 				end
 			end
 
-			-- === UPDATE + DRAW particles ===
 			for i = #self._particles, 1, -1 do
 				local p = self._particles[i]
 				local age = now - p.spawn_time
@@ -102,7 +98,7 @@ wall_type = {
 					table.remove(self._particles, i)
 				else
 					local t = age / p.lifetime
-					local fade_in = math.cubic_out(math.min(t * 2, 1)) -- fade in first 0.5 of life
+					local fade_in = math.cubic_out(math.min(t * 2, 1))
 					local fade_out = math.cubic_out(1 - t)
 					local alpha = fade_in * fade_out
 
@@ -110,7 +106,7 @@ wall_type = {
 					p.pos.x = p.pos.x + p.dx * dt
 					p.pos.y = p.pos.y + p.dy * dt
 
-					local color = settings.color:clone()
+					local color = _G[self.type.color][0]:clone()
 					color.a = color.a * alpha
 
 					graphics.circle(p.pos.x, p.pos.y, p.radius, color)
@@ -148,7 +144,7 @@ wall_type = {
 
 			local now = love.timer.getTime()
 
-			local spawn_rate = 5 -- flakes per second
+			local spawn_rate = 5 -- per second
 			local flake_lifetime = 1 -- seconds
 			local flake_radius = 3 -- pixels
 			local fall_speed_min = 10 -- px/sec
@@ -267,7 +263,7 @@ wall_type = {
 			local x, y = position:sub(normal:scale(other.size + 1)):unpack()
 
 			main.current.spawn = { -- goes to game.lua to be spawned on next update iteration
-				x = x, --
+				x = x,
 				y = y,
 				vx = 0,
 				vy = 0,
@@ -303,7 +299,7 @@ wall_type = {
 			local now = love.timer.getTime()
 			local dt = love.timer.getDelta()
 
-			local spawn_rate = 5 -- particles/sec per 100px
+			local spawn_rate = 5 -- p/sec per 100px
 			local lifetime = 1.2
 			local radius = 6
 			local offset_distance = 25 -- distance from wall to spawn
@@ -374,8 +370,7 @@ wall_type = {
 			end
 
 			local scale = 8
-			other.size_change = other.size + scale
-			-- other.shape.rs = other.shape.rs + scale
+			other.size_change = other.size + scale -- triggers player to redo its physics
 		end,
 		draw = function(self)
 			self.shape:draw(self.color, 10)
@@ -386,7 +381,7 @@ wall_type = {
 			local now = love.timer.getTime()
 			local dt = love.timer.getDelta()
 
-			local spawn_rate = 5 -- particles/sec per 100px
+			local spawn_rate = 5 -- p/sec per 100px
 			local lifetime = 1.2
 			local radius = 10
 			local jitter = 6
@@ -445,16 +440,22 @@ wall_type = {
 	Death = {
 		name = "Death",
 		color = "black",
-		collision_behavior = function(other)
+		collision_behavior = function(other, contact, self)
 			death_flash_alpha = 1.00 -- immediate flash value
 			trigger:tween(1.4, _G, { death_flash_alpha = 0 }, math.cubic_out, nil, "death_flash")
 			enemy_die1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 
 			other:set_velocity(0, 0)
 			other:spawn_player()
+			self.spring:pull(0.01, 200, 10)
 		end,
 		draw = function(self)
-			self.shape:draw(self.color, 10)
+			self.shape:draw(_G["red"][0], 12)
+			self.shape:draw(self.color, 8)
+			-- self.shape:draw(_G["red"][0], 2)
+			-- self.shape:draw(self.color, 8)
+			-- self.shape:draw(_G["white"][0], 4)
+			-- self.shape:draw(self.color, 6)
 		end,
 	},
 	Goal = {

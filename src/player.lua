@@ -59,7 +59,6 @@ function Player:update(dt)
 			if not self.size_change then
 				self.size_change = self.size
 			else
-				print("new size: ", self.size_change)
 				self.size = self.size_change
 				self:change_circle_radius(self.size)
 			end
@@ -159,10 +158,7 @@ function Player:on_collision_enter(other, contact)
 		self.collided = true
 		self.wall_id = other.id
 
-		-- local time = love.timer.getTime()
-		-- print("for time: ", time, ", pre collision normal:", self.wall_normal, ", theta: ", self.wall_normal_theta)
 		self.wall_normal = Vector(contact:getNormal())
 		self.wall_normal_theta = self.wall_normal:angle()
-		-- print("for time: ", time, ", post collision normal:", self.wall_normal, ", theta: ", self.wall_normal_theta)
 	end
 end
