@@ -75,7 +75,8 @@ function init()
 	}
 
 	-- load images:
-	-- image1 = Image('name')
+	wall_arrow_particle = Image("wall_arrow_particle")
+	-- wall_arrow_particle = Image("icon")
 
 	-- set logic init
 	-- main_song_instance = _G[random:table({ "song1", "song2", "song3", "song4", "song5" })]:play({ volume = 0.3 })

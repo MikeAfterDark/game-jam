@@ -274,12 +274,18 @@ wall_type = {
 			}
 		end,
 		draw = function(self)
-			self.shape:draw(self.color, 10)
+			local time = love.timer.getTime()
+			local pulse = 0.5 + 0.5 * math.sin(time * 3)
+
+			-- Pulsing outline
+			local outline_color = self.color:clone()
+			outline_color.a = 0.5 + 0.5 * pulse
+			self.shape:draw(outline_color, 10 + pulse * 3)
 		end,
 	},
 	Shrink = {
 		name = "Shrink",
-		color = "white",
+		color = "orange1",
 		collision_behavior = function(other, contact, self)
 			other:set_velocity(0, 0)
 			if other.size <= min_player_size or other.wall_id == self.id then
@@ -299,12 +305,11 @@ wall_type = {
 			local now = love.timer.getTime()
 			local dt = love.timer.getDelta()
 
-			local spawn_rate = 5 -- p/sec per 100px
+			local spawn_rate = 1 -- p/sec per 100px
 			local lifetime = 1.2
-			local radius = 6
-			local offset_distance = 25 -- distance from wall to spawn
-			local min_speed = 20
-			local max_speed = 45
+			local min_speed = 05
+			local max_speed = 10
+			local offset_distance = 20 -- distance from wall to spawn
 
 			for i = 1, #verts - 3, 2 do
 				local x1, y1 = verts[i], verts[i + 1]
@@ -347,22 +352,35 @@ wall_type = {
 				else
 					local t = age / p.lifetime
 					local alpha = math.sin(math.pi * t)
-
 					local dx = p.tx - p.x
 					local dy = p.ty - p.y
-					local x = p.x + dx * (age / p.lifetime)
-					local y = p.y + dy * (age / p.lifetime)
+					local len = math.sqrt(dx * dx + dy * dy)
 
-					local color = _G["white"][0]:clone()
+					-- Normalize direction
+					local ndx = dx / len
+					local ndy = dy / len
+
+					-- Move toward target using speed
+					local travel_dist = math.min(p.speed * age, len)
+					local x = p.x + ndx * travel_dist
+					local y = p.y + ndy * travel_dist
+
+					local color = self.color:clone()
 					color.a = alpha
-					graphics.circle(x, y, radius * t, color)
+					-- graphics.circle(x, y, radius * t, color)
+
+					local scale = 0.25 -- sprite dependent TODO: standardize sprite sizes
+					local dx = p.tx - p.x
+					local dy = p.ty - p.y
+					local angle = math.atan2(dy, dx)
+					wall_arrow_particle:draw(x, y, angle, scale, scale, 0, 0, color)
 				end
 			end
 		end,
 	},
 	Grow = {
 		name = "Grow",
-		color = "white",
+		color = "red1",
 		collision_behavior = function(other, contact, self)
 			other:set_velocity(0, 0)
 			if other.size >= max_player_size or other.wall_id == self.id then
@@ -381,12 +399,10 @@ wall_type = {
 			local now = love.timer.getTime()
 			local dt = love.timer.getDelta()
 
-			local spawn_rate = 5 -- p/sec per 100px
+			local spawn_rate = 1 -- p/sec per 100px
 			local lifetime = 1.2
-			local radius = 10
-			local jitter = 6
-			local min_speed = 20
-			local max_speed = 25
+			local min_speed = 05
+			local max_speed = 10
 
 			for i = 1, #verts - 3, 2 do
 				local x1, y1 = verts[i], verts[i + 1]
@@ -397,12 +413,13 @@ wall_type = {
 				if len > 0 then
 					local seg_spawn_chance = (spawn_rate * len / 100) * dt
 					if math.random() < seg_spawn_chance then
-						local t = math.random()
-						local px = x1 + dx * t
-						local py = y1 + dy * t
-
+						local edge_shift = 10 / (len - 10)
+						local spawn_from_wall_dist = 15
+						local t = (math.random() * (1 - 2 * edge_shift)) + edge_shift
 						local nx, ny = dy / len, -dx / len
+						local px = x1 + dx * t
 						local dir = (math.random() < 0.5) and -1 or 1
+						local py = y1 + dy * t + dir * ny * spawn_from_wall_dist
 
 						table.insert(self._grow_particles, {
 							x = px,
@@ -429,9 +446,12 @@ wall_type = {
 					local x = p.x + p.nx * p.speed * age
 					local y = p.y + p.ny * p.speed * age
 
-					local color = _G["white"][0]:clone()
+					local color = self.color:clone()
 					color.a = alpha
-					graphics.circle(x, y, radius * (1 - t), color)
+
+					local scale = 0.25 -- sprite dependent TODO: standardize sprite sizes
+					local angle = math.atan2(p.ny, p.nx)
+					wall_arrow_particle:draw(x, y, angle, scale, scale, 0, 0, color)
 				end
 			end
 		end,
@@ -450,17 +470,15 @@ wall_type = {
 			self.spring:pull(0.01, 200, 10)
 		end,
 		draw = function(self)
-			self.shape:draw(_G["red"][0], 12)
-			self.shape:draw(self.color, 8)
-			-- self.shape:draw(_G["red"][0], 2)
+			-- self.shape:draw(_G["red"][0], 12)
 			-- self.shape:draw(self.color, 8)
-			-- self.shape:draw(_G["white"][0], 4)
-			-- self.shape:draw(self.color, 6)
+
+			self.shape:draw(self.color, 10)
 		end,
 	},
 	Goal = {
 		name = "Goal",
-		color = "yellow",
+		color = "white",
 		collision_behavior = function(other)
 			other:set_velocity(0, 0)
 

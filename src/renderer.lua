@@ -17,6 +17,17 @@ function renderer_init()
 		purple = ColorRamp(Color("#8e559e"), 0.025),
 		blue2 = ColorRamp(Color("#4778ba"), 0.025),
 		yellow2 = ColorRamp(Color("#f59f10"), 0.025),
+
+		brown1 = ColorRamp(Color("#802d2f"), 0.025),
+		red1 = ColorRamp(Color("#ff595e"), 0.025),
+		orange1 = ColorRamp(Color("#ff924c"), 0.025),
+		yellow1 = ColorRamp(Color("#ffca3a"), 0.025),
+		mint1 = ColorRamp(Color("#c5ca30"), 0.025),
+		green1 = ColorRamp(Color("#8ac926"), 0.025),
+		grass1 = ColorRamp(Color("#52a675"), 0.025),
+		blue1 = ColorRamp(Color("#1982c4"), 0.025),
+		purple1 = ColorRamp(Color("#4267ac"), 0.025),
+		gray1 = ColorRamp(Color("#6a4c93"), 0.025),
 	}
 	for name, color in pairs(colors) do
 		_G[name] = color
