@@ -23,8 +23,7 @@ function Game:on_enter(from, args)
 		8 * global_game_scale,
 		0,
 		0, --
-		-- { "indicator", "note" }
-		{ "player", "wall" }
+		{ "player", "transparent", "opaque" }
 	)
 	self.post_main = Group()
 	self.effects = Group()
@@ -36,9 +35,10 @@ function Game:on_enter(from, args)
 	self.credits = Group():no_camera()
 
 	self.main:disable_collision_between("player", "player")
-	-- self.main:disable_collision_between("wall", "wall")
+	self.main:disable_collision_between("player", "transparent")
 	--
-	-- self.main:enable_trigger_between("player", "wall")
+	self.main:enable_trigger_between("player", "transparent")
+	self.main:enable_trigger_between("transparent", "player")
 	-- self.main:enable_trigger_between("wall", "player")
 
 	self.main_slow_amount = 1
@@ -176,7 +176,7 @@ function Game:update(dt)
 			if self.selection == 0 then -- player
 				self.hovered = Circle(self.mouse_x, self.mouse_y, self._player_size)
 				self.hovered.color = red[0]
-			else -- choose a wall
+			else                                                -- choose a wall
 				self.hovered = Chain(false, { self.mouse_x, self.mouse_y }) --Rectangle(mouse_x, mouse_y, gh * 0.1, gh * 0.1)
 				self.hovered.color = _G[wall_type[wall_type_order[self.selection]].color][0]
 				-- self.hovered.xy_scale = Vector(1, 1)
@@ -651,7 +651,8 @@ function Game:die()
 							slow_amount = 1
 							music_slow_amount = 1
 							locked_state = nil
-							scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = 1, num_players = 1 } }, {
+							scene_transition(self, gw / 2, gh / 2, Game("game"),
+								{ destination = "game", args = { level = 1, num_players = 1 } }, {
 								text = "chill mode will pause the timer [wavy]forever",
 								font = pixul_font,
 								alignment = "center",

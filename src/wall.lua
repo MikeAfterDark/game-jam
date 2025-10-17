@@ -276,8 +276,6 @@ wall_type = {
 		draw = function(self)
 			local time = love.timer.getTime()
 			local pulse = 0.5 + 0.5 * math.sin(time * 3)
-
-			-- Pulsing outline
 			local outline_color = self.color:clone()
 			outline_color.a = 0.5 + 0.5 * pulse
 			self.shape:draw(outline_color, 10 + pulse * 3)
@@ -456,7 +454,45 @@ wall_type = {
 			end
 		end,
 	},
+	Reverse = {
+		name = "Reverse",
+		color = "purple1",
+		collision_behavior = function(other, contact)
+			local normal = Vector(contact:getNormal())
+			local velocity = Vector(other:get_velocity())
 
+			local dir = velocity:normalize()
+			local dot = dir:dot(normal)
+
+			if dot < -0.99 then
+				other:set_velocity(0, 0)
+				return
+			end
+
+			local t1 = Vector(-normal.y, normal.x)
+			local t2 = Vector(normal.y, -normal.x)
+			local new_dir = (dir:dot(t1) > dir:dot(t2)) and t2 or t1
+			new_dir = new_dir:scale(other.speed)
+
+			other:set_velocity(new_dir:unpack())
+		end,
+		draw = function(self)
+			self.shape:draw(self.color, 10)
+		end,
+	},
+	Checkpoint = {
+		"Checkpoint",
+		color = "blue1",
+		transparent = true,
+		collision_behavior = function(other, contact, self)
+			print("hallo!")
+			--
+			-- other
+		end,
+		draw = function(self)
+			self.shape:draw(self.color, 10)
+		end,
+	},
 	Death = {
 		name = "Death",
 		color = "black",
@@ -540,7 +576,22 @@ wall_type = {
 		draw = function(self) end,
 	},
 }
-wall_type_order = { "Sticky", "Icy", "Bounce", "Clone", "Shrink", "Grow", "Death", "Goal", "Empty" } -- NOTE: a shitty way for creator mode to choose a wall
+
+-- NOTE: a shitty way for creator mode to choose a wall
+wall_type_order = {
+	"Sticky",
+	"Icy",
+	"Bounce",
+	"Clone",
+	"Shrink",
+	"Grow",
+	"Reverse",
+	"Checkpoint",
+
+	"Death",
+	"Goal",
+	"Empty",
+}
 
 Wall = Object:extend()
 Wall:implement(GameObject)
@@ -548,7 +599,7 @@ Wall:implement(Physics)
 function Wall:init(args)
 	self:init_game_object(args)
 
-	self:set_as_chain(self.loop, self.vertices, "static", "wall")
+	self:set_as_chain(self.loop, self.vertices, "static", self.type.transparent and "transparent" or "opaque")
 	self.interact_with_mouse = true
 
 	self.color = self.color or _G[self.type.color][0] or fg[0]
@@ -598,6 +649,12 @@ end
 function Wall:on_collision_enter(other, contact)
 	if other:is(Player) then
 		self.type.collision_behavior(other, contact, self)
+	end
+end
+
+function Wall:on_trigger_enter(other, contact)
+	if other:is(Player) then
+		self.type.collision_behavior(other, contact, self) -- WARN: maybe change to type.trigger_behaviour?
 	end
 end
 
