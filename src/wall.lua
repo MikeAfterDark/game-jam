@@ -150,7 +150,6 @@ wall_type = {
 			local fall_speed_min = 10 -- px/sec
 			local fall_speed_max = 30 -- px/sec
 			local jitter = 5 -- horizontal movement range
-			local spawn_chance = spawn_rate * love.timer.getDelta()
 
 			for i = 1, #verts - 3, 2 do
 				local x1, y1 = verts[i], verts[i + 1]
@@ -481,16 +480,70 @@ wall_type = {
 		end,
 	},
 	Checkpoint = {
-		"Checkpoint",
+		name = "Checkpoint",
 		color = "blue1",
 		transparent = true,
+		-- data = {},
+		init = function(self)
+			if not self then
+				print("self is nil??")
+			else
+				self.order_text = Text({
+					{
+						text = "[bg]" .. tostring(self.data and self.data.order or "nil"),
+						font = small_pixul_font,
+						alignment = "center",
+					},
+				}, global_text_tags)
+			end
+		end,
 		collision_behavior = function(other, contact, self)
-			print("hallo!")
-			--
-			-- other
+			if self.collected then
+				return
+			end
+
+			if self.data.order == checkpoint_counter + 1 then
+				self.spring:pull(0.01, 200, 10)
+				self.collected = true
+				checkpoint_counter = self.data.order -- WARN: potential race condition
+			end
 		end,
 		draw = function(self)
-			self.shape:draw(self.color, 10)
+			if self.collected then
+				local color = self.color:clone()
+				color.a = 0.5
+				self.shape:draw(color, 10)
+			else
+				self.shape:draw(_G["black"][0], 15)
+				local time = love.timer.getTime()
+				local pulse = 0.5 + 0.5 * math.sin(time * 3)
+				local outline_color = self.color:clone()
+				outline_color.a = 0.5 + 0.5 * pulse
+				self.shape:draw(outline_color, 10 + pulse * 3)
+
+				-- draw at center of each edge
+				local verts = self.shape.vertices
+				local radius = 18
+				local color = _G["white"][0] --self.color --_G["black"][0]
+
+				for i = 1, #verts - 2, 2 do
+					local x1, y1 = verts[i], verts[i + 1]
+					local x2, y2 = verts[i + 2], verts[i + 3]
+					local dx, dy = x2 - x1, y2 - y1
+					local lenSqr = dx * dx + dy * dy
+					if lenSqr > 3000 then
+						local mx = (x1 + x2) / 2
+						local my = (y1 + y2) / 2
+
+						graphics.circle(mx, my, radius + 4, _G["black"][0]) -- outline
+						graphics.circle(mx, my, radius, color)
+
+						if self.order_text then
+							self.order_text:draw(mx + 1, my + 4, 0, 1, 1)
+						end
+					end
+				end
+			end
 		end,
 	},
 	Death = {
@@ -599,7 +652,8 @@ Wall:implement(Physics)
 function Wall:init(args)
 	self:init_game_object(args)
 
-	self:set_as_chain(self.loop, self.vertices, "static", self.type.transparent and "transparent" or "opaque")
+	self:set_as_chain(self.loop, self.vertices, "static",
+		(self.type and self.type.transparent) and "transparent" or "opaque")
 	self.interact_with_mouse = true
 
 	self.color = self.color or _G[self.type.color][0] or fg[0]
@@ -619,6 +673,14 @@ function Wall:init(args)
 
 	local mouse_x, mouse_y = main.current.main:get_mouse_position()
 	self.mouse_circle = Circle(mouse_x, mouse_y, 5)
+
+	if self then
+		if self.type and self.type.init then
+			self.type.init(self)
+		end
+	else
+		print("skippping cuz self is nil for some reason??")
+	end
 end
 
 function Wall:update(dt)
@@ -628,12 +690,18 @@ function Wall:update(dt)
 	if main.current.creator_mode and (self.circle_colliding_with_mouse or self.colliding_with_mouse) then
 		if input.m2.pressed then
 			self.dead = true
+			if self.type.name == "Checkpoint" then -- TODO: self.type.on_delete = function() end,
+				num_checkpoints = num_checkpoints - 1
+			end
 		end
 
 		if input.m1.pressed and main.current.selection > 0 then
 			self.type = wall_type[wall_type_order[main.current.selection]]
 			self.color = _G[self.type.color][0] or fg[0]
 			self.init_color = self.color
+			if self.type.init then
+				self.type.init(self)
+			end
 
 			self.already_cloned = nil -- NOTE: jank setting for resetting clone-edge
 		end

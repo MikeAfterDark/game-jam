@@ -55,9 +55,15 @@ function Game:on_enter(from, args)
 	self._player_speed = 200 * global_game_scale
 	self._player_size = 32
 
+	-- NOTE: inits:
+	checkpoint_counter = 0
+	num_checkpoints = 0
+	self.map_builder = {}
+
 	self.creator_mode = args.creator_mode or false
 	if self.creator_mode then
 		-- creator setup if any
+		-- self:load_map("map.lua") -- NOTE: if load map, also add it to map_builder to avoid nil errors
 	else
 		self:load_map("map.lua")
 	end
@@ -141,6 +147,18 @@ function Game:update(dt)
 		self.credits:update(0)
 	end
 
+	self:update_game_object(dt * slow_amount)
+
+	star_group:update(dt * slow_amount)
+	self.floor:update(dt * slow_amount)
+	self.main:update(dt * slow_amount * self.main_slow_amount)
+	self.post_main:update(dt * slow_amount)
+	self.effects:update(dt * slow_amount)
+	self.ui:update(dt * slow_amount)
+	self.win_ui:update(dt * slow_amount)
+	self.paused_ui:update(dt * slow_amount)
+	self.options_ui:update(dt * slow_amount)
+
 	if self.spawn then
 		local a = Player({
 			group = self.main, --
@@ -207,10 +225,6 @@ function Game:update(dt)
 		end
 
 		if input.m1.pressed then
-			if not self.map_builder then
-				self.map_builder = {}
-			end
-
 			if self.selection == 0 then
 				table.insert(
 					self.map_builder,
@@ -236,14 +250,23 @@ function Game:update(dt)
 						-- table.remove(self.hovered.vertices) -- remove duplicate starting point at end of list
 						-- table.remove(self.hovered.vertices) -- only for loop = true
 
+						local type = wall_type[wall_type_order[self.selection]]
+
+						print("m1: Current selection:", self.selection, wall_type_order[self.selection])
+						local data = nil
+						if type.name == "Checkpoint" then
+							num_checkpoints = num_checkpoints + 1
+							data = { order = num_checkpoints }
+						end
 						table.insert(
 							self.map_builder,
 							Wall({
 								group = self.main,
-								type = wall_type[wall_type_order[self.selection]],
+								type = type,
 								loop = false,
 								vertices = self.hovered.vertices,
 								color = self.hovered.color,
+								data = data,
 							})
 						)
 						self.hovered = nil
@@ -260,16 +283,27 @@ function Game:update(dt)
 		if input.space.pressed and self.hovered and #self.hovered.vertices >= 4 then
 			table.remove(self.hovered.vertices) -- remove duplicate starting point at end of list
 			table.remove(self.hovered.vertices)
+
+			print("space: Current selection:", self.selection, wall_type_order[self.selection])
+			local type = wall_type[wall_type_order[self.selection]]
+
+			local data = nil
+			if type.name == "Checkpoint" then
+				num_checkpoints = num_checkpoints + 1
+				data = { order = num_checkpoints }
+			end
 			table.insert(
 				self.map_builder,
 				Wall({
 					group = self.main,
-					type = wall_type[wall_type_order[self.selection]],
+					type = type,
 					loop = false,
 					vertices = self.hovered.vertices,
 					color = self.hovered.color,
+					data = data,
 				})
 			)
+
 			self.hovered = nil
 		end
 
@@ -277,18 +311,6 @@ function Game:update(dt)
 			self:save_map(self.map_builder)
 		end
 	end
-
-	self:update_game_object(dt * slow_amount)
-
-	star_group:update(dt * slow_amount)
-	self.floor:update(dt * slow_amount)
-	self.main:update(dt * slow_amount * self.main_slow_amount)
-	self.post_main:update(dt * slow_amount)
-	self.effects:update(dt * slow_amount)
-	self.ui:update(dt * slow_amount)
-	self.win_ui:update(dt * slow_amount)
-	self.paused_ui:update(dt * slow_amount)
-	self.options_ui:update(dt * slow_amount)
 
 	-------------------------------------------------------------
 	----------------------- UI MENU STUFF -----------------------
@@ -314,7 +336,7 @@ function Game:update(dt)
 					{
 						-- text = tostring(main.current_music_type),
 						-- text = string.format("%.2f", self.map.song_position),
-						text = tostring("hi"),
+						text = tostring(num_checkpoints),
 						font = pixul_font,
 						alignment = "center",
 					},
@@ -337,25 +359,27 @@ function Game:load_map(filename)
 	end
 
 	local data = chunk()
-
-	Player({
-		group = self.main,
-		x = data.player.x,
-		y = data.player.y,
-		size = data.player.size,
-		speed = data.player.speed,
-		color = red[0],
-		color_text = "black",
-		tutorial = self.level == 0 or true,
-	})
-
-	for _, wall in ipairs(data.walls) do
-		Wall({
+	if data then
+		Player({
 			group = self.main,
-			type = wall_type[wall.type],
-			loop = wall.loop,
-			vertices = wall.vertices,
+			x = data.player.x,
+			y = data.player.y,
+			size = data.player.size,
+			speed = data.player.speed,
+			color = red[0],
+			color_text = "black",
+			tutorial = self.level == 0 or true,
 		})
+
+		for _, wall in ipairs(data.walls) do
+			Wall({
+				group = self.main,
+				type = wall_type[wall.type],
+				loop = wall.loop,
+				vertices = wall.vertices,
+				data = wall.data,
+			})
+		end
 	end
 end
 
@@ -377,6 +401,7 @@ function Game:save_map(map)
 					type = obj.type.name,
 					loop = obj.loop,
 					vertices = obj.vertices,
+					data = obj.data,
 				})
 			end
 		end
