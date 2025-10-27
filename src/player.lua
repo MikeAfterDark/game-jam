@@ -52,7 +52,7 @@ function Player:update(dt)
 			self.spawn_flag = false
 
 			self:set_position(self.spawn.x, self.spawn.y)
-			self.ready = true -- TODO: check if we're on a wall and not moving
+			self.ready = true -- NOTE: check if we're on a wall and not moving
 		end
 
 		if self.size_change ~= self.size then -- for grow/shrink

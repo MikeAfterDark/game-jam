@@ -476,6 +476,7 @@ wall_type = {
 			other:set_velocity(new_dir:unpack())
 		end,
 		draw = function(self)
+			self.shape:draw(_G["white"][0], 12)
 			self.shape:draw(self.color, 10)
 		end,
 	},
@@ -496,6 +497,10 @@ wall_type = {
 					},
 				}, global_text_tags)
 			end
+
+			if num_checkpoints < self.data.order then
+				num_checkpoints = self.data.order
+			end
 		end,
 		collision_behavior = function(other, contact, self)
 			if self.collected then
@@ -503,12 +508,15 @@ wall_type = {
 			end
 
 			if self.data.order == checkpoint_counter + 1 then
+				success:play({ pitch = random:float(2.95, 4.05), volume = 0.3 })
+
 				self.spring:pull(0.01, 200, 10)
 				self.collected = true
 				checkpoint_counter = self.data.order -- WARN: potential race condition
 			end
 		end,
 		draw = function(self)
+			graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
 			if self.collected then
 				local color = self.color:clone()
 				color.a = 0.5
@@ -520,30 +528,31 @@ wall_type = {
 				local outline_color = self.color:clone()
 				outline_color.a = 0.5 + 0.5 * pulse
 				self.shape:draw(outline_color, 10 + pulse * 3)
+			end
 
-				-- draw at center of each edge
-				local verts = self.shape.vertices
-				local radius = 18
-				local color = _G["white"][0] --self.color --_G["black"][0]
+			-- draw at center of each edge
+			local verts = self.shape.vertices
+			local radius = 18
+			local color = self.collected and self.color or _G["white"][0] --self.color --_G["black"][0]
 
-				for i = 1, #verts - 2, 2 do
-					local x1, y1 = verts[i], verts[i + 1]
-					local x2, y2 = verts[i + 2], verts[i + 3]
-					local dx, dy = x2 - x1, y2 - y1
-					local lenSqr = dx * dx + dy * dy
-					if lenSqr > 3000 then
-						local mx = (x1 + x2) / 2
-						local my = (y1 + y2) / 2
+			for i = 1, #verts - 2, 2 do
+				local x1, y1 = verts[i], verts[i + 1]
+				local x2, y2 = verts[i + 2], verts[i + 3]
+				local dx, dy = x2 - x1, y2 - y1
+				local lenSqr = dx * dx + dy * dy
+				if lenSqr > 3000 then -- 3000 seems to be enough for radius=18 numbering
+					local mx = (x1 + x2) / 2
+					local my = (y1 + y2) / 2
 
-						graphics.circle(mx, my, radius + 4, _G["black"][0]) -- outline
-						graphics.circle(mx, my, radius, color)
+					graphics.circle(mx, my, radius + 4, _G["black"][0]) -- outline
+					graphics.circle(mx, my, radius, color)
 
-						if self.order_text then
-							self.order_text:draw(mx + 1, my + 4, 0, 1, 1)
-						end
+					if self.order_text then
+						self.order_text:draw(mx + 1, my + 4, 0, 1, 1)
 					end
 				end
 			end
+			graphics.pop()
 		end,
 	},
 	Death = {
@@ -568,10 +577,19 @@ wall_type = {
 	Goal = {
 		name = "Goal",
 		color = "white",
-		collision_behavior = function(other)
-			other:set_velocity(0, 0)
+		collision_behavior = function(other, contact, self)
+			if checkpoint_counter == num_checkpoints then
+				other:set_velocity(0, 0)
+				main.current.win = true
+			else
+				death_flash_alpha = 1.00 -- immediate flash value
+				trigger:tween(1.4, _G, { death_flash_alpha = 0 }, math.cubic_out, nil, "death_flash")
+				enemy_die1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 
-			main.current.win = true
+				other:set_velocity(0, 0)
+				other:spawn_player()
+				self.spring:pull(0.01, 200, 10)
+			end
 		end,
 		draw = function(self)
 			local verts = self.shape.vertices
@@ -652,8 +670,7 @@ Wall:implement(Physics)
 function Wall:init(args)
 	self:init_game_object(args)
 
-	self:set_as_chain(self.loop, self.vertices, "static",
-		(self.type and self.type.transparent) and "transparent" or "opaque")
+	self:set_as_chain(self.loop, self.vertices, "static", (self.type and self.type.transparent) and "transparent" or "opaque")
 	self.interact_with_mouse = true
 
 	self.color = self.color or _G[self.type.color][0] or fg[0]

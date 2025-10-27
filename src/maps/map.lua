@@ -1,22 +1,32 @@
 return {
     player = {
-        y = 576,
-        x = 928,
+        y = 544,
+        x = 992,
         size = 32,
         speed = 800,
     },
     walls = {
         {
+            type = "Goal",
+            vertices = {
+                864,
+                288,
+                1056,
+                192,
+                1216,
+                288,
+                864,
+                288,
+            },
+            loop = false,
+        },
+        {
             type = "Checkpoint",
             vertices = {
-                1120,
-                672,
                 1152,
-                288,
-                1280,
+                448,
+                1152,
                 640,
-                1120,
-                672,
             },
             data = {
                 order = 1,
@@ -26,10 +36,10 @@ return {
         {
             type = "Checkpoint",
             vertices = {
-                1408,
-                352,
-                1344,
-                736,
+                1248,
+                416,
+                1184,
+                672,
             },
             data = {
                 order = 2,
@@ -39,14 +49,10 @@ return {
         {
             type = "Checkpoint",
             vertices = {
-                1440,
-                672,
-                1472,
+                1280,
+                640,
+                1344,
                 352,
-                1568,
-                320,
-                1440,
-                672,
             },
             data = {
                 order = 3,
@@ -56,10 +62,10 @@ return {
         {
             type = "Checkpoint",
             vertices = {
-                1568,
-                736,
-                1664,
-                416,
+                1440,
+                352,
+                1504,
+                672,
             },
             data = {
                 order = 4,
@@ -69,14 +75,10 @@ return {
         {
             type = "Checkpoint",
             vertices = {
-                1536,
-                512,
-                1696,
+                1600,
                 672,
-                1696,
-                512,
-                1536,
-                512,
+                1600,
+                352,
             },
             data = {
                 order = 5,
@@ -86,9 +88,13 @@ return {
         {
             type = "Checkpoint",
             vertices = {
-                1760,
-                352,
-                1760,
+                736,
+                704,
+                1184,
+                704,
+                1088,
+                832,
+                736,
                 704,
             },
             data = {
@@ -99,14 +105,10 @@ return {
         {
             type = "Checkpoint",
             vertices = {
-                1376,
-                736,
-                1024,
+                768,
+                832,
+                1088,
                 896,
-                1312,
-                896,
-                1376,
-                736,
             },
             data = {
                 order = 7,
@@ -116,17 +118,104 @@ return {
         {
             type = "Checkpoint",
             vertices = {
-                896,
-                800,
-                1056,
-                608,
-                992,
-                832,
-                896,
-                800,
+                1088,
+                928,
+                768,
+                960,
             },
             data = {
                 order = 8,
+            },
+            loop = false,
+        },
+        {
+            type = "Checkpoint",
+            vertices = {
+                896,
+                352,
+                1216,
+                320,
+            },
+            data = {
+                order = 9,
+            },
+            loop = false,
+        },
+        {
+            type = "Checkpoint",
+            vertices = {
+                768,
+                352,
+                640,
+                672,
+            },
+            data = {
+                order = 10,
+            },
+            loop = false,
+        },
+        {
+            type = "Checkpoint",
+            vertices = {
+                576,
+                384,
+                544,
+                704,
+            },
+            data = {
+                order = 11,
+            },
+            loop = false,
+        },
+        {
+            type = "Checkpoint",
+            vertices = {
+                416,
+                704,
+                480,
+                352,
+            },
+            data = {
+                order = 12,
+            },
+            loop = false,
+        },
+        {
+            type = "Checkpoint",
+            vertices = {
+                320,
+                384,
+                320,
+                768,
+            },
+            data = {
+                order = 13,
+            },
+            loop = false,
+        },
+        {
+            type = "Checkpoint",
+            vertices = {
+                224,
+                800,
+                256,
+                384,
+            },
+            data = {
+                order = 14,
+            },
+            loop = false,
+        },
+        {
+            type = "Checkpoint",
+            vertices = {
+                128,
+                352,
+                160,
+                704,
+            },
+            data = {
+                order = 15,
             },
             loop = false,
         },

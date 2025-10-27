@@ -99,19 +99,22 @@ function renderer_draw(draw_action)
 		-- 		end
 		-- 	end
 		-- end
-		for i = 1, gw / grid_size do
-			for j = 1, gh / grid_size do
-				local row = j * grid_size
-				local column = i * grid_size
+		if main.current:is(Game) then
+			for i = 1, gw / grid_size do
+				for j = 1, gh / grid_size do
+					local row = j * grid_size
+					local column = i * grid_size
 
-				local gray_val = 0.3
-				local color = Color(gray_val, gray_val, gray_val, 1)
-				local line_width = 3
-				graphics.line(column, 0, column, gh, color, line_width)
-				graphics.line(0, row, gw, row, color, line_width)
+					local gray_val = 0.3
+					local color = Color(gray_val, gray_val, gray_val, 1)
+					local line_width = 3
+					graphics.line(column, 0, column, gh, color, line_width)
+					graphics.line(0, row, gw, row, color, line_width)
+				end
 			end
 		end
 		bg_gradient:draw(gw / 2, gh / 2, global_game_width, global_game_height)
+		bg_gradient:draw(gw / 2, gh * 1.5, global_game_width, global_game_height)
 		camera:detach()
 	end)
 

@@ -109,7 +109,7 @@ function Game:update(dt)
 	end
 
 	if input.reset.pressed then
-		play(self, self.creator_mode)
+		play_level(self, self.creator_mode)
 	end
 
 	if self.win then
@@ -194,7 +194,7 @@ function Game:update(dt)
 			if self.selection == 0 then -- player
 				self.hovered = Circle(self.mouse_x, self.mouse_y, self._player_size)
 				self.hovered.color = red[0]
-			else                                                -- choose a wall
+			else -- choose a wall
 				self.hovered = Chain(false, { self.mouse_x, self.mouse_y }) --Rectangle(mouse_x, mouse_y, gh * 0.1, gh * 0.1)
 				self.hovered.color = _G[wall_type[wall_type_order[self.selection]].color][0]
 				-- self.hovered.xy_scale = Vector(1, 1)
@@ -252,7 +252,6 @@ function Game:update(dt)
 
 						local type = wall_type[wall_type_order[self.selection]]
 
-						print("m1: Current selection:", self.selection, wall_type_order[self.selection])
 						local data = nil
 						if type.name == "Checkpoint" then
 							num_checkpoints = num_checkpoints + 1
@@ -284,7 +283,6 @@ function Game:update(dt)
 			table.remove(self.hovered.vertices) -- remove duplicate starting point at end of list
 			table.remove(self.hovered.vertices)
 
-			print("space: Current selection:", self.selection, wall_type_order[self.selection])
 			local type = wall_type[wall_type_order[self.selection]]
 
 			local data = nil
@@ -676,8 +674,7 @@ function Game:die()
 							slow_amount = 1
 							music_slow_amount = 1
 							locked_state = nil
-							scene_transition(self, gw / 2, gh / 2, Game("game"),
-								{ destination = "game", args = { level = 1, num_players = 1 } }, {
+							scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = 1, num_players = 1 } }, {
 								text = "chill mode will pause the timer [wavy]forever",
 								font = pixul_font,
 								alignment = "center",

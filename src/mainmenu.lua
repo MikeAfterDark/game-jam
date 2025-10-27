@@ -11,10 +11,10 @@ function MainMenu:on_enter(from)
 	music_slow_amount = 1
 	-- trigger:tween(2, main_song_instance, { volume = 0.5, pitch = 1 }, math.linear)
 
-	self.main_menu_ui = Group():no_camera()
+	self.main_menu_ui = Group() --:no_camera()
 	self.options_ui = Group():no_camera()
 	self.keybinding_ui = Group():no_camera()
-	self.credits = Group()
+	self.credits = Group():no_camera()
 
 	main.ui_layer_stack:push({
 		layer = ui_interaction_layer.Main,
@@ -23,7 +23,24 @@ function MainMenu:on_enter(from)
 		ui_elements = self.main_ui_elements,
 	})
 
-	self:setup_main_menu_ui()
+	-- UI positioning:
+	--
+	-- [title screen]
+	-- [map selection]
+	-- [level selection]
+	--
+	menu = {
+		Title = "Title",
+		Map_Packs = "Map_Packs",
+		Levels = "Levels",
+	}
+
+	self.camera_positions = {
+		Title = { x = gw / 2, y = gh * 0.5 },
+		Map_Packs = { x = gw / 2, y = gh * 1.5 },
+		Levels = { x = gw / 2, y = gh * 2.5 },
+	}
+	self:setup_title_menu()
 end
 
 function MainMenu:on_exit()
@@ -37,7 +54,6 @@ function MainMenu:on_exit()
 	self.springs = nil
 	self.flashes = nil
 	self.hfx = nil
-	self.title_text = nil
 end
 
 function MainMenu:update(dt)
@@ -63,9 +79,6 @@ function MainMenu:update(dt)
 
 	if not self.in_pause and not self.transitioning then
 		self.main_menu_ui:update(dt * slow_amount)
-		if self.title_text then
-			self.title_text:update(dt)
-		end
 
 		if input.escape.pressed then
 			self.in_credits = false
@@ -123,7 +136,6 @@ function MainMenu:draw()
 	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 
 	self.main_menu_ui:draw()
-	self.title_text:draw(gw / 2, gh * 0.5)
 
 	if self.in_options then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent_2)
@@ -141,21 +153,10 @@ function MainMenu:draw()
 	self.credits:draw()
 end
 
-function MainMenu:setup_main_menu_ui()
+function MainMenu:setup_title_menu()
 	local ui_layer = ui_interaction_layer.Main
 	local ui_group = self.main_menu_ui
 	self.main_ui_elements = {}
-
-	-- self.debug = collect_into(
-	-- 	self.main_ui_elements,
-	-- 	Text({
-	-- 		{
-	-- 			text = "test",
-	-- 			font = pixul_font,
-	-- 			alignment = "center",
-	-- 		},
-	-- 	}, global_text_tags)
-	-- )
 
 	self.jam_name = collect_into(
 		self.main_ui_elements,
@@ -173,9 +174,21 @@ function MainMenu:setup_main_menu_ui()
 		})
 	)
 
-	self.title_text =
-		collect_into(self.main_ui_elements,
-			Text({ { text = "[wavy_title, green]title", font = fat_title_font, alignment = "center" } }, global_text_tags))
+	self.title_text = collect_into(
+		self.main_ui_elements,
+		Text2({
+			group = ui_group,
+			x = gw / 2,
+			y = gh / 2,
+			lines = {
+				{
+					text = "[wavy_title, green]title",
+					font = fat_title_font,
+					alignment = "center",
+				},
+			},
+		})
+	)
 
 	local button_offset = gh * 0.1
 	local button_dist_apart = gh * 0.08
@@ -189,7 +202,9 @@ function MainMenu:setup_main_menu_ui()
 			fg_color = "bg",
 			bg_color = "green",
 			action = function(b)
-				play(self)
+				self:setup_map_pack_menu() --- TODO: make this
+				self:set_ui_to(menu.Map_Packs)
+				-- play_level(self)
 			end,
 		})
 	)
@@ -237,4 +252,206 @@ function MainMenu:setup_main_menu_ui()
 		v.layer = ui_layer
 		v.force_update = true
 	end
+end
+
+function MainMenu:setup_map_pack_menu()
+	local ui_layer = ui_interaction_layer.Main
+	local ui_group = self.main_menu_ui
+	self.main_ui_elements = {}
+	local ui_elements = self.main_ui_elements
+
+	-- check src/maps for 'dev' maps
+	-- check ./maps for custom maps
+	local map_metadata = self:load_packs_metadata()
+	local y_offset = self.camera_positions.Map_Packs.y - gh / 2
+
+	-- TODO: clear these whenever leave
+	for i, pack in ipairs(map_metadata) do
+		collect_into(
+			ui_elements,
+			Text2({
+				group = ui_group,
+				x = gw / 2,
+				y = (0.1 * gh * i) + y_offset,
+				lines = {
+					{
+						text = "[wavy_mid, fg]" .. pack.name,
+						font = pixul_font,
+						alignment = "center",
+					},
+				},
+			})
+		)
+	end
+
+	if not self.back_to_title then
+		self.back_to_title = collect_into(
+			ui_elements,
+			Button({
+				group = ui_group,
+				x = gw / 2,
+				y = gh * 0.05 + y_offset,
+				force_update = true,
+				button_text = "back to title",
+				fg_color = "bg",
+				bg_color = "fg",
+				action = function()
+					self:set_ui_to(menu.Title)
+				end,
+			})
+		)
+	end
+
+	for _, v in pairs(self.main_ui_elements) do
+		-- v.group = ui_group
+		-- ui_group:add(v)
+
+		v.layer = ui_layer
+		v.force_update = true
+	end
+end
+
+function MainMenu:setup_level_menu()
+	local ui_layer = ui_interaction_layer.Main
+	local ui_group = self.main_menu_ui
+	self.main_ui_elements = {}
+
+	self.jam_name = collect_into(
+		self.main_ui_elements,
+		Text2({
+			group = ui_group,
+			x = gw / 2,
+			y = gh * 0.05,
+			lines = {
+				{
+					text = "[wavy_mid, fg]beep boop",
+					font = pixul_font,
+					alignment = "center",
+				},
+			},
+		})
+	)
+	for _, v in pairs(self.main_ui_elements) do
+		-- v.group = ui_group
+		-- ui_group:add(v)
+
+		v.layer = ui_layer
+		v.force_update = true
+	end
+end
+
+function MainMenu:set_ui_to(target_menu)
+	local pos = self.camera_positions[target_menu]
+	if not pos then
+		print("Warning: Invalid menu target '" .. tostring(target_menu) .. "'")
+		return
+	end
+
+	local transition_duration = 0.5
+
+	trigger:tween(transition_duration, camera, { x = pos.x, y = pos.y, r = 0 }, math.circ_in_out, function()
+		camera.x, camera.y, camera.r = pos.x, pos.y, 0
+	end)
+end
+
+function MainMenu:load_packs_metadata()
+	local packs = {}
+
+	for _, p in pairs(self:load_dev_packs()) do
+		table.insert(packs, p)
+	end
+	for _, p in pairs(self:load_custom_packs()) do
+		table.insert(packs, p)
+	end
+
+	print("Loaded Map Packs for:")
+	for key, pack in pairs(packs) do
+		print(key, pack.path)
+	end
+
+	return packs
+end
+
+function MainMenu:load_dev_packs()
+	local packs = {}
+	local fs = love.filesystem
+
+	if not fs.getInfo("maps", "directory") then
+		print("[Error] 'maps' folder not found.")
+		return packs
+	end
+
+	for _, dir in ipairs(fs.getDirectoryItems("maps")) do
+		local path = "maps/" .. dir
+		local info = fs.getInfo(path)
+		if info and info.type == "directory" then
+			local meta_path = path .. "/metadata.lua"
+			local meta_info = fs.getInfo(meta_path)
+			if meta_info and meta_info.type == "file" then
+				local ok, chunk = pcall(fs.load, meta_path)
+				if ok and chunk then
+					local ok2, meta = pcall(chunk)
+					if ok2 and type(meta) == "table" then
+						meta.path = path
+						packs[random:uid()] = meta
+						-- print("[OK] Loaded:", dir)
+						-- print("meta: ", meta.name)
+					else
+						print("[Error] Invalid metadata in:", dir, "-", tostring(meta))
+					end
+				else
+					print("[Error] Could not load:", dir, "-", tostring(chunk))
+				end
+			else
+				print("[Warn] No metadata.lua in:", dir)
+			end
+		end
+	end
+
+	-- print("Loaded Dev Maps for:")
+	-- for key, pack in pairs(packs) do
+	-- 	print(key, pack.path)
+	-- end
+	return packs
+end
+
+function MainMenu:load_custom_packs()
+	local packs = {}
+	local path_sep = package.config:sub(1, 1)
+	local base_path = "maps"
+
+	local p = io.popen((path_sep == "\\" and "dir /b /ad " or "ls -1 ") .. base_path)
+	if not p then
+		print("[Error] Failed to open maps folder.")
+		return packs
+	end
+
+	for dir in p:lines() do
+		local path = base_path .. path_sep .. dir .. path_sep
+		local meta_path = path .. "metadata.lua"
+		local f = io.open(meta_path, "r")
+		if f then
+			f:close()
+			local ok, chunk = pcall(loadfile, meta_path)
+			if ok and chunk then
+				local ok2, meta = pcall(chunk)
+				if ok2 and type(meta) == "table" then
+					meta.path = path
+					packs[random:uid()] = meta
+				else
+					print("[Error] Invalid metadata in:", dir)
+				end
+			else
+				print("[Error] Failed to load:", dir)
+			end
+		end
+	end
+	p:close()
+
+	-- print("Loaded Custom Maps for:")
+	-- for key, pack in pairs(packs) do
+	-- 	print(key, pack.path)
+	-- end
+
+	return packs
 end
