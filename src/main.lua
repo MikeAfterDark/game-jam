@@ -707,26 +707,26 @@ function pause_game(self)
 				fg_color = "bg",
 				bg_color = "green",
 				action = function()
-					play_level(self, true)
+					play_level(self, { creator_mode = true, level_path = main.current:is(Game) and main.current.level_path or "" })
 				end,
 			})
 		)
 
-		self.restart_button = collect_into(
-			self.paused_ui_elements,
-			Button({
-				group = ui_group,
-				x = gw / 2,
-				y = gh / 2 + 80 * global_game_scale,
-				force_update = true,
-				button_text = "restart",
-				fg_color = "bg",
-				bg_color = "orange",
-				action = function()
-					play_level(self)
-				end,
-			})
-		)
+		-- self.restart_button = collect_into(
+		-- 	self.paused_ui_elements,
+		-- 	Button({
+		-- 		group = ui_group,
+		-- 		x = gw / 2,
+		-- 		y = gh / 2 + 80 * global_game_scale,
+		-- 		force_update = true,
+		-- 		button_text = "restart",
+		-- 		fg_color = "bg",
+		-- 		bg_color = "orange",
+		-- 		action = function()
+		-- 			play_level(self)
+		-- 		end,
+		-- 	})
+		-- )
 
 		for _, v in pairs(self.paused_ui_elements) do
 			-- v.group = ui_group
@@ -738,14 +738,17 @@ function pause_game(self)
 	end, "pause")
 end
 
-function play_level(self, creator_mode)
+function play_level(self, args)
 	ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 
 	scene_transition(self, gw / 2, gh / 2, Game("game"), {
 		destination = "game",
-		args = { creator_mode = creator_mode },
+		args = {
+			creator_mode = args.creator_mode or false,
+			level_path = args.level_path or "",
+		},
 	}, { text = "todo text", font = pixul_font, alignment = "center" })
 end
 

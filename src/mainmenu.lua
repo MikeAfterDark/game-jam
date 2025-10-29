@@ -23,6 +23,9 @@ function MainMenu:on_enter(from)
 		ui_elements = self.main_ui_elements,
 	})
 
+	self.in_menu_transition = false
+	self.main_ui_elements = {}
+
 	-- UI positioning:
 	--
 	-- [title screen]
@@ -156,7 +159,6 @@ end
 function MainMenu:setup_title_menu()
 	local ui_layer = ui_interaction_layer.Main
 	local ui_group = self.main_menu_ui
-	self.main_ui_elements = {}
 
 	self.jam_name = collect_into(
 		self.main_ui_elements,
@@ -202,7 +204,7 @@ function MainMenu:setup_title_menu()
 			fg_color = "bg",
 			bg_color = "green",
 			action = function(b)
-				self:setup_map_pack_menu() --- TODO: make this
+				self:setup_map_pack_menu()
 				self:set_ui_to(menu.Map_Packs)
 				-- play_level(self)
 			end,
@@ -257,29 +259,35 @@ end
 function MainMenu:setup_map_pack_menu()
 	local ui_layer = ui_interaction_layer.Main
 	local ui_group = self.main_menu_ui
-	self.main_ui_elements = {}
 	local ui_elements = self.main_ui_elements
+	local menu_id = menu.Map_Packs
 
 	-- check src/maps for 'dev' maps
 	-- check ./maps for custom maps
 	local map_metadata = self:load_packs_metadata()
 	local y_offset = self.camera_positions.Map_Packs.y - gh / 2
 
-	-- TODO: clear these whenever leave
+	counter = counter and (counter + 1) or 0
+
 	for i, pack in ipairs(map_metadata) do
 		collect_into(
 			ui_elements,
-			Text2({
+			RectangleButton({
+				delete_on_menu_change = menu_id,
 				group = ui_group,
 				x = gw / 2,
-				y = (0.1 * gh * i) + y_offset,
-				lines = {
-					{
-						text = "[wavy_mid, fg]" .. pack.name,
-						font = pixul_font,
-						alignment = "center",
-					},
-				},
+				y = (0.25 * gh * (i + 0)) + y_offset,
+				w = gw * 0.1,
+				h = gw * 0.1,
+				force_update = true,
+				image_path = pack.path .. "pack_img.png",
+				title_text = pack.name .. counter,
+				fg_color = "bg",
+				bg_color = "fg",
+				action = function()
+					self:setup_level_menu(pack)
+					self:set_ui_to(menu.Levels)
+				end,
 			})
 		)
 	end
@@ -311,26 +319,55 @@ function MainMenu:setup_map_pack_menu()
 	end
 end
 
-function MainMenu:setup_level_menu()
+function MainMenu:setup_level_menu(pack)
 	local ui_layer = ui_interaction_layer.Main
 	local ui_group = self.main_menu_ui
-	self.main_ui_elements = {}
+	local y_offset = self.camera_positions.Levels.y - gh / 2
+	local ui_elements = self.main_ui_elements
+	local menu_id = menu.Levels
 
-	self.jam_name = collect_into(
-		self.main_ui_elements,
-		Text2({
-			group = ui_group,
-			x = gw / 2,
-			y = gh * 0.05,
-			lines = {
-				{
-					text = "[wavy_mid, fg]beep boop",
-					font = pixul_font,
-					alignment = "center",
-				},
-			},
-		})
-	)
+	for i, level in ipairs(pack.levels) do
+		collect_into(
+			ui_elements,
+			RectangleButton({
+				delete_on_menu_change = menu_id,
+				group = ui_group,
+				x = gw / 2,
+				y = (0.25 * gh * (i + 0)) + y_offset,
+				w = gw * 0.1,
+				h = gw * 0.1,
+				force_update = true,
+				image_path = pack.path .. level.path .. "/level_img.png",
+				title_text = level.name .. counter,
+				fg_color = "bg",
+				bg_color = "fg",
+				action = function()
+					print("loading level: " .. pack.path .. level.path .. "/path.lua")
+					play_level(self, { creator_mode = false, level_path = pack.path .. level.path .. "/map.lua" })
+				end,
+			})
+		)
+	end
+
+	if not self.back_to_map_packs then
+		self.back_to_map_packs = collect_into(
+			ui_elements,
+			Button({
+				group = ui_group,
+				x = gw / 2,
+				y = gh * 0.05 + y_offset,
+				force_update = true,
+				button_text = "back to packs",
+				fg_color = "bg",
+				bg_color = "fg",
+				action = function()
+					self:setup_map_pack_menu() -- NOTE: debatable if this is needed, forces a reload of map packs
+					self:set_ui_to(menu.Map_Packs)
+				end,
+			})
+		)
+	end
+
 	for _, v in pairs(self.main_ui_elements) do
 		-- v.group = ui_group
 		-- ui_group:add(v)
@@ -338,6 +375,10 @@ function MainMenu:setup_level_menu()
 		v.layer = ui_layer
 		v.force_update = true
 	end
+end
+
+function MainMenu:button_restriction()
+	return self.in_menu_transition
 end
 
 function MainMenu:set_ui_to(target_menu)
@@ -348,9 +389,29 @@ function MainMenu:set_ui_to(target_menu)
 	end
 
 	local transition_duration = 0.5
+	local previous_menu = self.current_menu
+	self.current_menu = target_menu
+
+	self.in_menu_transition = true
 
 	trigger:tween(transition_duration, camera, { x = pos.x, y = pos.y, r = 0 }, math.circ_in_out, function()
 		camera.x, camera.y, camera.r = pos.x, pos.y, 0
+		self.in_menu_transition = false
+
+		print("Deleting where menu_id == " .. tostring(previous_menu))
+		local to_remove = {}
+
+		for i, v in pairs(self.main_ui_elements) do
+			if v.delete_on_menu_change and v.delete_on_menu_change == previous_menu then
+				print("deleted button with img: " .. v.image_path)
+				v.dead = true
+				to_remove[#to_remove + 1] = i
+			end
+		end
+
+		for _, i in ipairs(to_remove) do
+			self.main_ui_elements[i] = nil
+		end
 	end)
 end
 
@@ -364,10 +425,10 @@ function MainMenu:load_packs_metadata()
 		table.insert(packs, p)
 	end
 
-	print("Loaded Map Packs for:")
-	for key, pack in pairs(packs) do
-		print(key, pack.path)
-	end
+	-- print("Loaded Map Packs for:")
+	-- for key, pack in pairs(packs) do
+	-- 	print(key, pack.path)
+	-- end
 
 	return packs
 end
@@ -382,10 +443,10 @@ function MainMenu:load_dev_packs()
 	end
 
 	for _, dir in ipairs(fs.getDirectoryItems("maps")) do
-		local path = "maps/" .. dir
+		local path = "maps/" .. dir .. "/"
 		local info = fs.getInfo(path)
 		if info and info.type == "directory" then
-			local meta_path = path .. "/metadata.lua"
+			local meta_path = path .. "metadata.lua"
 			local meta_info = fs.getInfo(meta_path)
 			if meta_info and meta_info.type == "file" then
 				local ok, chunk = pcall(fs.load, meta_path)

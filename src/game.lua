@@ -59,13 +59,15 @@ function Game:on_enter(from, args)
 	checkpoint_counter = 0
 	num_checkpoints = 0
 	self.map_builder = {}
-
+	self.level_path = args.level_path
 	self.creator_mode = args.creator_mode or false
+	print("Path: ", self.level_path)
+
 	if self.creator_mode then
 		-- creator setup if any
 		-- self:load_map("map.lua") -- NOTE: if load map, also add it to map_builder to avoid nil errors
 	else
-		self:load_map("map.lua")
+		self:load_map(self.level_path)
 	end
 
 	Wall({ -- border wall, it'll "keep all the illegals out" /s
@@ -109,7 +111,7 @@ function Game:update(dt)
 	end
 
 	if input.reset.pressed then
-		play_level(self, self.creator_mode)
+		play_level(self, { creator_mode = self.creator_mode, level_path = self.level_path })
 	end
 
 	if self.win then
@@ -349,7 +351,9 @@ function Game:update(dt)
 end
 
 function Game:load_map(filename)
-	local path = "maps/" .. filename
+	local path = filename
+
+	print("Trying to load: ", filename)
 
 	local chunk, err = love.filesystem.load(path)
 	if not chunk then
@@ -430,7 +434,7 @@ function Game:save_map(map)
 	output = output .. "    walls = " .. table_to_lua(walls_data, 1) .. "\n"
 	output = output .. "}"
 
-	local path = "maps/map.lua"
+	local path = self.level_path
 	local file = io.open(path, "w")
 	if file then
 		file:write(output)

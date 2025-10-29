@@ -1,20 +1,25 @@
--- Text button
-Button = Object:extend()
-Button:implement(GameObject)
-function Button:init(args)
+ButtonBase = Object:extend()
+ButtonBase:implement(GameObject)
+function ButtonBase:init(args)
 	self:init_game_object(args)
-	self.shape = Rectangle(self.x, self.y, args.w or (pixul_font:get_text_width(self.button_text) + 8), pixul_font.h + 4)
 	self.interact_with_mouse = true
 	self.selected = false
-	self.text = Text({ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } }, global_text_tags)
 end
 
-function Button:update(dt)
+function ButtonBase:update(dt)
 	self:update_game_object(dt)
 	if not on_current_ui_layer(self) then
 		return
 	end
-	self.text:update(dt)
+
+	if
+		on_current_ui_layer(self)
+		and not (main.current.button_restriction and main.current:button_restriction())
+		and not self.selected
+		and self.colliding_with_mouse
+	then
+		self:on_mouse_enter()
+	end
 
 	if self.hold_button then
 		if self.selected and input.m1.pressed then
@@ -44,6 +49,48 @@ function Button:update(dt)
 			end
 		end
 	end
+end
+
+function ButtonBase:on_mouse_enter()
+	if not on_current_ui_layer(self) or (main.current.button_restriction and main.current:button_restriction()) then
+		return false
+	end
+	buttonHover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+	buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	self.selected = true
+	if self.mouse_enter then
+		self:mouse_enter()
+	end
+	return true
+end
+
+function ButtonBase:on_mouse_exit()
+	-- if not on_current_ui_layer(self) then
+	-- 	return
+	-- end
+
+	self.selected = false
+	if self.mouse_exit then
+		self:mouse_exit()
+	end
+	return true
+end
+
+--
+--
+-- Text button
+--
+--
+Button = ButtonBase:extend()
+function Button:init(args)
+	ButtonBase.init(self, args)
+	self.shape = Rectangle(self.x, self.y, args.w or (pixul_font:get_text_width(self.button_text) + 8), pixul_font.h + 4)
+	self.text = Text({ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } }, global_text_tags)
+end
+
+function Button:update(dt)
+	ButtonBase.update(self, dt)
+	self.text:update(dt)
 end
 
 function Button:draw()
@@ -62,27 +109,15 @@ function Button:draw()
 		graphics.set_line_width(1)
 	end
 
-	graphics.rectangle(
-		self.x,
-		self.y,
-		self.shape.w,
-		self.shape.h,
-		4,
-		4,
-		--[[ self.selected and fg[0] or ]]
-		_G[self.bg_color][0]
-	)
+	graphics.rectangle(self.x, self.y, self.shape.w, self.shape.h, 4, 4, _G[self.bg_color][0])
 	self.text:draw(self.x, self.y + 5, 0, 1, 1)
 	graphics.pop()
 end
 
 function Button:on_mouse_enter()
-	if not on_current_ui_layer(self) then
+	if not ButtonBase.on_mouse_enter(self) then
 		return
 	end
-	buttonHover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
-	buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-	self.selected = true
 	self.text:set_text({
 		{
 			text = "[fgm10]" .. self.button_text,
@@ -91,23 +126,16 @@ function Button:on_mouse_enter()
 		},
 	})
 	self.spring:pull(0.2, 200, 10)
-	if self.mouse_enter then
-		self:mouse_enter()
-	end
 end
 
 function Button:on_mouse_exit()
-	-- if not on_current_ui_layer(self) then
-	-- 	return
-	-- end
+	if not ButtonBase.on_mouse_exit(self) then
+		return
+	end
 
 	self.text:set_text({
 		{ text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" },
 	})
-	self.selected = false
-	if self.mouse_exit then
-		self:mouse_exit()
-	end
 end
 
 function Button:set_text(text)
@@ -120,54 +148,20 @@ end
 
 --
 --
+-- Input button: for options menu stuffs
 --
 --
--- Input button
-InputButton = Object:extend()
-InputButton:implement(GameObject)
+InputButton = ButtonBase:extend()
 function InputButton:init(args)
-	self:init_game_object(args)
+	ButtonBase.init(self, args)
+
 	self.shape = Rectangle(self.x, self.y, args.w or (pixul_font:get_text_width(self.button_text) + 8), pixul_font.h + 4)
-	self.interact_with_mouse = true
-	self.selected = false
 	self.action_text = Text({ { text = "[" .. self.fg_color .. "]" .. self.description_text, font = pixul_font, alignment = "center" } }, global_text_tags)
 	self.input_text = Text({ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } }, global_text_tags)
 end
 
 function InputButton:update(dt)
-	self:update_game_object(dt)
-	if not on_current_ui_layer(self) then
-		return
-	end
-
-	if self.hold_button then
-		if self.selected and input.m1.pressed then
-			self.press_time = love.timer.getTime()
-			self.spring:pull(0.2, 200, 10)
-		end
-		if self.press_time then
-			if input.m1.down and love.timer.getTime() - self.press_time > self.hold_button then
-				self:action()
-				self.press_time = nil
-				self.spring:pull(0.1, 200, 10)
-			end
-		end
-		if input.m1.released then
-			self.press_time = nil
-			self.spring:pull(0.1, 200, 10)
-		end
-	else
-		if self.selected and input.m1.pressed then
-			if self.action then
-				self:action()
-			end
-		end
-		if self.selected and input.m2.pressed then
-			if self.action_2 then
-				self:action_2()
-			end
-		end
-	end
+	ButtonBase.update(self, dt)
 end
 
 function InputButton:draw()
@@ -186,17 +180,6 @@ function InputButton:draw()
 		graphics.set_line_width(1)
 	end
 
-	-- graphics.rectangle(
-	-- 	self.x,
-	-- 	self.y,
-	-- 	self.shape.w,
-	-- 	self.shape.h,
-	-- 	4,
-	-- 	4,
-	-- 	--[[ self.selected and fg[0] or ]]
-	-- 	_G["white"][0]
-	-- )
-
 	local text_distance_apart = self.shape.w / 3
 	self.action_text:draw(self.x - text_distance_apart, self.y + 0, 0, 1, 1)
 	self.input_text:draw(self.x + text_distance_apart, self.y + 0, 0, 1, 1)
@@ -208,12 +191,10 @@ function InputButton:draw()
 end
 
 function InputButton:on_mouse_enter()
-	if not on_current_ui_layer(self) then
+	if not ButtonBase.on_mouse_enter(self) then
 		return
 	end
-	buttonHover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
-	buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-	self.selected = true
+
 	self.input_text:set_text({
 		{
 			text = "[fgm10]" .. self.button_text,
@@ -222,29 +203,108 @@ function InputButton:on_mouse_enter()
 		},
 	})
 	self.spring:pull(0.2, 200, 10)
-	if self.mouse_enter then
-		self:mouse_enter()
-	end
 end
 
 function InputButton:on_mouse_exit()
-	-- if not on_current_ui_layer(self) then
-	-- 	return
-	-- end
+	if not ButtonBase.on_mouse_exit(self) then
+		return
+	end
 
 	self.input_text:set_text({
 		{ text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" },
 	})
-	self.selected = false
-	if self.mouse_exit then
-		self:mouse_exit()
-	end
 end
 
 function InputButton:set_text(text)
 	self.button_text = text
 	self.input_text:set_text({
 		{ text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" },
+	})
+	self.spring:pull(0.2, 200, 10)
+end
+
+--
+--
+-- Rectangle-Image button: for menu selection stuffs
+--
+--
+RectangleButton = ButtonBase:extend()
+function RectangleButton:init(args)
+	ButtonBase.init(self, args)
+	self.shape = Rectangle(self.x, self.y, self.w, self.h) -- args.w or (pixul_font:get_text_width(self.button_text) + 8), pixul_font.h + 4)
+	self.text = Text({ { text = "[" .. self.fg_color .. "]" .. self.title_text, font = pixul_font, alignment = "center" } }, global_text_tags)
+
+	self.image = Image(self.image_path, true)
+end
+
+function RectangleButton:update(dt)
+	ButtonBase.update(self, dt)
+	self.text:update(dt)
+end
+
+function RectangleButton:draw()
+	graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
+
+	graphics.rectangle(
+		self.x,
+		self.y,
+		self.shape.w,
+		self.shape.h,
+		4,
+		4,
+		--[[ self.selected and fg[0] or ]]
+		_G[self.bg_color][0]
+	)
+	local scale = 1
+	local color = _G["white"][0]
+	self.image:draw(self.x, self.y, 0, scale, scale, 0, 0, color)
+
+	if self.hold_button and self.press_time then
+		graphics.set_line_width(5)
+		graphics.set_color(fg[-5])
+		graphics.arc(
+			"open",
+			self.x,
+			self.y,
+			0.6 * self.shape.w,
+			0,
+			math.remap(love.timer.getTime() - self.press_time, 0, self.hold_button, 0, 1) * 2 * math.pi
+		)
+		graphics.set_line_width(1)
+	end
+
+	self.text:draw(self.x, self.y + 5, 0, 1, 1)
+	graphics.pop()
+end
+
+function RectangleButton:on_mouse_enter()
+	if not ButtonBase.on_mouse_enter(self) then
+		return
+	end
+
+	self.text:set_text({
+		{
+			text = "[fgm10]" .. self.title_text,
+			font = pixul_font,
+			alignment = "center",
+		},
+	})
+	self.spring:pull(0.2, 200, 10)
+end
+
+function RectangleButton:on_mouse_exit()
+	if not ButtonBase.on_mouse_exit(self) then
+		return
+	end
+	self.text:set_text({
+		{ text = "[" .. self.fg_color .. "]" .. self.title_text, font = pixul_font, alignment = "center" },
+	})
+end
+
+function RectangleButton:set_text(text)
+	self.title_text = text
+	self.text:set_text({
+		{ text = "[" .. self.fg_color .. "]" .. self.title_text, font = pixul_font, alignment = "center" },
 	})
 	self.spring:pull(0.2, 200, 10)
 end

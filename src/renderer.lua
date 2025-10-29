@@ -18,6 +18,7 @@ function renderer_init()
 		blue2 = ColorRamp(Color("#4778ba"), 0.025),
 		yellow2 = ColorRamp(Color("#f59f10"), 0.025),
 
+		-- pallete: https://colorkit.co/palette/802d2f-ff595e-ff924c-ffca3a-c5ca30-8ac926-52a675-1982c4-4267ac-6a4c93/
 		brown1 = ColorRamp(Color("#802d2f"), 0.025),
 		red1 = ColorRamp(Color("#ff595e"), 0.025),
 		orange1 = ColorRamp(Color("#ff924c"), 0.025),
