@@ -6,7 +6,7 @@ function MainMenu:init(name)
 	self:init_game_object()
 end
 
-function MainMenu:on_enter(from)
+function MainMenu:on_enter(from, args)
 	slow_amount = 1
 	music_slow_amount = 1
 	-- trigger:tween(2, main_song_instance, { volume = 0.5, pitch = 1 }, math.linear)
@@ -44,6 +44,17 @@ function MainMenu:on_enter(from)
 		Levels = { x = gw / 2, y = gh * 2.5 },
 	}
 	self:setup_title_menu()
+
+	if args.menu_mode then
+		if args.menu_mode == menu.Map_Packs then
+			self:setup_map_pack_menu()
+		elseif args.menu_mode == menu.Levels then
+			self:setup_level_menu(args.pack)
+		end
+		self:set_ui_to(args.menu_mode)
+	end
+
+	self.current_menu = args.menu_mode or menu.Title
 end
 
 function MainMenu:on_exit()
@@ -60,10 +71,12 @@ function MainMenu:on_exit()
 end
 
 function MainMenu:update(dt)
-	play_music({ volume = 0.3 })
+	-- if camera.y ~= self.camera_positions[self.current_menu].y and not self.in_menu_transition then
+	-- 	counter = counter and (counter + 1) or 0
+	-- 	print(counter)
+	-- end
 
-	self:update_game_object(dt * slow_amount)
-	-- main.ui_layer_stack:peek().music.pitch = math.clamp(slow_amount * music_slow_amount, 0.05, 1)
+	play_music({ volume = 0.3 })
 
 	if input.escape.pressed then
 		if self.in_options then
@@ -80,58 +93,18 @@ function MainMenu:update(dt)
 		end
 	end
 
-	if not self.in_pause and not self.transitioning then
-		self.main_menu_ui:update(dt * slow_amount)
-
-		if input.escape.pressed then
-			self.in_credits = false
-			if self.credits_button then
-				self.credits_button:on_mouse_exit()
-			end
-			for _, object in ipairs(self.credits.objects) do
-				object.dead = true
-			end
-			self.credits:update(0)
-		end
-	end
-
+	self.main_menu_ui:update(dt * slow_amount)
 	self.options_ui:update(dt * slow_amount)
 
 	if self.in_keybinding then
 		update_keybind_button_display(self)
 	end
 	self.keybinding_ui:update(dt * slow_amount)
+
 	self.credits:update(dt)
-
-	if self.artist_button then
-		self.artist_button:update(dt)
-	end
-
-	-- if input.m2.pressed then
-	-- 	if not self.counter then
-	-- 		self.counter = 1
-	-- 	end
-	-- 	if not self.debug then
-	-- 		self.debug = Text2({
-	-- 			group = main.current.main_menu_ui,
-	-- 			x = 100,
-	-- 			y = 20,
-	-- 			force_update = true,
-	-- 			lines = {
-	-- 				{
-	-- 					text = tostring(main.current_music_type),
-	-- 					-- text = tostring(self.counter),
-	-- 					font = pixul_font,
-	-- 					alignment = "center",
-	-- 				},
-	-- 			},
-	-- 		})
-	-- 	end
-	-- end
-	-- if input.m3.pressed and self.debug then
-	-- 	self.debug:clear()
-	-- 	self.debug = nil
-	-- 	-- self.counter = self.counter + 1
+	-- if camera.y ~= self.camera_positions[self.current_menu].y and not self.in_menu_transition then
+	-- 	local pos = self.camera_positions[self.current_menu]
+	-- 	camera.x, camera.y, camera.r = pos.x, pos.y, 0
 	-- end
 end
 
@@ -157,6 +130,7 @@ function MainMenu:draw()
 end
 
 function MainMenu:setup_title_menu()
+	print("setting up title")
 	local ui_layer = ui_interaction_layer.Main
 	local ui_group = self.main_menu_ui
 
@@ -257,6 +231,7 @@ function MainMenu:setup_title_menu()
 end
 
 function MainMenu:setup_map_pack_menu()
+	print("setting up map packs")
 	local ui_layer = ui_interaction_layer.Main
 	local ui_group = self.main_menu_ui
 	local ui_elements = self.main_ui_elements
@@ -320,6 +295,7 @@ function MainMenu:setup_map_pack_menu()
 end
 
 function MainMenu:setup_level_menu(pack)
+	print("setting up levels")
 	local ui_layer = ui_interaction_layer.Main
 	local ui_group = self.main_menu_ui
 	local y_offset = self.camera_positions.Levels.y - gh / 2
@@ -327,6 +303,7 @@ function MainMenu:setup_level_menu(pack)
 	local menu_id = menu.Levels
 
 	for i, level in ipairs(pack.levels) do
+		local path = pack.path .. level.path
 		collect_into(
 			ui_elements,
 			RectangleButton({
@@ -337,20 +314,25 @@ function MainMenu:setup_level_menu(pack)
 				w = gw * 0.1,
 				h = gw * 0.1,
 				force_update = true,
-				image_path = pack.path .. level.path .. "/level_img.png",
+				image_path = path .. "/level_img.png",
 				title_text = level.name .. counter,
 				fg_color = "bg",
 				bg_color = "fg",
 				action = function()
-					print("loading level: " .. pack.path .. level.path .. "/path.lua")
-					play_level(self, { creator_mode = false, level_path = pack.path .. level.path .. "/map.lua" })
+					print("loading level: " .. path .. "/path.lua")
+					play_level(self, {
+						creator_mode = false,
+						level = i,
+						pack = pack,
+						level_path = path .. "/map.lua",
+					})
 				end,
 			})
 		)
 	end
 
-	if not self.back_to_map_packs then
-		self.back_to_map_packs = collect_into(
+	if not self.back_to_map_packs_button then
+		self.back_to_map_packs_button = collect_into(
 			ui_elements,
 			Button({
 				group = ui_group,
@@ -363,6 +345,33 @@ function MainMenu:setup_level_menu(pack)
 				action = function()
 					self:setup_map_pack_menu() -- NOTE: debatable if this is needed, forces a reload of map packs
 					self:set_ui_to(menu.Map_Packs)
+				end,
+			})
+		)
+	end
+
+	if not self.new_level_button then
+		self.new_level_button = collect_into(
+			ui_elements,
+			Button({
+				group = ui_group,
+				x = gw * 0.95,
+				y = gh * 0.95 + y_offset,
+				w = gh * 0.05,
+				force_update = true,
+				button_text = "+",
+				fg_color = "bg",
+				bg_color = "fg",
+				action = function()
+					local level = #pack.levels + 1
+					local path = pack.levels[#pack.levels].path .. "1" -- TODO: not this
+					self:add_level_to_metadata(pack, level, path)
+					play_level(self, {
+						creator_mode = true,
+						level = level,
+						pack = pack,
+						level_path = pack.path .. path .. "/map.lua",
+					})
 				end,
 			})
 		)
@@ -388,7 +397,7 @@ function MainMenu:set_ui_to(target_menu)
 		return
 	end
 
-	local transition_duration = 0.5
+	local transition_duration = 0.4
 	local previous_menu = self.current_menu
 	self.current_menu = target_menu
 
@@ -398,12 +407,9 @@ function MainMenu:set_ui_to(target_menu)
 		camera.x, camera.y, camera.r = pos.x, pos.y, 0
 		self.in_menu_transition = false
 
-		print("Deleting where menu_id == " .. tostring(previous_menu))
 		local to_remove = {}
-
 		for i, v in pairs(self.main_ui_elements) do
 			if v.delete_on_menu_change and v.delete_on_menu_change == previous_menu then
-				print("deleted button with img: " .. v.image_path)
 				v.dead = true
 				to_remove[#to_remove + 1] = i
 			end
@@ -437,13 +443,13 @@ function MainMenu:load_dev_packs()
 	local packs = {}
 	local fs = love.filesystem
 
-	if not fs.getInfo("maps", "directory") then
-		print("[Error] 'maps' folder not found.")
+	if not fs.getInfo("dev_maps", "directory") then
+		print("[Error] 'dev_maps' folder not found.")
 		return packs
 	end
 
-	for _, dir in ipairs(fs.getDirectoryItems("maps")) do
-		local path = "maps/" .. dir .. "/"
+	for _, dir in ipairs(fs.getDirectoryItems("dev_maps")) do
+		local path = "dev_maps/" .. dir .. "/"
 		local info = fs.getInfo(path)
 		if info and info.type == "directory" then
 			local meta_path = path .. "metadata.lua"
@@ -474,6 +480,67 @@ function MainMenu:load_dev_packs()
 	-- 	print(key, pack.path)
 	-- end
 	return packs
+end
+
+function MainMenu:add_level_to_metadata(pack, name, level_path)
+	local metadata_path = pack.path .. "metadata.lua"
+
+	-- Load the metadata file as a Lua chunk
+	local chunk, err = love.filesystem.load(metadata_path)
+	if not chunk then
+		print("Failed to load metadata: " .. tostring(err))
+		return
+	end
+
+	-- Execute the chunk to get the table
+	local ok, metadata = pcall(chunk)
+	if not ok or type(metadata) ~= "table" then
+		print("Invalid metadata file format at: " .. metadata_path)
+		return
+	end
+
+	-- Ensure the levels table exists
+	metadata.levels = metadata.levels or {}
+
+	-- Add the new level entry
+	table.insert(metadata.levels, {
+		name = name,
+		path = level_path,
+	})
+
+	-- Serialize the updated table back to Lua code
+	local function serialize_table(tbl, indent)
+		indent = indent or ""
+		local next_indent = indent .. "\t"
+		local parts = { "{\n" }
+		for k, v in pairs(tbl) do
+			local key_str
+			if type(k) == "string" and k:match("^[%a_][%w_]*$") then
+				key_str = k .. " = "
+			else
+				key_str = "[" .. string.format("%q", k) .. "] = "
+			end
+			if type(v) == "table" then
+				table.insert(parts, next_indent .. key_str .. serialize_table(v, next_indent) .. ",\n")
+			elseif type(v) == "string" then
+				table.insert(parts, next_indent .. key_str .. string.format("%q", v) .. ",\n")
+			else
+				table.insert(parts, next_indent .. key_str .. tostring(v) .. ",\n")
+			end
+		end
+		table.insert(parts, indent .. "}")
+		return table.concat(parts)
+	end
+
+	local output = "return " .. serialize_table(metadata)
+
+	-- Write back to file
+	local success, message = love.filesystem.write(metadata_path, output)
+	if success then
+		print("✅ Metadata updated successfully at: " .. metadata_path)
+	else
+		print("❌ Failed to write metadata at: " .. metadata_path .. " (" .. tostring(message) .. ")")
+	end
 end
 
 function MainMenu:load_custom_packs()

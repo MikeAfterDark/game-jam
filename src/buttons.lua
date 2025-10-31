@@ -58,9 +58,8 @@ function ButtonBase:on_mouse_enter()
 	buttonHover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 	buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	self.selected = true
-	if self.mouse_enter then
-		self:mouse_enter()
-	end
+	-- debug.traceback()
+	-- print("BASE mouse_enter", self, debug.traceback())
 	return true
 end
 
@@ -70,9 +69,6 @@ function ButtonBase:on_mouse_exit()
 	-- end
 
 	self.selected = false
-	if self.mouse_exit then
-		self:mouse_exit()
-	end
 	return true
 end
 
@@ -85,7 +81,9 @@ Button = ButtonBase:extend()
 function Button:init(args)
 	ButtonBase.init(self, args)
 	self.shape = Rectangle(self.x, self.y, args.w or (pixul_font:get_text_width(self.button_text) + 8), pixul_font.h + 4)
-	self.text = Text({ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } }, global_text_tags)
+	self.text = Text(
+	{ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } },
+		global_text_tags)
 end
 
 function Button:update(dt)
@@ -156,8 +154,12 @@ function InputButton:init(args)
 	ButtonBase.init(self, args)
 
 	self.shape = Rectangle(self.x, self.y, args.w or (pixul_font:get_text_width(self.button_text) + 8), pixul_font.h + 4)
-	self.action_text = Text({ { text = "[" .. self.fg_color .. "]" .. self.description_text, font = pixul_font, alignment = "center" } }, global_text_tags)
-	self.input_text = Text({ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } }, global_text_tags)
+	self.action_text = Text(
+	{ { text = "[" .. self.fg_color .. "]" .. self.description_text, font = pixul_font, alignment = "center" } },
+		global_text_tags)
+	self.input_text = Text(
+	{ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } },
+		global_text_tags)
 end
 
 function InputButton:update(dt)
@@ -187,7 +189,8 @@ function InputButton:draw()
 
 	local halfway = self.separator_length
 	local separator_height = self.y + 8
-	graphics.dashed_line(self.x - halfway, separator_height, self.x + halfway, separator_height, 4, 1, _G[self.bg_color][0], 1)
+	graphics.dashed_line(self.x - halfway, separator_height, self.x + halfway, separator_height, 4, 1,
+		_G[self.bg_color][0], 1)
 end
 
 function InputButton:on_mouse_enter()
@@ -232,7 +235,9 @@ RectangleButton = ButtonBase:extend()
 function RectangleButton:init(args)
 	ButtonBase.init(self, args)
 	self.shape = Rectangle(self.x, self.y, self.w, self.h) -- args.w or (pixul_font:get_text_width(self.button_text) + 8), pixul_font.h + 4)
-	self.text = Text({ { text = "[" .. self.fg_color .. "]" .. self.title_text, font = pixul_font, alignment = "center" } }, global_text_tags)
+	self.text = Text(
+	{ { text = "[" .. self.fg_color .. "]" .. self.title_text, font = pixul_font, alignment = "center" } },
+		global_text_tags)
 
 	self.image = Image(self.image_path, true)
 end
@@ -290,6 +295,9 @@ function RectangleButton:on_mouse_enter()
 		},
 	})
 	self.spring:pull(0.2, 200, 10)
+
+	-- debug.traceback()
+	-- print("RECT mouse_enter", self, debug.traceback())
 end
 
 function RectangleButton:on_mouse_exit()

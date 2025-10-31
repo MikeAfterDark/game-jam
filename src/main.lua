@@ -113,7 +113,7 @@ function init()
 	start_countdown = 2.5
 
 	main:add(MainMenu("mainmenu"))
-	main:go_to("mainmenu")
+	main:go_to("mainmenu", {})
 	-- main:add(Game("game")) -- TODO: TEMP
 	-- main:go_to("game", { level = 1, num_players = 1 })
 
@@ -360,7 +360,8 @@ function open_options(self)
 				end,
 			})
 		)
-		button_offset = button_offset + button_distance - 3 --for some reason this is needed for the last button to work (for 4 controls)
+		button_offset = button_offset + button_distance -
+		3                                             --for some reason this is needed for the last button to work (for 4 controls)
 	end
 
 	--
@@ -707,7 +708,8 @@ function pause_game(self)
 				fg_color = "bg",
 				bg_color = "green",
 				action = function()
-					play_level(self, { creator_mode = true, level_path = main.current:is(Game) and main.current.level_path or "" })
+					play_level(self,
+						{ creator_mode = true, level_path = main.current:is(Game) and main.current.level_path or "" })
 				end,
 			})
 		)
@@ -739,16 +741,9 @@ function pause_game(self)
 end
 
 function play_level(self, args)
-	ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-	ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-	ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-
 	scene_transition(self, gw / 2, gh / 2, Game("game"), {
 		destination = "game",
-		args = {
-			creator_mode = args.creator_mode or false,
-			level_path = args.level_path or "",
-		},
+		args = args,
 	}, { text = "todo text", font = pixul_font, alignment = "center" })
 end
 
@@ -1003,16 +998,13 @@ function open_credits(self)
 end
 
 function restart_level_with_X_players(self, num_players)
-	self.transitioning = true
-	ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-	ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-	ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-
 	slow_amount = 1
 	music_slow_amount = 1
 	run_time = 0
 	locked_state = nil
-	scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = main.current.level, num_players = num_players } }, {
+
+	scene_transition(self, gw / 2, gh / 2, Game("game"),
+		{ destination = "game", args = { level = main.current.level, num_players = num_players } }, {
 		text = "stay hydrated!",
 		font = pixul_font,
 		alignment = "center",
@@ -1020,16 +1012,20 @@ function restart_level_with_X_players(self, num_players)
 end
 
 function scene_transition(self, x_pos, y_pos, addition, go_to, text_args)
+	ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+
+	while main.ui_layer_stack:size() > 1 do
+		pop_ui_layer(self)
+	end
+	self.transitioning = true
 	TransitionEffect({
 		group = main.transitions,
 		x = x_pos,
 		y = y_pos,
 		color = state.dark and bg[-2] or fg[0],
 		transition_action = function()
-			while main.ui_layer_stack:size() > 1 do
-				pop_ui_layer(self)
-			end
-			self.transitioning = true
 			-- slow_amount = 1
 			system.save_state()
 			main:add(addition)

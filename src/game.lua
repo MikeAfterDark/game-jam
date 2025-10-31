@@ -61,6 +61,9 @@ function Game:on_enter(from, args)
 	self.map_builder = {}
 	self.level_path = args.level_path
 	self.creator_mode = args.creator_mode or false
+	self.level = args.level or 0
+	self.pack = args.pack or {}
+
 	print("Path: ", self.level_path)
 
 	if self.creator_mode then
@@ -128,11 +131,6 @@ function Game:update(dt)
 				close_options(self)
 			end
 		else
-			self.transitioning = true
-			ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-			ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-			ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-
 			scene_transition(self, gw / 2, gh / 2, MainMenu("main_menu"), { destination = "main_menu", args = {} }, {
 				text = "loading main menu...",
 				font = pixul_font,
@@ -196,7 +194,7 @@ function Game:update(dt)
 			if self.selection == 0 then -- player
 				self.hovered = Circle(self.mouse_x, self.mouse_y, self._player_size)
 				self.hovered.color = red[0]
-			else -- choose a wall
+			else                                                -- choose a wall
 				self.hovered = Chain(false, { self.mouse_x, self.mouse_y }) --Rectangle(mouse_x, mouse_y, gh * 0.1, gh * 0.1)
 				self.hovered.color = _G[wall_type[wall_type_order[self.selection]].color][0]
 				-- self.hovered.xy_scale = Vector(1, 1)
@@ -358,6 +356,7 @@ function Game:load_map(filename)
 	local chunk, err = love.filesystem.load(path)
 	if not chunk then
 		error("Failed to load map for (" .. self.folder .. "): " .. err)
+		return
 	end
 
 	local data = chunk()
@@ -434,14 +433,29 @@ function Game:save_map(map)
 	output = output .. "    walls = " .. table_to_lua(walls_data, 1) .. "\n"
 	output = output .. "}"
 
+	-- local path = self.level_path
+	-- local file = io.open(path, "w")
+	-- if file then
+	-- 	file:write(output)
+	-- 	file:close()
+	-- 	print("written to file successfully at: " .. path)
+	-- else
+	-- 	print("failed to open file for writing at: " .. path)
+	-- end
+
 	local path = self.level_path
-	local file = io.open(path, "w")
-	if file then
-		file:write(output)
-		file:close()
+
+	local dir = path:match("^(.*[/\\])")
+	if dir then
+		love.filesystem.createDirectory(dir)
+	end
+
+	local success, message = love.filesystem.write(path, output)
+
+	if success then
 		print("written to file successfully at: " .. path)
 	else
-		print("failed to open file for writing at: " .. path)
+		print("failed to write file at: " .. path .. " (" .. tostring(message) .. ")")
 	end
 
 	-- local file = love.filesystem.newFile("map.lua", "w")
@@ -467,9 +481,9 @@ function Game:quit()
 		trigger:tween(1, _G, { music_slow_amount = 0 }, math.linear, function()
 			music_slow_amount = 0
 		end, "music_slow_amount")
-		trigger:tween(4, camera, { x = gw / 2, y = gh / 2, r = 0 }, math.linear, function()
-			camera.x, camera.y, camera.r = gw / 2, gh / 2, 0
-		end)
+		-- trigger:tween(4, camera, { x = gw / 2, y = gh / 2, r = 0 }, math.linear, function()
+		-- 	camera.x, camera.y, camera.r = gw / 2, gh / 2, 0
+		-- end)
 
 		ui_layer = ui_interaction_layer.Win
 		self.win_ui_elements = {}
@@ -491,6 +505,36 @@ function Game:quit()
 		)
 
 		trigger:after(0.5, function()
+			-- for k, v in pairs(self.pack) do
+			-- 	print(k, v)
+			-- end
+
+			if #self.pack.levels > self.level then
+				local next_level = self.level + 1
+				play_level(self, {
+					creator_mode = self.creator_mode,
+					level = next_level,
+					pack = self.pack,
+					level_path = self.pack.path .. self.pack.levels[next_level].path .. "/map.lua",
+				})
+			else
+				-- no more levels, go back to level select
+				print("no more levels")
+
+				scene_transition(
+					self,
+					gw / 2,
+					gh / 2,
+					MainMenu("main_menu"),
+					{ destination = "main_menu", args = { menu_mode = menu.Levels, pack = self.pack } },
+					{
+						text = "loading main menu...",
+						font = pixul_font,
+						alignment = "center",
+					}
+				)
+			end
+
 			self.win_text2 = collect_into(
 				self.win_ui_elements,
 				Text2({
@@ -670,15 +714,11 @@ function Game:die()
 					bg_color = "green",
 					action = function(b)
 						if not self.transitioning then
-							self.transitioning = true
-							ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-							ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-							ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-
 							slow_amount = 1
 							music_slow_amount = 1
 							locked_state = nil
-							scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = 1, num_players = 1 } }, {
+							scene_transition(self, gw / 2, gh / 2, Game("game"),
+								{ destination = "game", args = { level = 1, num_players = 1 } }, {
 								text = "chill mode will pause the timer [wavy]forever",
 								font = pixul_font,
 								alignment = "center",

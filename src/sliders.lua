@@ -158,9 +158,6 @@ function Slider:on_mouse_enter()
 	buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	self.hovered = true
 	self.spring:pull(0.2, 200, 10)
-	if self.mouse_enter then
-		self:mouse_enter()
-	end
 end
 
 function Slider:on_mouse_exit()
