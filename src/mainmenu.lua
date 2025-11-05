@@ -49,7 +49,8 @@ function MainMenu:on_enter(from, args)
 		if args.menu_mode == menu.Map_Packs then
 			self:setup_map_pack_menu()
 		elseif args.menu_mode == menu.Levels then
-			self:setup_level_menu(args.pack)
+			local pack = self:get_reloaded_pack(args.pack)
+			self:setup_level_menu(pack)
 		end
 		self:set_ui_to(args.menu_mode)
 	end
@@ -285,6 +286,25 @@ function MainMenu:setup_map_pack_menu()
 		)
 	end
 
+	if not self.new_map_pack_button then
+		self.new_map_pack_button = collect_into(
+			ui_elements,
+			Button({
+				group = ui_group,
+				x = gw * 0.95,
+				y = gh * 0.95 + y_offset,
+				w = gh * 0.05,
+				force_update = true,
+				button_text = "+",
+				fg_color = "bg",
+				bg_color = "fg",
+				action = function()
+					-- self:create_new_map_pack(File.is_dev_mode())
+				end,
+			})
+		)
+	end
+
 	for _, v in pairs(self.main_ui_elements) do
 		-- v.group = ui_group
 		-- ui_group:add(v)
@@ -295,38 +315,92 @@ function MainMenu:setup_map_pack_menu()
 end
 
 function MainMenu:setup_level_menu(pack)
-	print("setting up levels")
+	print("setting up levels, pack:")
+
+	if type(pack.levels) ~= "table" then
+		print("pack.levels is not a table! Got: " .. tostring(pack.levels))
+		return
+	end
+
 	local ui_layer = ui_interaction_layer.Main
 	local ui_group = self.main_menu_ui
 	local y_offset = self.camera_positions.Levels.y - gh / 2
 	local ui_elements = self.main_ui_elements
 	local menu_id = menu.Levels
 
+	local grid_x = 6
+	local scale = gw * 0.1
+
+	local spacing = scale * 1.2
+	local total_width = (grid_x * spacing) - (spacing - scale)
+	local x_start = (gw - total_width) / 2 + scale / 2 + gw * 0.125
+	local y_start = y_offset + gh * 0.2
+
 	for i, level in ipairs(pack.levels) do
 		local path = pack.path .. level.path
+
+		local col = (i - 1) % grid_x
+		local row = math.floor((i - 1) / grid_x)
+
 		collect_into(
 			ui_elements,
 			RectangleButton({
 				delete_on_menu_change = menu_id,
 				group = ui_group,
-				x = gw / 2,
-				y = (0.25 * gh * (i + 0)) + y_offset,
-				w = gw * 0.1,
-				h = gw * 0.1,
+				x = x_start + col * spacing,
+				y = y_start + row * spacing,
+				w = scale,
+				h = scale,
 				force_update = true,
 				image_path = path .. "/level_img.png",
 				title_text = level.name .. counter,
-				fg_color = "bg",
-				bg_color = "fg",
+				fg_color = "white",
+				bg_color = "bg",
 				action = function()
 					print("loading level: " .. path .. "/path.lua")
 					play_level(self, {
 						creator_mode = false,
 						level = i,
 						pack = pack,
-						level_path = path .. "/map.lua",
+						level_path = level.path,
 					})
 				end,
+			})
+		)
+	end
+
+	-- TODO:? check which level is hovered over, and set its title and description + completion tracking in flavour text?
+	-- (if tracking also add some indicator on the level button too)
+	if not self.flavour_text then
+		self.flavour_text = collect_into(
+			ui_elements,
+			Text2({
+				group = ui_group,
+				x = gw * 0.14,
+				y = gh * 0.05 + y_offset, --world positioning, top-center point
+
+				textbox_x = gw * 0.02, -- screen positioning, topleft corner
+				textbox_y = gh * 0.1,
+
+				w = gw * 0.24,
+				h = gh * 0.8,
+				scroll_box = true,
+				-- scroll_speed = 300,
+				vertical_alignment = "top",
+
+				lines = {
+					{
+						text = pack.name,
+						font = pixul_font,
+						alignment = "center",
+						wrap = gw * 0.23,
+					},
+					{
+						text = pack.description,
+						font = pixul_font,
+						wrap = gw * 0.23,
+					},
+				},
 			})
 		)
 	end
@@ -364,13 +438,12 @@ function MainMenu:setup_level_menu(pack)
 				bg_color = "fg",
 				action = function()
 					local level = #pack.levels + 1
-					local path = pack.levels[#pack.levels].path .. "1" -- TODO: not this
-					self:add_level_to_metadata(pack, level, path)
+					local path = #pack.levels + 1
 					play_level(self, {
 						creator_mode = true,
 						level = level,
 						pack = pack,
-						level_path = pack.path .. path .. "/map.lua",
+						level_path = path,
 					})
 				end,
 			})
@@ -482,65 +555,41 @@ function MainMenu:load_dev_packs()
 	return packs
 end
 
+function MainMenu:get_reloaded_pack(pack)
+	local fs = love.filesystem
+	local path = pack.path
+	if not path:match("/$") then
+		path = path .. "/"
+	end
+
+	local meta_path = path .. "metadata.lua"
+	print("reloading: ", meta_path)
+
+	-- load metadata
+	local chunk, load_err = fs.load(meta_path)
+	if not chunk then
+		print("Failed to load metadata:", load_err)
+		return
+	end
+
+	local ok, metadata = pcall(chunk)
+	if not ok or type(metadata) ~= "table" then
+		print("Failed to execute metadata.lua:", metadata)
+		return
+	end
+
+	metadata.path = path
+	return metadata
+end
+
 function MainMenu:add_level_to_metadata(pack, name, level_path)
 	local metadata_path = pack.path .. "metadata.lua"
 
-	-- Load the metadata file as a Lua chunk
-	local chunk, err = love.filesystem.load(metadata_path)
-	if not chunk then
-		print("Failed to load metadata: " .. tostring(err))
-		return
-	end
+	print("meta path: ", metadata_path)
+end
 
-	-- Execute the chunk to get the table
-	local ok, metadata = pcall(chunk)
-	if not ok or type(metadata) ~= "table" then
-		print("Invalid metadata file format at: " .. metadata_path)
-		return
-	end
-
-	-- Ensure the levels table exists
-	metadata.levels = metadata.levels or {}
-
-	-- Add the new level entry
-	table.insert(metadata.levels, {
-		name = name,
-		path = level_path,
-	})
-
-	-- Serialize the updated table back to Lua code
-	local function serialize_table(tbl, indent)
-		indent = indent or ""
-		local next_indent = indent .. "\t"
-		local parts = { "{\n" }
-		for k, v in pairs(tbl) do
-			local key_str
-			if type(k) == "string" and k:match("^[%a_][%w_]*$") then
-				key_str = k .. " = "
-			else
-				key_str = "[" .. string.format("%q", k) .. "] = "
-			end
-			if type(v) == "table" then
-				table.insert(parts, next_indent .. key_str .. serialize_table(v, next_indent) .. ",\n")
-			elseif type(v) == "string" then
-				table.insert(parts, next_indent .. key_str .. string.format("%q", v) .. ",\n")
-			else
-				table.insert(parts, next_indent .. key_str .. tostring(v) .. ",\n")
-			end
-		end
-		table.insert(parts, indent .. "}")
-		return table.concat(parts)
-	end
-
-	local output = "return " .. serialize_table(metadata)
-
-	-- Write back to file
-	local success, message = love.filesystem.write(metadata_path, output)
-	if success then
-		print("✅ Metadata updated successfully at: " .. metadata_path)
-	else
-		print("❌ Failed to write metadata at: " .. metadata_path .. " (" .. tostring(message) .. ")")
-	end
+function MainMenu:create_new_map_pack(is_dev)
+	print("is dev: ", is_dev)
 end
 
 function MainMenu:load_custom_packs()

@@ -59,7 +59,9 @@ function Game:on_enter(from, args)
 	checkpoint_counter = 0
 	num_checkpoints = 0
 	self.map_builder = {}
-	self.level_path = args.level_path
+	self.level_folder = args.level_path
+	self.level_path = (args.pack and args.level_path) and args.pack.path .. args.level_path .. "/map.lua" or ""
+	print("Level loaded: folder:", self.level_folder, ", path: ", self.level_path)
 	self.creator_mode = args.creator_mode or false
 	self.level = args.level or 0
 	self.pack = args.pack or {}
@@ -443,25 +445,109 @@ function Game:save_map(map)
 	-- 	print("failed to open file for writing at: " .. path)
 	-- end
 
+	-- local path = self.level_path
+	--
+	-- local dir = path:match("^(.*[/\\])")
+	-- if dir then
+	-- 	love.filesystem.createDirectory(dir)
+	-- end
+	--
+	-- local success, message = love.filesystem.write(path, output)
+	--
+	-- if success then
+	-- 	print("written to file successfully at: " .. path)
+	-- else
+	-- 	print("failed to write file at: " .. path .. " (" .. tostring(message) .. ")")
+	-- end
+
+	local dev_mode = love.filesystem.isFused() == false
 	local path = self.level_path
+	local saved_level = false
+	local new_level_folder = false
+
+	---
+	--- folder jank ---
+	---
+	local function dir_exists(path) -- NOTE: lua/C jank: https://stackoverflow.com/questions/1340230/check-if-directory-exists-in-lua
+		local ok, err, code = os.rename(path, path)
+		return ok or code == 13  -- code 13 = permission denied (means it exists)
+	end
 
 	local dir = path:match("^(.*[/\\])")
 	if dir then
-		love.filesystem.createDirectory(dir)
+		if not dir_exists(dir) then
+			print("creating new dir:", dir)
+
+			new_level_folder = true
+			os.execute('mkdir -p "' .. dir .. '"')
+		else
+			print("dir already exists:", dir)
+		end
 	end
 
-	local success, message = love.filesystem.write(path, output)
-
-	if success then
-		print("written to file successfully at: " .. path)
+	---
+	--- write the file jank ---
+	---
+	if dev_mode then
+		local file = io.open(path, "w")
+		if file then
+			file:write(output)
+			file:close()
+			saved_level = true
+			print("written to project file successfully at: " .. path)
+		else
+			print("failed to open project file for writing at: " .. path)
+		end
 	else
-		print("failed to write file at: " .. path .. " (" .. tostring(message) .. ")")
+		local success, message = love.filesystem.write(path, output)
+		if success then
+			saved_level = true
+			print("written to save directory successfully at: " .. path)
+		else
+			print("failed to write file: " .. tostring(message))
+		end
 	end
 
-	-- local file = love.filesystem.newFile("map.lua", "w")
-	-- file:write(output)
-	-- file:close()
-	-- print("finished writing")
+	if saved_level then
+		if new_level_folder then
+			print("Edit metadata to add level:", self.pack.path)
+			local fs = love.filesystem
+			local path = self.pack.path
+			if not path:match("/$") then
+				path = path .. "/"
+			end
+
+			local meta_path = path .. "metadata.lua"
+
+			-- load metadata
+			local chunk, load_err = fs.load(meta_path)
+			if not chunk then
+				print("Failed to load metadata:", load_err)
+				return
+			end
+
+			local ok, metadata = pcall(chunk)
+			if not ok or type(metadata) ~= "table" then
+				print("Failed to execute metadata.lua:", metadata)
+				return
+			end
+
+			-- modify metadata
+			metadata.levels = metadata.levels or {}
+			table.insert(metadata.levels, { name = "temp", path = self.level_folder })
+
+			-- serialize and write back
+			local data = "return " .. table.tostring(metadata)
+			local f, err = io.open(meta_path, "w")
+			if f then
+				f:write("return " .. table.tostring(metadata))
+				f:close()
+				print("Wrote directly to:", meta_path)
+			else
+				print("Failed to write:", err)
+			end
+		end
+	end
 end
 
 function Game:quit()
@@ -515,11 +601,10 @@ function Game:quit()
 					creator_mode = self.creator_mode,
 					level = next_level,
 					pack = self.pack,
-					level_path = self.pack.path .. self.pack.levels[next_level].path .. "/map.lua",
+					level_path = self.pack.levels[next_level].path,
 				})
 			else
-				-- no more levels, go back to level select
-				print("no more levels")
+				print("no more levels, going back to pack", self.pack.path)
 
 				scene_transition(
 					self,

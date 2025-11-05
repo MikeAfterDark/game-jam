@@ -360,8 +360,7 @@ function open_options(self)
 				end,
 			})
 		)
-		button_offset = button_offset + button_distance -
-		3                                             --for some reason this is needed for the last button to work (for 4 controls)
+		button_offset = button_offset + button_distance - 3 --for some reason this is needed for the last button to work (for 4 controls)
 	end
 
 	--
@@ -708,8 +707,7 @@ function pause_game(self)
 				fg_color = "bg",
 				bg_color = "green",
 				action = function()
-					play_level(self,
-						{ creator_mode = true, level_path = main.current:is(Game) and main.current.level_path or "" })
+					play_level(self, { creator_mode = true, level_path = main.current:is(Game) and main.current.level_path or "" })
 				end,
 			})
 		)
@@ -878,9 +876,9 @@ function open_credits(self)
 		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[blue]libraries: ", font = pixul_font } } })
 	)
 
-	local x_offset = -gw * 0.2
-	local x_dist = gw * 0.143
-	local x_width = gw * 0.134
+	local x_offset = -gw * 0.3
+	local x_dist = gw * 0.140
+	local x_width = gw * 0.130
 	self.libraries_button1 = collect_into(
 		self.credits_ui_elements,
 		Button({
@@ -950,6 +948,24 @@ function open_credits(self)
 		})
 	)
 
+	x_offset = x_offset + x_dist
+	self.libraries_button5 = collect_into(
+		self.credits_ui_elements,
+		Button({
+			group = ui_group,
+			x = columns[2] + x_offset,
+			y = yOffset,
+			w = x_width,
+			button_text = "inputfield",
+			fg_color = "bg",
+			bg_color = "blue",
+			credits_button = true,
+			action = function(b)
+				open_url(b, "https://github.com/ReFreezed/InputField")
+			end,
+		})
+	)
+
 	yOffset = yOffset + y_dist
 	self.music_section = collect_into(
 		self.credits_ui_elements,
@@ -1003,8 +1019,7 @@ function restart_level_with_X_players(self, num_players)
 	run_time = 0
 	locked_state = nil
 
-	scene_transition(self, gw / 2, gh / 2, Game("game"),
-		{ destination = "game", args = { level = main.current.level, num_players = num_players } }, {
+	scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = main.current.level, num_players = num_players } }, {
 		text = "stay hydrated!",
 		font = pixul_font,
 		alignment = "center",

@@ -597,19 +597,85 @@ end
 
 Text2 = Object:extend()
 Text2:implement(GameObject)
+
 function Text2:init(args)
 	self:init_game_object(args)
 	self.text = Text(args.lines, global_text_tags)
-	self.w, self.h = args.width or self.text.w, args.height or self.text.h
+	self.w, self.h = args.w or self.text.w, args.h or self.text.h
+
+	if self.scroll_box then
+		self.max_scroll = math.max(0, self.text.h - self.h + self.text.line_height / 2)
+		self.scroll_offset = 0
+		self.scroll_velocity = 0
+		self.scroll_speed = args.scroll_speed or 300
+		self.scroll_damping = args.scroll_damping or 8 -- how quickly it slows down
+		self.scroll_ease = args.scroll_ease or math.cubic_out
+	end
 end
 
 function Text2:update(dt)
 	self:update_game_object(dt)
 	self.text:update(dt)
+
+	if self.scroll_box then
+		local scroll_input = 0
+
+		if input.wheel_up.down or input.wheel_up.pressed then
+			scroll_input = scroll_input - 1
+		elseif input.wheel_down.down or input.wheel_down.pressed then
+			scroll_input = scroll_input + 1
+		end
+
+		if scroll_input ~= 0 then
+			self.scroll_velocity = self.scroll_velocity + scroll_input * self.scroll_speed
+		end
+
+		self.scroll_offset = self.scroll_offset + self.scroll_velocity * dt
+		self.scroll_velocity = self.scroll_velocity * math.exp(-self.scroll_damping * dt)
+		self.scroll_offset = math.max(0, math.min(self.scroll_offset, self.max_scroll))
+	end
 end
 
 function Text2:draw()
-	self.text:draw(self.x, self.y, self.r, self.spring.x * self.sx, self.spring.x * self.sy)
+	graphics.push(self.x, self.y, 0, 1, 1)
+
+	if self.textbox_x and self.textbox_y then
+		local draw_y = self.y + self.h / 2 + gh * 0.1 - self.scroll_offset
+
+		love.graphics.setScissor(self.textbox_x, self.textbox_y, self.w, self.h)
+		self.text:draw(self.x, draw_y, self.r, self.spring.x * self.sx, self.spring.x * self.sy)
+		love.graphics.setScissor()
+	else
+		self.text:draw(self.x, self.y, self.r, self.spring.x * self.sx, self.spring.x * self.sy)
+	end
+
+	if self.scroll_box then
+		local x = self.x
+		local base_length = 10 * global_game_scale
+		local thickness = 1.0 * global_game_scale
+		local color = white[0]
+
+		local y_offset = gh * 0.05
+
+		-- UP arrow
+		if self.scroll_offset > 0 then
+			local y = self.y + y_offset
+			local up_length = base_length * (self.scroll_offset / self.max_scroll)
+			graphics.line(x, y - up_length, x - up_length / 2, y - up_length / 2, color, thickness)
+			graphics.line(x, y - up_length, x + up_length / 2, y - up_length / 2, color, thickness)
+		end
+
+		-- DOWN arrow
+		if self.scroll_offset < self.max_scroll then
+			local y = self.y + self.h + y_offset
+			local down_length = base_length * (1 - (self.scroll_offset / self.max_scroll))
+			graphics.line(x, y + down_length, x - down_length / 2, y + down_length / 2, color, thickness)
+			graphics.line(x, y + down_length, x + down_length / 2, y + down_length / 2, color, thickness)
+		end
+		graphics.rectangle(self.x, self.y + self.h / 2 + y_offset, self.w, self.h, 5, 5, color, 5)
+	end
+
+	graphics.pop()
 end
 
 function Text2:pull(...)

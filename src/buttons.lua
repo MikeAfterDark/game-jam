@@ -81,9 +81,7 @@ Button = ButtonBase:extend()
 function Button:init(args)
 	ButtonBase.init(self, args)
 	self.shape = Rectangle(self.x, self.y, args.w or (pixul_font:get_text_width(self.button_text) + 8), pixul_font.h + 4)
-	self.text = Text(
-	{ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } },
-		global_text_tags)
+	self.text = Text({ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } }, global_text_tags)
 end
 
 function Button:update(dt)
@@ -154,12 +152,8 @@ function InputButton:init(args)
 	ButtonBase.init(self, args)
 
 	self.shape = Rectangle(self.x, self.y, args.w or (pixul_font:get_text_width(self.button_text) + 8), pixul_font.h + 4)
-	self.action_text = Text(
-	{ { text = "[" .. self.fg_color .. "]" .. self.description_text, font = pixul_font, alignment = "center" } },
-		global_text_tags)
-	self.input_text = Text(
-	{ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } },
-		global_text_tags)
+	self.action_text = Text({ { text = "[" .. self.fg_color .. "]" .. self.description_text, font = pixul_font, alignment = "center" } }, global_text_tags)
+	self.input_text = Text({ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } }, global_text_tags)
 end
 
 function InputButton:update(dt)
@@ -189,8 +183,7 @@ function InputButton:draw()
 
 	local halfway = self.separator_length
 	local separator_height = self.y + 8
-	graphics.dashed_line(self.x - halfway, separator_height, self.x + halfway, separator_height, 4, 1,
-		_G[self.bg_color][0], 1)
+	graphics.dashed_line(self.x - halfway, separator_height, self.x + halfway, separator_height, 4, 1, _G[self.bg_color][0], 1)
 end
 
 function InputButton:on_mouse_enter()
@@ -234,12 +227,21 @@ end
 RectangleButton = ButtonBase:extend()
 function RectangleButton:init(args)
 	ButtonBase.init(self, args)
-	self.shape = Rectangle(self.x, self.y, self.w, self.h) -- args.w or (pixul_font:get_text_width(self.button_text) + 8), pixul_font.h + 4)
-	self.text = Text(
-	{ { text = "[" .. self.fg_color .. "]" .. self.title_text, font = pixul_font, alignment = "center" } },
-		global_text_tags)
+	self.shape = Rectangle(self.x, self.y, self.w, self.h)
+	self.text = --Text({ { text = "[" .. self.fg_color .. "]" .. self.title_text, font = pixul_font, alignment = "center" } }, global_text_tags)
+		Text2({
+			x = self.x,
+			y = self.y,
+			lines = {
+				{
+					text = "[" .. self.fg_color .. "]" .. self.title_text,
+					font = pixul_font,
+					wrap = self.w * 1.5,
+				},
+			},
+		})
 
-	self.image = Image(self.image_path, true)
+	self.image = love.filesystem.getInfo(self.image_path) and Image(self.image_path, true) or nil
 end
 
 function RectangleButton:update(dt)
@@ -262,7 +264,9 @@ function RectangleButton:draw()
 	)
 	local scale = 1
 	local color = _G["white"][0]
-	self.image:draw(self.x, self.y, 0, scale, scale, 0, 0, color)
+	if self.image then
+		self.image:draw(self.x, self.y, 0, scale, scale, 0, 0, color)
+	end
 
 	if self.hold_button and self.press_time then
 		graphics.set_line_width(5)
@@ -287,13 +291,13 @@ function RectangleButton:on_mouse_enter()
 		return
 	end
 
-	self.text:set_text({
-		{
-			text = "[fgm10]" .. self.title_text,
-			font = pixul_font,
-			alignment = "center",
-		},
-	})
+	-- self.text:set_text({
+	-- 	{
+	-- 		text = "[fgm10]" .. self.title_text,
+	-- 		font = pixul_font,
+	-- 		alignment = "center",
+	-- 	},
+	-- })
 	self.spring:pull(0.2, 200, 10)
 
 	-- debug.traceback()
@@ -304,9 +308,9 @@ function RectangleButton:on_mouse_exit()
 	if not ButtonBase.on_mouse_exit(self) then
 		return
 	end
-	self.text:set_text({
-		{ text = "[" .. self.fg_color .. "]" .. self.title_text, font = pixul_font, alignment = "center" },
-	})
+	-- self.text:set_text({
+	-- 	{ text = "[" .. self.fg_color .. "]" .. self.title_text, font = pixul_font, alignment = "center" },
+	-- })
 end
 
 function RectangleButton:set_text(text)

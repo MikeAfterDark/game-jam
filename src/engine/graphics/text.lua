@@ -51,11 +51,12 @@ text = Text({
 -- The text object itself also has .w and .h which corresponds to the width of the biggest line and height of all lines + offsets, respectively.
 -- If 'alignment_width' is set to a specific line then that line will be automatically set to that width, and if it is the biggest then .w will also be set to that value.
 Text = Object:extend()
-function Text:init(text_data, text_tags)
+function Text:init(text_data, text_tags, args)
 	self.t = Trigger()
 	self.text_data = text_data
 	self.text_tags = text_tags
 	self.white = Color(1, 1, 1, 1)
+	self.vertical_alignment = (args and args.vertical_alignment) or "middle"
 	self:set_text(text_data)
 	return self
 end
@@ -92,7 +93,9 @@ function Text:draw(x, y, r, sx, sy)
 				end
 			end
 			graphics.push(x, y, r, sx, sy)
-			graphics.print(c.character, line.font, x + c.x - self.w / 2, y + c.y - self.h / 2, c.r or 0, c.sx or 1, c.sy or c.sx or 1, c.ox or 0, c.oy or 0)
+			local y_offset = (self.vertical_alignment == "top") and 0 or (self.h / 2)
+			-- graphics.print(c.character, line.font, x + c.x - self.w / 2, y + c.y - self.h / 2, c.r or 0,
+			graphics.print(c.character, line.font, x + c.x - self.w / 2, y + c.y - y_offset, c.r or 0, c.sx or 1, c.sy or c.sx or 1, c.ox or 0, c.oy or 0)
 			graphics.pop()
 			graphics.set_color(self.white)
 		end
@@ -124,6 +127,7 @@ function Text:format_text()
 		x = 0
 	end
 	self.h = y
+	self.line_height = self.h / #self.lines
 
 	for i, line in ipairs(self.lines) do
 		if line.alignment == "right" then
@@ -158,7 +162,7 @@ function Text:format_text()
 			end
 			local added_width_to_each_space = math.floor(left_over_width / spaces_count)
 			local total_added_width = 0
-			for _, c in ipairs(characters) do
+			for _, c in ipairs(line.characters) do
 				if c.character == " " then
 					c.x = c.x + added_width_to_each_space
 					total_added_width = total_added_width + added_width_to_each_space
@@ -171,6 +175,70 @@ function Text:format_text()
 end
 
 function Text:parse(text_data)
+	-- local processed = {} -- hybrid word/character wrapping
+	-- for _, line in ipairs(text_data) do
+	-- 	if line.wrap then
+	-- 		local font, wrap = line.front, line.wrap
+	-- 		local current, w = "", 0
+	-- 		local tag = line.text:match("%[(.-)%]")
+	-- 		local rest_of_line = line.text:gsub("^%[.-%]%s*", "") -- removes it and any following space
+	-- 		print(tag, "rest: ", rest_of_line)
+	-- 		for word in line.text:gmatch("%S+") do
+	-- 			print("words:", word)
+	-- 		end
+	-- 	end
+	-- end
+
+	for _, line in ipairs(text_data) do
+		if line.wrap and line.font then
+			local font, wrap = line.font, line.wrap
+			local current, w = "", 0
+			for word in line.text:gmatch("%S+") do
+				local ww = font:get_text_width(word .. " ")
+				if ww > wrap then -- per character
+					for i = 1, #word do
+						local c = word:sub(i, i)
+						local cw = font:get_text_width(c)
+						if w + cw > wrap and current ~= "" then
+							table.insert(processed, {
+								text = current,
+								font = font,
+								alignment = line.alignment,
+								alignment_width = line.alignment_width,
+								wrap = wrap,
+							})
+							current, w = c, cw
+						else
+							current, w = current .. c, w + cw
+						end
+					end
+					current, w = current .. " ", w + font:get_text_width(" ")
+				elseif w + ww > wrap and current ~= "" then -- per word
+					table.insert(processed, {
+						text = current,
+						font = font,
+						alignment = line.alignment,
+						alignment_width = line.alignment_width,
+						wrap = wrap,
+					})
+					current, w = word .. " ", ww
+				else
+					current, w = current .. word .. " ", w + ww
+				end
+			end
+			table.insert(processed, {
+				text = current,
+				font = font,
+				alignment = line.alignment,
+				alignment_width = line.alignment_width,
+				wrap = wrap,
+			})
+		else
+			table.insert(processed, line)
+		end
+	end
+	text_data = processed
+
 	for _, line in ipairs(text_data) do
 		local tags = {}
 		for i, tags_text, j in line.text:gmatch("()%[(.-)%]()") do
