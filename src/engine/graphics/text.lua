@@ -95,7 +95,8 @@ function Text:draw(x, y, r, sx, sy)
 			graphics.push(x, y, r, sx, sy)
 			local y_offset = (self.vertical_alignment == "top") and 0 or (self.h / 2)
 			-- graphics.print(c.character, line.font, x + c.x - self.w / 2, y + c.y - self.h / 2, c.r or 0,
-			graphics.print(c.character, line.font, x + c.x - self.w / 2, y + c.y - y_offset, c.r or 0, c.sx or 1, c.sy or c.sx or 1, c.ox or 0, c.oy or 0)
+			graphics.print(c.character, line.font, x + c.x - self.w / 2, y + c.y - y_offset, c.r or 0,
+				c.sx or 1, c.sy or c.sx or 1, c.ox or 0, c.oy or 0)
 			graphics.pop()
 			graphics.set_color(self.white)
 		end
@@ -175,7 +176,7 @@ function Text:format_text()
 end
 
 function Text:parse(text_data)
-	-- local processed = {} -- hybrid word/character wrapping
+	local processed = {} -- hybrid word/character wrapping
 	-- for _, line in ipairs(text_data) do
 	-- 	if line.wrap then
 	-- 		local font, wrap = line.front, line.wrap
@@ -273,7 +274,8 @@ function Text:parse(text_data)
 				end
 			end
 			if not inside_tags then
-				table.insert(line.characters, { character = c, visible = true, tags = current_tags or {} })
+				table.insert(line.characters,
+					{ character = c, visible = true, tags = current_tags or {} })
 			end
 		end
 	end

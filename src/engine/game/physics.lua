@@ -148,6 +148,12 @@ function Physics:set_as_triangle(w, h, body_type, tag)
 	return self
 end
 
+function Physics:set_trigger(is_trigger)
+	if self.fixture then
+		self.fixture:setSensor(is_trigger)
+	end
+end
+
 function Physics:change_circle_radius(new_rs)
 	if not self.body then
 		error("Physics body not initialized.")
@@ -498,6 +504,15 @@ function Physics:set_friction(v)
 		end
 	end
 	return self
+end
+
+function Physics:get_friction()
+	if self.fixture then
+		return self.fixture:getFriction()
+	elseif self.fixtures then
+		-- if there are multiple fixtures, return the first one's value
+		return self.fixtures[1] and self.fixtures[1]:getFriction() or nil
+	end
 end
 
 -- Applies an instantaneous amount of force to the object

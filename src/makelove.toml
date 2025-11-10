@@ -1,7 +1,8 @@
-name = "bob" # WARN: also change for setup_web_build
+name = "gamemusicjam-2025" # WARN: also change for setup_web_build
 
-default_targets = ["win32", "win64", "appimage", "lovejs", "macos"]
-# default_targets = [ "lovejs"]
+default_targets = ["win32", "win64", "appimage", "lovejs", "macos"] #full
+# default_targets = ["win32", "win64", "appimage", "macos"] #everything but web
+# default_targets = [ "lovejs"] # web only
 build_directory = "../build"
 # icon_file "./assets/images/icon.png"
 
@@ -21,8 +22,8 @@ postbuild = [
 	# {build_directory} and {version} will be replaced
 	# This is obviously only for illustrative purposes, you will probaly want to wrap this in a script
 	# "butler push {build_directory}/win32/SuperGame-win32.zip pfirsich/supergame:win32 --userversion {version}",
-	"./setup_web_build.sh bob", # WARN: arg needs to be {name} -AND- uses hardcoded 'build_directory'
-	# "./push.sh"
+	"./setup_web_build.sh gamemusicjam-2025", # WARN: arg needs to be {name} -AND- uses hardcoded 'build_directory'
+	"./push.sh"
 ]
 
 [hooks.parameters]

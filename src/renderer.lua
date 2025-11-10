@@ -416,6 +416,20 @@ global_text_tags = {
 		end,
 	}),
 
+	cbyc_fast = TextTag({
+		init = function(c, i, text)
+			c.color = invisible
+			text.t:after((i - 1) * 0.05, function()
+				c.color = red[0]
+				camera:shake(3, 0.075)
+				buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+			end)
+		end,
+		draw = function(c, i, text)
+			graphics.set_color(c.color)
+		end,
+	}),
+
 	cbyc2 = TextTag({
 		init = function(c, i, text)
 			c.color = invisible
@@ -594,6 +608,68 @@ end
 --
 --
 --
+Animation = Object:extend()
+Animation:implement(GameObject)
+function Animation:init(args)
+	self:init_game_object(args)
+
+	self.sprite_sheet = args.sprite_sheet
+	self.frame_width = args.frame_width
+	self.frame_height = args.frame_height
+	self.animation_speed = args.speed or 0.1
+
+	self.frame_time = 0
+	self.frame_counter = 1
+
+	local image_w, image_h = self.sprite_sheet.w, self.sprite_sheet.h
+	self.frames = {}
+	for y = 0, image_h - self.frame_height, self.frame_height do
+		for x = 0, image_w - self.frame_width, self.frame_width do
+			local quad = love.graphics.newQuad(x, y, self.frame_width, self.frame_height, image_w, image_h)
+			table.insert(self.frames, quad)
+		end
+	end
+
+	self.num_frames = #self.frames
+end
+
+function Animation:update(dt)
+	self.frame_time = self.frame_time + dt
+	if self.frame_time > self.animation_speed then
+		self.frame_time = self.frame_time % self.animation_speed
+		self.frame_counter = self.frame_counter + 1
+		if self.frame_counter > self.num_frames then
+			if self.stop_on_finish then
+				self.frame_counter = self.num_frames
+			else
+				self.frame_counter = 1
+			end
+		end
+	end
+end
+
+function Animation:draw(x, y, r, sx, sy, ox, oy, color)
+	local frame = self.frames[self.frame_counter]
+	local _r, g, b, a
+	if color then
+		_r, g, b, a = love.graphics.getColor()
+		graphics.set_color(color)
+	end
+	love.graphics.draw(
+		self.sprite_sheet.image,
+		frame,
+		x - self.center_x * sx,
+		y - self.center_y * sy,
+		r or 0,
+		sx or 1,
+		sy or sx or 1,
+		self.frame_width / 2 + (ox or 0),
+		self.frame_height / 2 + (oy or 0)
+	)
+	if color then
+		love.graphics.setColor(_r, g, b, a)
+	end
+end
 
 Text2 = Object:extend()
 Text2:implement(GameObject)

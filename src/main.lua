@@ -5,6 +5,7 @@ require("renderer")
 
 require("player")
 require("wall")
+require("runner")
 
 -- on linux, state is at: ~/.local/share/{love, project_name}/state.txt
 function init()
@@ -69,6 +70,7 @@ function init()
 
 	music_songs = {
 		main = { "song1", "song2", "song3", "song4", "song5" },
+		game = { "song1", "song2", "song3", "song4", "song5" },
 		paused = { "pause_song1", "pause_song2", "pause_song3" },
 		options = { "pause_song1", "pause_song2", "pause_song3" },
 		credits = { "pause_song1", "pause_song2", "pause_song3" },
@@ -77,9 +79,27 @@ function init()
 	-- load images:
 	wall_arrow_particle = Image("wall_arrow_particle")
 	-- wall_arrow_particle = Image("icon")
+	local is_path = true
+	knight_sprites = {
+		hitbox_width = 15,
+		hitbox_height = 35,
+
+		hitbox_center_x = -5,
+		hitbox_center_y = 22,
+
+		frame_width = 120,
+		frame_height = 80,
+		animation_speed = 0.07,
+		sprite_sheets = {
+			-- https://aamatniekss.itch.io/fantasy-knight-free-pixelart-animated-character by: aamatniekss
+			idle = Image("assets/images/knight/Colour1/Outline/120x80_PNGSheets/_Idle.png", is_path),
+			run = Image("assets/images/knight/Colour1/Outline/120x80_PNGSheets/_Run.png", is_path),
+			jump = Image("assets/images/knight/Colour1/Outline/120x80_PNGSheets/_Jump.png", is_path),
+			dead = Image("assets/images/knight/Colour1/Outline/120x80_PNGSheets/_DeathNoMovement.png", is_path),
+		},
+	}
 
 	-- set logic init
-	-- main_song_instance = _G[random:table({ "song1", "song2", "song3", "song4", "song5" })]:play({ volume = 0.3 })
 	slow_amount = 1
 	music_slow_amount = 1
 	run_time = 0
@@ -92,6 +112,7 @@ function init()
 		KeyBinding = 4,
 		Win = 5,
 		Loss = 6,
+		Game = 7,
 
 		Test = 10,
 	}
@@ -142,7 +163,7 @@ function love.run()
 	global_game_height = 270 * global_game_scale
 
 	return engine_run({
-		game_name = "Bob",
+		game_name = "Game/Music Jam 2025",
 		window_width = "max",
 		window_height = "max",
 	})
@@ -696,37 +717,45 @@ function pause_game(self)
 			})
 		)
 
-		self.creator_button = collect_into(
+		self.restart_button = collect_into(
 			self.paused_ui_elements,
 			Button({
 				group = ui_group,
 				x = gw / 2,
 				y = gh / 2 + 60 * global_game_scale,
 				force_update = true,
-				button_text = "creator",
+				button_text = "restart",
 				fg_color = "bg",
-				bg_color = "green",
+				bg_color = "orange",
 				action = function()
-					play_level(self, { creator_mode = true, level_path = main.current:is(Game) and main.current.level_path or "" })
+					play_level(self, {
+						creator_mode = false,
+						level_folder = main.current:is(Game) and main.current.level_folder or "",
+					})
 				end,
 			})
 		)
-
-		-- self.restart_button = collect_into(
-		-- 	self.paused_ui_elements,
-		-- 	Button({
-		-- 		group = ui_group,
-		-- 		x = gw / 2,
-		-- 		y = gh / 2 + 80 * global_game_scale,
-		-- 		force_update = true,
-		-- 		button_text = "restart",
-		-- 		fg_color = "bg",
-		-- 		bg_color = "orange",
-		-- 		action = function()
-		-- 			play_level(self)
-		-- 		end,
-		-- 	})
-		-- )
+		if love.filesystem.isFused() == false and not web then
+			self.creator_button = collect_into(
+				self.paused_ui_elements,
+				Button({
+					group = ui_group,
+					x = gw / 2,
+					y = gh / 2 + 80 * global_game_scale,
+					force_update = true,
+					button_text = "creator",
+					fg_color = "bg",
+					bg_color = "green",
+					action = function()
+						close_options(self) -- fix music cuz this option is only available in options
+						play_level(self, {
+							creator_mode = true,
+							level_folder = main.current:is(Game) and main.current.level_folder or "",
+						})
+					end,
+				})
+			)
+		end
 
 		for _, v in pairs(self.paused_ui_elements) do
 			-- v.group = ui_group
@@ -1057,9 +1086,6 @@ function scene_transition(self, x_pos, y_pos, addition, go_to, text_args)
 end
 
 function play_music(args)
-	if true then
-		return
-	end
 	--[[
 	Overview:
 	1. Check the topmost layer with music (layer_has_music == true)
@@ -1114,9 +1140,6 @@ function play_music(args)
 end
 
 function stop_current_music()
-	if true then
-		return
-	end
 	if main.ui_layer_stack:peek().music ~= nil then
 		main.ui_layer_stack:peek().music:stop()
 	end

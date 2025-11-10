@@ -174,9 +174,9 @@ function engine_run(config)
 				elseif name == "mousereleased" then
 					input.mouse_state[input.mouse_buttons[c]] = false
 				elseif name == "wheelmoved" then
-					if b == 1 then
+					if b > 0 then
 						input.mouse_state.wheel_up = true
-					elseif b == -1 then
+					elseif b < 0 then
 						input.mouse_state.wheel_down = true
 					end
 				elseif name == "gamepadpressed" then

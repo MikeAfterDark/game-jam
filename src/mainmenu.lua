@@ -40,8 +40,7 @@ function MainMenu:on_enter(from, args)
 
 	self.camera_positions = {
 		Title = { x = gw / 2, y = gh * 0.5 },
-		Map_Packs = { x = gw / 2, y = gh * 1.5 },
-		Levels = { x = gw / 2, y = gh * 2.5 },
+		Levels = { x = gw / 2, y = gh * 1.5 },
 	}
 	self:setup_title_menu()
 
@@ -49,7 +48,7 @@ function MainMenu:on_enter(from, args)
 		if args.menu_mode == menu.Map_Packs then
 			self:setup_map_pack_menu()
 		elseif args.menu_mode == menu.Levels then
-			local pack = self:get_reloaded_pack(args.pack)
+			local pack = self:get_pack_from_path(args.pack.path)
 			self:setup_level_menu(pack)
 		end
 		self:set_ui_to(args.menu_mode)
@@ -72,11 +71,6 @@ function MainMenu:on_exit()
 end
 
 function MainMenu:update(dt)
-	-- if camera.y ~= self.camera_positions[self.current_menu].y and not self.in_menu_transition then
-	-- 	counter = counter and (counter + 1) or 0
-	-- 	print(counter)
-	-- end
-
 	play_music({ volume = 0.3 })
 
 	if input.escape.pressed then
@@ -103,10 +97,6 @@ function MainMenu:update(dt)
 	self.keybinding_ui:update(dt * slow_amount)
 
 	self.credits:update(dt)
-	-- if camera.y ~= self.camera_positions[self.current_menu].y and not self.in_menu_transition then
-	-- 	local pos = self.camera_positions[self.current_menu]
-	-- 	camera.x, camera.y, camera.r = pos.x, pos.y, 0
-	-- end
 end
 
 function MainMenu:draw()
@@ -131,7 +121,7 @@ function MainMenu:draw()
 end
 
 function MainMenu:setup_title_menu()
-	print("setting up title")
+	-- print("setting up title")
 	local ui_layer = ui_interaction_layer.Main
 	local ui_group = self.main_menu_ui
 
@@ -143,7 +133,7 @@ function MainMenu:setup_title_menu()
 			y = gh * 0.05,
 			lines = {
 				{
-					text = "[wavy_mid, fg]beep boop",
+					text = "[wavy_mid, fg]Game/Music Jam 2025!!",
 					font = pixul_font,
 					alignment = "center",
 				},
@@ -179,9 +169,9 @@ function MainMenu:setup_title_menu()
 			fg_color = "bg",
 			bg_color = "green",
 			action = function(b)
-				self:setup_map_pack_menu()
-				self:set_ui_to(menu.Map_Packs)
-				-- play_level(self)
+				local pack = self:get_pack_from_path("dev_maps/levels/")
+				self:setup_level_menu(pack)
+				self:set_ui_to(menu.Levels)
 			end,
 		})
 	)
@@ -232,7 +222,7 @@ function MainMenu:setup_title_menu()
 end
 
 function MainMenu:setup_map_pack_menu()
-	print("setting up map packs")
+	-- print("setting up map packs")
 	local ui_layer = ui_interaction_layer.Main
 	local ui_group = self.main_menu_ui
 	local ui_elements = self.main_ui_elements
@@ -242,8 +232,6 @@ function MainMenu:setup_map_pack_menu()
 	-- check ./maps for custom maps
 	local map_metadata = self:load_packs_metadata()
 	local y_offset = self.camera_positions.Map_Packs.y - gh / 2
-
-	counter = counter and (counter + 1) or 0
 
 	for i, pack in ipairs(map_metadata) do
 		collect_into(
@@ -257,7 +245,7 @@ function MainMenu:setup_map_pack_menu()
 				h = gw * 0.1,
 				force_update = true,
 				image_path = pack.path .. "pack_img.png",
-				title_text = pack.name .. counter,
+				title_text = pack.name,
 				fg_color = "bg",
 				bg_color = "fg",
 				action = function()
@@ -315,7 +303,7 @@ function MainMenu:setup_map_pack_menu()
 end
 
 function MainMenu:setup_level_menu(pack)
-	print("setting up levels, pack:")
+	-- print("setting up levels, pack:")
 
 	if type(pack.levels) ~= "table" then
 		print("pack.levels is not a table! Got: " .. tostring(pack.levels))
@@ -353,16 +341,16 @@ function MainMenu:setup_level_menu(pack)
 				h = scale,
 				force_update = true,
 				image_path = path .. "/level_img.png",
-				title_text = level.name .. counter,
+				title_text = level.name,
 				fg_color = "white",
 				bg_color = "bg",
 				action = function()
-					print("loading level: " .. path .. "/path.lua")
+					-- print("loading level: " .. path .. "/path.lua")
 					play_level(self, {
 						creator_mode = false,
 						level = i,
 						pack = pack,
-						level_path = level.path,
+						level_folder = level.path,
 					})
 				end,
 			})
@@ -405,26 +393,25 @@ function MainMenu:setup_level_menu(pack)
 		)
 	end
 
-	if not self.back_to_map_packs_button then
-		self.back_to_map_packs_button = collect_into(
+	if not self.back_button then
+		self.back_button = collect_into(
 			ui_elements,
 			Button({
 				group = ui_group,
 				x = gw / 2,
 				y = gh * 0.05 + y_offset,
 				force_update = true,
-				button_text = "back to packs",
+				button_text = "back to title",
 				fg_color = "bg",
 				bg_color = "fg",
 				action = function()
-					self:setup_map_pack_menu() -- NOTE: debatable if this is needed, forces a reload of map packs
-					self:set_ui_to(menu.Map_Packs)
+					self:set_ui_to(menu.Title)
 				end,
 			})
 		)
 	end
 
-	if not self.new_level_button then
+	if not self.new_level_button and love.filesystem.isFused() == false and not web then
 		self.new_level_button = collect_into(
 			ui_elements,
 			Button({
@@ -443,7 +430,7 @@ function MainMenu:setup_level_menu(pack)
 						creator_mode = true,
 						level = level,
 						pack = pack,
-						level_path = path,
+						level_folder = path,
 					})
 				end,
 			})
@@ -555,15 +542,14 @@ function MainMenu:load_dev_packs()
 	return packs
 end
 
-function MainMenu:get_reloaded_pack(pack)
+function MainMenu:get_pack_from_path(path)
 	local fs = love.filesystem
-	local path = pack.path
 	if not path:match("/$") then
 		path = path .. "/"
 	end
 
 	local meta_path = path .. "metadata.lua"
-	print("reloading: ", meta_path)
+	-- print("reloading: ", meta_path)
 
 	-- load metadata
 	local chunk, load_err = fs.load(meta_path)
@@ -582,14 +568,8 @@ function MainMenu:get_reloaded_pack(pack)
 	return metadata
 end
 
-function MainMenu:add_level_to_metadata(pack, name, level_path)
-	local metadata_path = pack.path .. "metadata.lua"
-
-	print("meta path: ", metadata_path)
-end
-
 function MainMenu:create_new_map_pack(is_dev)
-	print("is dev: ", is_dev)
+	-- print("is dev: ", is_dev)
 end
 
 function MainMenu:load_custom_packs()

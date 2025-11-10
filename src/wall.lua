@@ -1,141 +1,157 @@
 wall_type = {
-	Sticky = {
-		name = "Sticky",
-		color = "green",
-
-		_particle_drip_settings = {
-			spawn_rate = 0.5,
-			lifetime = 1.1,
-			speed_min = 00,
-			speed_max = 00,
-			spread = 0.0,
-			gravity = 50,
-			radius_min = 5,
-			radius_max = 7,
-		},
-
-		_particle_impact_settings = {
-			count = 12,
-			lifetime = 0.5,
-			speed_min = 150,
-			speed_max = 200,
-			spread = 1,
-			gravity = 600,
-			radius_min = 6,
-			radius_max = 6,
-		},
-
+	Stone = {
+		name = "Stone",
+		color = "fg",
 		collision_behavior = function(other, contact, self)
-			local normal = Vector(contact:getNormal())
-			local pos = Vector(contact:getPositions())
-
-			other:set_velocity(0, 0)
-
-			self._particles = self._particles or {}
-			local settings = self.type._particle_impact_settings
-
-			for i = 1, settings.count do
-				local angle = normal:angle() + (math.random() - 0.5) * settings.spread
-				local speed = math.random(settings.speed_min, settings.speed_max)
-				local dx = math.cos(angle) * speed
-				local dy = math.sin(angle) * speed
-
-				table.insert(self._particles, {
-					pos = pos:clone(),
-					dx = dx,
-					dy = dy,
-					lifetime = settings.lifetime,
-					spawn_time = love.timer.getTime(),
-					radius = math.random(settings.radius_min, settings.radius_max),
-					from_impact = true,
-				})
-			end
+			other.state = Runner_State.Run
 		end,
+		collision_exit = function(other, contact, self) end,
 		draw = function(self)
 			self.shape:draw(self.color, 10)
-
-			self._particles = self._particles or {}
-			local drip_settings = self.type._particle_drip_settings
-			local now = love.timer.getTime()
-			local dt = love.timer.getDelta()
-			local verts = self.shape.vertices
-
-			local spawn_rate = drip_settings.spawn_rate
-			for i = 1, #verts - 3, 2 do
-				local x1, y1 = verts[i], verts[i + 1]
-				local x2, y2 = verts[i + 2], verts[i + 3]
-
-				local dx, dy = x2 - x1, y2 - y1
-				local seg_len = math.sqrt(dx * dx + dy * dy)
-				local seg_spawn_chance = (spawn_rate * seg_len / 100) * dt
-
-				if math.random() < seg_spawn_chance then
-					local t = math.random()
-					local sx = x1 + dx * t
-					local sy = y1 + dy * t
-
-					local angle = math.pi / 2 + (math.random() - 0.5) * drip_settings.spread
-					local speed = math.random(drip_settings.speed_min, drip_settings.speed_max)
-
-					table.insert(self._particles, {
-						pos = Vector(sx, sy),
-						dx = math.cos(angle) * speed,
-						dy = math.sin(angle) * speed,
-						radius = math.random(drip_settings.radius_min, drip_settings.radius_max),
-						spawn_time = now,
-						lifetime = drip_settings.lifetime,
-						from_impact = false,
-					})
-				end
-			end
-
-			for i = #self._particles, 1, -1 do
-				local p = self._particles[i]
-				local age = now - p.spawn_time
-				local settings = p.from_impact and self.type._particle_impact_settings or drip_settings
-
-				if age > p.lifetime then
-					table.remove(self._particles, i)
-				else
-					local t = age / p.lifetime
-					local fade_in = math.cubic_out(math.min(t * 2, 1))
-					local fade_out = math.cubic_out(1 - t)
-					local alpha = fade_in * fade_out
-
-					p.dy = p.dy + settings.gravity * dt
-					p.pos.x = p.pos.x + p.dx * dt
-					p.pos.y = p.pos.y + p.dy * dt
-
-					local color = _G[self.type.color][0]:clone()
-					color.a = color.a * alpha
-
-					graphics.circle(p.pos.x, p.pos.y, p.radius, color)
-				end
-			end
 		end,
 	},
+	-- Sticky = {
+	-- 	name = "Sticky",
+	-- 	color = "green",
+	--
+	-- 	_particle_drip_settings = {
+	-- 		spawn_rate = 0.5,
+	-- 		lifetime = 1.1,
+	-- 		speed_min = 00,
+	-- 		speed_max = 00,
+	-- 		spread = 0.0,
+	-- 		gravity = 50,
+	-- 		radius_min = 5,
+	-- 		radius_max = 7,
+	-- 	},
+	--
+	-- 	_particle_impact_settings = {
+	-- 		count = 12,
+	-- 		lifetime = 0.5,
+	-- 		speed_min = 150,
+	-- 		speed_max = 200,
+	-- 		spread = 1,
+	-- 		gravity = 600,
+	-- 		radius_min = 6,
+	-- 		radius_max = 6,
+	-- 	},
+	--
+	-- 	collision_behavior = function(other, contact, self)
+	-- 		local normal = Vector(contact:getNormal())
+	-- 		local pos = Vector(contact:getPositions())
+	--
+	-- 		other:set_velocity(0, 0)
+	--
+	-- 		self._particles = self._particles or {}
+	-- 		local settings = self.type._particle_impact_settings
+	--
+	-- 		for i = 1, settings.count do
+	-- 			local angle = normal:angle() + (math.random() - 0.5) * settings.spread
+	-- 			local speed = math.random(settings.speed_min, settings.speed_max)
+	-- 			local dx = math.cos(angle) * speed
+	-- 			local dy = math.sin(angle) * speed
+	--
+	-- 			table.insert(self._particles, {
+	-- 				pos = pos:clone(),
+	-- 				dx = dx,
+	-- 				dy = dy,
+	-- 				lifetime = settings.lifetime,
+	-- 				spawn_time = love.timer.getTime(),
+	-- 				radius = math.random(settings.radius_min, settings.radius_max),
+	-- 				from_impact = true,
+	-- 			})
+	-- 		end
+	-- 	end,
+	-- 	draw = function(self)
+	-- 		self.shape:draw(self.color, 10)
+	--
+	-- 		self._particles = self._particles or {}
+	-- 		local drip_settings = self.type._particle_drip_settings
+	-- 		local now = love.timer.getTime()
+	-- 		local dt = love.timer.getDelta()
+	-- 		local verts = self.shape.vertices
+	--
+	-- 		local spawn_rate = drip_settings.spawn_rate
+	-- 		for i = 1, #verts - 3, 2 do
+	-- 			local x1, y1 = verts[i], verts[i + 1]
+	-- 			local x2, y2 = verts[i + 2], verts[i + 3]
+	--
+	-- 			local dx, dy = x2 - x1, y2 - y1
+	-- 			local seg_len = math.sqrt(dx * dx + dy * dy)
+	-- 			local seg_spawn_chance = (spawn_rate * seg_len / 100) * dt
+	--
+	-- 			if math.random() < seg_spawn_chance then
+	-- 				local t = math.random()
+	-- 				local sx = x1 + dx * t
+	-- 				local sy = y1 + dy * t
+	--
+	-- 				local angle = math.pi / 2 + (math.random() - 0.5) * drip_settings.spread
+	-- 				local speed = math.random(drip_settings.speed_min, drip_settings.speed_max)
+	--
+	-- 				table.insert(self._particles, {
+	-- 					pos = Vector(sx, sy),
+	-- 					dx = math.cos(angle) * speed,
+	-- 					dy = math.sin(angle) * speed,
+	-- 					radius = math.random(drip_settings.radius_min, drip_settings.radius_max),
+	-- 					spawn_time = now,
+	-- 					lifetime = drip_settings.lifetime,
+	-- 					from_impact = false,
+	-- 				})
+	-- 			end
+	-- 		end
+	--
+	-- 		for i = #self._particles, 1, -1 do
+	-- 			local p = self._particles[i]
+	-- 			local age = now - p.spawn_time
+	-- 			local settings = p.from_impact and self.type._particle_impact_settings or drip_settings
+	--
+	-- 			if age > p.lifetime then
+	-- 				table.remove(self._particles, i)
+	-- 			else
+	-- 				local t = age / p.lifetime
+	-- 				local fade_in = math.cubic_out(math.min(t * 2, 1))
+	-- 				local fade_out = math.cubic_out(1 - t)
+	-- 				local alpha = fade_in * fade_out
+	--
+	-- 				p.dy = p.dy + settings.gravity * dt
+	-- 				p.pos.x = p.pos.x + p.dx * dt
+	-- 				p.pos.y = p.pos.y + p.dy * dt
+	--
+	-- 				local color = _G[self.type.color][0]:clone()
+	-- 				color.a = color.a * alpha
+	--
+	-- 				graphics.circle(p.pos.x, p.pos.y, p.radius, color)
+	-- 			end
+	-- 		end
+	-- 	end,
+	-- },
 	Icy = {
 		name = "Icy",
 		color = "blue",
-		collision_behavior = function(other, contact)
+		collision_behavior = function(other, contact, self)
 			local normal = Vector(contact:getNormal())
-			local velocity = Vector(other:get_velocity())
+			local vx, vy = other:get_velocity()
 
-			local dir = velocity:normalize()
+			local dir = Vector(vx, vy):normalize()
 			local dot = dir:dot(normal)
 
-			if dot < -0.99 then
-				other:set_velocity(0, 0)
-				return
-			end
+			other.state = Runner_State.Slide
+			other:set_friction(0)
+			other.icy_velocity = vx -- try reapply velocity to avoid stoppage
 
-			local t1 = Vector(-normal.y, normal.x)
-			local t2 = Vector(normal.y, -normal.x)
-			local new_dir = (dir:dot(t1) > dir:dot(t2)) and t1 or t2
-			new_dir = new_dir:scale(other.speed)
-
-			other:set_velocity(new_dir:unpack())
+			-- if dot < -0.99 then
+			-- 	other:set_velocity(0, 0)
+			-- 	return
+			-- end
+			--
+			-- local t1 = Vector(-normal.y, normal.x)
+			-- local t2 = Vector(normal.y, -normal.x)
+			-- local new_dir = (dir:dot(t1) > dir:dot(t2)) and t1 or t2
+			-- new_dir = new_dir:scale(other.speed)
+			--
+			-- other:set_velocity(new_dir:unpack())
 		end,
+		collision_exit = function(other, contact, self) end,
 		draw = function(self)
 			self.shape:draw(self.color, 10)
 
@@ -199,9 +215,9 @@ wall_type = {
 		color = "purple",
 		collision_behavior = function(other, contact, self)
 			local normal = Vector(contact:getNormal())
-			local velocity = Vector(other:get_velocity()):normalize():scale(other.speed)
+			local velocity = Vector(other:get_velocity()) --:normalize():scale(other.speed)
 
-			local reflection = velocity:sub(normal:scale(2 * (velocity:dot(normal))))
+			local reflection = (velocity:sub(normal:scale(2 * (velocity:dot(normal))))):scale(1)
 			other:set_velocity(reflection:unpack())
 
 			self.last_bounce = love.timer.getTime()
@@ -244,42 +260,42 @@ wall_type = {
 			end
 		end,
 	},
-	Clone = {
-		name = "Clone",
-		color = "yellow2",
-		collision_behavior = function(other, contact, self)
-			other:set_velocity(0, 0)
-			if self.already_cloned then
-				return
-			end
-
-			self.already_cloned = true
-			self.color = fg_alt[0]
-			self.init_color = fg_alt[0]
-
-			local normal = Vector(contact:getNormal())
-			local position = Vector(contact:getPositions())
-			local x, y = position:sub(normal:scale(other.size + 1)):unpack()
-
-			main.current.spawn = { -- goes to game.lua to be spawned on next update iteration
-				x = x,
-				y = y,
-				vx = 0,
-				vy = 0,
-				size = other.size,
-				color = other.color,
-				speed = other.speed,
-				init_wall_normal = Vector(contact:getNormal()):scale(-1),
-			}
-		end,
-		draw = function(self)
-			local time = love.timer.getTime()
-			local pulse = 0.5 + 0.5 * math.sin(time * 3)
-			local outline_color = self.color:clone()
-			outline_color.a = 0.5 + 0.5 * pulse
-			self.shape:draw(outline_color, 10 + pulse * 3)
-		end,
-	},
+	-- Clone = {
+	-- 	name = "Clone",
+	-- 	color = "yellow2",
+	-- 	collision_behavior = function(other, contact, self)
+	-- 		other:set_velocity(0, 0)
+	-- 		if self.already_cloned then
+	-- 			return
+	-- 		end
+	--
+	-- 		self.already_cloned = true
+	-- 		self.color = fg_alt[0]
+	-- 		self.init_color = fg_alt[0]
+	--
+	-- 		local normal = Vector(contact:getNormal())
+	-- 		local position = Vector(contact:getPositions())
+	-- 		local x, y = position:sub(normal:scale(other.size + 1)):unpack()
+	--
+	-- 		main.current.spawn = { -- goes to game.lua to be spawned on next update iteration
+	-- 			x = x,
+	-- 			y = y,
+	-- 			vx = 0,
+	-- 			vy = 0,
+	-- 			size = other.size,
+	-- 			color = other.color,
+	-- 			speed = other.speed,
+	-- 			init_wall_normal = Vector(contact:getNormal()):scale(-1),
+	-- 		}
+	-- 	end,
+	-- 	draw = function(self)
+	-- 		local time = love.timer.getTime()
+	-- 		local pulse = 0.5 + 0.5 * math.sin(time * 3)
+	-- 		local outline_color = self.color:clone()
+	-- 		outline_color.a = 0.5 + 0.5 * pulse
+	-- 		self.shape:draw(outline_color, 10 + pulse * 3)
+	-- 	end,
+	-- },
 	Shrink = {
 		name = "Shrink",
 		color = "orange1",
@@ -289,10 +305,13 @@ wall_type = {
 				return
 			end
 
+			other.state = Runner_State.Run
 			local scale = 8
 			other.size_change = other.size - scale
 			other:set_velocity(0, 0)
 		end,
+
+		collision_exit = function(other, contact, self) end,
 		draw = function(self)
 			self.shape:draw(self.color, 10)
 
@@ -384,6 +403,7 @@ wall_type = {
 				return
 			end
 
+			other.state = Runner_State.Run
 			local scale = 8
 			other.size_change = other.size + scale -- triggers player to redo its physics
 		end,
@@ -453,33 +473,33 @@ wall_type = {
 			end
 		end,
 	},
-	Reverse = {
-		name = "Reverse",
-		color = "purple1",
-		collision_behavior = function(other, contact)
-			local normal = Vector(contact:getNormal())
-			local velocity = Vector(other:get_velocity())
-
-			local dir = velocity:normalize()
-			local dot = dir:dot(normal)
-
-			if dot < -0.99 then
-				other:set_velocity(0, 0)
-				return
-			end
-
-			local t1 = Vector(-normal.y, normal.x)
-			local t2 = Vector(normal.y, -normal.x)
-			local new_dir = (dir:dot(t1) > dir:dot(t2)) and t2 or t1
-			new_dir = new_dir:scale(other.speed)
-
-			other:set_velocity(new_dir:unpack())
-		end,
-		draw = function(self)
-			self.shape:draw(_G["white"][0], 12)
-			self.shape:draw(self.color, 10)
-		end,
-	},
+	-- Reverse = {
+	-- 	name = "Reverse",
+	-- 	color = "purple1",
+	-- 	collision_behavior = function(other, contact)
+	-- 		local normal = Vector(contact:getNormal())
+	-- 		local velocity = Vector(other:get_velocity())
+	--
+	-- 		local dir = velocity:normalize()
+	-- 		local dot = dir:dot(normal)
+	--
+	-- 		if dot < -0.99 then
+	-- 			other:set_velocity(0, 0)
+	-- 			return
+	-- 		end
+	--
+	-- 		local t1 = Vector(-normal.y, normal.x)
+	-- 		local t2 = Vector(normal.y, -normal.x)
+	-- 		local new_dir = (dir:dot(t1) > dir:dot(t2)) and t2 or t1
+	-- 		new_dir = new_dir:scale(other.speed)
+	--
+	-- 		other:set_velocity(new_dir:unpack())
+	-- 	end,
+	-- 	draw = function(self)
+	-- 		self.shape:draw(_G["white"][0], 12)
+	-- 		self.shape:draw(self.color, 10)
+	-- 	end,
+	-- },
 	Checkpoint = {
 		name = "Checkpoint",
 		color = "blue1",
@@ -502,7 +522,7 @@ wall_type = {
 				num_checkpoints = self.data.order
 			end
 		end,
-		collision_behavior = function(other, contact, self)
+		trigger_behaviour = function(other, contact, self)
 			if self.collected then
 				return
 			end
@@ -559,13 +579,23 @@ wall_type = {
 		name = "Death",
 		color = "black",
 		collision_behavior = function(other, contact, self)
+			if other.state == Runner_State.Dead then
+				return
+			end
+
 			death_flash_alpha = 1.00 -- immediate flash value
 			trigger:tween(1.4, _G, { death_flash_alpha = 0 }, math.cubic_out, nil, "death_flash")
 			enemy_die1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 
-			other:set_velocity(0, 0)
-			other:spawn_player()
+			other.state = Runner_State.Dead -- go ragdoll
+			-- local _, vy = other:get_velocity()
+			-- other:set_velocity(0, vy)
 			self.spring:pull(0.01, 200, 10)
+
+			if not main.current.death_circle then -- TODO: idk if i want this tbh, maybe just some particle explosion?
+				local x, y = other.x, other.y
+				main.current.death_circle = Circle(x, y, 30)
+			end
 		end,
 		draw = function(self)
 			-- self.shape:draw(_G["red"][0], 12)
@@ -640,6 +670,46 @@ wall_type = {
 			end
 		end,
 	},
+
+	Player = {
+		name = "Player",
+		color = "yellow1",
+		init = function(other, contact, self)
+			self.obstructed = 0
+
+			-- if self.data.index is nil then
+			-- table.insert(self.data, input index) -- TODO:
+			-- bind input
+		end,
+		collision_behavior = function(other, contact, self)
+			local nx, ny = contact:getNormal()
+
+			-- if steep angle then dont change state
+			local dot = nx * 0 + ny * 1
+			-- local len = math.sqrt(nx * nx + ny * ny)
+			local cos_angle = dot -- / len
+			local max_cos = math.cos(math.rad(other.max_uphill_angle))
+
+			-- if ny < max_cos then  -- above simplifies to this
+			if cos_angle < max_cos then
+				return
+			end
+
+			other.state = Runner_State.Run
+		end,
+		trigger_behaviour = function(other, contact, self)
+			self.obstructed = self.obstructed + 1
+		end,
+		trigger_exit = function(other, contact, self)
+			self.obstructed = self.obstructed - 1
+		end,
+		draw = function(self)
+			local color = self.color:clone()
+			color.a = self.active and 1 or 0.5
+			self.shape:draw(color, 10)
+		end,
+	},
+
 	Empty = {
 		name = "Empty",
 		color = "purple",
@@ -650,17 +720,19 @@ wall_type = {
 
 -- NOTE: a shitty way for creator mode to choose a wall
 wall_type_order = {
-	"Sticky",
+	"Stone",
+	-- "Sticky",
 	"Icy",
 	"Bounce",
-	"Clone",
+	-- "Clone",
 	"Shrink",
 	"Grow",
-	"Reverse",
+	-- "Reverse",
 	"Checkpoint",
 
 	"Death",
 	"Goal",
+	"Player",
 	"Empty",
 }
 
@@ -670,6 +742,9 @@ Wall:implement(Physics)
 function Wall:init(args)
 	self:init_game_object(args)
 
+	if type(self.type) == "string" then
+		self.type = wall_type[self.type]
+	end
 	self:set_as_chain(self.loop, self.vertices, "static", (self.type and self.type.transparent) and "transparent" or "opaque")
 	self.interact_with_mouse = true
 
@@ -727,24 +802,48 @@ end
 
 function Wall:draw()
 	graphics.push(self.center_x, self.center_y, 0, self.spring.x, self.spring.y)
-	self.type.draw(self)
+	if self.type.draw then
+		self.type.draw(self)
+	else
+		print(self.type, " missing a draw function")
+	end
 	graphics.pop()
 end
 
 function Wall:on_collision_enter(other, contact)
-	if other:is(Player) then
-		self.type.collision_behavior(other, contact, self)
+	if other:is(Runner) then
+		if self.type.collision_behavior then
+			self.type.collision_behavior(other, contact, self)
+		end
+	end
+end
+
+function Wall:on_collision_exit(other, contact)
+	if other:is(Runner) then
+		if self.type.collision_exit then
+			self.type.collision_exit(other, contact, self)
+		end
 	end
 end
 
 function Wall:on_trigger_enter(other, contact)
-	if other:is(Player) then
-		self.type.collision_behavior(other, contact, self) -- WARN: maybe change to type.trigger_behaviour?
+	if other:is(Runner) then
+		if self.type.trigger_behaviour then
+			self.type.trigger_behaviour(other, contact, self)
+		end
+	end
+end
+
+function Wall:on_trigger_exit(other, contact)
+	if other:is(Runner) then
+		if self.type.trigger_exit then
+			self.type.trigger_exit(other, contact, self)
+		end
 	end
 end
 
 --
--- mouse stuffs
+-- mouse stuffs for creator_mode
 --
 function Wall:on_mouse_enter()
 	if main.current.paused or not main.current.creator_mode then

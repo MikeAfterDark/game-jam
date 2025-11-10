@@ -41,13 +41,7 @@ end
 function Player:update(dt)
 	self:update_game_object(dt)
 
-	if
-		not main.current.won
-		and not main.current.died
-		and not main.current.choosing_passives
-		and not main.current.paused
-		and not main.current.transitioning
-	then
+	if not main.current.won and not main.current.died and not main.current.paused and not main.current.transitioning then
 		if self.spawn_flag then
 			self.spawn_flag = false
 
