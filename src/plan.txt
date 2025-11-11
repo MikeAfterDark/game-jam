@@ -25,5 +25,17 @@ progress:
 - jump pill
 - 
 
+QoL:
+- fun background/music for stim screen
+
 BUGFIXING:
 - When sliding down, add gravity to runner velocity
+- RESTART BUTTON in pause menu crashes
+- COUNTDOWN for level start
+- Controls: 'reset all controls to default' button
+- Controls: "reset key'
+
+
+new game obj: stop mario from reaching flagpole
+
+

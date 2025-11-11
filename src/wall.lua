@@ -674,12 +674,23 @@ wall_type = {
 	Player = {
 		name = "Player",
 		color = "yellow1",
-		init = function(other, contact, self)
+		init = function(self)
 			self.obstructed = 0
 
-			-- if self.data.index is nil then
-			-- table.insert(self.data, input index) -- TODO:
-			-- bind input
+			if not self.data.index then
+				self.data.index = main.current.player_wall_index
+				main.current.player_wall_index = main.current.player_wall_index + 1
+			end
+
+			self.index_text = Text({
+				{
+					text = "[bg]" .. tostring(self.data and self.data.index or "nil"),
+					font = small_pixul_font,
+					alignment = "center",
+				},
+			}, global_text_tags)
+
+			self.input_action = input["wall" .. self.data.index]
 		end,
 		collision_behavior = function(other, contact, self)
 			local nx, ny = contact:getNormal()
@@ -691,22 +702,43 @@ wall_type = {
 			local max_cos = math.cos(math.rad(other.max_uphill_angle))
 
 			-- if ny < max_cos then  -- above simplifies to this
-			if cos_angle < max_cos then
+			-- if self.data.index == 3 then
+			-- 	print("angle: ", cos_angle, " > ", -max_cos, "contact: ", nx, ", ", ny)
+			-- end
+			if cos_angle > -max_cos then
 				return
 			end
 
 			other.state = Runner_State.Run
 		end,
-		trigger_behaviour = function(other, contact, self)
-			self.obstructed = self.obstructed + 1
-		end,
-		trigger_exit = function(other, contact, self)
-			self.obstructed = self.obstructed - 1
-		end,
+		-- trigger_behaviour = function(other, contact, self)
+		-- 	self.obstructed = self.obstructed + 1
+		-- end,
+		-- trigger_exit = function(other, contact, self)
+		-- 	self.obstructed = self.obstructed - 1
+		-- end,
 		draw = function(self)
 			local color = self.color:clone()
 			color.a = self.active and 1 or 0.5
 			self.shape:draw(color, 10)
+
+			if self.index_text then
+				local radius = 18
+				local color = self.collected and self.color or _G["white"][0] --self.color --_G["black"][0]
+
+				local mx1 = self.vertices[1]
+				local my1 = self.vertices[2]
+
+				local mx2 = self.vertices[#self.vertices - 1]
+				local my2 = self.vertices[#self.vertices]
+				graphics.circle(mx1, my1, radius + 4, _G["black"][0]) -- outline
+				graphics.circle(mx1, my1, radius, color)
+
+				graphics.circle(mx2, my2, radius + 4, _G["black"][0]) -- outline
+				graphics.circle(mx2, my2, radius, color)
+				self.index_text:draw(mx1 + 1, my1 + 4, 0, 1, 1)
+				self.index_text:draw(mx2 + 1, my2 + 4, 0, 1, 1)
+			end
 		end,
 	},
 
@@ -748,7 +780,8 @@ function Wall:init(args)
 	self:set_as_chain(self.loop, self.vertices, "static", (self.type and self.type.transparent) and "transparent" or "opaque")
 	self.interact_with_mouse = true
 
-	self.color = self.color or _G[self.type.color][0] or fg[0]
+	self.color = --[[  self.color or ]]
+		_G[self.type.color][0] or fg[0]
 	self.init_color = self.color
 	self.hovered_color = red[0]
 
@@ -777,8 +810,19 @@ end
 
 function Wall:update(dt)
 	self:update_game_object(dt)
-	self:check_mouse_collision()
 
+	if self.input_action then
+		if state.toggle_controls then
+			if self.input_action.pressed then
+				self.active = not self.active or false
+			end
+		else
+			self.active = (self.input_action.down or self.input_action.pressed) or false
+		end
+		self:set_trigger(not self.active)
+	end
+
+	self:check_mouse_collision()
 	if main.current.creator_mode and (self.circle_colliding_with_mouse or self.colliding_with_mouse) then
 		if input.m2.pressed then
 			self.dead = true

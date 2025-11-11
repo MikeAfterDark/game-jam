@@ -16,13 +16,23 @@ function init()
 		state.input = {}
 	end
 	controls = {
-		jump = { text = "Jump", default = { "z" }, input = state.input.jump },
+		-- jump = { text = "Jump", default = { "z" }, input = state.input.jump },
+		-- up = { text = "Up", default = { "up", "w" }, input = state.input.up },
+		-- down = { text = "Down", default = { "down", "s" }, input = state.input.down },
+		-- left = { text = "Left", default = { "left", "a" }, input = state.input.left },
+		-- right = { text = "Right", default = { "right", "d" }, input = state.input.right },
 		reset = { text = "Reset", default = { "x" }, input = state.input.reset },
-		up = { text = "Up", default = { "up", "w" }, input = state.input.up },
-		down = { text = "Down", default = { "down", "s" }, input = state.input.down },
-		left = { text = "Left", default = { "left", "a" }, input = state.input.left },
-		right = { text = "Right", default = { "right", "d" }, input = state.input.right },
+		wall1 = { text = "Wall 1", default = { "1" }, input = state.input.wall1 },
+		wall2 = { text = "Wall 2", default = { "2" }, input = state.input.wall2 },
+		wall3 = { text = "Wall 3", default = { "3" }, input = state.input.wall3 },
+		wall4 = { text = "Wall 4", default = { "4" }, input = state.input.wall4 },
+		wall5 = { text = "Wall 5", default = { "5" }, input = state.input.wall5 },
+		wall6 = { text = "Wall 6", default = { "6" }, input = state.input.wall6 },
+		wall7 = { text = "Wall 7", default = { "7" }, input = state.input.wall7 },
+		wall8 = { text = "Wall 8", default = { "8" }, input = state.input.wall8 },
+		wall9 = { text = "Wall 9", default = { "9" }, input = state.input.wall9 },
 	}
+	options_keys_display_order = { "reset", "wall1", "wall2", "wall3", "wall4", "wall5", "wall6", "wall7", "wall8", "wall9" }
 	for action, key in pairs(controls) do
 		input:bind(action, key.input or key.default)
 	end
@@ -32,6 +42,7 @@ function init()
 	local s = { tags = { sfx } }
 	buttonHover = Sound("buttonHover.ogg", s)
 	buttonPop = Sound("buttonPop.ogg", s)
+	buttonBoop = Sound("buttonBoop.ogg", s)
 
 	ui_switch1 = Sound("ui_switch1.ogg", s)
 	ui_switch2 = Sound("ui_switch2.ogg", s)
@@ -359,7 +370,9 @@ function open_options(self)
 	)
 	button_offset = button_offset + button_distance
 
-	for action, key in pairs(controls) do
+	for _, action in ipairs(options_keys_display_order) do
+		local key = controls[action]
+		-- for action, key in pairs(controls) do
 		local keys = key.input or key.default
 		local keys_string = table.concat(keys, ", ")
 
@@ -418,6 +431,25 @@ function open_options(self)
 			end,
 		})
 	)
+	button_offset = button_offset + button_distance
+
+	self.wall_toggle_controls = collect_into(
+		self.options_ui_elements,
+		Button({
+			x = column_x[column],
+			y = gh / 2 + button_offset,
+			w = gw * 0.20,
+			button_text = tostring(state.toggle_controls and "toggle walls" or "press n' hold"),
+			fg_color = "bg",
+			bg_color = "fg",
+			action = function(b)
+				ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+				state.toggle_controls = not state.toggle_controls
+				b:set_text(tostring(state.toggle_controls and "toggle walls" or "press n' hold"))
+			end,
+		})
+	)
+	button_offset = button_offset + button_distance
 
 	-- button_offset = button_offset + button_distance
 	-- self.tutorial_button = collect_into(

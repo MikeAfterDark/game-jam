@@ -88,7 +88,7 @@ end
 function Runner:update(dt)
 	self:update_game_object(dt)
 	local vx, vy = self:get_velocity()
-	self.dir = vx == 0 and self.dir or math.sign(vx)
+	self.dir = vx ~= 0 and math.sign(vx) or self.dir
 
 	local vx = 0
 	if self.state == Runner_State.Slide then

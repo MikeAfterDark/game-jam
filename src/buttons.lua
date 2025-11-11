@@ -227,26 +227,34 @@ end
 RectangleButton = ButtonBase:extend()
 function RectangleButton:init(args)
 	ButtonBase.init(self, args)
+	self.color = self.color or _G[self.bg_color][0]
 	self.shape = Rectangle(self.x, self.y, self.w, self.h)
-	self.text = --Text({ { text = "[" .. self.fg_color .. "]" .. self.title_text, font = pixul_font, alignment = "center" } }, global_text_tags)
-		Text2({
-			x = self.x,
-			y = self.y,
-			lines = {
-				{
-					text = "[" .. self.fg_color .. "]" .. self.title_text,
-					font = pixul_font,
-					wrap = self.w * 1.5,
+	if self.title_text then
+		self.text = --Text({ { text = "[" .. self.fg_color .. "]" .. self.title_text, font = pixul_font, alignment = "center" } }, global_text_tags)
+			Text2({
+				x = self.x,
+				y = self.y,
+				lines = {
+					{
+						text = "[" .. self.fg_color .. "]" .. self.title_text,
+						font = pixul_font,
+						wrap = self.w * 1.5,
+					},
 				},
-			},
-		})
+			})
+	end
 
-	self.image = love.filesystem.getInfo(self.image_path) and Image(self.image_path, true) or nil
+	if not self.no_image then
+		self.image = love.filesystem.getInfo(self.image_path) and Image(self.image_path, true) or nil
+	end
 end
 
 function RectangleButton:update(dt)
 	ButtonBase.update(self, dt)
-	self.text:update(dt)
+
+	if self.text then
+		self.text:update(dt)
+	end
 end
 
 function RectangleButton:draw()
@@ -260,7 +268,7 @@ function RectangleButton:draw()
 		4,
 		4,
 		--[[ self.selected and fg[0] or ]]
-		_G[self.bg_color][0]
+		self.color
 	)
 	local scale = 1
 	local color = _G["white"][0]
@@ -282,7 +290,9 @@ function RectangleButton:draw()
 		graphics.set_line_width(1)
 	end
 
-	self.text:draw(self.x, self.y + 5, 0, 1, 1)
+	if self.text then
+		self.text:draw(self.x, self.y + 5, 0, 1, 1)
+	end
 	graphics.pop()
 end
 

@@ -35,14 +35,17 @@ function MainMenu:on_enter(from, args)
 	menu = {
 		Title = "Title",
 		Map_Packs = "Map_Packs",
+		Stim_Screen = "Stim_Screen",
 		Levels = "Levels",
 	}
 
 	self.camera_positions = {
-		Title = { x = gw / 2, y = gh * 0.5 },
-		Levels = { x = gw / 2, y = gh * 1.5 },
+		Title = { x = gw * 0.5, y = gh * 0.5 },
+		Stim_Screen = { x = gw * 1.5, y = gh * 0.5 },
+		Levels = { x = gw * 0.5, y = gh * 1.5 },
 	}
 	self:setup_title_menu()
+	self:setup_stim_screen()
 
 	if args.menu_mode then
 		if args.menu_mode == menu.Map_Packs then
@@ -154,6 +157,22 @@ function MainMenu:setup_title_menu()
 					alignment = "center",
 				},
 			},
+		})
+	)
+
+	self.to_stim_screen_button = collect_into(
+		self.main_ui_elements,
+		Button({
+			group = ui_group,
+			x = gw * 0.91,
+			y = gh * 0.5,
+			w = gw * 0.17,
+			button_text = "[wavy_rainbow]Stim Cave :)",
+			fg_color = "fg",
+			bg_color = "black",
+			action = function(b)
+				self:set_ui_to(menu.Stim_Screen)
+			end,
 		})
 	)
 
@@ -292,6 +311,102 @@ function MainMenu:setup_map_pack_menu()
 			})
 		)
 	end
+
+	for _, v in pairs(self.main_ui_elements) do
+		-- v.group = ui_group
+		-- ui_group:add(v)
+
+		v.layer = ui_layer
+		v.force_update = true
+	end
+end
+
+function MainMenu:setup_stim_screen()
+	local ui_layer = ui_interaction_layer.Main
+	local ui_group = self.main_menu_ui
+	local x_offset = self.camera_positions.Levels.x + gw / 2
+	local ui_elements = self.main_ui_elements
+
+	local scale = gw * 0.03
+	local spacing = scale * 1.1
+	local x_start = x_offset + scale * 2
+	local y_start = scale
+
+	local num_rows = ((gh - y_start) / scale) - 3
+	local num_columns = (gw / scale) - 6
+	local function hsv_to_rgb(h, s, v)
+		local r, g, b
+
+		local i = math.floor(h * 6)
+		local f = h * 6 - i
+		local p = v * (1 - s)
+		local q = v * (1 - f * s)
+		local t = v * (1 - (1 - f) * s)
+
+		i = i % 6
+		if i == 0 then
+			r, g, b = v, t, p
+		elseif i == 1 then
+			r, g, b = q, v, p
+		elseif i == 2 then
+			r, g, b = p, v, t
+		elseif i == 3 then
+			r, g, b = p, q, v
+		elseif i == 4 then
+			r, g, b = t, p, v
+		elseif i == 5 then
+			r, g, b = v, p, q
+		end
+
+		return r, g, b
+	end
+	for i = 1, num_columns do
+		for j = 1, num_rows do
+			local u = (i - 1) / (num_columns - 1)
+			local v = (j - 1) / (num_rows - 1)
+
+			local hue = (u + v * 0.5 + 0.25 * math.sin(i * 0.1) + 0.25 * math.cos(j * 0.6)) % 1.0
+			local sat = math.min(1, 0.7 + 0.3 * math.sin((i + j * 1.5) / 2))
+			local val = math.min(1, 0.8 + 0.4 * math.sin((i * 0.8 - j * 1.2) / 3 + 1))
+
+			local r, g, b = hsv_to_rgb(hue, sat, val)
+
+			collect_into(
+				ui_elements,
+				RectangleButton({
+					group = ui_group,
+					x = x_start + i * spacing,
+					y = y_start + j * spacing,
+					w = scale,
+					h = scale,
+					force_update = true,
+					no_image = true,
+					color = Color(r, g, b, 1),
+					action = function(b)
+						b.spring:pull(0.2, 200, 10)
+						buttonBoop:play({ pitch = random:float(0.75, 3.05), volume = 0.5 })
+					end,
+				})
+			)
+		end
+	end
+
+	self.to_title_from_stim_button = collect_into(
+		ui_elements,
+		Button({
+			group = ui_group,
+			x = x_offset + gw * 0.04,
+			y = gh / 2,
+			w = gw * 0.058,
+			force_update = true,
+			button_text = "back",
+			fg_color = "bg",
+			bg_color = "fg",
+			action = function()
+				self:set_ui_to(menu.Title)
+			end,
+		})
+	)
 
 	for _, v in pairs(self.main_ui_elements) do
 		-- v.group = ui_group

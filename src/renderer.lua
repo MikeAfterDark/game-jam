@@ -87,19 +87,6 @@ function renderer_draw(draw_action)
 
 	background_canvas:draw_to(function()
 		camera:attach()
-		-- for i = 1, 32 do
-		-- 	for j = 1, 18 do
-		-- 		if j % 2 == 0 then
-		-- 			if i % 2 == 1 then
-		-- 				graphics.rectangle2(0 + (i - 1) * 22, 0 + (j - 1) * 22, 22, 22, nil, nil, bg_off)
-		-- 			end
-		-- 		else
-		-- 			if i % 2 == 0 then
-		-- 				graphics.rectangle2(0 + (i - 1) * 22, 0 + (j - 1) * 22, 22, 22, nil, nil, bg_off)
-		-- 			end
-		-- 		end
-		-- 	end
-		-- end
 		if main.current:is(Game) then
 			for i = 1, gw / grid_size do
 				for j = 1, gh / grid_size do
@@ -113,7 +100,12 @@ function renderer_draw(draw_action)
 					graphics.line(0, row, gw, row, color, line_width)
 				end
 			end
+		elseif main.current:is(MainMenu) then
+			if main.current.current_menu == menu.Stim_Screen then
+				-- TODO: rainbow background or somethigng
+			end
 		end
+
 		bg_gradient:draw(gw / 2, gh / 2, global_game_width, global_game_height)
 		bg_gradient:draw(gw / 2, gh * 1.5, global_game_width, global_game_height)
 		camera:detach()
@@ -373,7 +365,7 @@ global_text_tags = {
 	}),
 	wavy_rainbow = TextTag({
 		init = function(c, i, text)
-			c.color = white[0]
+			c.color = white[0]:clone()
 		end,
 
 		update = function(c, dt, i, text)
@@ -729,7 +721,7 @@ function Text2:draw()
 		local x = self.x
 		local base_length = 10 * global_game_scale
 		local thickness = 1.0 * global_game_scale
-		local color = white[0]
+		local color = white[0]:clone()
 
 		local y_offset = gh * 0.05
 

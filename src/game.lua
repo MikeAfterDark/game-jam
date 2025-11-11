@@ -59,6 +59,7 @@ function Game:on_enter(from, args)
 	-- NOTE: inits:
 	checkpoint_counter = 0
 	num_checkpoints = 0
+	num_player_walls = 0
 	self.map_builder = { runners = {}, walls = {}, pills = {} }
 	self.level_folder = args.level_folder
 	self.level_path = (args.pack and args.level_folder) and args.pack.path .. args.level_folder or ""
@@ -287,6 +288,9 @@ function Game:update(dt)
 						if type.name == "Checkpoint" then
 							num_checkpoints = num_checkpoints + 1
 							data = { order = num_checkpoints }
+						elseif type.name == "Player" then
+							num_player_walls = num_player_walls + 1
+							data = { index = num_player_walls }
 						end
 						local wall_data = {
 							type = type.name, -- NOTE: type.name here**
@@ -326,6 +330,9 @@ function Game:update(dt)
 			if type.name == "Checkpoint" then
 				num_checkpoints = num_checkpoints + 1
 				data = { order = num_checkpoints }
+			elseif type.name == "Player" then
+				num_player_walls = num_player_walls + 1
+				data = { index = num_player_walls }
 			end
 			local wall_data = {
 				type = type.name, -- NOTE: type.name here**
