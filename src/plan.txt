@@ -1,41 +1,10 @@
-1
-- Knights: Spawn (save/load), countdown to start/player input to start, knight run + turn around on walls
-- walls/floor (save/load)
-DONE
-
-2
-- player wall/floor (save/load amount/locations), test toggle VS holding - might be able to move them around
-
-progress:
-- death circle to show who died
-- death animation
-- Game:die()
-- death-zone (save/load)
-- knight death & restart - fast level reload?
-- physics:is_trigger()
-- WIP: make player walls and try activate them collidable/triggers, disable activation if its already colliding with a runner
-    - on create, bind to index (0-9) for button inputs and render it (like checkpoint numbers)
-    - save index with the wall
-    - on init(), make sure its bound to the index,
-    - options: make sure indexes are editable
-
-
-3
-- pills (save/load)
-- jump pill
-- 
-
-QoL:
-- fun background/music for stim screen
-
 BUGFIXING:
-- When sliding down, add gravity to runner velocity
-- RESTART BUTTON in pause menu crashes
-- COUNTDOWN for level start
 - Controls: 'reset all controls to default' button
 - Controls: "reset key'
+- countdown timer locks out the other menus
 
 
-new game obj: stop mario from reaching flagpole
+
+new game obj? stop mario from reaching flagpole
 
 

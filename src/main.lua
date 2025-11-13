@@ -6,6 +6,7 @@ require("renderer")
 require("player")
 require("wall")
 require("runner")
+require("pill")
 
 -- on linux, state is at: ~/.local/share/{love, project_name}/state.txt
 function init()
@@ -32,7 +33,8 @@ function init()
 		wall8 = { text = "Wall 8", default = { "8" }, input = state.input.wall8 },
 		wall9 = { text = "Wall 9", default = { "9" }, input = state.input.wall9 },
 	}
-	options_keys_display_order = { "reset", "wall1", "wall2", "wall3", "wall4", "wall5", "wall6", "wall7", "wall8", "wall9" }
+	options_keys_display_order = { "reset", "wall1", "wall2", "wall3", "wall4", "wall5", "wall6", "wall7", "wall8",
+		"wall9" }
 	for action, key in pairs(controls) do
 		input:bind(action, key.input or key.default)
 	end
@@ -394,7 +396,8 @@ function open_options(self)
 				end,
 			})
 		)
-		button_offset = button_offset + button_distance - 3 --for some reason this is needed for the last button to work (for 4 controls)
+		button_offset = button_offset + button_distance -
+		3                                             --for some reason this is needed for the last button to work (for 4 controls)
 	end
 
 	--
@@ -761,8 +764,10 @@ function pause_game(self)
 				bg_color = "orange",
 				action = function()
 					play_level(self, {
-						creator_mode = false,
-						level_folder = main.current:is(Game) and main.current.level_folder or "",
+						creator_mode = main.current.creator_mode,
+						level = main.current.level,
+						pack = main.current.pack,
+						level_folder = main.current.level_folder,
 					})
 				end,
 			})
@@ -1080,7 +1085,8 @@ function restart_level_with_X_players(self, num_players)
 	run_time = 0
 	locked_state = nil
 
-	scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = main.current.level, num_players = num_players } }, {
+	scene_transition(self, gw / 2, gh / 2, Game("game"),
+		{ destination = "game", args = { level = main.current.level, num_players = num_players } }, {
 		text = "stay hydrated!",
 		font = pixul_font,
 		alignment = "center",

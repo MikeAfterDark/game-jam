@@ -386,6 +386,20 @@ function Group:set_as_physics_world(meter, xg, yg, tags)
         if oa.on_collision_exit then oa:on_collision_exit(ob, c) end
         if ob.on_collision_exit then ob:on_collision_exit(oa, c) end
       end
+    end,
+    nil,
+    function(fa, fb, c, ni, ti)
+      local oa, ob = self:get_object_by_id(fa:getUserData()), self:get_object_by_id(fb:getUserData())
+      if not (oa and ob) then return end
+      if fa:isSensor() or fb:isSensor() then return end
+
+      local nx, ny = c:getNormal()
+      if oa.on_collision_post then
+        oa:on_collision_post(ob, c, nx, ny, ni, ti)
+      end
+      if ob.on_collision_post then
+        ob:on_collision_post(oa, c, -nx, -ny, ni, ti)
+      end
     end
   )
   return self

@@ -23,7 +23,7 @@ function Game:on_enter(from, args)
 		8 * global_game_scale,
 		0,
 		1000, --
-		{ "player", "transparent", "opaque", "runner" }
+		{ "player", "transparent", "opaque", "runner", "pill" }
 	)
 	self.post_main = Group()
 	self.effects = Group()
@@ -34,12 +34,22 @@ function Game:on_enter(from, args)
 	self.keybinding_ui = Group():no_camera()
 	self.credits = Group():no_camera()
 
-	self.main:disable_collision_between("player", "player")
-	self.main:disable_collision_between("player", "transparent")
 	self.main:disable_collision_between("runner", "runner")
+	self.main:disable_collision_between("runner", "transparent")
+	self.main:disable_collision_between("runner", "pill")
+	--
+	--
+	--
+	--
 	--
 	self.main:enable_trigger_between("player", "transparent")
 	self.main:enable_trigger_between("transparent", "player")
+
+	self.main:enable_trigger_between("runner", "transparent")
+	self.main:enable_trigger_between("transparent", "runner")
+
+	self.main:enable_trigger_between("runner", "pill")
+	self.main:enable_trigger_between("pill", "runner")
 	-- self.main:enable_trigger_between("wall", "player")
 
 	self.main_slow_amount = 1
@@ -55,6 +65,8 @@ function Game:on_enter(from, args)
 	max_player_size = 64
 	self._player_speed = 200 * global_game_scale
 	self._player_size = 32
+	self.countdown = 3
+	self.countdown_text = Text({ { text = "", font = pixul_font, alignment = "center" } }, global_text_tags)
 
 	-- NOTE: inits:
 	checkpoint_counter = 0
@@ -157,6 +169,18 @@ function Game:update(dt)
 		self.credits:update(0)
 	end
 
+	if self.countdown > 0 then
+		self.countdown = self.countdown - dt
+		self.countdown_text:set_text({
+			{
+				text = "[red]" .. math.floor(self.countdown),
+				font = fat_font,
+				alignment = "center",
+			},
+		})
+		return
+	end
+
 	self:update_game_object(dt * slow_amount)
 
 	star_group:update(dt * slow_amount)
@@ -201,7 +225,7 @@ function Game:update(dt)
 		local previous_selection = self.selection or -1
 
 		local wheel_input = (input.wheel_up.pressed and -1 or 0) + (input.wheel_down.pressed and 1 or 0)
-		self.selection = ((self.selection or 0) + wheel_input) % #wall_type_order
+		self.selection = ((self.selection or 0) + wheel_input) % (#wall_type_order + 1)
 
 		self.mouse_x, self.mouse_y = self.main:get_mouse_position()
 		self.mouse_x = math.floor(self.mouse_x / grid_size) * grid_size
@@ -218,16 +242,20 @@ function Game:update(dt)
 				self.hovered = Circle(self.mouse_x, self.mouse_y, sprite.hitbox_width)
 				self.hovered.size = 1
 				self.hovered.color = red[0]
-			else -- choose a wall
+			elseif self.selection == #wall_type_order then -- pill
+				self.hovered = Circle(self.mouse_x, self.mouse_y, 10)
+				self.hovered.size = 10
+				self.hovered.color = green[0]
+			else                                                -- wall
 				self.hovered = Chain(false, { self.mouse_x, self.mouse_y }) --Rectangle(mouse_x, mouse_y, gh * 0.1, gh * 0.1)
 				self.hovered.color = _G[wall_type[wall_type_order[self.selection]].color][0]
-				-- self.hovered.xy_scale = Vector(1, 1)
-				-- self.hovered.rotated = 0
 			end
 		else
 			if self.selection == 0 then
 				self.hovered:move_to(self.mouse_x, self.mouse_y)
-			else
+			elseif self.selection == #wall_type_order and not self.hovered.pill_data then
+				self.hovered:move_to(self.mouse_x, self.mouse_y)
+			elseif self.selection < #wall_type_order then
 				self.hovered.vertices[#self.hovered.vertices - 1] = self.mouse_x
 				self.hovered.vertices[#self.hovered.vertices] = self.mouse_y
 			end
@@ -272,7 +300,7 @@ function Game:update(dt)
 					speed = runner_data.speed,
 				})
 				self.hovered = nil
-			else
+			elseif self.selection < #wall_type_order then
 				if
 					#self.hovered.vertices <= 2
 					or self.mouse_x ~= self.hovered.vertices[#self.hovered.vertices - 3]
@@ -317,6 +345,39 @@ function Game:update(dt)
 						table.insert(self.hovered.vertices, self.mouse_y)
 					end
 				end
+			end
+		end
+
+		if self.selection == #wall_type_order then
+			if input.m1.pressed then
+				self.hovered.pill_data = {
+					x = self.hovered.x,
+					y = self.hovered.y,
+					rs = self.hovered.size,
+					boost_x = 0,
+					boost_y = 0,
+				}
+			end
+
+			if input.m1.down then
+				local xi = self.hovered.pill_data.x - self.mouse_x
+				local yi = self.hovered.pill_data.y - self.mouse_y
+				self.hovered.pill_data.boost_x = xi
+				self.hovered.pill_data.boost_y = yi
+			end
+
+			if input.m1.released then
+				table.insert(self.map_builder.pills, self.hovered.pill_data)
+				Pill({
+					group = self.main,
+					x = self.hovered.pill_data.x,
+					y = self.hovered.pill_data.y,
+					rs = self.hovered.pill_data.rs,
+					boost_x = self.hovered.pill_data.boost_x,
+					boost_y = self.hovered.pill_data.boost_y,
+					color = green[0],
+				})
+				self.hovered = nil
 			end
 		end
 
@@ -415,7 +476,7 @@ function Game:load_map(map_path)
 	local object_registry = {
 		runners = Runner,
 		walls = Wall,
-		-- pills = Pill,
+		pills = Pill,
 	}
 
 	for key, constructor in pairs(object_registry) do
@@ -431,42 +492,6 @@ function Game:load_map(map_path)
 		end
 	end
 end
-
--- if data then
--- 	for _, runner in ipairs(data.runners) do
--- 		Runner({
--- 			group = self.main,
--- 			type = runner_type[runner.type],
--- 			direction = runner.direction,
--- 			speed = runner.speed,
--- 			size = runner.size,
--- 			pill_effectiveness = runner.pill_effectiveness,
--- 		})
--- 	end
---
--- 	for _, wall in ipairs(data.walls) do
--- 		Wall({
--- 			group = self.main,
--- 			type = wall_type[wall.type],
--- 			loop = wall.loop,
--- 			vertices = wall.vertices,
--- 			data = wall.data,
--- 		})
--- 	end
---
--- 	for _, pill in ipairs(data.pills) do
--- 		Pill({
--- 			group = self.main,
--- 			type = pill_type[pill.type],
--- 			x = pill.x,
--- 			y = pill.y,
--- 			w = pill.size,
--- 			h = pill.size,
--- 			respawn_time = pill.respawn_time,
--- 			strength = pill.strength,
--- 		})
--- 	end
--- end
 
 function Game:save_map(map)
 	-- local player_data = nil
@@ -539,7 +564,7 @@ function Game:save_map(map)
 	---
 	local function dir_exists(path) -- NOTE: lua/C jank: https://stackoverflow.com/questions/1340230/check-if-directory-exists-in-lua
 		local ok, err, code = os.rename(path, path)
-		return ok or code == 13 -- code 13 = permission denied (means it exists)
+		return ok or code == 13  -- code 13 = permission denied (means it exists)
 	end
 
 	local dir = path:match("^(.*[/\\])")
@@ -742,6 +767,10 @@ function Game:draw()
 	self.main:draw()
 	self.post_main:draw()
 	self.effects:draw()
+
+	if self.countdown_text and self.countdown > 0 then
+		self.countdown_text:draw(gw / 2, gh * 0.3)
+	end
 
 	if self.death_circle then
 		self.death_circle:draw(_G["red"][0], 11)

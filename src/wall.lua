@@ -136,8 +136,7 @@ wall_type = {
 			local dot = dir:dot(normal)
 
 			other.state = Runner_State.Slide
-			other:set_friction(0)
-			other.icy_velocity = vx -- try reapply velocity to avoid stoppage
+			other.icy_velocity = math.sqrt(vx * vx + vy * vy) -- try reapply velocity to avoid stoppage
 
 			-- if dot < -0.99 then
 			-- 	other:set_velocity(0, 0)
@@ -222,6 +221,8 @@ wall_type = {
 
 			self.last_bounce = love.timer.getTime()
 			self.bounce_amp = math.min(1 + (self.bounce_amp or 0.5), 1.8)
+
+			other.state = Runner_State.Slide
 		end,
 		draw = function(self)
 			local verts = self.shape.vertices
@@ -296,183 +297,183 @@ wall_type = {
 	-- 		self.shape:draw(outline_color, 10 + pulse * 3)
 	-- 	end,
 	-- },
-	Shrink = {
-		name = "Shrink",
-		color = "orange1",
-		collision_behavior = function(other, contact, self)
-			other:set_velocity(0, 0)
-			if other.size <= min_player_size or other.wall_id == self.id then
-				return
-			end
-
-			other.state = Runner_State.Run
-			local scale = 8
-			other.size_change = other.size - scale
-			other:set_velocity(0, 0)
-		end,
-
-		collision_exit = function(other, contact, self) end,
-		draw = function(self)
-			self.shape:draw(self.color, 10)
-
-			local verts = self.shape.vertices
-			self._shrink_particles = self._shrink_particles or {}
-
-			local now = love.timer.getTime()
-			local dt = love.timer.getDelta()
-
-			local spawn_rate = 1 -- p/sec per 100px
-			local lifetime = 1.2
-			local min_speed = 05
-			local max_speed = 10
-			local offset_distance = 20 -- distance from wall to spawn
-
-			for i = 1, #verts - 3, 2 do
-				local x1, y1 = verts[i], verts[i + 1]
-				local x2, y2 = verts[i + 2], verts[i + 3]
-				local dx, dy = x2 - x1, y2 - y1
-				local len = math.sqrt(dx * dx + dy * dy)
-
-				if len > 0 then
-					local seg_spawn_chance = (spawn_rate * len / 100) * dt
-					if math.random() < seg_spawn_chance then
-						local t = math.random()
-						local base_x = x1 + dx * t
-						local base_y = y1 + dy * t
-
-						local nx, ny = dy / len, -dx / len
-						local dir = (math.random() < 0.5) and -1 or 1
-
-						local spawn_x = base_x + nx * dir * offset_distance
-						local spawn_y = base_y + ny * dir * offset_distance
-
-						table.insert(self._shrink_particles, {
-							x = spawn_x,
-							y = spawn_y,
-							tx = base_x,
-							ty = base_y,
-							speed = math.random(min_speed, max_speed),
-							spawn_time = now,
-							lifetime = lifetime,
-						})
-					end
-				end
-			end
-
-			for i = #self._shrink_particles, 1, -1 do
-				local p = self._shrink_particles[i]
-				local age = now - p.spawn_time
-
-				if age > p.lifetime then
-					table.remove(self._shrink_particles, i)
-				else
-					local t = age / p.lifetime
-					local alpha = math.sin(math.pi * t)
-					local dx = p.tx - p.x
-					local dy = p.ty - p.y
-					local len = math.sqrt(dx * dx + dy * dy)
-
-					-- Normalize direction
-					local ndx = dx / len
-					local ndy = dy / len
-
-					-- Move toward target using speed
-					local travel_dist = math.min(p.speed * age, len)
-					local x = p.x + ndx * travel_dist
-					local y = p.y + ndy * travel_dist
-
-					local color = self.color:clone()
-					color.a = alpha
-					-- graphics.circle(x, y, radius * t, color)
-
-					local scale = 0.25 -- sprite dependent TODO: standardize sprite sizes
-					local dx = p.tx - p.x
-					local dy = p.ty - p.y
-					local angle = math.atan2(dy, dx)
-					wall_arrow_particle:draw(x, y, angle, scale, scale, 0, 0, color)
-				end
-			end
-		end,
-	},
-	Grow = {
-		name = "Grow",
-		color = "red1",
-		collision_behavior = function(other, contact, self)
-			other:set_velocity(0, 0)
-			if other.size >= max_player_size or other.wall_id == self.id then
-				return
-			end
-
-			other.state = Runner_State.Run
-			local scale = 8
-			other.size_change = other.size + scale -- triggers player to redo its physics
-		end,
-		draw = function(self)
-			self.shape:draw(self.color, 10)
-
-			local verts = self.shape.vertices
-			self._grow_particles = self._grow_particles or {}
-
-			local now = love.timer.getTime()
-			local dt = love.timer.getDelta()
-
-			local spawn_rate = 1 -- p/sec per 100px
-			local lifetime = 1.2
-			local min_speed = 05
-			local max_speed = 10
-
-			for i = 1, #verts - 3, 2 do
-				local x1, y1 = verts[i], verts[i + 1]
-				local x2, y2 = verts[i + 2], verts[i + 3]
-				local dx, dy = x2 - x1, y2 - y1
-				local len = math.sqrt(dx * dx + dy * dy)
-
-				if len > 0 then
-					local seg_spawn_chance = (spawn_rate * len / 100) * dt
-					if math.random() < seg_spawn_chance then
-						local edge_shift = 10 / (len - 10)
-						local spawn_from_wall_dist = 15
-						local t = (math.random() * (1 - 2 * edge_shift)) + edge_shift
-						local nx, ny = dy / len, -dx / len
-						local px = x1 + dx * t
-						local dir = (math.random() < 0.5) and -1 or 1
-						local py = y1 + dy * t + dir * ny * spawn_from_wall_dist
-
-						table.insert(self._grow_particles, {
-							x = px,
-							y = py,
-							nx = nx * dir,
-							ny = ny * dir,
-							speed = math.random(min_speed, max_speed),
-							spawn_time = now,
-							lifetime = lifetime,
-						})
-					end
-				end
-			end
-
-			for i = #self._grow_particles, 1, -1 do
-				local p = self._grow_particles[i]
-				local age = now - p.spawn_time
-
-				if age > p.lifetime then
-					table.remove(self._grow_particles, i)
-				else
-					local t = age / p.lifetime
-					local alpha = math.sin(math.pi * t)
-					local x = p.x + p.nx * p.speed * age
-					local y = p.y + p.ny * p.speed * age
-
-					local color = self.color:clone()
-					color.a = alpha
-
-					local scale = 0.25 -- sprite dependent TODO: standardize sprite sizes
-					local angle = math.atan2(p.ny, p.nx)
-					wall_arrow_particle:draw(x, y, angle, scale, scale, 0, 0, color)
-				end
-			end
-		end,
-	},
+	-- Shrink = {
+	-- 	name = "Shrink",
+	-- 	color = "orange1",
+	-- 	collision_behavior = function(other, contact, self)
+	-- 		other:set_velocity(0, 0)
+	-- 		if other.size <= min_player_size or other.wall_id == self.id then
+	-- 			return
+	-- 		end
+	--
+	-- 		other.state = Runner_State.Run
+	-- 		local scale = 8
+	-- 		other.size_change = other.size - scale
+	-- 		other:set_velocity(0, 0)
+	-- 	end,
+	--
+	-- 	collision_exit = function(other, contact, self) end,
+	-- 	draw = function(self)
+	-- 		self.shape:draw(self.color, 10)
+	--
+	-- 		local verts = self.shape.vertices
+	-- 		self._shrink_particles = self._shrink_particles or {}
+	--
+	-- 		local now = love.timer.getTime()
+	-- 		local dt = love.timer.getDelta()
+	--
+	-- 		local spawn_rate = 1 -- p/sec per 100px
+	-- 		local lifetime = 1.2
+	-- 		local min_speed = 05
+	-- 		local max_speed = 10
+	-- 		local offset_distance = 20 -- distance from wall to spawn
+	--
+	-- 		for i = 1, #verts - 3, 2 do
+	-- 			local x1, y1 = verts[i], verts[i + 1]
+	-- 			local x2, y2 = verts[i + 2], verts[i + 3]
+	-- 			local dx, dy = x2 - x1, y2 - y1
+	-- 			local len = math.sqrt(dx * dx + dy * dy)
+	--
+	-- 			if len > 0 then
+	-- 				local seg_spawn_chance = (spawn_rate * len / 100) * dt
+	-- 				if math.random() < seg_spawn_chance then
+	-- 					local t = math.random()
+	-- 					local base_x = x1 + dx * t
+	-- 					local base_y = y1 + dy * t
+	--
+	-- 					local nx, ny = dy / len, -dx / len
+	-- 					local dir = (math.random() < 0.5) and -1 or 1
+	--
+	-- 					local spawn_x = base_x + nx * dir * offset_distance
+	-- 					local spawn_y = base_y + ny * dir * offset_distance
+	--
+	-- 					table.insert(self._shrink_particles, {
+	-- 						x = spawn_x,
+	-- 						y = spawn_y,
+	-- 						tx = base_x,
+	-- 						ty = base_y,
+	-- 						speed = math.random(min_speed, max_speed),
+	-- 						spawn_time = now,
+	-- 						lifetime = lifetime,
+	-- 					})
+	-- 				end
+	-- 			end
+	-- 		end
+	--
+	-- 		for i = #self._shrink_particles, 1, -1 do
+	-- 			local p = self._shrink_particles[i]
+	-- 			local age = now - p.spawn_time
+	--
+	-- 			if age > p.lifetime then
+	-- 				table.remove(self._shrink_particles, i)
+	-- 			else
+	-- 				local t = age / p.lifetime
+	-- 				local alpha = math.sin(math.pi * t)
+	-- 				local dx = p.tx - p.x
+	-- 				local dy = p.ty - p.y
+	-- 				local len = math.sqrt(dx * dx + dy * dy)
+	--
+	-- 				-- Normalize direction
+	-- 				local ndx = dx / len
+	-- 				local ndy = dy / len
+	--
+	-- 				-- Move toward target using speed
+	-- 				local travel_dist = math.min(p.speed * age, len)
+	-- 				local x = p.x + ndx * travel_dist
+	-- 				local y = p.y + ndy * travel_dist
+	--
+	-- 				local color = self.color:clone()
+	-- 				color.a = alpha
+	-- 				-- graphics.circle(x, y, radius * t, color)
+	--
+	-- 				local scale = 0.25 -- sprite dependent TODO: standardize sprite sizes
+	-- 				local dx = p.tx - p.x
+	-- 				local dy = p.ty - p.y
+	-- 				local angle = math.atan2(dy, dx)
+	-- 				wall_arrow_particle:draw(x, y, angle, scale, scale, 0, 0, color)
+	-- 			end
+	-- 		end
+	-- 	end,
+	-- },
+	-- Grow = {
+	-- 	name = "Grow",
+	-- 	color = "red1",
+	-- 	collision_behavior = function(other, contact, self)
+	-- 		other:set_velocity(0, 0)
+	-- 		if other.size >= max_player_size or other.wall_id == self.id then
+	-- 			return
+	-- 		end
+	--
+	-- 		other.state = Runner_State.Run
+	-- 		local scale = 8
+	-- 		other.size_change = other.size + scale -- triggers player to redo its physics
+	-- 	end,
+	-- 	draw = function(self)
+	-- 		self.shape:draw(self.color, 10)
+	--
+	-- 		local verts = self.shape.vertices
+	-- 		self._grow_particles = self._grow_particles or {}
+	--
+	-- 		local now = love.timer.getTime()
+	-- 		local dt = love.timer.getDelta()
+	--
+	-- 		local spawn_rate = 1 -- p/sec per 100px
+	-- 		local lifetime = 1.2
+	-- 		local min_speed = 05
+	-- 		local max_speed = 10
+	--
+	-- 		for i = 1, #verts - 3, 2 do
+	-- 			local x1, y1 = verts[i], verts[i + 1]
+	-- 			local x2, y2 = verts[i + 2], verts[i + 3]
+	-- 			local dx, dy = x2 - x1, y2 - y1
+	-- 			local len = math.sqrt(dx * dx + dy * dy)
+	--
+	-- 			if len > 0 then
+	-- 				local seg_spawn_chance = (spawn_rate * len / 100) * dt
+	-- 				if math.random() < seg_spawn_chance then
+	-- 					local edge_shift = 10 / (len - 10)
+	-- 					local spawn_from_wall_dist = 15
+	-- 					local t = (math.random() * (1 - 2 * edge_shift)) + edge_shift
+	-- 					local nx, ny = dy / len, -dx / len
+	-- 					local px = x1 + dx * t
+	-- 					local dir = (math.random() < 0.5) and -1 or 1
+	-- 					local py = y1 + dy * t + dir * ny * spawn_from_wall_dist
+	--
+	-- 					table.insert(self._grow_particles, {
+	-- 						x = px,
+	-- 						y = py,
+	-- 						nx = nx * dir,
+	-- 						ny = ny * dir,
+	-- 						speed = math.random(min_speed, max_speed),
+	-- 						spawn_time = now,
+	-- 						lifetime = lifetime,
+	-- 					})
+	-- 				end
+	-- 			end
+	-- 		end
+	--
+	-- 		for i = #self._grow_particles, 1, -1 do
+	-- 			local p = self._grow_particles[i]
+	-- 			local age = now - p.spawn_time
+	--
+	-- 			if age > p.lifetime then
+	-- 				table.remove(self._grow_particles, i)
+	-- 			else
+	-- 				local t = age / p.lifetime
+	-- 				local alpha = math.sin(math.pi * t)
+	-- 				local x = p.x + p.nx * p.speed * age
+	-- 				local y = p.y + p.ny * p.speed * age
+	--
+	-- 				local color = self.color:clone()
+	-- 				color.a = alpha
+	--
+	-- 				local scale = 0.25 -- sprite dependent TODO: standardize sprite sizes
+	-- 				local angle = math.atan2(p.ny, p.nx)
+	-- 				wall_arrow_particle:draw(x, y, angle, scale, scale, 0, 0, color)
+	-- 			end
+	-- 		end
+	-- 	end,
+	-- },
 	-- Reverse = {
 	-- 	name = "Reverse",
 	-- 	color = "purple1",
@@ -617,7 +618,6 @@ wall_type = {
 				enemy_die1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 
 				other:set_velocity(0, 0)
-				other:spawn_player()
 				self.spring:pull(0.01, 200, 10)
 			end
 		end,
@@ -757,8 +757,8 @@ wall_type_order = {
 	"Icy",
 	"Bounce",
 	-- "Clone",
-	"Shrink",
-	"Grow",
+	-- "Shrink",
+	-- "Grow",
 	-- "Reverse",
 	"Checkpoint",
 
@@ -777,7 +777,8 @@ function Wall:init(args)
 	if type(self.type) == "string" then
 		self.type = wall_type[self.type]
 	end
-	self:set_as_chain(self.loop, self.vertices, "static", (self.type and self.type.transparent) and "transparent" or "opaque")
+	self:set_as_chain(self.loop, self.vertices, "static",
+		(self.type and self.type.transparent) and "transparent" or "opaque")
 	self.interact_with_mouse = true
 
 	self.color = --[[  self.color or ]]

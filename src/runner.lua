@@ -71,6 +71,7 @@ function Runner:init(args)
 	self:set_as_rectangle(self.w, self.h, "dynamic", "runner")
 	self:set_fixed_rotation(true) -- stop the damn hitbox from spinning
 	self:set_restitution(0.1)
+	self:set_damping(0)
 
 	self.dir = self.direction == "right" and 1 or 0
 	self.max_uphill_angle = 50 --degrees
@@ -87,16 +88,38 @@ end
 
 function Runner:update(dt)
 	self:update_game_object(dt)
-	local vx, vy = self:get_velocity()
-	self.dir = vx ~= 0 and math.sign(vx) or self.dir
 
-	local vx = 0
+	local vx, vy = self:get_velocity()
+	local gx, gy = main.current.main.world:getGravity() -- NOTE: maybe only if not falling?
+
+	local vel = 0
 	if self.state == Runner_State.Slide then
-		vx = math.abs(self.icy_velocity) * self.dir
-	elseif self.state ~= Runner_State.Idle and self.state ~= Runner_State.Dead then
-		vx = self.speed * self.dir
+		self:set_friction(0)
+		self.dir = math.sign(vx)
+		vel = math.abs(self.icy_velocity / 2) * self.dir
+
+		if self.grounded then
+			local max_speed = 10
+			local max_vel = 10
+			-- self.icy_speed = math.max(math.min(self.icy_speed * self.ground_normal, max_speed), -max_speed)
+			-- vel = math.max(math.min(vel * self.icy_speed, max_vel), -max_vel)
+			if self.ground_normal.y >= 0.99 then
+				self:set_velocity(vel + gx * dt, vy + gy * dt)
+			end
+		end
+	elseif self.state ~= Runner_State.Idle and self.state ~= Runner_State.Dead and self.grounded then
+		self:set_friction(1)
+		vel = self.speed * self.dir
+		if self.grounded then
+			self:set_velocity(vel * self.size + gx * dt, vy + gy * dt)
+		end
 	end
-	self:set_velocity(vx * self.size, vy)
+
+	if self.grounded then
+		self.temp_color = red[0]
+	else
+		self.temp_color = blue[0]
+	end
 
 	self.runner_label.x = self.x
 	self.runner_label.y = self.y + self.label_y_offset
@@ -107,11 +130,35 @@ function Runner:update(dt)
 		animation.y = self.y
 		animation:update(dt)
 	end
+
+	self.grounded = false
+	self.ground_normal = nil
+end
+
+function Runner:on_collision_post(other, contact, nx, ny, normal_impulse, tangent_impulse)
+	-- self.grounded = false
+	-- self.ground_normal = nil
+	-- self.touching_left = false
+	-- self.touching_right = false
+	if ny > 0.6 then
+		self.grounded = true
+		self.ground_normal = { x = nx, y = ny }
+	elseif math.abs(nx) > 0.6 then
+		if nx < 0 then
+			-- self.touching_left = true
+			self.dir = 1
+			-- print(self.count, "left: nx:", nx, ", ny: ", ny)
+		else
+			-- self.touching_right = true
+			self.dir = -1
+			-- print(self.count, "right: nx:", nx, ", ny: ", ny)
+		end
+	end
 end
 
 function Runner:draw()
 	-- graphics.rectangle(self.x, self.y, self.w, self.h, 0, 0, self.color)
-	self:draw_physics()
+	self:draw_physics(self.temp_color or white[0])
 
 	self.runner_label:draw()
 
