@@ -32,6 +32,10 @@ end
 function Pill:on_trigger_enter(other, contact)
     if other:is(Runner) then
         other:apply_impulse(self.boost_x, self.boost_y)
+        local vx, vy = other:get_velocity()
+        if vx ~= 0 then
+            other.dir = math.sign(vx)
+        end
         self.spring:pull(0.2, 200, 10)
     end
 end

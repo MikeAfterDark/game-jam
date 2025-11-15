@@ -3,7 +3,7 @@ wall_type = {
 		name = "Stone",
 		color = "fg",
 		collision_behavior = function(other, contact, self)
-			other.state = Runner_State.Run
+			other:set_state(Runner_State.Run)
 		end,
 		collision_exit = function(other, contact, self) end,
 		draw = function(self)
@@ -135,7 +135,7 @@ wall_type = {
 			local dir = Vector(vx, vy):normalize()
 			local dot = dir:dot(normal)
 
-			other.state = Runner_State.Slide
+			other:set_state(Runner_State.Slide)
 			other.icy_velocity = math.sqrt(vx * vx + vy * vy) -- try reapply velocity to avoid stoppage
 
 			-- if dot < -0.99 then
@@ -222,7 +222,7 @@ wall_type = {
 			self.last_bounce = love.timer.getTime()
 			self.bounce_amp = math.min(1 + (self.bounce_amp or 0.5), 1.8)
 
-			other.state = Runner_State.Slide
+			other:set_state(Runner_State.Run)
 		end,
 		draw = function(self)
 			local verts = self.shape.vertices
@@ -551,25 +551,27 @@ wall_type = {
 				self.shape:draw(outline_color, 10 + pulse * 3)
 			end
 
-			-- draw at center of each edge
-			local verts = self.shape.vertices
-			local radius = 18
-			local color = self.collected and self.color or _G["white"][0] --self.color --_G["black"][0]
+			if not self.data.dont_draw_number then
+				-- draw at center of each edge
+				local verts = self.shape.vertices
+				local radius = 18
+				local color = self.collected and self.color or _G["white"][0] --self.color --_G["black"][0]
 
-			for i = 1, #verts - 2, 2 do
-				local x1, y1 = verts[i], verts[i + 1]
-				local x2, y2 = verts[i + 2], verts[i + 3]
-				local dx, dy = x2 - x1, y2 - y1
-				local lenSqr = dx * dx + dy * dy
-				if lenSqr > 3000 then -- 3000 seems to be enough for radius=18 numbering
-					local mx = (x1 + x2) / 2
-					local my = (y1 + y2) / 2
+				for i = 1, #verts - 2, 2 do
+					local x1, y1 = verts[i], verts[i + 1]
+					local x2, y2 = verts[i + 2], verts[i + 3]
+					local dx, dy = x2 - x1, y2 - y1
+					local lenSqr = dx * dx + dy * dy
+					if lenSqr > 3000 then -- 3000 seems to be enough for radius=18 numbering
+						local mx = (x1 + x2) / 2
+						local my = (y1 + y2) / 2
 
-					graphics.circle(mx, my, radius + 4, _G["black"][0]) -- outline
-					graphics.circle(mx, my, radius, color)
+						graphics.circle(mx, my, radius + 4, _G["black"][0]) -- outline
+						graphics.circle(mx, my, radius, color)
 
-					if self.order_text then
-						self.order_text:draw(mx + 1, my + 4, 0, 1, 1)
+						if self.order_text then
+							self.order_text:draw(mx + 1, my + 4, 0, 1, 1)
+						end
 					end
 				end
 			end
@@ -584,19 +586,36 @@ wall_type = {
 				return
 			end
 
-			death_flash_alpha = 1.00 -- immediate flash value
+			death_flash_alpha = 0.20 -- immediate flash value
 			trigger:tween(1.4, _G, { death_flash_alpha = 0 }, math.cubic_out, nil, "death_flash")
 			enemy_die1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 
-			other.state = Runner_State.Dead -- go ragdoll
+			other:set_state(Runner_State.Dead)
 			-- local _, vy = other:get_velocity()
 			-- other:set_velocity(0, vy)
-			self.spring:pull(0.01, 200, 10)
+			-- self.spring:pull(0.01, 200, 10)
 
-			if not main.current.death_circle then -- TODO: idk if i want this tbh, maybe just some particle explosion?
-				local x, y = other.x, other.y
-				main.current.death_circle = Circle(x, y, 30)
+			local x, y = contact:getPositions()
+			local nx, ny = contact:getNormal()
+
+			local normal_angle = math.atan2(ny, nx)
+			for i = 1, random:int(10, 24) do
+				local half_circle = random:float(-math.pi / 2, math.pi / 2)
+				HitParticle({
+					group = main.current.effects,
+					x = x,
+					y = y,
+					w = 20,
+					curve = 15,
+					r = normal_angle + half_circle,
+					gravity = 900,
+					color = red[0],
+				})
 			end
+			-- if not main.current.death_circle then -- TODO: idk if i want this tbh, maybe just some particle explosion?
+			-- 	local x, y = other.x, other.y
+			-- 	main.current.death_circle = Circle(x, y, 30)
+			-- end
 		end,
 		draw = function(self)
 			-- self.shape:draw(_G["red"][0], 12)
@@ -605,77 +624,76 @@ wall_type = {
 			self.shape:draw(self.color, 10)
 		end,
 	},
-	Goal = {
-		name = "Goal",
-		color = "white",
-		collision_behavior = function(other, contact, self)
-			if checkpoint_counter == num_checkpoints then
-				other:set_velocity(0, 0)
-				main.current.win = true
-			else
-				death_flash_alpha = 1.00 -- immediate flash value
-				trigger:tween(1.4, _G, { death_flash_alpha = 0 }, math.cubic_out, nil, "death_flash")
-				enemy_die1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-
-				other:set_velocity(0, 0)
-				self.spring:pull(0.01, 200, 10)
-			end
-		end,
-		draw = function(self)
-			local verts = self.shape.vertices
-			local tile_size = 15 -- how long each checker segment is
-			local width = self.max_width or 10
-			local color1 = self.color
-			local color2 = Color(0, 0, 0, 1)
-
-			for i = 1, #verts - 3, 2 do
-				local x1, y1 = verts[i], verts[i + 1]
-				local x2, y2 = verts[i + 2], verts[i + 3]
-
-				local dx, dy = x2 - x1, y2 - y1
-				local length = math.sqrt(dx * dx + dy * dy)
-				local angle = math.atan2(dy, dx)
-				local segments = math.floor(length / tile_size)
-
-				for j = 0, segments - 1 do
-					local t1 = j / segments
-					local t2 = (j + 1) / segments
-
-					local sx1 = x1 + dx * t1
-					local sy1 = y1 + dy * t1
-					local sx2 = x1 + dx * t2
-					local sy2 = y1 + dy * t2
-
-					local mx = sy2 - sy1
-					local my = sx1 - sx2
-					local mag = math.sqrt(mx * mx + my * my)
-					if mag > 0 then
-						mx, my = (mx / mag) * width / 2, (my / mag) * width / 2
-					end
-
-					local quad = {
-						sx1 - mx,
-						sy1 - my,
-						sx2 - mx,
-						sy2 - my,
-						sx2 + mx,
-						sy2 + my,
-						sx1 + mx,
-						sy1 + my,
-					}
-
-					local color = (j % 2 == 0) and color1 or color2
-					graphics.polygon(quad, color)
-				end
-			end
-		end,
-	},
-
+	-- Goal = {
+	-- 	name = "Goal",
+	-- 	color = "white",
+	-- 	collision_behavior = function(other, contact, self)
+	-- 		if checkpoint_counter == num_checkpoints then
+	-- 			other:set_velocity(0, 0)
+	-- 			main.current.win = true
+	-- 		else
+	-- 			death_flash_alpha = 1.00 -- immediate flash value
+	-- 			trigger:tween(1.4, _G, { death_flash_alpha = 0 }, math.cubic_out, nil, "death_flash")
+	-- 			enemy_die1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	--
+	-- 			other:set_velocity(0, 0)
+	-- 			self.spring:pull(0.01, 200, 10)
+	-- 		end
+	-- 	end,
+	-- 	draw = function(self)
+	-- 		local verts = self.shape.vertices
+	-- 		local tile_size = 15 -- how long each checker segment is
+	-- 		local width = self.max_width or 10
+	-- 		local color1 = self.color
+	-- 		local color2 = Color(0, 0, 0, 1)
+	--
+	-- 		for i = 1, #verts - 3, 2 do
+	-- 			local x1, y1 = verts[i], verts[i + 1]
+	-- 			local x2, y2 = verts[i + 2], verts[i + 3]
+	--
+	-- 			local dx, dy = x2 - x1, y2 - y1
+	-- 			local length = math.sqrt(dx * dx + dy * dy)
+	-- 			local angle = math.atan2(dy, dx)
+	-- 			local segments = math.floor(length / tile_size)
+	--
+	-- 			for j = 0, segments - 1 do
+	-- 				local t1 = j / segments
+	-- 				local t2 = (j + 1) / segments
+	--
+	-- 				local sx1 = x1 + dx * t1
+	-- 				local sy1 = y1 + dy * t1
+	-- 				local sx2 = x1 + dx * t2
+	-- 				local sy2 = y1 + dy * t2
+	--
+	-- 				local mx = sy2 - sy1
+	-- 				local my = sx1 - sx2
+	-- 				local mag = math.sqrt(mx * mx + my * my)
+	-- 				if mag > 0 then
+	-- 					mx, my = (mx / mag) * width / 2, (my / mag) * width / 2
+	-- 				end
+	--
+	-- 				local quad = {
+	-- 					sx1 - mx,
+	-- 					sy1 - my,
+	-- 					sx2 - mx,
+	-- 					sy2 - my,
+	-- 					sx2 + mx,
+	-- 					sy2 + my,
+	-- 					sx1 + mx,
+	-- 					sy1 + my,
+	-- 				}
+	--
+	-- 				local color = (j % 2 == 0) and color1 or color2
+	-- 				graphics.polygon(quad, color)
+	-- 			end
+	-- 		end
+	-- 	end,
+	-- },
 	Player = {
 		name = "Player",
 		color = "yellow1",
 		init = function(self)
-			self.obstructed = 0
+			self.active = true
 
 			if not self.data.index then
 				self.data.index = main.current.player_wall_index
@@ -709,7 +727,7 @@ wall_type = {
 				return
 			end
 
-			other.state = Runner_State.Run
+			other:set_state(Runner_State.Run)
 		end,
 		-- trigger_behaviour = function(other, contact, self)
 		-- 	self.obstructed = self.obstructed + 1
@@ -763,7 +781,7 @@ wall_type_order = {
 	"Checkpoint",
 
 	"Death",
-	"Goal",
+	-- "Goal",
 	"Player",
 	"Empty",
 }
@@ -781,8 +799,7 @@ function Wall:init(args)
 		(self.type and self.type.transparent) and "transparent" or "opaque")
 	self.interact_with_mouse = true
 
-	self.color = --[[  self.color or ]]
-		_G[self.type.color][0] or fg[0]
+	self.color = _G[self.type.color][0] or fg[0]
 	self.init_color = self.color
 	self.hovered_color = red[0]
 
@@ -805,7 +822,7 @@ function Wall:init(args)
 			self.type.init(self)
 		end
 	else
-		print("skippping cuz self is nil for some reason??")
+		print("skipping cuz self is nil for some reason??")
 	end
 end
 
@@ -818,7 +835,7 @@ function Wall:update(dt)
 				self.active = not self.active or false
 			end
 		else
-			self.active = (self.input_action.down or self.input_action.pressed) or false
+			self.active = not (self.input_action.down or self.input_action.pressed) or false
 		end
 		self:set_trigger(not self.active)
 	end

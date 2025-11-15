@@ -1,10 +1,11 @@
 BUGFIXING:
-- Controls: 'reset all controls to default' button
-- Controls: "reset key'
-- countdown timer locks out the other menus
+- if 'win' during the transition during death it pops up both menus
 
+Tech Debt:
+- Clean up runner_types self.animations init
 
+Game:
+- Kill all runners within a centain amount of time and before they can collect all the checkpoints by controlling if certain walls are opaque or transparent
 
-new game obj? stop mario from reaching flagpole
-
-
+Ideas:
+- Faster levels are good

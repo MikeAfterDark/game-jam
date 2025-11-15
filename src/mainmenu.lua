@@ -152,7 +152,7 @@ function MainMenu:setup_title_menu()
 			y = gh / 2,
 			lines = {
 				{
-					text = "[wavy_title, green]title",
+					text = "[wavy_title, green]Invaders",
 					font = fat_title_font,
 					alignment = "center",
 				},
@@ -454,13 +454,13 @@ function MainMenu:setup_level_menu(pack)
 				y = y_start + row * spacing,
 				w = scale,
 				h = scale,
+				wrap = level.wrap or false,
 				force_update = true,
 				image_path = path .. "/level_img.png",
 				title_text = level.name,
 				fg_color = "white",
 				bg_color = "bg",
 				action = function()
-					-- print("loading level: " .. path .. "/path.lua")
 					play_level(self, {
 						creator_mode = false,
 						level = i,

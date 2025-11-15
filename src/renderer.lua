@@ -7,6 +7,7 @@ function renderer_init()
 		white = ColorRamp(Color(1, 1, 1, 1), 0.025),
 		black = ColorRamp(Color(0, 0, 0, 1), 0.025),
 		bg = ColorRamp(Color("#303030"), 0.025),
+		bg_alt = ColorRamp(Color("#101010"), 0.025),
 		fg = ColorRamp(Color("#dadada"), 0.025),
 		fg_alt = ColorRamp(Color("#b0a89f"), 0.025),
 		yellow = ColorRamp(Color("#facf00"), 0.025),
@@ -88,16 +89,18 @@ function renderer_draw(draw_action)
 	background_canvas:draw_to(function()
 		camera:attach()
 		if main.current:is(Game) then
-			for i = 1, gw / grid_size do
-				for j = 1, gh / grid_size do
-					local row = j * grid_size
-					local column = i * grid_size
+			if main.current.creator_mode then
+				for i = 1, gw / grid_size do
+					for j = 1, gh / grid_size do
+						local row = j * grid_size
+						local column = i * grid_size
 
-					local gray_val = 0.3
-					local color = Color(gray_val, gray_val, gray_val, 1)
-					local line_width = 3
-					graphics.line(column, 0, column, gh, color, line_width)
-					graphics.line(0, row, gw, row, color, line_width)
+						local gray_val = 0.3
+						local color = Color(gray_val, gray_val, gray_val, 1)
+						local line_width = 3
+						graphics.line(column, 0, column, gh, color, line_width)
+						graphics.line(0, row, gw, row, color, line_width)
+					end
 				end
 			end
 		elseif main.current:is(MainMenu) then
@@ -562,12 +565,17 @@ HitParticle = Object:extend()
 HitParticle:implement(GameObject)
 function HitParticle:init(args)
 	self:init_game_object(args)
-	self.v = self.v or random:float(50, 150)
+	self.v = self.v or random:float(250, 350)
 	self.r = args.r or random:float(0, 2 * math.pi)
-	self.duration = self.duration or random:float(0.2, 0.6)
+	self.vx = self.v * math.cos(self.r)
+	self.vy = self.v * math.sin(self.r)
+
+	self.duration = self.duration or random:float(2.4, 5.8)
 	self.w = self.w or random:float(3.5, 7)
 	self.h = self.h or self.w / 2
 	self.color = self.color or fg[0]
+	self.curve = self.curve or 15
+	self.gravity = self.gravity or 300
 	self.t:tween(self.duration, self, { w = 2, h = 2, v = 0 }, math.cubic_in_out, function()
 		self.dead = true
 	end)
@@ -575,16 +583,21 @@ end
 
 function HitParticle:update(dt)
 	self:update_game_object(dt)
-	self.x = self.x + self.v * math.cos(self.r) * dt
-	self.y = self.y + self.v * math.sin(self.r) * dt
+	self.vy = self.vy + self.gravity * dt
+
+	self.x = self.x + self.vx * dt
+	self.y = self.y + self.vy * dt
+
+	self.r = math.atan2(self.vy, self.vx)
 end
 
 function HitParticle:draw()
 	graphics.push(self.x, self.y, self.r)
 	if self.parent and not self.parent.dead then
-		graphics.rectangle(self.x, self.y, self.w, self.h, 2, 2, self.parent.hfx.hit.f and fg[0] or self.color)
+		graphics.rectangle(self.x, self.y, self.w, self.h, self.curve, self.curve,
+			self.parent.hfx.hit.f and fg[0] or self.color)
 	else
-		graphics.rectangle(self.x, self.y, self.w, self.h, 2, 2, self.color)
+		graphics.rectangle(self.x, self.y, self.w, self.h, self.curve, self.curve, self.color)
 	end
 	graphics.pop()
 end

@@ -1,223 +1,152 @@
 return {
-    player = {
-        y = 544,
-        x = 992,
-        size = 32,
-        speed = 800,
+    ["level_timer"] = 30,
+    ["walls"] = {
+        [1] = {
+            ["data"] = { ["index"] = 1 },
+            ["type"] = "Player",
+            ["vertices"] = {
+                [1] = 416,
+                [2] = 352,
+                [3] = 544,
+                [4] = 352,
+                [5] = 544,
+                [6] = 480,
+                [7] = 672,
+                [8] = 480,
+                [9] = 672,
+                [10] = 352,
+                [11] = 800,
+                [12] = 352,
+                [13] = 800,
+                [14] = 480,
+                [15] = 928,
+                [16] = 480,
+                [17] = 928,
+                [18] = 352,
+                [19] = 1056,
+                [20] = 352,
+                [21] = 1056,
+                [22] = 480,
+                [23] = 1184,
+                [24] = 480,
+                [25] = 1184,
+                [26] = 352,
+                [27] = 1312,
+                [28] = 352,
+                [29] = 1312,
+                [30] = 480,
+                [31] = 1440,
+                [32] = 480,
+                [33] = 1440,
+                [34] = 352,
+                [35] = 1568,
+                [36] = 352,
+                [37] = 1568,
+                [38] = 480,
+                [39] = 1696,
+                [40] = 480,
+            },
+            ["loop"] = false,
+        },
+        [2] = {
+            ["type"] = "Stone",
+            ["vertices"] = { [1] = 416, [2] = 480, [3] = 544, [4] = 480 },
+            ["loop"] = false,
+        },
+        [3] = {
+            ["type"] = "Stone",
+            ["vertices"] = { [1] = 672, [2] = 480, [3] = 800, [4] = 480 },
+            ["loop"] = false,
+        },
+        [4] = {
+            ["type"] = "Stone",
+            ["vertices"] = { [1] = 928, [2] = 480, [3] = 1056, [4] = 480 },
+            ["loop"] = false,
+        },
+        [5] = {
+            ["type"] = "Stone",
+            ["vertices"] = { [1] = 1184, [2] = 480, [3] = 1312, [4] = 480 },
+            ["loop"] = false,
+        },
+        [6] = {
+            ["type"] = "Stone",
+            ["vertices"] = { [1] = 1440, [2] = 480, [3] = 1568, [4] = 480 },
+            ["loop"] = false,
+        },
+        [7] = {
+            ["type"] = "Stone",
+            ["vertices"] = { [1] = 1696, [2] = 352, [3] = 1568, [4] = 352 },
+            ["loop"] = false,
+        },
+        [8] = {
+            ["type"] = "Stone",
+            ["vertices"] = { [1] = 1440, [2] = 352, [3] = 1312, [4] = 352 },
+            ["loop"] = false,
+        },
+        [9] = {
+            ["type"] = "Stone",
+            ["vertices"] = { [1] = 1184, [2] = 352, [3] = 1056, [4] = 352 },
+            ["loop"] = false,
+        },
+        [10] = {
+            ["type"] = "Stone",
+            ["vertices"] = { [1] = 928, [2] = 352, [3] = 800, [4] = 352 },
+            ["loop"] = false,
+        },
+        [11] = {
+            ["type"] = "Stone",
+            ["vertices"] = { [1] = 672, [2] = 352, [3] = 544, [4] = 352 },
+            ["loop"] = false,
+        },
+        [12] = {
+            ["type"] = "Bounce",
+            ["vertices"] = { [1] = 1696, [2] = 512, [3] = 1888, [4] = 512 },
+            ["loop"] = false,
+        },
+        [13] = {
+            ["type"] = "Bounce",
+            ["vertices"] = { [1] = 416, [2] = 512, [3] = 224, [4] = 512 },
+            ["loop"] = false,
+        },
+        [14] = {
+            ["data"] = { ["order"] = 1 },
+            ["type"] = "Checkpoint",
+            ["vertices"] = { [1] = 544, [2] = 512, [3] = 1568, [4] = 512 },
+            ["loop"] = false,
+        },
+        [15] = {
+            ["data"] = { ["order"] = 2 },
+            ["type"] = "Checkpoint",
+            ["vertices"] = { [1] = 544, [2] = 576, [3] = 1568, [4] = 576 },
+            ["loop"] = false,
+        },
+        [16] = {
+            ["data"] = { ["order"] = 3 },
+            ["type"] = "Checkpoint",
+            ["vertices"] = { [1] = 544, [2] = 640, [3] = 1568, [4] = 640 },
+            ["loop"] = false,
+        },
+        [17] = {
+            ["type"] = "Stone",
+            ["vertices"] = { [1] = 544, [2] = 480, [3] = 544, [4] = 736, [5] = 1568, [6] = 736, [7] = 1568, [8] = 480 },
+            ["loop"] = false,
+        },
+        [18] = {
+            ["type"] = "Stone",
+            ["vertices"] = { [1] = 416, [2] = 352, [3] = 352, [4] = 352, [5] = 352, [6] = 256 },
+            ["loop"] = false,
+        },
+        [19] = {
+            ["type"] = "Stone",
+            ["vertices"] = { [1] = 1696, [2] = 352, [3] = 1696, [4] = 256 },
+            ["loop"] = false,
+        },
     },
-    walls = {
-        {
-            type = "Goal",
-            vertices = {
-                864,
-                288,
-                1056,
-                192,
-                1216,
-                288,
-                864,
-                288,
-            },
-            loop = false,
-        },
-        {
-            type = "Checkpoint",
-            vertices = {
-                1152,
-                448,
-                1152,
-                640,
-            },
-            data = {
-                order = 1,
-            },
-            loop = false,
-        },
-        {
-            type = "Checkpoint",
-            vertices = {
-                1248,
-                416,
-                1184,
-                672,
-            },
-            data = {
-                order = 2,
-            },
-            loop = false,
-        },
-        {
-            type = "Checkpoint",
-            vertices = {
-                1280,
-                640,
-                1344,
-                352,
-            },
-            data = {
-                order = 3,
-            },
-            loop = false,
-        },
-        {
-            type = "Checkpoint",
-            vertices = {
-                1440,
-                352,
-                1504,
-                672,
-            },
-            data = {
-                order = 4,
-            },
-            loop = false,
-        },
-        {
-            type = "Checkpoint",
-            vertices = {
-                1600,
-                672,
-                1600,
-                352,
-            },
-            data = {
-                order = 5,
-            },
-            loop = false,
-        },
-        {
-            type = "Checkpoint",
-            vertices = {
-                736,
-                704,
-                1184,
-                704,
-                1088,
-                832,
-                736,
-                704,
-            },
-            data = {
-                order = 6,
-            },
-            loop = false,
-        },
-        {
-            type = "Checkpoint",
-            vertices = {
-                768,
-                832,
-                1088,
-                896,
-            },
-            data = {
-                order = 7,
-            },
-            loop = false,
-        },
-        {
-            type = "Checkpoint",
-            vertices = {
-                1088,
-                928,
-                768,
-                960,
-            },
-            data = {
-                order = 8,
-            },
-            loop = false,
-        },
-        {
-            type = "Checkpoint",
-            vertices = {
-                896,
-                352,
-                1216,
-                320,
-            },
-            data = {
-                order = 9,
-            },
-            loop = false,
-        },
-        {
-            type = "Checkpoint",
-            vertices = {
-                768,
-                352,
-                640,
-                672,
-            },
-            data = {
-                order = 10,
-            },
-            loop = false,
-        },
-        {
-            type = "Checkpoint",
-            vertices = {
-                576,
-                384,
-                544,
-                704,
-            },
-            data = {
-                order = 11,
-            },
-            loop = false,
-        },
-        {
-            type = "Checkpoint",
-            vertices = {
-                416,
-                704,
-                480,
-                352,
-            },
-            data = {
-                order = 12,
-            },
-            loop = false,
-        },
-        {
-            type = "Checkpoint",
-            vertices = {
-                320,
-                384,
-                320,
-                768,
-            },
-            data = {
-                order = 13,
-            },
-            loop = false,
-        },
-        {
-            type = "Checkpoint",
-            vertices = {
-                224,
-                800,
-                256,
-                384,
-            },
-            data = {
-                order = 14,
-            },
-            loop = false,
-        },
-        {
-            type = "Checkpoint",
-            vertices = {
-                128,
-                352,
-                160,
-                704,
-            },
-            data = {
-                order = 15,
-            },
-            loop = false,
-        },
-    }
+    ["runners"] = {
+        [1] = { ["x"] = 416, ["size"] = 1, ["y"] = 256, ["direction"] = "right", ["type"] = "knight", ["speed"] = 200 },
+        [2] = { ["x"] = 864, ["size"] = 2, ["y"] = 288, ["direction"] = "right", ["type"] = "knight", ["speed"] = 200 },
+        [3] = { ["x"] = 1440, ["size"] = 3, ["y"] = 288, ["direction"] = "right", ["type"] = "knight", ["speed"] = 200 },
+    },
+    ["pills"] = {},
 }
+

@@ -22,7 +22,7 @@ function init()
 		-- down = { text = "Down", default = { "down", "s" }, input = state.input.down },
 		-- left = { text = "Left", default = { "left", "a" }, input = state.input.left },
 		-- right = { text = "Right", default = { "right", "d" }, input = state.input.right },
-		reset = { text = "Reset", default = { "x" }, input = state.input.reset },
+		reset = { text = "Restart", default = { "x" }, input = state.input.reset },
 		wall1 = { text = "Wall 1", default = { "1" }, input = state.input.wall1 },
 		wall2 = { text = "Wall 2", default = { "2" }, input = state.input.wall2 },
 		wall3 = { text = "Wall 3", default = { "3" }, input = state.input.wall3 },
@@ -50,18 +50,7 @@ function init()
 	ui_switch2 = Sound("ui_switch2.ogg", s)
 	ui_transition2 = Sound("ui_transition2.ogg", s)
 
-	shoot1 = Sound("pew.ogg", s)
-	hit1 = Sound("hit.ogg", s)
-	hit4 = Sound("hit4.ogg", s)
-
 	enemy_die1 = Sound("enemy_die1.ogg", s)
-	enemy_die2 = Sound("enemy_die2.ogg", s)
-
-	proj_hit_wall1 = Sound("proj_hit_wall1.ogg", s)
-
-	player_hit1 = Sound("player_hit1.ogg", s)
-	player_hit2 = Sound("player_hit2.ogg", s)
-
 	success = Sound("success.ogg", s)
 
 	-- load songs
@@ -91,7 +80,7 @@ function init()
 
 	-- load images:
 	wall_arrow_particle = Image("wall_arrow_particle")
-	-- wall_arrow_particle = Image("icon")
+
 	local is_path = true
 	knight_sprites = {
 		hitbox_width = 15,
@@ -336,23 +325,23 @@ function open_options(self)
 	)
 	button_offset = button_offset + button_distance
 
-	self.screen_shake_button = collect_into(
-		self.options_ui_elements,
-		Button({
-			x = column_x[column],
-			y = gh / 2 + button_offset,
-			w = 65 * global_game_scale,
-			button_text = tostring(state.no_screen_shake and "no shake" or "yes shake"),
-			fg_color = "bg",
-			bg_color = "fg",
-			action = function(b)
-				ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-				state.no_screen_shake = not state.no_screen_shake
-				b:set_text(tostring(state.no_screen_shake and "no shake" or "cam shake"))
-			end,
-		})
-	)
-	button_offset = button_offset + button_distance
+	-- self.screen_shake_button = collect_into(
+	-- 	self.options_ui_elements,
+	-- 	Button({
+	-- 		x = column_x[column],
+	-- 		y = gh / 2 + button_offset,
+	-- 		w = 65 * global_game_scale,
+	-- 		button_text = tostring(state.no_screen_shake and "no shake" or "yes shake"),
+	-- 		fg_color = "bg",
+	-- 		bg_color = "fg",
+	-- 		action = function(b)
+	-- 			ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	-- 			state.no_screen_shake = not state.no_screen_shake
+	-- 			b:set_text(tostring(state.no_screen_shake and "no shake" or "cam shake"))
+	-- 		end,
+	-- 	})
+	-- )
+	-- button_offset = button_offset + button_distance
 
 	--
 	-- next column: Controls
@@ -418,23 +407,23 @@ function open_options(self)
 	)
 	button_offset = button_offset + button_distance
 
-	self.screen_flashes_button = collect_into(
-		self.options_ui_elements,
-		Button({
-			x = column_x[column],
-			y = gh / 2 + button_offset,
-			w = gw * 0.20,
-			button_text = tostring(state.screen_flashes and "screen flashes" or "no flashes"),
-			fg_color = "bg",
-			bg_color = "fg",
-			action = function(b)
-				ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-				state.screen_flashes = not state.screen_flashes
-				b:set_text(tostring(state.screen_flashes and "sreen flashes" or "no flashes"))
-			end,
-		})
-	)
-	button_offset = button_offset + button_distance
+	-- self.screen_flashes_button = collect_into(
+	-- 	self.options_ui_elements,
+	-- 	Button({
+	-- 		x = column_x[column],
+	-- 		y = gh / 2 + button_offset,
+	-- 		w = gw * 0.20,
+	-- 		button_text = tostring(state.screen_flashes and "screen flashes" or "no flashes"),
+	-- 		fg_color = "bg",
+	-- 		bg_color = "fg",
+	-- 		action = function(b)
+	-- 			ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	-- 			state.screen_flashes = not state.screen_flashes
+	-- 			b:set_text(tostring(state.screen_flashes and "sreen flashes" or "no flashes"))
+	-- 		end,
+	-- 	})
+	-- )
+	-- button_offset = button_offset + button_distance
 
 	self.wall_toggle_controls = collect_into(
 		self.options_ui_elements,
@@ -442,13 +431,13 @@ function open_options(self)
 			x = column_x[column],
 			y = gh / 2 + button_offset,
 			w = gw * 0.20,
-			button_text = tostring(state.toggle_controls and "toggle walls" or "press n' hold"),
+			button_text = tostring(state.toggle_controls and "toggle controls" or "press n' hold"),
 			fg_color = "bg",
 			bg_color = "fg",
 			action = function(b)
 				ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 				state.toggle_controls = not state.toggle_controls
-				b:set_text(tostring(state.toggle_controls and "toggle walls" or "press n' hold"))
+				b:set_text(tostring(state.toggle_controls and "toggle controls" or "press n' hold"))
 			end,
 		})
 	)
@@ -808,7 +797,7 @@ function play_level(self, args)
 	scene_transition(self, gw / 2, gh / 2, Game("game"), {
 		destination = "game",
 		args = args,
-	}, { text = "todo text", font = pixul_font, alignment = "center" })
+	}, { text = "another Squad invades...", font = pixul_font, alignment = "center" })
 end
 
 function unpause_game(self)
@@ -890,7 +879,7 @@ function open_credits(self)
 			group = ui_group,
 			x = columns[1],
 			y = yOffset,
-			lines = { { text = "[fg]artist: ", font = pixul_font } },
+			lines = { { text = "[fg]art: ", font = pixul_font } },
 		})
 	)
 	self.artist_button = collect_into(
@@ -899,13 +888,13 @@ function open_credits(self)
 			group = self.credits,
 			x = columns[2],
 			y = yOffset,
-			w = gw * 0.1,
-			button_text = "[wavy_rainbow]Teirue",
+			w = gw * 0.3,
+			button_text = "[wavy_rainbow]knight: aamatniekss",
 			fg_color = "bg",
 			bg_color = "black",
 			credits_button = true,
 			action = function(b)
-				open_url(b, "https://www.instagram.com/teirue.byte/")
+				open_url(b, "https://aamatniekss.itch.io/fantasy-knight-free-pixelart-animated-character")
 			end,
 		})
 	)
@@ -917,7 +906,7 @@ function open_credits(self)
 			group = ui_group,
 			x = columns[1],
 			y = yOffset,
-			lines = { { text = "[fg]code based off: ", font = pixul_font } },
+			lines = { { text = "[fg]engine: ", font = pixul_font } },
 		})
 	)
 	self.code_basis_button = collect_into(
@@ -942,7 +931,7 @@ function open_credits(self)
 		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[blue]libraries: ", font = pixul_font } } })
 	)
 
-	local x_offset = -gw * 0.3
+	local x_offset = -gw * 0.2
 	local x_dist = gw * 0.140
 	local x_width = gw * 0.130
 	self.libraries_button1 = collect_into(
@@ -1015,61 +1004,61 @@ function open_credits(self)
 	)
 
 	x_offset = x_offset + x_dist
-	self.libraries_button5 = collect_into(
-		self.credits_ui_elements,
-		Button({
-			group = ui_group,
-			x = columns[2] + x_offset,
-			y = yOffset,
-			w = x_width,
-			button_text = "inputfield",
-			fg_color = "bg",
-			bg_color = "blue",
-			credits_button = true,
-			action = function(b)
-				open_url(b, "https://github.com/ReFreezed/InputField")
-			end,
-		})
-	)
+	-- self.libraries_button5 = collect_into(
+	-- 	self.credits_ui_elements,
+	-- 	Button({
+	-- 		group = ui_group,
+	-- 		x = columns[2] + x_offset,
+	-- 		y = yOffset,
+	-- 		w = x_width,
+	-- 		button_text = "inputfield",
+	-- 		fg_color = "bg",
+	-- 		bg_color = "blue",
+	-- 		credits_button = true,
+	-- 		action = function(b)
+	-- 			open_url(b, "https://github.com/ReFreezed/InputField")
+	-- 		end,
+	-- 	})
+	-- )
 
 	yOffset = yOffset + y_dist
 	self.music_section = collect_into(
 		self.credits_ui_elements,
 		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[green]music:", font = pixul_font } } })
 	)
-	self.music_button1 = collect_into(
-		self.credits_ui_elements,
-		Button({
-			group = ui_group,
-			x = columns[2],
-			y = yOffset,
-			button_text = "archive.org",
-			fg_color = "bg",
-			bg_color = "green",
-			credits_button = true,
-			action = function(b)
-				open_url(b, "https://archive.org")
-			end,
-		})
-	)
+	-- self.music_button1 = collect_into(
+	-- 	self.credits_ui_elements,
+	-- 	Button({
+	-- 		group = ui_group,
+	-- 		x = columns[2],
+	-- 		y = yOffset,
+	-- 		button_text = "name",
+	-- 		fg_color = "bg",
+	-- 		bg_color = "green",
+	-- 		credits_button = true,
+	-- 		action = function(b)
+	-- 			open_url(b, "link")
+	-- 		end,
+	-- 	})
+	-- )
 
 	yOffset = yOffset + y_dist
 	self.sound_section = collect_into(
 		self.credits_ui_elements,
 		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[yellow]sounds:", font = pixul_font } } })
 	)
-	self.sound_button1 = collect_into(
-		self.credits_ui_elements,
-		Button({
-			group = self.credits,
-			x = columns[2],
-			y = yOffset,
-			button_text = "BlueYeti Snowball + Audacity + Mikey's Mouth",
-			fg_color = "bg",
-			bg_color = "yellow",
-			credits_button = true,
-		})
-	)
+	-- self.sound_button1 = collect_into(
+	-- 	self.credits_ui_elements,
+	-- 	Button({
+	-- 		group = self.credits,
+	-- 		x = columns[2],
+	-- 		y = yOffset,
+	-- 		button_text = "BlueYeti Snowball + Audacity + Mikey's Mouth",
+	-- 		fg_color = "bg",
+	-- 		bg_color = "yellow",
+	-- 		credits_button = true,
+	-- 	})
+	-- )
 	for _, v in pairs(self.credits_ui_elements) do
 		-- v.group = ui_group
 		-- ui_group:add(v)

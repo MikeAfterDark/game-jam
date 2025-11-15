@@ -4,9 +4,6 @@ runner_types = {
 	knight = {
 		name = "knight",
 		load_sprites = function(self)
-			-- run, jump
-			-- self.sprites = knight_sprites.sprite_sheets
-
 			self.animations = {
 				idle = Animation({
 					sprite_sheet = knight_sprites.sprite_sheets.idle,
@@ -64,6 +61,8 @@ function Runner:init(args)
 	self:init_game_object(args)
 	counter = counter and (counter + 1) or 0
 	self.count = counter
+	self.init_x = self.x
+	self.init_y = self.y
 
 	self.type = runner_types[self.type]
 	self.state = Runner_State.Run
@@ -78,12 +77,24 @@ function Runner:init(args)
 
 	self.color = _G["white"][0]
 	self.color_text = "red"
-	self.label_y_offset = 50 * self.size
-	self.runner_label = Text2({
-		x = self.x,
-		y = self.y + self.label_y_offset,
-		lines = { { text = "[" .. self.color_text .. "]A", font = pixul_font } },
-	})
+	-- self.label_y_offset = 50 * self.size
+	-- self.runner_label = Text2({
+	-- 	x = self.x,
+	-- 	y = self.y + self.label_y_offset,
+	-- 	lines = { { text = "[" .. self.color_text .. "]A", font = pixul_font } },
+	-- })
+end
+
+function Runner:reset()
+	self.state = Runner_State.Run
+	self.dir = self.direction == "right" and 1 or 0
+
+	-- fuuuuck
+	self:set_position(self.init_x, self.init_y)
+	print("resetting")
+
+	-- self.x = self.init_x
+	-- self.y = self.init_y
 end
 
 function Runner:update(dt)
@@ -95,23 +106,23 @@ function Runner:update(dt)
 	local vel = 0
 	if self.state == Runner_State.Slide then
 		self:set_friction(0)
-		self.dir = math.sign(vx)
+		self.dir = vx ~= 0 and math.sign(vx) or 1
 		vel = math.abs(self.icy_velocity / 2) * self.dir
 
 		if self.grounded then
-			local max_speed = 10
-			local max_vel = 10
 			-- self.icy_speed = math.max(math.min(self.icy_speed * self.ground_normal, max_speed), -max_speed)
 			-- vel = math.max(math.min(vel * self.icy_speed, max_vel), -max_vel)
 			if self.ground_normal.y >= 0.99 then
 				self:set_velocity(vel + gx * dt, vy + gy * dt)
+			elseif self.ground_normal.x > 0.1 then
+				self:apply_force(vel, 0)
 			end
 		end
 	elseif self.state ~= Runner_State.Idle and self.state ~= Runner_State.Dead and self.grounded then
 		self:set_friction(1)
 		vel = self.speed * self.dir
 		if self.grounded then
-			self:set_velocity(vel * self.size + gx * dt, vy + gy * dt)
+			self:set_velocity(vel * math.min(1, self.size / 1.6) + gx * dt, vy + gy * dt)
 		end
 	end
 
@@ -121,8 +132,8 @@ function Runner:update(dt)
 		self.temp_color = blue[0]
 	end
 
-	self.runner_label.x = self.x
-	self.runner_label.y = self.y + self.label_y_offset
+	-- self.runner_label.x = self.x
+	-- self.runner_label.y = self.y + self.label_y_offset
 
 	local animation = self.animations[self.state]
 	if animation then
@@ -157,10 +168,9 @@ function Runner:on_collision_post(other, contact, nx, ny, normal_impulse, tangen
 end
 
 function Runner:draw()
-	-- graphics.rectangle(self.x, self.y, self.w, self.h, 0, 0, self.color)
-	self:draw_physics(self.temp_color or white[0])
+	-- self:draw_physics(self.temp_color or white[0])
 
-	self.runner_label:draw()
+	-- self.runner_label:draw()
 
 	local color = Color(1, 1, 1, 0.8)
 	local anim = self.animations[self.state]
@@ -168,6 +178,12 @@ function Runner:draw()
 		anim:draw(self.x, self.y, 0, self.size * self.dir, self.size, 0, 0, color)
 	else
 		self.animations[Runner_State.Idle]:draw(self.x, self.y, 0, self.size * self.dir, self.size, 0, 0, color)
+	end
+end
+
+function Runner:set_state(new_state)
+	if self.state ~= Runner_State.Dead then
+		self.state = new_state
 	end
 end
 

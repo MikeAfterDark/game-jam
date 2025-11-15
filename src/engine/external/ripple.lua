@@ -1,7 +1,7 @@
 local ripple = {
-	_VERSION = 'Ripple',
-	_DESCRIPTION = 'Audio helpers for LÖVE.',
-	_URL = 'https://github.com/tesselode/ripple',
+	_VERSION = "Ripple",
+	_DESCRIPTION = "Audio helpers for LÖVE.",
+	_URL = "https://github.com/tesselode/ripple",
 	_LICENSE = [[
 		MIT License
 
@@ -24,7 +24,7 @@ local ripple = {
 		LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 		OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 		SOFTWARE.
-	]]
+	]],
 }
 
 local unpack = unpack or table.unpack -- luacheck: ignore
@@ -114,7 +114,9 @@ function Taggable:_untag(tag)
 end
 
 function Taggable:_setEffect(name, filterSettings)
-	if filterSettings == nil then filterSettings = true end
+	if filterSettings == nil then
+		filterSettings = true
+	end
 	self._effects[name] = filterSettings
 end
 
@@ -150,7 +152,7 @@ function Taggable:_setOptions(options)
 end
 
 function Taggable:tag(...)
-	for i = 1, select('#', ...) do
+	for i = 1, select("#", ...) do
 		local tag = select(i, ...)
 		self:_tag(tag)
 	end
@@ -159,7 +161,7 @@ function Taggable:tag(...)
 end
 
 function Taggable:untag(...)
-	for i = 1, select('#', ...) do
+	for i = 1, select("#", ...) do
 		local tag = select(i, ...)
 		self:_untag(tag)
 	end
@@ -189,14 +191,14 @@ function Taggable:getEffect(name)
 end
 
 function Taggable:__index(key)
-	if key == 'volume' then
+	if key == "volume" then
 		return self._volume
 	end
 	return Taggable[key]
 end
 
 function Taggable:__newindex(key, value)
-	if key == 'volume' then
+	if key == "volume" then
 		self:_setVolume(value)
 	else
 		rawset(self, key, value)
@@ -207,10 +209,12 @@ end
 	Represents a tag that can be applied to sounds,
 	instances of sounds, or other tags.
 ]]
-local Tag = {__newindex = Taggable.__newindex}
+local Tag = { __newindex = Taggable.__newindex }
 
 function Tag:__index(key)
-	if Tag[key] then return Tag[key] end
+	if Tag[key] then
+		return Tag[key]
+	end
 	return Taggable.__index(self, key)
 end
 
@@ -265,9 +269,9 @@ end
 local Instance = {}
 
 function Instance:__index(key)
-	if key == 'pitch' then
+	if key == "pitch" then
 		return self._source:getPitch()
-	elseif key == 'loop' then
+	elseif key == "loop" then
 		return self._source:isLooping()
 	elseif Instance[key] then
 		return Instance[key]
@@ -276,9 +280,9 @@ function Instance:__index(key)
 end
 
 function Instance:__newindex(key, value)
-	if key == 'pitch' then
+	if key == "pitch" then
 		self._source:setPitch(value)
-	elseif key == 'loop' then
+	elseif key == "loop" then
 		self._source:setLooping(value)
 	else
 		Taggable.__newindex(self, key, value)
@@ -356,7 +360,9 @@ function Instance:_play(options)
 	if options and options.loop ~= nil then
 		self.loop = options.loop
 	end
-	if not web then self._source:seek(options and options.seek or 0) end
+	if not web then
+		self._source:seek(options and options.seek or 0)
+	end
 	self._source:play()
 end
 
@@ -364,17 +370,19 @@ function Instance:_update(dt)
 	-- fade in
 	if self._fadeDirection == 1 and self._fadeVolume < 1 then
 		self._fadeVolume = self._fadeVolume + self._fadeSpeed * dt
-		if self._fadeVolume > 1 then self._fadeVolume = 1 end
+		if self._fadeVolume > 1 then
+			self._fadeVolume = 1
+		end
 		self:_onChangeVolume()
-	-- fade out
+		-- fade out
 	elseif self._fadeDirection == -1 and self._fadeVolume > 0 then
 		self._fadeVolume = self._fadeVolume - self._fadeSpeed * dt
 		if self._fadeVolume < 0 then
 			self._fadeVolume = 0
 			-- pause or stop after fading out
-			if self._afterFadingOut == 'pause' then
+			if self._afterFadingOut == "pause" then
 				self:pause()
-			elseif self._afterFadingOut == 'stop' then
+			elseif self._afterFadingOut == "stop" then
 				self:stop()
 			end
 		end
@@ -383,14 +391,14 @@ function Instance:_update(dt)
 end
 
 function Instance:isStopped()
-	return (not self._source:isPlaying()) and (not self._paused)
+	return (not self._source:isPlaying()) and not self._paused
 end
 
 function Instance:pause(fadeDuration)
 	if fadeDuration and not self._paused then
 		self._fadeDirection = -1
 		self._fadeSpeed = 1 / fadeDuration
-		self._afterFadingOut = 'pause'
+		self._afterFadingOut = "pause"
 	else
 		self._source:pause()
 		self._paused = true
@@ -414,7 +422,7 @@ function Instance:stop(fadeDuration)
 	if fadeDuration and not self._paused then
 		self._fadeDirection = -1
 		self._fadeSpeed = 1 / fadeDuration
-		self._afterFadingOut = 'stop'
+		self._afterFadingOut = "stop"
 	else
 		self._source:stop()
 		self._paused = false
@@ -425,7 +433,7 @@ end
 local Sound = {}
 
 function Sound:__index(key)
-	if key == 'loop' then
+	if key == "loop" then
 		return self._source:isLooping()
 	elseif Sound[key] then
 		return Sound[key]
@@ -434,7 +442,7 @@ function Sound:__index(key)
 end
 
 function Sound:__newindex(key, value)
-	if key == 'loop' then
+	if key == "loop" then
 		self._source:setLooping(value)
 		for _, instance in ipairs(self._instances) do
 			instance.loop = value
@@ -459,6 +467,9 @@ function Sound:_onChangeEffects()
 end
 
 function Sound:play(options)
+	if true then
+		return nil -- NOTE: STOPPED AUDIO FOR PRE-MUSIC JAM DEMO
+	end
 	-- reuse a stopped instance if one is available
 	for _, instance in ipairs(self._instances) do
 		if instance:isStopped() then
@@ -511,7 +522,9 @@ function ripple.newSound(source, options)
 		_instances = {},
 	}, Sound)
 	sound:_setOptions(options)
-	if options and options.loop then sound.loop = true end
+	if options and options.loop then
+		sound.loop = true
+	end
 	return sound
 end
 

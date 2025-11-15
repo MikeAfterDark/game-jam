@@ -1,24 +1,13 @@
 return {
-    ["author"] = "Mikee",
-    ["levels"] = {
-        [14] = { ["name"] = "all walls", ["path"] = 14 },
-        [2] = { ["name"] = "DEAD", ["path"] = "2" },
-        [5] = { ["name"] = "DEAD", ["path"] = 5 },
-        [12] = { ["name"] = "wall control", ["path"] = 12 },
-        [11] = { ["name"] = "boing", ["path"] = 11 },
-        [4] = { ["name"] = "DEAD", ["path"] = 4 },
-        [10] = { ["name"] = "stairs", ["path"] = 10 },
-        [9] = { ["name"] = "90deg", ["path"] = 9 },
-        [8] = { ["name"] = "slopes", ["path"] = 8 },
-        [13] = { ["name"] = "check point", ["path"] = 13 },
-        [3] = { ["name"] = "DEAD", ["path"] = "3" },
-        [7] = { ["name"] = "ice only", ["path"] = 7 },
-        [1] = { ["name"] = "death loop", ["path"] = "1" },
-        [15] = { ["name"] = "pills", ["path"] = 15 },
-        [6] = { ["name"] = "basic", ["path"] = 6 },
-    },
-    ["name"] = "First Pack",
     ["description"] =
-    "This is the first pack in the game! thanks for trying it out, I'm just writing some text to see how long I can make it, stress testing the text-rendering. This is really fun, please work. Ok that was pretty legible, butwhataboutthis?whereimnotenteringspacessoicanseethewrappinginaction",
+    "Knights of 'The Squad' have invaded your carefully built dungeon. Lucky for you, you can make walls and floors passable at will, and 'The Squad' is famously a bunch of morons that run in a straight line. Kill them before they learn too much about your dungeon!",
+    ["name"] = "Stop The Squad",
+    ["levels"] = {
+        [4] = { ["name"] = "Boing", ["path"] = 4 },
+        [1] = { ["name"] = "Tutorial", ["path"] = 1 },
+        [2] = { ["name"] = "Zigzag", ["path"] = 2 },
+        [3] = { ["path"] = 3, ["name"] = "Left Right", ["wrap"] = true },
+    },
+    ["author"] = "Mikee",
 }
 

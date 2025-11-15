@@ -67,6 +67,8 @@ function Game:on_enter(from, args)
 	self._player_size = 32
 	self.countdown = 3
 	self.countdown_text = Text({ { text = "", font = pixul_font, alignment = "center" } }, global_text_tags)
+	self.level_timer_text = Text({ { text = "", font = pixul_font, alignment = "center" } }, global_text_tags)
+	self.creator_mode_selection_text = Text({ { text = "", font = pixul_font, alignment = "center" } }, global_text_tags)
 
 	-- NOTE: inits:
 	checkpoint_counter = 0
@@ -87,6 +89,8 @@ function Game:on_enter(from, args)
 		-- print("Loading level: folder:", self.level_folder, ", path: ", self.level_path)
 		self:load_map(self.level_path)
 	end
+	self.level_timer = self.level_timer or 60
+	self.init_level_timer = self.level_timer
 
 	Wall({ -- border wall, it'll "keep all the illegals out" /s
 		group = self.main,
@@ -128,19 +132,26 @@ function Game:update(dt)
 
 	if not self.in_pause and not self.stuck and not self.won then
 		run_time = run_time + dt
+		self.countdown = self.countdown - dt
+
+		if self.countdown <= 0 and not self.died then
+			self.level_timer = self.level_timer - dt
+		end
 	end
 
 	if input.reset.pressed then
-		play_level(self, {
-			creator_mode = self.creator_mode,
-			level = self.level,
-			pack = self.pack,
-			level_folder = self.level_folder,
-		})
-	end
-
-	if self.win then
-		self:quit()
+		if self.creator_mode then
+			for _, runner in ipairs(self.runners) do
+				runner:reset()
+			end
+		else
+			play_level(self, {
+				creator_mode = self.creator_mode,
+				level = self.level,
+				pack = self.pack,
+				level_folder = self.level_folder,
+			})
+		end
 	end
 
 	if input.escape.pressed and not self.transitioning and not self.in_credits then
@@ -169,11 +180,35 @@ function Game:update(dt)
 		self.credits:update(0)
 	end
 
+	self:update_game_object(dt * slow_amount)
+
+	star_group:update(dt * slow_amount)
+	self.floor:update(dt * slow_amount)
+	self.post_main:update(dt * slow_amount)
+	self.effects:update(dt * slow_amount)
+	self.ui:update(dt * slow_amount)
+	self.end_ui:update(dt * slow_amount)
+	self.paused_ui:update(dt * slow_amount)
+	self.options_ui:update(dt * slow_amount)
+	if self.in_keybinding then
+		update_keybind_button_display(self)
+	end
+	self.keybinding_ui:update(dt * slow_amount)
+	self.credits:update(dt * slow_amount)
+
+	if self.level_timer > 0 then
+		self.level_timer_text:set_text({
+			{
+				text = "[red]" .. math.floor(self.level_timer),
+				font = pixul_font,
+				alignment = "center",
+			},
+		})
+	end
 	if self.countdown > 0 then
-		self.countdown = self.countdown - dt
 		self.countdown_text:set_text({
 			{
-				text = "[red]" .. math.floor(self.countdown),
+				text = "[red]" .. math.floor(self.countdown + 1),
 				font = fat_font,
 				alignment = "center",
 			},
@@ -181,33 +216,7 @@ function Game:update(dt)
 		return
 	end
 
-	self:update_game_object(dt * slow_amount)
-
-	star_group:update(dt * slow_amount)
-	self.floor:update(dt * slow_amount)
 	self.main:update(dt * slow_amount * self.main_slow_amount)
-	self.post_main:update(dt * slow_amount)
-	self.effects:update(dt * slow_amount)
-	self.ui:update(dt * slow_amount)
-	self.end_ui:update(dt * slow_amount)
-	self.paused_ui:update(dt * slow_amount)
-	self.options_ui:update(dt * slow_amount)
-
-	if self.spawn then
-		local a = Player({
-			group = self.main, --
-			x = self.spawn.x,
-			y = self.spawn.y,
-			size = self.spawn.size,
-			speed = self.spawn.speed,
-			color = self.spawn.color,
-			color_text = "black",
-			init_wall_normal = self.spawn.init_wall_normal,
-			tutorial = true,
-		})
-		a:set_velocity(self.spawn.vx, self.spawn.vy)
-		self.spawn = nil
-	end
 
 	local dead_runners = 0
 	for _, runner in ipairs(self.runners) do
@@ -216,9 +225,17 @@ function Game:update(dt)
 		end
 	end
 
-	local allowed_dead = 3
-	if dead_runners > allowed_dead then
-		self:die()
+	if not self.creator_mode then
+		if dead_runners == #self.runners then
+			self.win = true
+			self:quit()
+		elseif num_checkpoints > 0 and checkpoint_counter == num_checkpoints then
+			self.reason_for_loss = "they know too much"
+			self:die()
+		elseif self.level_timer < 0 then
+			self.reason_for_loss = "the squad survived"
+			self:die()
+		end
 	end
 
 	if self.creator_mode then -- map creator mode
@@ -237,19 +254,35 @@ function Game:update(dt)
 				self.hovered = nil
 			end
 
+			local selection_text = ""
+			local selection_color = ""
 			if self.selection == 0 then -- player
 				local sprite = knight_sprites
 				self.hovered = Circle(self.mouse_x, self.mouse_y, sprite.hitbox_width)
 				self.hovered.size = 1
 				self.hovered.color = red[0]
+				selection_text = "runner"
+				selection_color = "red"
 			elseif self.selection == #wall_type_order then -- pill
 				self.hovered = Circle(self.mouse_x, self.mouse_y, 10)
 				self.hovered.size = 10
 				self.hovered.color = green[0]
+				selection_text = "jump pill"
+				selection_color = "green"
 			else                                                -- wall
 				self.hovered = Chain(false, { self.mouse_x, self.mouse_y }) --Rectangle(mouse_x, mouse_y, gh * 0.1, gh * 0.1)
 				self.hovered.color = _G[wall_type[wall_type_order[self.selection]].color][0]
+				selection_text = wall_type_order[self.selection]
+				selection_color = wall_type[wall_type_order[self.selection]].color
 			end
+
+			self.creator_mode_selection_text:set_text({
+				{
+					text = "[" .. selection_color .. "]" .. selection_text,
+					font = pixul_font,
+					alignment = "center",
+				},
+			})
 		else
 			if self.selection == 0 then
 				self.hovered:move_to(self.mouse_x, self.mouse_y)
@@ -290,15 +323,18 @@ function Game:update(dt)
 				}
 
 				table.insert(self.map_builder.runners, runner_data)
-				Runner({
-					group = self.main,
-					x = runner_data.x,
-					y = runner_data.y,
-					size = runner_data.size,
-					type = runner_data.type,
-					direction = runner_data.direction,
-					speed = runner_data.speed,
-				})
+				table.insert(
+					self.runners,
+					Runner({
+						group = self.main,
+						x = runner_data.x,
+						y = runner_data.y,
+						size = runner_data.size,
+						type = runner_data.type,
+						direction = runner_data.direction,
+						speed = runner_data.speed,
+					})
+				)
 				self.hovered = nil
 			elseif self.selection < #wall_type_order then
 				if
@@ -324,7 +360,6 @@ function Game:update(dt)
 							type = type.name, -- NOTE: type.name here**
 							loop = false,
 							vertices = self.hovered.vertices,
-							color = self.hovered.color,
 							data = data,
 						}
 
@@ -334,7 +369,6 @@ function Game:update(dt)
 							type = type, -- NOTE: just type here**
 							loop = wall_data.loop,
 							vertices = wall_data.vertices,
-							color = wall_data.color,
 							data = wall_data.data,
 						})
 						self.hovered = nil
@@ -375,13 +409,12 @@ function Game:update(dt)
 					rs = self.hovered.pill_data.rs,
 					boost_x = self.hovered.pill_data.boost_x,
 					boost_y = self.hovered.pill_data.boost_y,
-					color = green[0],
 				})
 				self.hovered = nil
 			end
 		end
 
-		if input.space.pressed and self.hovered and #self.hovered.vertices >= 4 then
+		if input.space.pressed and self.hovered and #self.hovered.vertices > 4 then
 			table.remove(self.hovered.vertices) -- remove duplicate starting point at end of list
 			table.remove(self.hovered.vertices)
 
@@ -399,7 +432,6 @@ function Game:update(dt)
 				type = type.name, -- NOTE: type.name here**
 				loop = false,
 				vertices = self.hovered.vertices,
-				color = self.hovered.color,
 				data = data,
 			}
 
@@ -409,7 +441,6 @@ function Game:update(dt)
 				type = type, -- NOTE: just type here**
 				loop = wall_data.loop,
 				vertices = wall_data.vertices,
-				color = wall_data.color,
 				data = wall_data.data,
 			})
 			self.hovered = nil
@@ -417,46 +448,10 @@ function Game:update(dt)
 
 		if input.s.pressed then
 			print("saving map")
+			self.map_builder.level_timer = 30
 			self:save_map(self.map_builder)
 		end
 	end
-
-	-------------------------------------------------------------
-	----------------------- UI MENU STUFF -----------------------
-	-------------------------------------------------------------
-
-	if self.in_keybinding then
-		update_keybind_button_display(self)
-	end
-	self.keybinding_ui:update(dt * slow_amount)
-	self.credits:update(dt * slow_amount)
-
-	-- if input.m2.pressed then -- NOTE: PLAYTIME DEBUG TEXT
-	-- 	if not self.counter then
-	-- 		self.counter = 1
-	-- 	end
-	-- 	if not self.debug then
-	-- 		self.debug = Text2({
-	-- 			group = self.ui,
-	-- 			x = 100,
-	-- 			y = 20,
-	-- 			force_update = true,
-	-- 			lines = {
-	-- 				{
-	-- 					-- text = tostring(main.current_music_type),
-	-- 					-- text = string.format("%.2f", self.map.song_position),
-	-- 					text = tostring(num_checkpoints),
-	-- 					font = pixul_font,
-	-- 					alignment = "center",
-	-- 				},
-	-- 			},
-	-- 		})
-	-- 	end
-	-- end
-	-- if input.m3.pressed and self.debug then
-	-- 	self.debug:clear()
-	-- 	self.debug = nil
-	-- end
 end
 
 function Game:load_map(map_path)
@@ -491,6 +486,8 @@ function Game:load_map(map_path)
 			end
 		end
 	end
+
+	self.level_timer = data["level_timer"]
 end
 
 function Game:save_map(map)
@@ -649,7 +646,7 @@ function Game:quit()
 	-- end
 
 	self.quitting = true
-	if not self.win_text and not self.win_text2 and self.win then
+	if not self.win_text and not self.win_text2 and self.win and not self.won then
 		input:set_mouse_visible(true)
 		self.won = true
 		locked_state = nil
@@ -660,9 +657,6 @@ function Game:quit()
 		trigger:tween(1, _G, { music_slow_amount = 0 }, math.linear, function()
 			music_slow_amount = 0
 		end, "music_slow_amount")
-		-- trigger:tween(4, camera, { x = gw / 2, y = gh / 2, r = 0 }, math.linear, function()
-		-- 	camera.x, camera.y, camera.r = gw / 2, gh / 2, 0
-		-- end)
 
 		ui_layer = ui_interaction_layer.Win
 		self.win_ui_elements = {}
@@ -672,19 +666,74 @@ function Game:quit()
 			ui_elements = self.win_ui_elements,
 		})
 
-		self.win_text = collect_into(
-			self.win_ui_elements,
-			Text2({
-				group = self.end_ui,
-				x = gw / 2,
-				y = gh / 2 - 40 * global_game_scale,
-				force_update = true,
-				lines = { { text = "[wavy_mid, cbyc2]congratulations!", font = fat_font, alignment = "center" } },
-			})
-		)
-
 		trigger:after(0.5, function()
-			if #self.pack.levels > self.level then
+			local win_msg = random:table({
+				"Knights down",
+				"that'll show 'em",
+				"good shit",
+				"a win is a win",
+				"nothin' but death",
+				"area secure",
+				"just a few more",
+			})
+			if #self.pack.levels == self.level then
+				win_msg = "congrats! the dungeon is safe"
+			end
+			self.win_text = collect_into(
+				self.win_ui_elements,
+				Text2({
+					group = self.end_ui,
+					x = gw / 2,
+					y = gh / 2 - 40 * global_game_scale,
+					force_update = true,
+					lines = { { text = "[wavy_mid, cbyc2]" .. win_msg, font = fat_font, alignment = "center" } },
+				})
+			)
+
+			trigger:after(0.5, function()
+				self.win_time_text = collect_into(
+					self.win_ui_elements,
+					Text2({
+						group = self.end_ui,
+						x = gw / 2,
+						y = gh / 2 - 12 * global_game_scale,
+						force_update = true,
+						lines = {
+							{
+								text = "[wavy_mid, cbyc2]Time: " ..
+								string.format("%.2f", self.level_timer) .. "/" .. self.init_level_timer,
+								font = pixul_font,
+								alignment = "center",
+							},
+						},
+					})
+				)
+			end)
+
+			self.retry = collect_into(
+				self.win_ui_elements,
+				Button({
+					group = self.end_ui,
+					x = gw / 2 - 30 * global_game_scale,
+					y = gh / 2 + 5 * global_game_scale,
+					w = gw * 0.07,
+					force_update = true,
+					button_text = "[orange]redo",
+					fg_color = "fg",
+					bg_color = "bg_alt",
+					action = function()
+						play_level(self, {
+							creator_mode = self.creator_mode,
+							level = self.level,
+							pack = self.pack,
+							level_folder = self.level_folder,
+						})
+					end,
+				})
+			)
+
+			local next_step_text = "next level"
+			local next_step_function = function()
 				local next_level = self.level + 1
 				play_level(self, {
 					creator_mode = self.creator_mode,
@@ -692,56 +741,57 @@ function Game:quit()
 					pack = self.pack,
 					level_folder = self.pack.levels[next_level].path,
 				})
-			else
-				print("no more levels, going back to pack", self.pack.path)
-
-				scene_transition(
-					self,
-					gw / 2,
-					gh / 2,
-					MainMenu("main_menu"),
-					{ destination = "main_menu", args = { menu_mode = menu.Levels, pack = self.pack } },
-					{
-						text = "loading main menu...",
-						font = pixul_font,
-						alignment = "center",
-					}
-				)
 			end
+			if #self.pack.levels == self.level then
+				next_step_text = "main menu"
+				next_step_function = function()
+					print("no more levels, going back to pack", self.pack.path)
 
-			self.win_text2 = collect_into(
-				self.win_ui_elements,
-				Text2({
-					group = self.end_ui,
-					x = gw / 2,
-					y = gh / 2,
-					force_update = true,
-					lines = {
+					scene_transition(
+						self,
+						gw / 2,
+						gh / 2,
+						MainMenu("main_menu"),
+						{ destination = "main_menu", args = { menu_mode = menu.Levels, pack = self.pack } },
 						{
-							text = "[fg]level beat",
+							text = "loading main menu...",
 							font = pixul_font,
 							alignment = "center",
-							height_multiplier = 1.24,
-						},
-					},
+						}
+					)
+				end
+			end
+			self.next_step = collect_into(
+				self.win_ui_elements,
+				Button({
+					group = self.end_ui,
+					x = gw / 2 + 30 * global_game_scale,
+					y = gh / 2 + 5 * global_game_scale,
+					w = gw * 0.16,
+					force_update = true,
+					button_text = "[green]" .. next_step_text,
+					fg_color = "fg",
+					bg_color = "bg_alt",
+					action = next_step_function,
 				})
 			)
+
 			self.credits_button = collect_into(
 				self.win_ui_elements,
 				Button({
 					group = self.end_ui,
 					x = gw / 2,
-					y = gh / 2 + 35 * global_game_scale,
+					y = gh / 2 + 25 * global_game_scale,
+					w = gw * 0.12,
 					force_update = true,
-					button_text = "credits",
-					fg_color = "bg",
-					bg_color = "fg",
+					button_text = "[yellow]credits",
+					fg_color = "fg",
+					bg_color = "bg_alt",
 					action = function()
 						open_credits(self)
 					end,
 				})
 			)
-
 			for _, v in pairs(self.win_ui_elements) do
 				-- v.group = ui_group
 				-- ui_group:add(v)
@@ -772,8 +822,12 @@ function Game:draw()
 		self.countdown_text:draw(gw / 2, gh * 0.3)
 	end
 
-	if self.death_circle then
-		self.death_circle:draw(_G["red"][0], 11)
+	if self.level_timer_text then
+		self.level_timer_text:draw(gh * 0.05, gh * 0.05)
+	end
+
+	if self.creator_mode_selection_text then
+		self.creator_mode_selection_text:draw(gw * 0.7, gh * 0.95)
 	end
 
 	if self.hovered then
@@ -850,7 +904,7 @@ function Game:die()
 				force_update = true,
 				lines = {
 					{
-						text = "[wavy_mid, cbyc_fast]The Squad Died",
+						text = "[wavy_mid, cbyc_fast]" .. self.reason_for_loss,
 						font = fat_font,
 						alignment = "center",
 					},
