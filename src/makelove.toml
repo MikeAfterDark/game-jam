@@ -1,4 +1,4 @@
-name = "gamemusicjam-2025" # WARN: also change for setup_web_build
+name = "invaders" # WARN: also change for setup_web_build
 
 default_targets = ["win32", "win64", "appimage", "lovejs", "macos"] #full
 # default_targets = ["win32", "win64", "appimage", "macos"] #everything but web
@@ -7,23 +7,23 @@ build_directory = "../build"
 # icon_file "./assets/images/icon.png"
 
 love_files = [
-    # "::git-ls-tree::",
-    "./*",
+# "::git-ls-tree::",
+"./*",
 ]
 
 [hooks]
 # Both hooks are a list of commands to be executed. They use the default shell.
 # For more information, see the README.md
 prebuild = [
-	# "./generate_changelog.py",
-	# "./generate_builddata.py",
+# "./generate_changelog.py",
+# "./generate_builddata.py",
 ]
 postbuild = [
-	# {build_directory} and {version} will be replaced
-	# This is obviously only for illustrative purposes, you will probaly want to wrap this in a script
-	# "butler push {build_directory}/win32/SuperGame-win32.zip pfirsich/supergame:win32 --userversion {version}",
-	"./setup_web_build.sh gamemusicjam-2025", # WARN: arg needs to be {name} -AND- uses hardcoded 'build_directory'
-	# "./push.sh"
+# {build_directory} and {version} will be replaced
+# This is obviously only for illustrative purposes, you will probaly want to wrap this in a script
+# "butler push {build_directory}/win32/SuperGame-win32.zip pfirsich/supergame:win32 --userversion {version}",
+"./setup_web_build.sh invaders", # WARN: arg needs to be {name} -AND- uses hardcoded 'build_directory'
+"./push.sh"
 ]
 
 [hooks.parameters]

@@ -136,7 +136,7 @@ function MainMenu:setup_title_menu()
 			y = gh * 0.05,
 			lines = {
 				{
-					text = "[wavy_mid, fg]Game/Music Jam 2025!!",
+					text = "[wavy_mid, fg]Electroaccoustic Invaders!!!",
 					font = pixul_font,
 					alignment = "center",
 				},

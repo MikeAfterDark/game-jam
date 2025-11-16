@@ -1,4 +1,5 @@
 BUGFIXING:
+- ice sliding on different OSs
 - if 'win' during the transition during death it pops up both menus
 
 Tech Debt:

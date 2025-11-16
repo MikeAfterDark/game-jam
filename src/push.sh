@@ -1,7 +1,7 @@
 #!/bin/bash
 
 name="gusakm"
-project="gamemusicjam-2025"
+project="invaders"
 type=""
 
 butler push ../build/lovejs ${name}/${project}:web${type}

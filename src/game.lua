@@ -63,8 +63,6 @@ function Game:on_enter(from, args)
 	grid_size = 32
 	min_player_size = 16
 	max_player_size = 64
-	self._player_speed = 200 * global_game_scale
-	self._player_size = 32
 	self.countdown = 3
 	self.countdown_text = Text({ { text = "", font = pixul_font, alignment = "center" } }, global_text_tags)
 	self.level_timer_text = Text({ { text = "", font = pixul_font, alignment = "center" } }, global_text_tags)
@@ -632,7 +630,6 @@ function Game:save_map(map)
 			if f then
 				f:write("return " .. table.tostring(metadata))
 				f:close()
-				-- print("Wrote directly to:", meta_path)
 			else
 				print("Failed to write:", err)
 			end
@@ -641,9 +638,9 @@ function Game:save_map(map)
 end
 
 function Game:quit()
-	-- if self.died then
-	-- 	return
-	-- end
+	if self.died then
+		return
+	end
 
 	self.quitting = true
 	if not self.win_text and not self.win_text2 and self.win and not self.won then

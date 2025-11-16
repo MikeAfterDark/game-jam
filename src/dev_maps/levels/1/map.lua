@@ -89,8 +89,8 @@ return {
         },
     },
     ["runners"] = {
-        [1] = { ["x"] = 160, ["size"] = 1, ["y"] = 672, ["direction"] = "right", ["type"] = "knight", ["speed"] = 200 },
-        [2] = { ["x"] = 608, ["size"] = 1, ["y"] = 608, ["direction"] = "right", ["type"] = "knight", ["speed"] = 200 },
+        [1] = { ["x"] = 160, ["size"] = 2, ["y"] = 672, ["direction"] = "right", ["type"] = "knight", ["speed"] = 200 },
+        [2] = { ["x"] = 608, ["size"] = 1.5, ["y"] = 608, ["direction"] = "right", ["type"] = "knight", ["speed"] = 200 },
     },
     ["pills"] = {},
 }

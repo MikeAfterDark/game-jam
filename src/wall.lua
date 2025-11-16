@@ -129,14 +129,18 @@ wall_type = {
 		name = "Icy",
 		color = "blue",
 		collision_behavior = function(other, contact, self)
-			local normal = Vector(contact:getNormal())
-			local vx, vy = other:get_velocity()
+			if other.state == Runner_State.Slide then
+				return
+			end
 
-			local dir = Vector(vx, vy):normalize()
-			local dot = dir:dot(normal)
+			-- local normal = Vector(contact:getNormal())
+			-- local vx, vy = other:get_velocity()
+			--
+			-- local dir = Vector(vx, vy):normalize()
+			-- local dot = dir:dot(normal)
 
 			other:set_state(Runner_State.Slide)
-			other.icy_velocity = math.sqrt(vx * vx + vy * vy) -- try reapply velocity to avoid stoppage
+			-- other.icy_velocity = math.sqrt(vx * vx + vy * vy) -- try reapply velocity to avoid stoppage
 
 			-- if dot < -0.99 then
 			-- 	other:set_velocity(0, 0)
