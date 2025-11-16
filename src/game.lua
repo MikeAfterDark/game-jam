@@ -10,11 +10,6 @@ function Game:on_enter(from, args)
 	self.hfx:add("condition1", 1)
 	self.hfx:add("condition2", 1)
 
-	main.ui_layer_stack:push({
-		layer = ui_interaction_layer.Game,
-		layer_has_music = false,
-		ui_elements = self.game_ui_elements,
-	})
 	camera.x, camera.y = gw / 2, gh / 2
 	camera.r = 0
 
@@ -89,6 +84,9 @@ function Game:on_enter(from, args)
 	else
 		-- print("Loading level: folder:", self.level_folder, ", path: ", self.level_path)
 		self:load_map(self.level_path)
+		-- if self.music then
+		-- 	random:table(self.music):play({ volume = 0.5 })
+		-- end
 	end
 	self.level_timer = self.level_timer or 60
 	self.init_level_timer = self.level_timer
@@ -103,6 +101,13 @@ function Game:on_enter(from, args)
 	self.in_pause = false
 	self.stuck = false
 	self.won = false
+
+	main.ui_layer_stack:push({
+		layer = ui_interaction_layer.Game,
+		layer_has_music = self.music_type ~= "",
+		music_type = self.music_type,
+		ui_elements = self.game_ui_elements,
+	})
 end
 
 function Game:on_exit()
@@ -498,6 +503,7 @@ function Game:load_map(map_path)
 	end
 
 	self.level_timer = data["level_timer"]
+	self.music_type = data["music_type"] or ""
 end
 
 function Game:save_map(map)

@@ -28,14 +28,25 @@ function init()
 		wall8 = { text = "Wall 8", default = { "8" }, input = state.input.wall8 },
 		wall9 = { text = "Wall 9", default = { "9" }, input = state.input.wall9 },
 	}
-	options_keys_display_order = { "reset", "wall1", "wall2", "wall3", "wall4", "wall5", "wall6", "wall7", "wall8", "wall9" }
+	options_keys_display_order = {
+		"reset",
+		"wall1",
+		"wall2",
+		"wall3",
+		"wall4",
+		"wall5",
+		"wall6",
+		"wall7",
+		"wall8",
+		"wall9",
+	}
 	for action, key in pairs(controls) do
 		input:bind(action, key.input or key.default)
 	end
 
 	-- load sounds:
 	-- TODO: move all sounds and music data to some data file and load *that*
-	local s = { tags = { sfx } }
+	sfx_tag = { tags = { sfx } }
 	-- buttonHover = Sound("buttonHover.ogg", s)
 	-- buttonPop = Sound("buttonPop.ogg", s)
 	-- buttonBoop = Sound("buttonBoop.ogg", s)
@@ -47,59 +58,59 @@ function init()
 	-- enemy_die1 = Sound("enemy_die1.ogg", s)
 	-- success = Sound("success.ogg", s)
 
-	local music_jam = "music_jam/"
+	music_jam_folder = "music_jam/"
 	-- ui
 	ui_hover = {
-		Sound(music_jam .. "UI Hover 1.mp3", s),
-		Sound(music_jam .. "UI Hover 2.mp3", s),
-		Sound(music_jam .. "UI Hover 3.mp3", s),
+		Sound(music_jam_folder .. "UI Hover 1.mp3", sfx_tag),
+		Sound(music_jam_folder .. "UI Hover 2.mp3", sfx_tag),
+		Sound(music_jam_folder .. "UI Hover 3.mp3", sfx_tag),
 	}
 	ui_click = {
-		Sound(music_jam .. "UI CLICK 1.mp3", s),
-		Sound(music_jam .. "UI CLICK 2.mp3", s),
-		Sound(music_jam .. "UI CLICK 3.mp3", s),
+		Sound(music_jam_folder .. "UI CLICK 1.mp3", sfx_tag),
+		Sound(music_jam_folder .. "UI CLICK 2.mp3", sfx_tag),
+		Sound(music_jam_folder .. "UI CLICK 3.mp3", sfx_tag),
 	}
 	stim_cave = {
-		Sound(music_jam .. "Stim Cave 1.mp3", s),
-		Sound(music_jam .. "Stim Cave 2.mp3", s),
-		Sound(music_jam .. "Stim Cave 3.mp3", s),
-		Sound(music_jam .. "Stim Cave 4.mp3", s),
+		Sound(music_jam_folder .. "Stim Cave 1.mp3", sfx_tag),
+		Sound(music_jam_folder .. "Stim Cave 2.mp3", sfx_tag),
+		Sound(music_jam_folder .. "Stim Cave 3.mp3", sfx_tag),
+		Sound(music_jam_folder .. "Stim Cave 4.mp3", sfx_tag),
 	}
 
 	-- meta level
 	level_victory = {
-		Sound(music_jam .. "Level WON Sting (G).mp3", s),
-		Sound(music_jam .. "Level WON Sting (C).mp3", s),
+		Sound(music_jam_folder .. "Level WON Sting (G).mp3", sfx_tag),
+		Sound(music_jam_folder .. "Level WON Sting (C).mp3", sfx_tag),
 	}
 	level_failure = {
-		Sound(music_jam .. "LEVEL LOST Sting (G1).mp3", s),
-		Sound(music_jam .. "LEVEL LOST Sting (C1).mp3", s),
+		Sound(music_jam_folder .. "LEVEL LOST Sting (G1).mp3", sfx_tag),
+		Sound(music_jam_folder .. "LEVEL LOST Sting (C1).mp3", sfx_tag),
 	}
 	level_countdown_c = {
-		Sound(music_jam .. "INVD-Ckey-3-short.mp3", s),
-		Sound(music_jam .. "INVD-Ckey-2-short.mp3", s),
-		Sound(music_jam .. "INVD-Ckey-1-short.mp3", s),
-		Sound(music_jam .. "INVD-Ckey-GO-short.mp3", s),
+		Sound(music_jam_folder .. "INVD-Ckey-3-short.mp3", sfx_tag),
+		Sound(music_jam_folder .. "INVD-Ckey-2-short.mp3", sfx_tag),
+		Sound(music_jam_folder .. "INVD-Ckey-1-short.mp3", sfx_tag),
+		Sound(music_jam_folder .. "INVD-Ckey-GO-short.mp3", sfx_tag),
 	}
 	level_countdown_g = {
-		Sound(music_jam .. "INVD-Gkey-3.mp3", s),
-		Sound(music_jam .. "INVD-Gkey-2.mp3", s),
-		Sound(music_jam .. "INVD-Gkey-1.mp3", s),
-		Sound(music_jam .. "INVD-Gkey-GO.mp3", s),
+		Sound(music_jam_folder .. "INVD-Gkey-3.mp3", sfx_tag),
+		Sound(music_jam_folder .. "INVD-Gkey-2.mp3", sfx_tag),
+		Sound(music_jam_folder .. "INVD-Gkey-1.mp3", sfx_tag),
+		Sound(music_jam_folder .. "INVD-Gkey-GO.mp3", sfx_tag),
 	}
 
 	-- gameplay
 	invader_death = {
-		Sound(music_jam .. "Invader Death 1.mp3", s),
-		Sound(music_jam .. "Invader Death 2.mp3", s),
-		Sound(music_jam .. "Invader Death 3.mp3", s),
+		Sound(music_jam_folder .. "Invader Death 1.mp3", sfx_tag),
+		Sound(music_jam_folder .. "Invader Death 2.mp3", sfx_tag),
+		Sound(music_jam_folder .. "Invader Death 3.mp3", sfx_tag),
 	}
 
 	invader_footsteps = {
-		Sound(music_jam .. "Invader Footsteps 1.mp3", s),
-		Sound(music_jam .. "Invader Footsteps 2.mp3", s),
-		Sound(music_jam .. "Invader Footsteps 3.mp3", s),
-		Sound(music_jam .. "Invader Footsteps 4.mp3", s),
+		Sound(music_jam_folder .. "Invader Footsteps 1.mp3", sfx_tag),
+		Sound(music_jam_folder .. "Invader Footsteps 2.mp3", sfx_tag),
+		Sound(music_jam_folder .. "Invader Footsteps 3.mp3", sfx_tag),
+		Sound(music_jam_folder .. "Invader Footsteps 4.mp3", sfx_tag),
 	}
 
 	-- load songs
@@ -109,17 +120,19 @@ function init()
 	-- song4 = Sound("pixel-fantasia-355123.mp3", { tags = { music } })
 	-- song5 = Sound("pixel-fight-8-bit-arcade-music-background-music-for-video-208775.mp3", { tags = { music } })
 
-	local m = { tags = { music } } -- for volume control
-	song_stim_cave = Sound(music_jam .. "Guitar slop.mp3", m)
-	song1 = Sound("funk-smooth-party-stylish-379509.mp3", m)
-	song2 = Sound("groovy-ambient-funk-201745.mp3", m)
-	song3 = Sound("drunk-on-funk-273910.mp3", m)
-	song4 = Sound("midnight-quirk-255361.mp3", m)
-	song5 = Sound("funky_main-187356.mp3", m)
+	music_tag = { tags = { music } } -- for volume control
+	song_stim_cave = Sound(music_jam_folder .. "Guitar slop.mp3", music_tag)
+	song_yellow1 = Sound(music_jam_folder .. "bass slop.mp3", music_tag)
 
-	pause_song1 = Sound("jazzy-slow-background-music-244598.mp3", m)
-	pause_song2 = Sound("glass-of-wine-143532.mp3", m)
-	pause_song3 = Sound("for-elevator-jazz-music-124005.mp3", m)
+	song1 = Sound("funk-smooth-party-stylish-379509.mp3", music_tag)
+	song2 = Sound("groovy-ambient-funk-201745.mp3", music_tag)
+	song3 = Sound("drunk-on-funk-273910.mp3", music_tag)
+	song4 = Sound("midnight-quirk-255361.mp3", music_tag)
+	song5 = Sound("funky_main-187356.mp3", music_tag)
+
+	pause_song1 = Sound("jazzy-slow-background-music-244598.mp3", music_tag)
+	pause_song2 = Sound("glass-of-wine-143532.mp3", music_tag)
+	pause_song3 = Sound("for-elevator-jazz-music-124005.mp3", music_tag)
 
 	music_songs = {
 		-- main = { "song1", "song2", "song3", "song4", "song5" },
@@ -129,6 +142,7 @@ function init()
 		-- credits = { "pause_song1", "pause_song2", "pause_song3" },
 		main = {},
 		stim_cave = { song_stim_cave },
+		yellow = { song_yellow1 },
 		game = {},
 		paused = {},
 		options = {},
@@ -1206,6 +1220,8 @@ function play_music(args)
 
 	local target_type = top_music_layer.music_type
 	local volume = args.volume or (music and music.volume or state.music_volume or 0.1)
+
+	-- local song_table =
 
 	if not current_playing_music or current_playing_music:isStopped() or (top_music_layer.music and top_music_layer.music:isStopped()) then
 		local song = random:table(music_songs[target_type])
