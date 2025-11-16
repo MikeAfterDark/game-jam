@@ -72,7 +72,7 @@ function Slider:update(dt)
 			self._last_section = current_section
 
 			local pitch = current_section / self.max_sections + 0.5
-			buttonPop:play({ pitch = pitch, volume = 0.5 })
+			-- buttonPop:play({ pitch = pitch, volume = 0.5 })
 
 			if self.action then
 				self:action(self.value)
@@ -154,8 +154,9 @@ function Slider:on_mouse_enter()
 	if not on_current_ui_layer(self) then
 		return
 	end
-	buttonHover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
-	buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	random:table(ui_hover):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+	-- buttonHover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+	-- buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	self.hovered = true
 	self.spring:pull(0.2, 200, 10)
 end

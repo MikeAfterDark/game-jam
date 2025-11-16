@@ -171,6 +171,13 @@ function MainMenu:setup_title_menu()
 			fg_color = "fg",
 			bg_color = "black",
 			action = function(b)
+				main.ui_layer_stack:push({
+					layer = ui_interaction_layer.Main,
+					-- music = self.main_menu_song_instance,
+					layer_has_music = true,
+					music_type = "stim_cave",
+					-- ui_elements = self.main_ui_elements,
+				})
 				self:set_ui_to(menu.Stim_Screen)
 			end,
 		})
@@ -382,9 +389,10 @@ function MainMenu:setup_stim_screen()
 					force_update = true,
 					no_image = true,
 					color = Color(r, g, b, 1),
+					enter_sfx = stim_cave,
 					action = function(b)
 						b.spring:pull(0.2, 200, 10)
-						buttonBoop:play({ pitch = random:float(0.75, 3.05), volume = 0.5 })
+						-- buttonBoop:play({ pitch = random:float(0.75, 3.05), volume = 0.5 })
 					end,
 				})
 			)
@@ -403,6 +411,7 @@ function MainMenu:setup_stim_screen()
 			fg_color = "bg",
 			bg_color = "fg",
 			action = function()
+				pop_ui_layer(self)
 				self:set_ui_to(menu.Title)
 			end,
 		})

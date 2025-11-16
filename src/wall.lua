@@ -533,7 +533,7 @@ wall_type = {
 			end
 
 			if self.data.order == checkpoint_counter + 1 then
-				success:play({ pitch = random:float(2.95, 4.05), volume = 0.3 })
+				-- success:play({ pitch = random:float(2.95, 4.05), volume = 0.3 })
 
 				self.spring:pull(0.01, 200, 10)
 				self.collected = true
@@ -592,7 +592,8 @@ wall_type = {
 
 			death_flash_alpha = 0.20 -- immediate flash value
 			trigger:tween(1.4, _G, { death_flash_alpha = 0 }, math.cubic_out, nil, "death_flash")
-			enemy_die1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+			-- enemy_die1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+			random:table(invader_death):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 
 			other:set_state(Runner_State.Dead)
 			-- local _, vy = other:get_velocity()
@@ -799,8 +800,7 @@ function Wall:init(args)
 	if type(self.type) == "string" then
 		self.type = wall_type[self.type]
 	end
-	self:set_as_chain(self.loop, self.vertices, "static",
-		(self.type and self.type.transparent) and "transparent" or "opaque")
+	self:set_as_chain(self.loop, self.vertices, "static", (self.type and self.type.transparent) and "transparent" or "opaque")
 	self.interact_with_mouse = true
 
 	self.color = _G[self.type.color][0] or fg[0]
@@ -916,8 +916,9 @@ function Wall:on_mouse_enter()
 		return
 	end
 
+	random:table(ui_hover):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 	-- buttonHover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
-	buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	-- buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 
 	self.spring:pull(0.01, 200, 10)
 	self.init_color = self.color

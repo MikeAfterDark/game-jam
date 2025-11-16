@@ -17,11 +17,6 @@ function init()
 		state.input = {}
 	end
 	controls = {
-		-- jump = { text = "Jump", default = { "z" }, input = state.input.jump },
-		-- up = { text = "Up", default = { "up", "w" }, input = state.input.up },
-		-- down = { text = "Down", default = { "down", "s" }, input = state.input.down },
-		-- left = { text = "Left", default = { "left", "a" }, input = state.input.left },
-		-- right = { text = "Right", default = { "right", "d" }, input = state.input.right },
 		reset = { text = "Restart", default = { "x" }, input = state.input.reset },
 		wall1 = { text = "Wall 1", default = { "1" }, input = state.input.wall1 },
 		wall2 = { text = "Wall 2", default = { "2" }, input = state.input.wall2 },
@@ -33,8 +28,7 @@ function init()
 		wall8 = { text = "Wall 8", default = { "8" }, input = state.input.wall8 },
 		wall9 = { text = "Wall 9", default = { "9" }, input = state.input.wall9 },
 	}
-	options_keys_display_order = { "reset", "wall1", "wall2", "wall3", "wall4", "wall5", "wall6", "wall7", "wall8",
-		"wall9" }
+	options_keys_display_order = { "reset", "wall1", "wall2", "wall3", "wall4", "wall5", "wall6", "wall7", "wall8", "wall9" }
 	for action, key in pairs(controls) do
 		input:bind(action, key.input or key.default)
 	end
@@ -42,16 +36,71 @@ function init()
 	-- load sounds:
 	-- TODO: move all sounds and music data to some data file and load *that*
 	local s = { tags = { sfx } }
-	buttonHover = Sound("buttonHover.ogg", s)
-	buttonPop = Sound("buttonPop.ogg", s)
-	buttonBoop = Sound("buttonBoop.ogg", s)
+	-- buttonHover = Sound("buttonHover.ogg", s)
+	-- buttonPop = Sound("buttonPop.ogg", s)
+	-- buttonBoop = Sound("buttonBoop.ogg", s)
+	--
+	-- ui_switch1 = Sound("ui_switch1.ogg", s)
+	-- ui_switch2 = Sound("ui_switch2.ogg", s)
+	-- ui_transition2 = Sound("ui_transition2.ogg", s)
+	--
+	-- enemy_die1 = Sound("enemy_die1.ogg", s)
+	-- success = Sound("success.ogg", s)
 
-	ui_switch1 = Sound("ui_switch1.ogg", s)
-	ui_switch2 = Sound("ui_switch2.ogg", s)
-	ui_transition2 = Sound("ui_transition2.ogg", s)
+	local music_jam = "music_jam/"
+	-- ui
+	ui_hover = {
+		Sound(music_jam .. "UI Hover 1.mp3", s),
+		Sound(music_jam .. "UI Hover 2.mp3", s),
+		Sound(music_jam .. "UI Hover 3.mp3", s),
+	}
+	ui_click = {
+		Sound(music_jam .. "UI CLICK 1.mp3", s),
+		Sound(music_jam .. "UI CLICK 2.mp3", s),
+		Sound(music_jam .. "UI CLICK 3.mp3", s),
+	}
+	stim_cave = {
+		Sound(music_jam .. "Stim Cave 1.mp3", s),
+		Sound(music_jam .. "Stim Cave 2.mp3", s),
+		Sound(music_jam .. "Stim Cave 3.mp3", s),
+		Sound(music_jam .. "Stim Cave 4.mp3", s),
+	}
 
-	enemy_die1 = Sound("enemy_die1.ogg", s)
-	success = Sound("success.ogg", s)
+	-- meta level
+	level_victory = {
+		Sound(music_jam .. "Level WON Sting (G).mp3", s),
+		Sound(music_jam .. "Level WON Sting (C).mp3", s),
+	}
+	level_failure = {
+		Sound(music_jam .. "LEVEL LOST Sting (G1).mp3", s),
+		Sound(music_jam .. "LEVEL LOST Sting (C1).mp3", s),
+	}
+	level_countdown_c = {
+		Sound(music_jam .. "INVD-Ckey-3-short.mp3", s),
+		Sound(music_jam .. "INVD-Ckey-2-short.mp3", s),
+		Sound(music_jam .. "INVD-Ckey-1-short.mp3", s),
+		Sound(music_jam .. "INVD-Ckey-GO-short.mp3", s),
+	}
+	level_countdown_g = {
+		Sound(music_jam .. "INVD-Gkey-3.mp3", s),
+		Sound(music_jam .. "INVD-Gkey-2.mp3", s),
+		Sound(music_jam .. "INVD-Gkey-1.mp3", s),
+		Sound(music_jam .. "INVD-Gkey-GO.mp3", s),
+	}
+
+	-- gameplay
+	invader_death = {
+		Sound(music_jam .. "Invader Death 1.mp3", s),
+		Sound(music_jam .. "Invader Death 2.mp3", s),
+		Sound(music_jam .. "Invader Death 3.mp3", s),
+	}
+
+	invader_footsteps = {
+		Sound(music_jam .. "Invader Footsteps 1.mp3", s),
+		Sound(music_jam .. "Invader Footsteps 2.mp3", s),
+		Sound(music_jam .. "Invader Footsteps 3.mp3", s),
+		Sound(music_jam .. "Invader Footsteps 4.mp3", s),
+	}
 
 	-- load songs
 	-- song1 = Sound("neon-rush-retro-synthwave-uplifting-daily-vlog-fast-cuts-sv201-360195.mp3", { tags = { music } })
@@ -60,22 +109,30 @@ function init()
 	-- song4 = Sound("pixel-fantasia-355123.mp3", { tags = { music } })
 	-- song5 = Sound("pixel-fight-8-bit-arcade-music-background-music-for-video-208775.mp3", { tags = { music } })
 
-	song1 = Sound("funk-smooth-party-stylish-379509.mp3", { tags = { music } })
-	song2 = Sound("groovy-ambient-funk-201745.mp3", { tags = { music } })
-	song3 = Sound("drunk-on-funk-273910.mp3", { tags = { music } })
-	song4 = Sound("midnight-quirk-255361.mp3", { tags = { music } })
-	song5 = Sound("funky_main-187356.mp3", { tags = { music } })
+	local m = { tags = { music } } -- for volume control
+	song_stim_cave = Sound(music_jam .. "Guitar slop.mp3", m)
+	song1 = Sound("funk-smooth-party-stylish-379509.mp3", m)
+	song2 = Sound("groovy-ambient-funk-201745.mp3", m)
+	song3 = Sound("drunk-on-funk-273910.mp3", m)
+	song4 = Sound("midnight-quirk-255361.mp3", m)
+	song5 = Sound("funky_main-187356.mp3", m)
 
-	pause_song1 = Sound("jazzy-slow-background-music-244598.mp3", { tags = { music } })
-	pause_song2 = Sound("glass-of-wine-143532.mp3", { tags = { music } })
-	pause_song3 = Sound("for-elevator-jazz-music-124005.mp3", { tags = { music } })
+	pause_song1 = Sound("jazzy-slow-background-music-244598.mp3", m)
+	pause_song2 = Sound("glass-of-wine-143532.mp3", m)
+	pause_song3 = Sound("for-elevator-jazz-music-124005.mp3", m)
 
 	music_songs = {
-		main = { "song1", "song2", "song3", "song4", "song5" },
-		game = { "song1", "song2", "song3", "song4", "song5" },
-		paused = { "pause_song1", "pause_song2", "pause_song3" },
-		options = { "pause_song1", "pause_song2", "pause_song3" },
-		credits = { "pause_song1", "pause_song2", "pause_song3" },
+		-- main = { "song1", "song2", "song3", "song4", "song5" },
+		-- game = { "song1", "song2", "song3", "song4", "song5" },
+		-- paused = { "pause_song1", "pause_song2", "pause_song3" },
+		-- options = { "pause_song1", "pause_song2", "pause_song3" },
+		-- credits = { "pause_song1", "pause_song2", "pause_song3" },
+		main = {},
+		stim_cave = { song_stim_cave },
+		game = {},
+		paused = {},
+		options = {},
+		credits = {},
 	}
 
 	-- load images:
@@ -206,7 +263,7 @@ function open_options(self)
 			fg_color = "bg",
 			bg_color = "fg",
 			action = function(b)
-				ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+				-- ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 				state.dark = not state.dark
 				b:set_text(tostring(state.dark and " dark" or "light") .. " mode")
 			end,
@@ -289,7 +346,7 @@ function open_options(self)
 				state.fullscreen = not state.fullscreen
 
 				b:set_text(tostring(state.fullscreen and "fullscreen" or "windowed"))
-				ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+				-- ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 
 				local screen_width, screen_height = 960, 540
 				if state.fullscreen then
@@ -318,7 +375,7 @@ function open_options(self)
 			action = function(b)
 				state.vsync = not state.vsync
 				b:set_text(tostring(state.vsync and "vsync" or "no vsync"))
-				ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+				-- ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 				setWindow({ vsync = state.vsync })
 			end,
 		})
@@ -385,8 +442,7 @@ function open_options(self)
 				end,
 			})
 		)
-		button_offset = button_offset + button_distance -
-		3                                             --for some reason this is needed for the last button to work (for 4 controls)
+		button_offset = button_offset + button_distance - 3 --for some reason this is needed for the last button to work (for 4 controls)
 	end
 
 	--
@@ -435,7 +491,7 @@ function open_options(self)
 			fg_color = "bg",
 			bg_color = "fg",
 			action = function(b)
-				ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+				-- ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 				state.toggle_controls = not state.toggle_controls
 				b:set_text(tostring(state.toggle_controls and "toggle controls" or "press n' hold"))
 			end,
@@ -842,10 +898,10 @@ function open_credits(self)
 	self.in_credits = true
 
 	local open_url = function(b, url)
-		ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 		b.spring:pull(0.2, 200, 10)
 		b.selected = true
-		ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+		-- ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+		-- ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 		system.open_url(url)
 	end
 
@@ -1074,8 +1130,7 @@ function restart_level_with_X_players(self, num_players)
 	run_time = 0
 	locked_state = nil
 
-	scene_transition(self, gw / 2, gh / 2, Game("game"),
-		{ destination = "game", args = { level = main.current.level, num_players = num_players } }, {
+	scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = main.current.level, num_players = num_players } }, {
 		text = "stay hydrated!",
 		font = pixul_font,
 		alignment = "center",
@@ -1083,9 +1138,9 @@ function restart_level_with_X_players(self, num_players)
 end
 
 function scene_transition(self, x_pos, y_pos, addition, go_to, text_args)
-	ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-	ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-	ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	-- ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	-- ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	-- ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 
 	while main.ui_layer_stack:size() > 1 do
 		pop_ui_layer(self)
@@ -1153,14 +1208,23 @@ function play_music(args)
 	local volume = args.volume or (music and music.volume or state.music_volume or 0.1)
 
 	if not current_playing_music or current_playing_music:isStopped() or (top_music_layer.music and top_music_layer.music:isStopped()) then
-		top_music_layer.music = _G[random:table(music_songs[target_type])]:play({ volume = volume })
+		local song = random:table(music_songs[target_type])
+		if not song then
+			return
+		end
+
+		top_music_layer.music = song:play({ volume = volume })
 		main.current_music_type = target_type
 	elseif main.current_music_type ~= target_type then
 		current_playing_music:pause()
 		if top_music_layer.music then
 			top_music_layer.music:resume()
 		else
-			top_music_layer.music = _G[random:table(music_songs[target_type])]:play({ volume = volume })
+			local song = random:table(music_songs[target_type])
+			if not song then
+				return
+			end
+			top_music_layer.music = song:play({ volume = volume })
 		end
 		main.current_music_type = target_type
 	end

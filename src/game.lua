@@ -64,6 +64,9 @@ function Game:on_enter(from, args)
 	min_player_size = 16
 	max_player_size = 64
 	self.countdown = 3
+	self.countdown_audio_timer = 3
+	self.coundown_audio_index = 1
+	self.countdown_audio = random:bool(50) and level_countdown_g or level_countdown_c
 	self.countdown_text = Text({ { text = "", font = pixul_font, alignment = "center" } }, global_text_tags)
 	self.level_timer_text = Text({ { text = "", font = pixul_font, alignment = "center" } }, global_text_tags)
 	self.creator_mode_selection_text = Text({ { text = "", font = pixul_font, alignment = "center" } }, global_text_tags)
@@ -130,6 +133,15 @@ function Game:update(dt)
 
 	if not self.in_pause and not self.stuck and not self.won then
 		run_time = run_time + dt
+
+		if self.countdown <= self.countdown_audio_timer and self.coundown_audio_index <= #self.countdown_audio then
+			self.countdown_audio_timer = self.countdown_audio_timer - 1
+			self.countdown_audio[self.coundown_audio_index]:play({
+				pitch = 1, --[[ random:float(0.9, 1.2), ]]
+				volume = 0.5,
+			})
+			self.coundown_audio_index = self.coundown_audio_index + 1
+		end
 		self.countdown = self.countdown - dt
 
 		if self.countdown <= 0 and not self.died then
@@ -267,7 +279,7 @@ function Game:update(dt)
 				self.hovered.color = green[0]
 				selection_text = "jump pill"
 				selection_color = "green"
-			else                                                -- wall
+			else -- wall
 				self.hovered = Chain(false, { self.mouse_x, self.mouse_y }) --Rectangle(mouse_x, mouse_y, gh * 0.1, gh * 0.1)
 				self.hovered.color = _G[wall_type[wall_type_order[self.selection]].color][0]
 				selection_text = wall_type_order[self.selection]
@@ -559,7 +571,7 @@ function Game:save_map(map)
 	---
 	local function dir_exists(path) -- NOTE: lua/C jank: https://stackoverflow.com/questions/1340230/check-if-directory-exists-in-lua
 		local ok, err, code = os.rename(path, path)
-		return ok or code == 13  -- code 13 = permission denied (means it exists)
+		return ok or code == 13 -- code 13 = permission denied (means it exists)
 	end
 
 	local dir = path:match("^(.*[/\\])")
@@ -644,6 +656,7 @@ function Game:quit()
 
 	self.quitting = true
 	if not self.win_text and not self.win_text2 and self.win and not self.won then
+		random:table(level_victory):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 		input:set_mouse_visible(true)
 		self.won = true
 		locked_state = nil
@@ -697,8 +710,7 @@ function Game:quit()
 						force_update = true,
 						lines = {
 							{
-								text = "[wavy_mid, cbyc2]Time: " ..
-								string.format("%.2f", self.level_timer) .. "/" .. self.init_level_timer,
+								text = "[wavy_mid, cbyc2]Time: " .. string.format("%.2f", self.level_timer) .. "/" .. self.init_level_timer,
 								font = pixul_font,
 								alignment = "center",
 							},
@@ -868,7 +880,8 @@ function Game:draw()
 end
 
 function Game:die()
-	if not self.died_text then
+	if not self.died_text and not self.won then
+		random:table(level_failure):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 		input:set_mouse_visible(true)
 		self.died = true
 		locked_state = nil
@@ -929,7 +942,7 @@ function Game:die()
 			-- )
 
 			camera:shake(5, 0.075)
-			buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+			-- buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
 			self.died_restart_button = collect_into(
 				self.game_loss_ui_elements,
 				Button({

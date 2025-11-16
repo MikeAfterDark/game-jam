@@ -5,40 +5,12 @@ runner_types = {
 		name = "knight",
 		load_sprites = function(self)
 			self.animations = {
-				idle = Animation({
-					sprite_sheet = knight_sprites.sprite_sheets.idle,
-					frame_width = knight_sprites.frame_width,
-					frame_height = knight_sprites.frame_height,
-					speed = knight_sprites.animation_speed,
-					center_x = knight_sprites.hitbox_center_x,
-					center_y = knight_sprites.hitbox_center_y,
-				}),
-				run = Animation({
-					sprite_sheet = knight_sprites.sprite_sheets.run,
-					frame_width = knight_sprites.frame_width,
-					frame_height = knight_sprites.frame_height,
-					speed = knight_sprites.animation_speed,
-					center_x = knight_sprites.hitbox_center_x,
-					center_y = knight_sprites.hitbox_center_y,
-				}),
-				jump = Animation({
-					sprite_sheet = knight_sprites.sprite_sheets.jump,
-					frame_width = knight_sprites.frame_width,
-					frame_height = knight_sprites.frame_height,
-					speed = knight_sprites.animation_speed,
-					center_x = knight_sprites.hitbox_center_x,
-					center_y = knight_sprites.hitbox_center_y,
-				}),
-				dead = Animation({
-					sprite_sheet = knight_sprites.sprite_sheets.dead,
-					frame_width = knight_sprites.frame_width,
-					frame_height = knight_sprites.frame_height,
-					speed = knight_sprites.animation_speed,
-					center_x = knight_sprites.hitbox_center_x,
-					center_y = knight_sprites.hitbox_center_y,
-					stop_on_finish = true,
-				}),
+				idle = Animation({ sheet = knight_sprites, type = "idle" }),
+				run = Animation({ sheet = knight_sprites, type = "run" }),
+				jump = Animation({ sheet = knight_sprites, type = "jump" }),
+				dead = Animation({ sheet = knight_sprites, type = "dead", stop_on_finish = true }),
 			}
+
 			self.w = knight_sprites.hitbox_width * self.size
 			self.h = knight_sprites.hitbox_height * self.size
 		end,
@@ -78,6 +50,8 @@ function Runner:init(args)
 
 	self.color = _G["white"][0]
 	self.color_text = "red"
+	self.sfx = {}
+
 	-- self.label_y_offset = 50 * self.size
 	-- self.runner_label = Text2({
 	-- 	x = self.x,
@@ -90,12 +64,7 @@ function Runner:reset()
 	self.state = Runner_State.Run
 	self.dir = self.direction == "right" and 1 or 0
 
-	-- fuuuuck
 	self:set_position(self.init_x, self.init_y)
-	print("resetting")
-
-	-- self.x = self.init_x
-	-- self.y = self.init_y
 end
 
 function Runner:update(dt)
@@ -123,9 +92,16 @@ function Runner:update(dt)
 		vel = self.speed * self.dir
 		if self.grounded then
 			self:set_velocity(vel * math.min(1, self.size / 1.6) + gx * dt, vy + gy * dt)
+
+			if not self.sfx.run or self.sfx.run:isStopped() then
+				self.sfx.run = random:table(invader_footsteps):play({
+					pitch = random:float(0.9, 1.2),
+					volume = 0.5,
+				})
+			end
 		end
 	elseif self.state == Runner_State.Dead then
-		self:set_velocity(vx * 0.98, vy) -- fake friction/drag cuz physics shenanigans
+		self:set_velocity(vx * 0.98, vy) -- fake friction/drag cuz physics shenanigans (friction at enter_contact is all that matters)
 	end
 
 	if self.grounded then
@@ -162,7 +138,7 @@ function Runner:draw()
 	-- self:draw_physics(self.temp_color or white[0])
 	-- self.runner_label:draw()
 
-	local color = Color(1, 1, 1, 0.8)
+	local color = Color(1, 1, 1, 1)
 	local anim = self.animations[self.state]
 	if anim then
 		anim:draw(self.x, self.y, 0, self.size * self.dir, self.size, 0, 0, color)

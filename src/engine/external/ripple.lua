@@ -467,9 +467,10 @@ function Sound:_onChangeEffects()
 end
 
 function Sound:play(options)
-	if true then
-		return nil -- NOTE: STOPPED AUDIO FOR PRE-MUSIC JAM DEMO
-	end
+	-- if true then
+	-- 	return nil -- NOTE: STOPPED AUDIO FOR PRE-MUSIC JAM DEMO
+	-- end
+
 	-- reuse a stopped instance if one is available
 	for _, instance in ipairs(self._instances) do
 		if instance:isStopped() then

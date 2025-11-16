@@ -40,11 +40,13 @@ function ButtonBase:update(dt)
 	else
 		if self.selected and input.m1.pressed then
 			if self.action then
+				random:table(ui_click):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 				self:action()
 			end
 		end
 		if self.selected and input.m2.pressed then
 			if self.action_2 then
+				random:table(ui_click):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 				self:action_2()
 			end
 		end
@@ -55,8 +57,15 @@ function ButtonBase:on_mouse_enter()
 	if not on_current_ui_layer(self) or (main.current.button_restriction and main.current:button_restriction()) then
 		return false
 	end
-	buttonHover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
-	buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+
+	if self.enter_sfx then
+		random:table(self.enter_sfx):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+	else
+		random:table(ui_hover):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+	end
+
+	-- buttonHover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+	-- buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	self.selected = true
 	-- debug.traceback()
 	-- print("BASE mouse_enter", self, debug.traceback())
@@ -81,9 +90,7 @@ Button = ButtonBase:extend()
 function Button:init(args)
 	ButtonBase.init(self, args)
 	self.shape = Rectangle(self.x, self.y, args.w or (pixul_font:get_text_width(self.button_text) + 8), pixul_font.h + 4)
-	self.text = Text(
-	{ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } },
-		global_text_tags)
+	self.text = Text({ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } }, global_text_tags)
 end
 
 function Button:update(dt)
@@ -154,12 +161,8 @@ function InputButton:init(args)
 	ButtonBase.init(self, args)
 
 	self.shape = Rectangle(self.x, self.y, args.w or (pixul_font:get_text_width(self.button_text) + 8), pixul_font.h + 4)
-	self.action_text = Text(
-	{ { text = "[" .. self.fg_color .. "]" .. self.description_text, font = pixul_font, alignment = "center" } },
-		global_text_tags)
-	self.input_text = Text(
-	{ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } },
-		global_text_tags)
+	self.action_text = Text({ { text = "[" .. self.fg_color .. "]" .. self.description_text, font = pixul_font, alignment = "center" } }, global_text_tags)
+	self.input_text = Text({ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } }, global_text_tags)
 end
 
 function InputButton:update(dt)
@@ -189,8 +192,7 @@ function InputButton:draw()
 
 	local halfway = self.separator_length
 	local separator_height = self.y + 8
-	graphics.dashed_line(self.x - halfway, separator_height, self.x + halfway, separator_height, 4, 1,
-		_G[self.bg_color][0], 1)
+	graphics.dashed_line(self.x - halfway, separator_height, self.x + halfway, separator_height, 4, 1, _G[self.bg_color][0], 1)
 end
 
 function InputButton:on_mouse_enter()

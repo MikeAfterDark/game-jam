@@ -403,7 +403,7 @@ global_text_tags = {
 			text.t:after((i - 1) * 0.15, function()
 				c.color = red[0]
 				camera:shake(3, 0.075)
-				buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+				-- buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
 			end)
 		end,
 		draw = function(c, i, text)
@@ -417,7 +417,7 @@ global_text_tags = {
 			text.t:after((i - 1) * 0.05, function()
 				c.color = red[0]
 				camera:shake(3, 0.075)
-				buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+				-- buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
 			end)
 		end,
 		draw = function(c, i, text)
@@ -431,7 +431,7 @@ global_text_tags = {
 			text.t:after((i - 1) * 0.15, function()
 				c.color = yellow[0]
 				camera:shake(3, 0.075)
-				buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+				-- buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
 			end)
 		end,
 		draw = function(c, i, text)
@@ -594,8 +594,7 @@ end
 function HitParticle:draw()
 	graphics.push(self.x, self.y, self.r)
 	if self.parent and not self.parent.dead then
-		graphics.rectangle(self.x, self.y, self.w, self.h, self.curve, self.curve,
-			self.parent.hfx.hit.f and fg[0] or self.color)
+		graphics.rectangle(self.x, self.y, self.w, self.h, self.curve, self.curve, self.parent.hfx.hit.f and fg[0] or self.color)
 	else
 		graphics.rectangle(self.x, self.y, self.w, self.h, self.curve, self.curve, self.color)
 	end
@@ -618,16 +617,22 @@ Animation:implement(GameObject)
 function Animation:init(args)
 	self:init_game_object(args)
 
-	self.sprite_sheet = args.sprite_sheet
-	self.frame_width = args.frame_width
-	self.frame_height = args.frame_height
-	self.animation_speed = args.speed or 0.1
+	-- self.type = args.type
+	self.sprite_sheet = args.sheet.sprite_sheets[self.type]
+
+	self.frame_width = args.sheet.frame_width
+	self.frame_height = args.sheet.frame_height
+	self.animation_speed = args.sheet.animation_speed or 0.1
+
+	self.center_x = args.sheet.hitbox_center_x or 0
+	self.center_y = args.sheet.hitbox_center_y or 0
 
 	self.frame_time = 0
 	self.frame_counter = 1
 
 	local image_w, image_h = self.sprite_sheet.w, self.sprite_sheet.h
 	self.frames = {}
+
 	for y = 0, image_h - self.frame_height, self.frame_height do
 		for x = 0, image_w - self.frame_width, self.frame_width do
 			local quad = love.graphics.newQuad(x, y, self.frame_width, self.frame_height, image_w, image_h)

@@ -1,0 +1,1 @@
+return {["level_timer"] = 30, ["walls"] = {}, ["runners"] = {}, ["pills"] = {}}
