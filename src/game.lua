@@ -104,7 +104,7 @@ function Game:on_enter(from, args)
 
 	main.ui_layer_stack:push({
 		layer = ui_interaction_layer.Game,
-		layer_has_music = self.music_type ~= "",
+		layer_has_music = false, -- self.creator_mode and false or self.music_type ~= "",
 		music_type = self.music_type,
 		ui_elements = self.game_ui_elements,
 	})
@@ -147,7 +147,7 @@ function Game:update(dt)
 			})
 			self.coundown_audio_index = self.coundown_audio_index + 1
 		end
-		self.countdown = self.countdown - dt
+		self.countdown = self.countdown - 1.7 * dt
 
 		if self.countdown <= 0 and not self.died then
 			self.level_timer = self.level_timer - dt
@@ -916,7 +916,7 @@ function Game:die()
 				group = ui_group,
 				layer = ui_layer,
 				x = gw / 2,
-				y = gh / 2 - 32 * global_game_scale,
+				y = gh / 2, -- - 32 * global_game_scale,
 				force_update = true,
 				lines = {
 					{
@@ -928,48 +928,37 @@ function Game:die()
 			})
 		)
 
-		self.t:after(0.75, function()
-			-- self.died_text2 = collect_into(
+		self.t:after(1.25, function()
+			play_level(self, {
+				fast_load = true,
+				creator_mode = self.creator_mode,
+				level = self.level,
+				pack = self.pack,
+				level_folder = self.level_folder,
+			})
+
+			-- self.died_restart_button = collect_into(
 			-- 	self.game_loss_ui_elements,
-			-- 	Text2({
+			-- 	Button({
 			-- 		group = ui_group,
 			-- 		layer = ui_layer,
-			-- 		force_update = true,
 			-- 		x = gw / 2,
-			-- 		y = gh / 2,
-			-- 		lines = {
-			-- 			{
-			-- 				text = "[wavy_mid, cbyc2]try again?",
-			-- 				font = fat_font,
-			-- 				alignment = "center",
-			-- 			},
-			-- 		},
+			-- 		y = gh / 2 + 20,
+			-- 		force_update = true,
+			-- 		button_text = "run it back",
+			-- 		fg_color = "bg",
+			-- 		bg_color = "green",
+			-- 		action = function(b)
+			-- 			play_level(self, {
+			-- 				fast_load = true,
+			-- 				creator_mode = self.creator_mode,
+			-- 				level = self.level,
+			-- 				pack = self.pack,
+			-- 				level_folder = self.level_folder,
+			-- 			})
+			-- 		end,
 			-- 	})
 			-- )
-
-			camera:shake(5, 0.075)
-			-- buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
-			self.died_restart_button = collect_into(
-				self.game_loss_ui_elements,
-				Button({
-					group = ui_group,
-					layer = ui_layer,
-					x = gw / 2,
-					y = gh / 2 + 20,
-					force_update = true,
-					button_text = "run it back",
-					fg_color = "bg",
-					bg_color = "green",
-					action = function(b)
-						play_level(self, {
-							creator_mode = self.creator_mode,
-							level = self.level,
-							pack = self.pack,
-							level_folder = self.level_folder,
-						})
-					end,
-				})
-			)
 		end)
 		-- trigger:tween(2, camera, { x = gw / 2, y = gh / 2, r = 0 }, math.linear, function()
 		-- 	camera.x, camera.y, camera.r = gw / 2, gh / 2, 0

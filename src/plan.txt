@@ -1,15 +1,17 @@
 BUGFIXING:
-- ice sliding on different OSs
-- if 'win' during the transition during death it pops up both menus
-
-Tech Debt:
-- Clean up runner_types self.animations init
+- sliding on ice should turn around (slope) + stopping on ice never restarts if make wall passable
+- level songs restarting on redo, cuz the ui_layer gets popped and pushed, make sure two levels with the same 'type' keep the same song playing in a row
 
 Game:
 - Kill all runners within a centain amount of time and before they can collect all the checkpoints by controlling if certain walls are opaque or transparent
 
 Ideas:
 - Faster levels are good
+- music fading in/out on death and pause menu and whenever a new songtype comes up
+- text whenever a song plays to show songname and creator/s
+- stim cave, random button jumpscares
+- after a set of levels, stim cave cooldown
+- no stim mode setting: set all music to loop "rahhh anti-stim"
+- include Cats somehow
 
-- round countdown audio - 14min
-- stim cave music -
+-- level 5 note: make the checkpoint for each 'key' at the bottom of the keyhole

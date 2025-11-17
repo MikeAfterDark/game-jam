@@ -114,16 +114,31 @@ function init()
 	}
 
 	-- load songs
-	-- song1 = Sound("neon-rush-retro-synthwave-uplifting-daily-vlog-fast-cuts-sv201-360195.mp3", { tags = { music } })
-	-- song2 = Sound("8-bit-gaming-background-music-358443.mp3", { tags = { music } })
-	-- song3 = Sound("edm003-retro-edm-_-gamepixel-racer-358045.mp3", { tags = { music } })
-	-- song4 = Sound("pixel-fantasia-355123.mp3", { tags = { music } })
-	-- song5 = Sound("pixel-fight-8-bit-arcade-music-background-music-for-video-208775.mp3", { tags = { music } })
 
 	music_tag = { tags = { music } } -- for volume control
 	song_stim_cave = Sound(music_jam_folder .. "Guitar slop.mp3", music_tag)
 	song_yellow1 = Sound(music_jam_folder .. "bass slop.mp3", music_tag)
 
+	music_songs = {
+		main = {},
+		stim_cave = { song_stim_cave },
+		yellow = { song_yellow1 },
+		game = {},
+		paused = {},
+		options = {},
+		credits = {},
+		-- main = { "song1", "song2", "song3", "song4", "song5" },
+		-- game = { "song1", "song2", "song3", "song4", "song5" },
+		-- paused = { "pause_song1", "pause_song2", "pause_song3" },
+		-- options = { "pause_song1", "pause_song2", "pause_song3" },
+		-- credits = { "pause_song1", "pause_song2", "pause_song3" },
+	}
+
+	-- song1 = Sound("neon-rush-retro-synthwave-uplifting-daily-vlog-fast-cuts-sv201-360195.mp3", { tags = { music } })
+	-- song2 = Sound("8-bit-gaming-background-music-358443.mp3", { tags = { music } })
+	-- song3 = Sound("edm003-retro-edm-_-gamepixel-racer-358045.mp3", { tags = { music } })
+	-- song4 = Sound("pixel-fantasia-355123.mp3", { tags = { music } })
+	-- song5 = Sound("pixel-fight-8-bit-arcade-music-background-music-for-video-208775.mp3", { tags = { music } })
 	song1 = Sound("funk-smooth-party-stylish-379509.mp3", music_tag)
 	song2 = Sound("groovy-ambient-funk-201745.mp3", music_tag)
 	song3 = Sound("drunk-on-funk-273910.mp3", music_tag)
@@ -134,23 +149,9 @@ function init()
 	pause_song2 = Sound("glass-of-wine-143532.mp3", music_tag)
 	pause_song3 = Sound("for-elevator-jazz-music-124005.mp3", music_tag)
 
-	music_songs = {
-		-- main = { "song1", "song2", "song3", "song4", "song5" },
-		-- game = { "song1", "song2", "song3", "song4", "song5" },
-		-- paused = { "pause_song1", "pause_song2", "pause_song3" },
-		-- options = { "pause_song1", "pause_song2", "pause_song3" },
-		-- credits = { "pause_song1", "pause_song2", "pause_song3" },
-		main = {},
-		stim_cave = { song_stim_cave },
-		yellow = { song_yellow1 },
-		game = {},
-		paused = {},
-		options = {},
-		credits = {},
-	}
-
 	-- load images:
 	wall_arrow_particle = Image("wall_arrow_particle")
+	title_background = Image("cat_background")
 
 	local is_path = true
 	knight_sprites = {
@@ -1138,19 +1139,6 @@ function open_credits(self)
 	end
 end
 
-function restart_level_with_X_players(self, num_players)
-	slow_amount = 1
-	music_slow_amount = 1
-	run_time = 0
-	locked_state = nil
-
-	scene_transition(self, gw / 2, gh / 2, Game("game"), { destination = "game", args = { level = main.current.level, num_players = num_players } }, {
-		text = "stay hydrated!",
-		font = pixul_font,
-		alignment = "center",
-	})
-end
-
 function scene_transition(self, x_pos, y_pos, addition, go_to, text_args)
 	-- ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	-- ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
@@ -1161,6 +1149,7 @@ function scene_transition(self, x_pos, y_pos, addition, go_to, text_args)
 	end
 	self.transitioning = true
 	TransitionEffect({
+		fast = go_to.args.fast_load or false,
 		group = main.transitions,
 		x = x_pos,
 		y = y_pos,

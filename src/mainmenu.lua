@@ -105,6 +105,8 @@ end
 function MainMenu:draw()
 	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 
+	local scale = 0.565
+	title_background:draw(gw / 2, gh / 2, 0, scale, scale, 0, 0, white[0])
 	self.main_menu_ui:draw()
 
 	if self.in_options then
