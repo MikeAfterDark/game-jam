@@ -118,13 +118,13 @@ function init()
 	music_tag = { tags = { music } } -- for volume control
 	song_stim_cave = Sound(music_jam_folder .. "Guitar slop.mp3", music_tag)
 	song_yellow1 = Sound(music_jam_folder .. "bass slop.mp3", music_tag)
+	temp = Sound(music_jam_folder .. "UI CLICK 2.mp3", music_tag)
 
 	music_songs = {
 		main = {},
 		stim_cave = { song_stim_cave },
 		yellow = { song_yellow1 },
-		game = {},
-		paused = {},
+		paused = { temp },
 		options = {},
 		credits = {},
 		-- main = { "song1", "song2", "song3", "song4", "song5" },
@@ -457,7 +457,8 @@ function open_options(self)
 				end,
 			})
 		)
-		button_offset = button_offset + button_distance - 3 --for some reason this is needed for the last button to work (for 4 controls)
+		button_offset = button_offset + button_distance - 3
+		--for some reason this is needed for the last button to work (for 4 controls)
 	end
 
 	--
@@ -1144,7 +1145,12 @@ function scene_transition(self, x_pos, y_pos, addition, go_to, text_args)
 	-- ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	-- ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 
+	-- if layer_type = "game" then don't pop?
 	while main.ui_layer_stack:size() > 1 do
+		local layer = main.ui_layer_stack:peek()
+		if layer.game and not go_to.args.clear_music then -- let the game decide when to pop the layer
+			break
+		end
 		pop_ui_layer(self)
 	end
 	self.transitioning = true
@@ -1209,8 +1215,6 @@ function play_music(args)
 
 	local target_type = top_music_layer.music_type
 	local volume = args.volume or (music and music.volume or state.music_volume or 0.1)
-
-	-- local song_table =
 
 	if not current_playing_music or current_playing_music:isStopped() or (top_music_layer.music and top_music_layer.music:isStopped()) then
 		local song = random:table(music_songs[target_type])

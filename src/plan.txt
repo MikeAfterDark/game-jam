@@ -7,11 +7,15 @@ Game:
 
 Ideas:
 - Faster levels are good
-- music fading in/out on death and pause menu and whenever a new songtype comes up
 - text whenever a song plays to show songname and creator/s
-- stim cave, random button jumpscares
+- music fading in/out on death and pause menu and whenever a new songtype comes up
+
 - after a set of levels, stim cave cooldown
 - no stim mode setting: set all music to loop "rahhh anti-stim"
-- include Cats somehow
+- stim cave, random button jumpscares
+
+
+
+
 
 -- level 5 note: make the checkpoint for each 'key' at the bottom of the keyhole

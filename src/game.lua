@@ -102,12 +102,21 @@ function Game:on_enter(from, args)
 	self.stuck = false
 	self.won = false
 
-	main.ui_layer_stack:push({
-		layer = ui_interaction_layer.Game,
-		layer_has_music = false, -- self.creator_mode and false or self.music_type ~= "",
-		music_type = self.music_type,
-		ui_elements = self.game_ui_elements,
-	})
+	-- if layer underneath this one has layer_type == "game" and the same music type then dont push
+	local layer = main.ui_layer_stack:peek()
+	if layer and layer.music_type ~= self.music_type then
+		if layer.game then
+			pop_ui_layer(self)
+		end
+
+		main.ui_layer_stack:push({
+			layer = ui_interaction_layer.Game,
+			layer_has_music = self.has_music,
+			game = true,
+			music_type = self.music_type,
+			ui_elements = self.game_ui_elements,
+		})
+	end
 end
 
 function Game:on_exit()
@@ -179,7 +188,8 @@ function Game:update(dt)
 				close_options(self)
 			end
 		else
-			scene_transition(self, gw / 2, gh / 2, MainMenu("main_menu"), { destination = "main_menu", args = {} }, {
+			local layer = main.ui_layer_stack:peek()
+			scene_transition(self, gw / 2, gh / 2, MainMenu("main_menu"), { destination = "main_menu", args = { clear_music = true } }, {
 				text = "loading main menu...",
 				font = pixul_font,
 				alignment = "center",
@@ -504,6 +514,7 @@ function Game:load_map(map_path)
 
 	self.level_timer = data["level_timer"]
 	self.music_type = data["music_type"] or ""
+	self.has_music = data["music_type"] ~= nil
 end
 
 function Game:save_map(map)
@@ -916,7 +927,7 @@ function Game:die()
 				group = ui_group,
 				layer = ui_layer,
 				x = gw / 2,
-				y = gh / 2, -- - 32 * global_game_scale,
+				y = gh / 2,
 				force_update = true,
 				lines = {
 					{
