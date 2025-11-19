@@ -55,7 +55,7 @@ function Game:on_enter(from, args)
 	self.w, self.h = self.x2 - self.x1, self.y2 - self.y1
 
 	-- NOTE: constants:
-	grid_size = 32
+	grid_size = 16
 	min_player_size = 16
 	max_player_size = 64
 	self.countdown = 3
@@ -939,7 +939,7 @@ function Game:die()
 			})
 		)
 
-		self.t:after(1.25, function()
+		self.t:after(0.8, function()
 			play_level(self, {
 				fast_load = true,
 				creator_mode = self.creator_mode,

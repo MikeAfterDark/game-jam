@@ -1,12 +1,12 @@
 BUGFIXING:
-- sliding on ice should turn around (slope) + stopping on ice never restarts if make wall passable
-- level songs restarting on redo, cuz the ui_layer gets popped and pushed, make sure two levels with the same 'type' keep the same song playing in a row
+- sliding on ice should turn around (slope) + stopping on ice never restarts if make wall passable 
+    need to check every frame for what am currently collided with, if only one obj then take the attribute of it
 
 Game:
 - Kill all runners within a centain amount of time and before they can collect all the checkpoints by controlling if certain walls are opaque or transparent
 
 Ideas:
-- Faster levels are good
+- level clear indicators and clear time PBs
 - text whenever a song plays to show songname and creator/s
 - music fading in/out on death and pause menu and whenever a new songtype comes up
 
@@ -15,7 +15,3 @@ Ideas:
 - stim cave, random button jumpscares
 
 
-
-
-
--- level 5 note: make the checkpoint for each 'key' at the bottom of the keyhole

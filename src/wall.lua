@@ -528,7 +528,7 @@ wall_type = {
 			end
 		end,
 		trigger_behaviour = function(other, contact, self)
-			if self.collected then
+			if self.collected or other.state == Runner_State.Dead then
 				return
 			end
 

@@ -45,7 +45,7 @@ function Runner:init(args)
 	self:set_damping(0)
 	self:set_friction(0)
 
-	self.dir = self.direction == "right" and 1 or 0
+	self.dir = self.direction == "right" and 1 or -1
 	self.max_uphill_angle = 50 --degrees
 
 	self.color = _G["white"][0]
@@ -62,7 +62,7 @@ end
 
 function Runner:reset()
 	self.state = Runner_State.Run
-	self.dir = self.direction == "right" and 1 or 0
+	self.dir = self.direction == "right" and 1 or -1
 
 	self:set_position(self.init_x, self.init_y)
 end
