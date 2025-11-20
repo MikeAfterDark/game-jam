@@ -1,3 +1,5 @@
+require("buttons")
+
 MainMenu = Object:extend()
 MainMenu:implement(State)
 MainMenu:implement(GameObject)
@@ -110,10 +112,6 @@ function MainMenu:draw()
 
 	local scale = 0.565
 	title_background:draw(gw / 2, gh / 2, 0, scale, scale, 0, 0, white[0])
-	if self.song_info_text then
-		graphics.rectangle(gw * 0.2, gh * 0.96 - 5, self.song_info_text.w, self.song_info_text.h, nil, nil, modal_transparent)
-		self.song_info_text:draw(gw * 0.2, gh * 0.96, 0, 1, 1)
-	end
 
 	self.main_menu_ui:draw()
 
@@ -131,6 +129,18 @@ function MainMenu:draw()
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 	end
 	self.credits:draw()
+	if self.song_info_text then
+		graphics.rectangle(
+			gw * 0.2,
+			gh * 0.96 - 5, --
+			self.song_info_text.w,
+			self.song_info_text.h,
+			nil,
+			nil,
+			modal_transparent
+		)
+		self.song_info_text:draw(gw * 0.2, gh * 0.96, 0, 1, 1)
+	end
 end
 
 function MainMenu:setup_title_menu()
@@ -466,7 +476,7 @@ function MainMenu:setup_level_menu(pack)
 
 		collect_into(
 			ui_elements,
-			RectangleButton({
+			Level_Button({
 				delete_on_menu_change = menu_id,
 				group = ui_group,
 				x = x_start + col * spacing,
@@ -479,6 +489,7 @@ function MainMenu:setup_level_menu(pack)
 				title_text = level.name,
 				fg_color = "white",
 				bg_color = "bg",
+				level = level,
 				action = function()
 					play_level(self, {
 						creator_mode = false,
@@ -488,6 +499,28 @@ function MainMenu:setup_level_menu(pack)
 					})
 				end,
 			})
+			-- RectangleButton({
+			-- 	delete_on_menu_change = menu_id,
+			-- 	group = ui_group,
+			-- 	x = x_start + col * spacing,
+			-- 	y = y_start + row * spacing,
+			-- 	w = scale,
+			-- 	h = scale,
+			-- 	wrap = level.wrap or false,
+			-- 	force_update = true,
+			-- 	image_path = path .. "/level_img.png",
+			-- 	title_text = level.name,
+			-- 	fg_color = "white",
+			-- 	bg_color = "bg",
+			-- 	action = function()
+			-- 		play_level(self, {
+			-- 			creator_mode = false,
+			-- 			level = i,
+			-- 			pack = pack,
+			-- 			level_folder = level.path,
+			-- 		})
+			-- 	end,
+			-- })
 		)
 	end
 
@@ -745,4 +778,66 @@ function MainMenu:load_custom_packs()
 	-- end
 
 	return packs
+end
+
+--[[			Level_button({
+				delete_on_menu_change = menu_id,
+				group = ui_group,
+				x = x_start + col * spacing,
+				y = y_start + row * spacing,
+				w = scale,
+				h = scale,
+				wrap = level.wrap or false,
+				force_update = true,
+				image_path = path .. "/level_img.png",
+				title_text = level.name,
+				fg_color = "white",
+				bg_color = "bg",
+				action = function()
+					play_level(self, {
+						creator_mode = false,
+						level = i,
+						pack = pack,
+						level_folder = level.path,
+					})
+				end,
+			})
+]]
+--
+Level_Button = RectangleButton:extend()
+function Level_Button:init(args)
+	RectangleButton.init(self, args)
+
+	self.level_name = self.level.name
+	if not state[self.level_name] then
+		state[self.level_name] = -1
+	end
+
+	self.pb_text = Text({
+		{
+			text = "[yellow]" .. ((state[self.level_name] > 0) and string.format("%.2f", state[self.level_name]) or ""),
+			font = pixul_font,
+			alignment = "center",
+		},
+	}, global_text_tags)
+end
+
+function Level_Button:update(dt)
+	RectangleButton.update(self, dt)
+
+	self.pb_text:set_text({
+		{
+			text = "[yellow]" .. ((state[self.level_name] > 0) and string.format("%.2f", state[self.level_name]) or ""),
+			font = pixul_font,
+			alignment = "center",
+		},
+	})
+end
+
+function Level_Button:draw()
+	RectangleButton.draw(self)
+
+	if self.pb_text then
+		self.pb_text:draw(self.x + self.w * 0.4, self.y - self.h * 0.4, math.pi / 4, self.spring.x, self.spring.y)
+	end
 end

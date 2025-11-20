@@ -55,9 +55,7 @@ function Game:on_enter(from, args)
 	self.w, self.h = self.x2 - self.x1, self.y2 - self.y1
 
 	-- NOTE: constants:
-	grid_size = 16
-	min_player_size = 16
-	max_player_size = 64
+	grid_size = 32
 	self.countdown = 3
 	self.countdown_audio_timer = 3
 	self.coundown_audio_index = 1
@@ -193,11 +191,18 @@ function Game:update(dt)
 			end
 		else
 			local layer = main.ui_layer_stack:peek()
-			scene_transition(self, gw / 2, gh / 2, MainMenu("main_menu"), { destination = "main_menu", args = { clear_music = true } }, {
-				text = "loading main menu...",
-				font = pixul_font,
-				alignment = "center",
-			})
+			scene_transition(
+				self, --
+				gw / 2,
+				gh / 2,
+				MainMenu("main_menu"),
+				{ destination = "main_menu", args = { clear_music = true } },
+				{
+					text = "loading main menu...",
+					font = pixul_font,
+					alignment = "center",
+				}
+			)
 			return
 		end
 	elseif input.escape.pressed and self.in_credits then
@@ -298,8 +303,8 @@ function Game:update(dt)
 				self.hovered.color = green[0]
 				selection_text = "jump pill"
 				selection_color = "green"
-			else -- wall
-				self.hovered = Chain(false, { self.mouse_x, self.mouse_y }) --Rectangle(mouse_x, mouse_y, gh * 0.1, gh * 0.1)
+			else
+				self.hovered = Chain(false, { self.mouse_x, self.mouse_y })
 				self.hovered.color = _G[wall_type[wall_type_order[self.selection]].color][0]
 				selection_text = wall_type_order[self.selection]
 				selection_color = wall_type[wall_type_order[self.selection]].color
@@ -590,7 +595,8 @@ function Game:save_map(map)
 	---
 	--- folder jank ---
 	---
-	local function dir_exists(path) -- NOTE: lua/C jank: https://stackoverflow.com/questions/1340230/check-if-directory-exists-in-lua
+	-- NOTE: lua/C jank: https://stackoverflow.com/questions/1340230/check-if-directory-exists-in-lua
+	local function dir_exists(path)
 		local ok, err, code = os.rename(path, path)
 		return ok or code == 13 -- code 13 = permission denied (means it exists)
 	end
@@ -677,6 +683,10 @@ function Game:quit()
 
 	self.quitting = true
 	if not self.win_text and not self.win_text2 and self.win and not self.won then
+		local level_name = self.pack.levels[self.level].name
+		local old_pb = state[level_name]
+		state[level_name] = old_pb > self.level_timer and old_pb or self.level_timer
+		system.save_state()
 		random:table(level_victory):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 		input:set_mouse_visible(true)
 		self.won = true
@@ -731,13 +741,38 @@ function Game:quit()
 						force_update = true,
 						lines = {
 							{
-								text = "[wavy_mid, cbyc2]Time: " .. string.format("%.2f", self.level_timer) .. "/" .. self.init_level_timer,
+								text = "[wavy_mid, cbyc2]Time: " --
+									.. string.format("%.2f", self.level_timer)
+									.. "/"
+									.. self.init_level_timer,
 								font = pixul_font,
 								alignment = "center",
 							},
 						},
 					})
 				)
+				if old_pb and old_pb < self.level_timer then
+					trigger:after(1.5, function()
+						self.pb_notif_text = collect_into(
+							self.win_ui_elements,
+							Text2({
+								group = self.end_ui,
+								x = gw / 2 + 70 * global_game_scale,
+								y = gh / 2 - 15 * global_game_scale,
+								r = math.pi / 4,
+								force_update = true,
+								lines = {
+									{
+										text = "PB! " --
+											.. (old_pb > 0 and ("(" .. string.format("%.2f", old_pb) .. ")") or ""),
+										font = pixul_font,
+										alignment = "center",
+									},
+								},
+							})
+						)
+					end)
+				end
 			end)
 
 			self.retry = collect_into(
@@ -832,7 +867,6 @@ function Game:quit()
 		end)
 
 		self.t:after(2, function()
-			self.slow_transitioning = true
 			self.t:tween(0.7, self, { main_slow_amount = 0 }, math.linear, function()
 				self.main_slow_amount = 0
 			end)
@@ -900,7 +934,7 @@ function Game:draw()
 	self.credits:draw()
 
 	if self.song_info_text then
-		local x_pos, y_pos = gw * 0.15, gh * 0.975
+		local x_pos, y_pos = gw * 0.2, gh * 0.95
 		graphics.rectangle(x_pos, y_pos - 5, self.song_info_text.w, self.song_info_text.h, nil, nil, modal_transparent)
 		self.song_info_text:draw(x_pos, y_pos, 0, 1, 1)
 	end

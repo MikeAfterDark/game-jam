@@ -6,10 +6,6 @@ Game:
 - Kill all runners within a centain amount of time and before they can collect all the checkpoints by controlling if certain walls are opaque or transparent
 
 Ideas:
-- level clear indicators and clear time PBs
-- text whenever a song plays to show songname and creator/s
-- music fading in/out on death and pause menu and whenever a new songtype comes up
-
 - after a set of levels, stim cave cooldown
 - no stim mode setting: set all music to loop "rahhh anti-stim"
 - stim cave, random button jumpscares

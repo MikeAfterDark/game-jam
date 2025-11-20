@@ -40,7 +40,7 @@ function renderer_init()
 	modal_transparent_2 = Color(0.1, 0.1, 0.1, 0.9)
 
 	bg_off = Color(46, 46, 46)
-	bg_gradient = GradientImage("vertical", Color(128, 128, 128, 0), Color(0, 0, 0, 0.3))
+	bg_gradient = GradientImage("vertical", Color(128, 128, 128, 0), Color(0, 0, 0, 0.9))
 
 	graphics.set_background_color(bg[0])
 	graphics.set_color(fg[0])

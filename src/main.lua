@@ -44,19 +44,6 @@ function init()
 		input:bind(action, key.input or key.default)
 	end
 
-	-- load sounds:
-	-- TODO: move all sounds and music data to some data file and load *that*
-	sfx_tag = { tags = { sfx } }
-	-- buttonHover = Sound("buttonHover.ogg", s)
-	-- buttonPop = Sound("buttonPop.ogg", s)
-	-- buttonBoop = Sound("buttonBoop.ogg", s)
-	--
-	-- ui_switch1 = Sound("ui_switch1.ogg", s)
-	-- ui_switch2 = Sound("ui_switch2.ogg", s)
-	-- ui_transition2 = Sound("ui_transition2.ogg", s)
-	--
-	-- enemy_die1 = Sound("enemy_die1.ogg", s)
-	-- success = Sound("success.ogg", s)
 	person = {
 		-- dev:
 		Mikey = { name = "Mikey G", nickname = "Mikey", url = "https://gusakm.itch.io/", color = "green" },
@@ -67,7 +54,7 @@ function init()
 		Kai = { name = "KaiaRadio", nickname = "Kai", url = "https://www.youtube.com/@KaiaRadio", color = "blue" }, -- light blue
 
 		Apezilla = { name = "a", nickname = "a", url = "https://www.google.com/", color = "red" },
-		Tectonic = { name = "t", nickname = "t", url = "https://www.google.com/", color = "red" },
+		Tectonic = { name = "t", nickname = "Tectonic", url = "https://www.google.com/", color = "red" },
 
 		-- SFX
 		Istaivan = { name = "i", nickname = "i", url = "https://www.google.com/", color = "red" },
@@ -75,8 +62,11 @@ function init()
 		Gerard = { name = "g", nickname = "g", url = "https://www.google.com/", color = "red" },
 	}
 
+	-- load sounds:
 	music_jam_folder = "music_jam/"
+	music_fade = 1
 	-- ui
+	sfx_tag = { tags = { sfx } }
 	ui_hover = {
 		Sound(music_jam_folder .. "UI Hover 1.mp3", sfx_tag),
 		Sound(music_jam_folder .. "UI Hover 2.mp3", sfx_tag),
@@ -133,17 +123,26 @@ function init()
 	-- load songs
 
 	music_tag = { tags = { music } } -- for volume control
-	song_stim_cave = Sound(music_jam_folder .. "Guitar slop.mp3", music_tag, { name = "guitar slop", artists = { person.Sul, person.Mikey } })
+	song_stim_cave = Sound(
+		music_jam_folder .. "Guitar slop.mp3",
+		music_tag, --
+		{ name = "guitar slop", artists = { person.Sul, person.Mikey } }
+	)
 	song_yellow1 = Sound(music_jam_folder .. "bass slop.mp3", music_tag, { name = "bass slop", artists = { person.Sul } })
+	song_main_menu = Sound(
+		music_jam_folder .. "game jam 2025 main theme.mp3",
+		music_tag, --
+		{ name = "mongolian goat", artists = { person.Tectonic } }
+	)
 	temp = Sound(music_jam_folder .. "UI CLICK 2.mp3", music_tag, { name = "temp", artists = { person.Mikey } })
 
 	music_songs = {
-		main = {},
+		main = { song_main_menu },
 		stim_cave = { song_stim_cave },
 		yellow = { song_yellow1 },
 		paused = { temp },
-		options = {},
-		credits = {},
+		options = { temp },
+		credits = { temp },
 		-- main = { "song1", "song2", "song3", "song4", "song5" },
 		-- game = { "song1", "song2", "song3", "song4", "song5" },
 		-- paused = { "pause_song1", "pause_song2", "pause_song3" },
@@ -239,6 +238,14 @@ end
 
 function update(dt)
 	main:update(dt)
+
+	for i = 1, main.ui_layer_stack:size() do
+		local layer = main.ui_layer_stack.items[i]
+		if layer.song then
+			layer.song:update(dt)
+		end
+	end
+	-- top_music_layer.song:update(love.timer.getDelta())
 end
 
 function draw()
@@ -1172,7 +1179,7 @@ function set_music_info(self, song)
 	local musicians = ""
 	for i, artist in ipairs(song.data.artists or {}) do
 		local comma = i < (#song.data.artists or 0) and "," or ""
-		musicians = musicians .. "[wavy," .. artist.color .. "]" .. artist.nickname .. comma
+		musicians = musicians .. "[ wavy," .. artist.color .. "]" .. artist.nickname .. comma
 	end
 
 	self.song_info_text:set_text({
@@ -1263,20 +1270,20 @@ function play_music(args)
 			return
 		end
 
-		top_music_layer.music = song:play({ volume = volume })
+		top_music_layer.music = song:play({ volume = volume, fadeDuration = music_fade })
 		top_music_layer.song = song
 		main.current_music_type = target_type
 	elseif main.current_music_type ~= target_type then
-		current_playing_music:pause()
+		current_playing_music:pause(music_fade)
 		if top_music_layer.music then
-			top_music_layer.music:resume()
+			top_music_layer.music:resume(music_fade)
 		else
 			local song = random:table(music_songs[target_type])
 			if not song then
 				set_music_info(main.current, nil)
 				return
 			end
-			top_music_layer.music = song:play({ volume = volume })
+			top_music_layer.music = song:play({ volume = volume, fadeDuration = music_fade })
 			top_music_layer.song = song
 		end
 		main.current_music_type = target_type
@@ -1286,8 +1293,9 @@ function play_music(args)
 end
 
 function stop_current_music()
-	if main.ui_layer_stack:peek().music ~= nil then
-		main.ui_layer_stack:peek().music:stop()
+	local layer = main.ui_layer_stack:peek()
+	if layer and layer.music then
+		layer.music:stop()
 	end
 end
 
