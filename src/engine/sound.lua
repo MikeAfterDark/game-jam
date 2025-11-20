@@ -13,8 +13,10 @@
 --   }
 -- })
 
-Sound = function(asset_name, options)
-	return ripple.newSound(love.audio.newSource("assets/sounds/" .. asset_name, "static"), options)
+Sound = function(asset_name, options, info)
+	local sound = ripple.newSound(love.audio.newSource("assets/sounds/" .. asset_name, "static"), options)
+	sound.data = info
+	return sound
 end
 SoundTag = ripple.newTag
 Effect = love.audio.setEffect

@@ -57,6 +57,23 @@ function init()
 	--
 	-- enemy_die1 = Sound("enemy_die1.ogg", s)
 	-- success = Sound("success.ogg", s)
+	person = {
+		-- dev:
+		Mikey = { name = "Mikey G", nickname = "Mikey", url = "https://gusakm.itch.io/", color = "green" },
+
+		-- music
+		Sul = { name = "Sul Ponticellist", nickname = "Sul", url = "https://www.youtube.com/@SulPonticellist", color = "purple" },
+		Freddie = { name = "Resident // Cryptid", nickname = "R//C", url = "https://www.residentcryptidmusic.com/ ", color = "yellow" },
+		Kai = { name = "KaiaRadio", nickname = "Kai", url = "https://www.youtube.com/@KaiaRadio", color = "blue" }, -- light blue
+
+		Apezilla = { name = "a", nickname = "a", url = "https://www.google.com/", color = "red" },
+		Tectonic = { name = "t", nickname = "t", url = "https://www.google.com/", color = "red" },
+
+		-- SFX
+		Istaivan = { name = "i", nickname = "i", url = "https://www.google.com/", color = "red" },
+		Cole = { name = "c", nickname = "c", url = "https://www.google.com/", color = "red" },
+		Gerard = { name = "g", nickname = "g", url = "https://www.google.com/", color = "red" },
+	}
 
 	music_jam_folder = "music_jam/"
 	-- ui
@@ -116,9 +133,9 @@ function init()
 	-- load songs
 
 	music_tag = { tags = { music } } -- for volume control
-	song_stim_cave = Sound(music_jam_folder .. "Guitar slop.mp3", music_tag)
-	song_yellow1 = Sound(music_jam_folder .. "bass slop.mp3", music_tag)
-	temp = Sound(music_jam_folder .. "UI CLICK 2.mp3", music_tag)
+	song_stim_cave = Sound(music_jam_folder .. "Guitar slop.mp3", music_tag, { name = "guitar slop", artists = { person.Sul, person.Mikey } })
+	song_yellow1 = Sound(music_jam_folder .. "bass slop.mp3", music_tag, { name = "bass slop", artists = { person.Sul } })
+	temp = Sound(music_jam_folder .. "UI CLICK 2.mp3", music_tag, { name = "temp", artists = { person.Mikey } })
 
 	music_songs = {
 		main = {},
@@ -132,6 +149,7 @@ function init()
 		-- paused = { "pause_song1", "pause_song2", "pause_song3" },
 		-- options = { "pause_song1", "pause_song2", "pause_song3" },
 		-- credits = { "pause_song1", "pause_song2", "pause_song3" },
+		--
 	}
 
 	-- song1 = Sound("neon-rush-retro-synthwave-uplifting-daily-vlog-fast-cuts-sv201-360195.mp3", { tags = { music } })
@@ -731,6 +749,7 @@ function close_options(self)
 end
 
 function pause_game(self)
+	self.in_pause = true
 	input.m1.pressed = false
 	input:set_mouse_visible(true)
 	local ui_layer = ui_interaction_layer.Paused
@@ -743,9 +762,8 @@ function pause_game(self)
 		ui_elements = self.paused_ui_elements,
 	})
 
-	trigger:tween(0.25, _G, { slow_amount = 0 }, math.linear, function()
+	trigger:tween(0.15, _G, { slow_amount = 0 }, math.linear, function()
 		slow_amount = 0
-		self.in_pause = true
 
 		self.paused_menu_title_text = collect_into(
 			self.paused_ui_elements,
@@ -873,11 +891,10 @@ function play_level(self, args)
 end
 
 function unpause_game(self)
+	self.in_pause = false
+	pop_ui_layer(self)
 	trigger:tween(0.25, _G, { slow_amount = 1 }, math.linear, function()
 		slow_amount = 1
-		self.in_pause = false
-
-		pop_ui_layer(self)
 	end)
 end
 
@@ -1140,6 +1157,29 @@ function open_credits(self)
 	end
 end
 
+function set_music_info(self, song)
+	if not self or not self.song_info_text or (song and song == self.prev_song) then
+		return
+	elseif not song then
+		self.song_info_text:set_text({
+			{ text = "", font = pixul_font },
+		})
+		self.prev_song = nil
+		return
+	end
+	self.prev_song = song
+
+	local musicians = ""
+	for i, artist in ipairs(song.data.artists or {}) do
+		local comma = i < (#song.data.artists or 0) and "," or ""
+		musicians = musicians .. "[wavy," .. artist.color .. "]" .. artist.nickname .. comma
+	end
+
+	self.song_info_text:set_text({
+		{ text = "[wavy]" .. song.data.name .. " [white]by " .. musicians, font = pixul_font },
+	})
+end
+
 function scene_transition(self, x_pos, y_pos, addition, go_to, text_args)
 	-- ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	-- ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
@@ -1219,10 +1259,12 @@ function play_music(args)
 	if not current_playing_music or current_playing_music:isStopped() or (top_music_layer.music and top_music_layer.music:isStopped()) then
 		local song = random:table(music_songs[target_type])
 		if not song then
+			set_music_info(main.current, nil)
 			return
 		end
 
 		top_music_layer.music = song:play({ volume = volume })
+		top_music_layer.song = song
 		main.current_music_type = target_type
 	elseif main.current_music_type ~= target_type then
 		current_playing_music:pause()
@@ -1231,12 +1273,16 @@ function play_music(args)
 		else
 			local song = random:table(music_songs[target_type])
 			if not song then
+				set_music_info(main.current, nil)
 				return
 			end
 			top_music_layer.music = song:play({ volume = volume })
+			top_music_layer.song = song
 		end
 		main.current_music_type = target_type
 	end
+
+	set_music_info(main.current, top_music_layer.song)
 end
 
 function stop_current_music()

@@ -77,6 +77,7 @@ function Game:on_enter(from, args)
 	self.level = args.level or 0
 	self.pack = args.pack or {}
 	self.runners = {}
+	self.song_info_text = Text({ { text = "", font = pixul_font, alignment = "center" } }, global_text_tags)
 
 	if self.creator_mode then
 		-- creator setup if any
@@ -144,6 +145,9 @@ end
 
 function Game:update(dt)
 	play_music({ volume = 0.3 })
+	if self.song_info_text then
+		self.song_info_text:update(dt)
+	end
 
 	if not self.in_pause and not self.stuck and not self.won then
 		run_time = run_time + dt
@@ -894,6 +898,12 @@ function Game:draw()
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent_2)
 	end
 	self.credits:draw()
+
+	if self.song_info_text then
+		local x_pos, y_pos = gw * 0.15, gh * 0.975
+		graphics.rectangle(x_pos, y_pos - 5, self.song_info_text.w, self.song_info_text.h, nil, nil, modal_transparent)
+		self.song_info_text:draw(x_pos, y_pos, 0, 1, 1)
+	end
 end
 
 function Game:die()

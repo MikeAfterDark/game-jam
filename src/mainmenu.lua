@@ -26,10 +26,10 @@ function MainMenu:on_enter(from, args)
 	self.in_menu_transition = false
 	self.main_ui_elements = {}
 
+	self.song_info_text = Text({ { text = "", font = pixul_font, alignment = "center" } }, global_text_tags)
 	-- UI positioning:
 	--
-	-- [title screen]
-	-- [map selection]
+	-- [title screen][stim cave]
 	-- [level selection]
 	--
 	menu = {
@@ -75,6 +75,9 @@ end
 
 function MainMenu:update(dt)
 	play_music({ volume = 0.3 })
+	if self.song_info_text then
+		self.song_info_text:update(dt)
+	end
 
 	if input.escape.pressed then
 		if self.in_options then
@@ -107,6 +110,11 @@ function MainMenu:draw()
 
 	local scale = 0.565
 	title_background:draw(gw / 2, gh / 2, 0, scale, scale, 0, 0, white[0])
+	if self.song_info_text then
+		graphics.rectangle(gw * 0.2, gh * 0.96 - 5, self.song_info_text.w, self.song_info_text.h, nil, nil, modal_transparent)
+		self.song_info_text:draw(gw * 0.2, gh * 0.96, 0, 1, 1)
+	end
+
 	self.main_menu_ui:draw()
 
 	if self.in_options then
