@@ -191,6 +191,8 @@ function Game:update(dt)
 			end
 		else
 			local layer = main.ui_layer_stack:peek()
+
+			random:table(menu_loading):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 			scene_transition(
 				self, --
 				gw / 2,
@@ -812,6 +814,7 @@ function Game:quit()
 				next_step_function = function()
 					print("no more levels, going back to pack", self.pack.path)
 
+					random:table(menu_loading):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 					scene_transition(
 						self,
 						gw / 2,
@@ -934,7 +937,7 @@ function Game:draw()
 	self.credits:draw()
 
 	if self.song_info_text then
-		local x_pos, y_pos = gw * 0.2, gh * 0.95
+		local x_pos, y_pos = gw * 0.275, gh * 0.95
 		graphics.rectangle(x_pos, y_pos - 5, self.song_info_text.w, self.song_info_text.h, nil, nil, modal_transparent)
 		self.song_info_text:draw(x_pos, y_pos, 0, 1, 1)
 	end

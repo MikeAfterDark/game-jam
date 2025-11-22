@@ -1,5 +1,6 @@
 return {
 	["level_timer"] = 10,
+	["music_type"] = "yellow",
 	["walls"] = {
 		[1] = { ["type"] = "Player", ["vertices"] = { [1] = 608, [2] = 96, [3] = 1312, [4] = 96 }, ["data"] = { ["index"] = 1 }, ["loop"] = false },
 		[2] = { ["type"] = "Stone", ["vertices"] = { [1] = 1312, [2] = 96, [3] = 1376, [4] = 96, [5] = 1376, [6] = 32 }, ["loop"] = false },

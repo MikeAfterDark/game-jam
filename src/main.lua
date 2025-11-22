@@ -53,13 +53,13 @@ function init()
 		Freddie = { name = "Resident // Cryptid", nickname = "R//C", url = "https://www.residentcryptidmusic.com/ ", color = "yellow" },
 		Kai = { name = "KaiaRadio", nickname = "Kai", url = "https://www.youtube.com/@KaiaRadio", color = "blue" }, -- light blue
 
-		Apezilla = { name = "a", nickname = "a", url = "https://www.google.com/", color = "red" },
-		Tectonic = { name = "t", nickname = "Tectonic", url = "https://www.google.com/", color = "red" },
+		Apezilla = { name = "David Browne", nickname = "Apezilla", url = "https://youtube.com/@davidbrowne003?si=VfRtjg5YRjJ1enFa", color = "red" },
+		Tectonic = { name = "TectonicHorizon", nickname = "Tectonic", url = "https://soundcloud.com/reedflow", color = "p_blue1" },
 
 		-- SFX
-		Istaivan = { name = "i", nickname = "i", url = "https://www.google.com/", color = "red" },
-		Cole = { name = "c", nickname = "c", url = "https://www.google.com/", color = "red" },
-		Gerard = { name = "g", nickname = "g", url = "https://www.google.com/", color = "red" },
+		Istaivan = { name = "Istaivan", nickname = "istavian", url = "https://exedexes1.com/", color = "purple" },
+		Cole = { name = "Cole Dabolish", nickname = "Cole", url = "https://youtube.com/@coledabolish?si=1-dRQgtCixEaHwlw", color = "p_blue1" },
+		Gerard = { name = "Gerard", nickname = "Gerard", url = "https://gerardito.itch.io/", color = "green" },
 	}
 
 	-- load sounds:
@@ -105,6 +105,15 @@ function init()
 		Sound(music_jam_folder .. "INVD-Gkey-1.mp3", sfx_tag),
 		Sound(music_jam_folder .. "INVD-Gkey-GO.mp3", sfx_tag),
 	}
+	level_dissapear = {
+		Sound(music_jam_folder .. "platform disappear.mp3", sfx_tag),
+	}
+	level_appear = {
+		Sound(music_jam_folder .. "platform appear.mp3", sfx_tag),
+	}
+	menu_loading = {
+		Sound(music_jam_folder .. "loading.mp3", sfx_tag),
+	}
 
 	-- gameplay
 	invader_death = {
@@ -126,23 +135,48 @@ function init()
 	song_stim_cave = Sound(
 		music_jam_folder .. "Guitar slop.mp3",
 		music_tag, --
-		{ name = "guitar slop", artists = { person.Sul, person.Mikey } }
+		{ name = "Guitar Slop", artists = { person.Sul } }
 	)
-	song_yellow1 = Sound(music_jam_folder .. "bass slop.mp3", music_tag, { name = "bass slop", artists = { person.Sul } })
 	song_main_menu = Sound(
-		music_jam_folder .. "game jam 2025 main theme.mp3",
+		music_jam_folder .. "Invaders Approach Master.mp3",
 		music_tag, --
-		{ name = "mongolian goat", artists = { person.Tectonic } }
+		{ name = "Main Menu Theme ig lol", artists = { person.Tectonic } }
 	)
+	song_options = Sound(
+		music_jam_folder .. "Options Theme Master.mp3",
+		music_tag, --
+		{ name = "Options Song ^_^", artists = { person.Kai, person.Cole } }
+	)
+	song_pause = Sound(
+		music_jam_folder .. "Pause Theme Master.mp3",
+		music_tag, --
+		{ name = "Pause Theme O_o", artists = { person.Kai, person.Cole } }
+	)
+	song_credits = Sound(
+		music_jam_folder .. "Credit Theme Master.mp3",
+		music_tag, --
+		{ name = "Credit Theme UwU", artists = { person.Kai, person.Cole } }
+	)
+
 	temp = Sound(music_jam_folder .. "UI CLICK 2.mp3", music_tag, { name = "temp", artists = { person.Mikey } })
+
+	song_bass_slop = Sound(music_jam_folder .. "Bass Slop Master.mp3", music_tag, { name = "Bass Slop", artists = { person.Sul } })
+	song_freddie = Sound(
+		music_jam_folder .. "watch your step (and your back) Master.mp3",
+		music_tag,
+		{ name = "Watch Your Step (and your Back)", artists = { person.Freddie } }
+	)
+	song_apezilla = Sound(music_jam_folder .. "Singed Infringers Master.mp3", music_tag, { name = "Singed Infringers", artists = { person.Apezilla } })
+	song_tutorial = Sound(music_jam_folder .. "Tutorial Theme Master.mp3", music_tag, { name = "Tutorial Theme OvO", artists = { person.Kai } })
 
 	music_songs = {
 		main = { song_main_menu },
+		tutorial = { song_tutorial },
 		stim_cave = { song_stim_cave },
-		yellow = { song_yellow1 },
-		paused = { temp },
-		options = { temp },
-		credits = { temp },
+		yellow = { song_bass_slop, song_freddie, song_apezilla },
+		paused = { song_pause },
+		options = { song_options },
+		credits = { song_credits },
 		-- main = { "song1", "song2", "song3", "song4", "song5" },
 		-- game = { "song1", "song2", "song3", "song4", "song5" },
 		-- paused = { "pause_song1", "pause_song2", "pause_song3" },
@@ -156,19 +190,21 @@ function init()
 	-- song3 = Sound("edm003-retro-edm-_-gamepixel-racer-358045.mp3", { tags = { music } })
 	-- song4 = Sound("pixel-fantasia-355123.mp3", { tags = { music } })
 	-- song5 = Sound("pixel-fight-8-bit-arcade-music-background-music-for-video-208775.mp3", { tags = { music } })
-	song1 = Sound("funk-smooth-party-stylish-379509.mp3", music_tag)
-	song2 = Sound("groovy-ambient-funk-201745.mp3", music_tag)
-	song3 = Sound("drunk-on-funk-273910.mp3", music_tag)
-	song4 = Sound("midnight-quirk-255361.mp3", music_tag)
-	song5 = Sound("funky_main-187356.mp3", music_tag)
-
-	pause_song1 = Sound("jazzy-slow-background-music-244598.mp3", music_tag)
-	pause_song2 = Sound("glass-of-wine-143532.mp3", music_tag)
-	pause_song3 = Sound("for-elevator-jazz-music-124005.mp3", music_tag)
+	-- song1 = Sound("funk-smooth-party-stylish-379509.mp3", music_tag)
+	-- song2 = Sound("groovy-ambient-funk-201745.mp3", music_tag)
+	-- song3 = Sound("drunk-on-funk-273910.mp3", music_tag)
+	-- song4 = Sound("midnight-quirk-255361.mp3", music_tag)
+	-- song5 = Sound("funky_main-187356.mp3", music_tag)
+	--
+	-- pause_song1 = Sound("jazzy-slow-background-music-244598.mp3", music_tag)
+	-- pause_song2 = Sound("glass-of-wine-143532.mp3", music_tag)
+	-- pause_song3 = Sound("for-elevator-jazz-music-124005.mp3", music_tag)
 
 	-- load images:
 	wall_arrow_particle = Image("wall_arrow_particle")
-	title_background = Image("cat_background")
+	-- title_background = Image("cat_background")
+	title_background = Image("drawn_background")
+	note_background = Image("note_background2")
 
 	local is_path = true
 	knight_sprites = {
@@ -925,6 +961,8 @@ function pop_ui_layer(self)
 end
 
 function open_credits(self)
+	input.m1.pressed = false
+	input.m1.down = false
 	local ui_layer = ui_interaction_layer.Credits
 	local ui_group = self.credits
 	self.credits_ui_elements = {}
@@ -947,7 +985,7 @@ function open_credits(self)
 
 	local yOffset = gh * 0.3
 	local y_dist = gh * 0.08
-	local columns = { gw / 4, 2 * gw / 3 }
+	local columns = { gw * 0.2, gw * 0.6 }
 	self.dev_section = collect_into(
 		self.credits_ui_elements,
 		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[fg]dev: ", font = pixul_font } } })
@@ -967,8 +1005,121 @@ function open_credits(self)
 			end,
 		})
 	)
+	yOffset = yOffset + y_dist
+	-- self.libraries_button5 = collect_into(
+	-- 	self.credits_ui_elements,
+	-- 	Button({
+	-- 		group = ui_group,
+	-- 		x = columns[2] + x_offset,
+	-- 		y = yOffset,
+	-- 		w = x_width,
+	-- 		button_text = "inputfield",
+	-- 		fg_color = "bg",
+	-- 		bg_color = "blue",
+	-- 		credits_button = true,
+	-- 		action = function(b)
+	-- 			open_url(b, "https://github.com/ReFreezed/InputField")
+	-- 		end,
+	-- 	})
+	-- )
+
+	self.music_section = collect_into(
+		self.credits_ui_elements,
+		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[green]music:", font = pixul_font } } })
+	)
+
+	local musicians = { person.Kai, person.Tectonic, person.Sul, person.Freddie, person.Apezilla }
+	local musician_offset = { 85, 98, 0, 103 }
+	x_offset = -gw * 0.20
+	for i, musician in ipairs(musicians) do
+		collect_into(
+			self.credits_ui_elements,
+			Button({
+				group = ui_group,
+				x = columns[2] + x_offset,
+				y = yOffset,
+				button_text = musician.name,
+				fg_color = musician.color,
+				bg_color = "black",
+				credits_button = true,
+				action = function(b)
+					open_url(b, musician.url)
+				end,
+			})
+		)
+		x_offset = x_offset + (musician_offset[i] or 0) * global_game_scale
+		if i == 3 then
+			yOffset = yOffset + y_dist - gh * 0.02
+			x_offset = -gw * 0.08
+		end
+	end
+	-- self.music_button1 = collect_into(
+	-- 	self.credits_ui_elements,
+	-- 	Button({
+	-- 		group = ui_group,
+	-- 		x = columns[2],
+	-- 		y = yOffset,
+	-- 		button_text = "name",
+	-- 		fg_color = "bg",
+	-- 		bg_color = "green",
+	-- 		credits_button = true,
+	-- 		action = function(b)
+	-- 			open_url(b, "link")
+	-- 		end,
+	-- 	})
+	-- )
 
 	yOffset = yOffset + y_dist
+	self.sound_section = collect_into(
+		self.credits_ui_elements,
+		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[yellow]SFX:", font = pixul_font } } })
+	)
+	local sfx_artists = { person.Cole, person.Istaivan, person.Gerard }
+	local sfx_offset = { 75, 70 }
+	x_offset = -gw * 0.15
+	for i, artist in ipairs(sfx_artists) do
+		collect_into(
+			self.credits_ui_elements,
+			Button({
+				group = ui_group,
+				x = columns[2] + x_offset,
+				y = yOffset,
+				button_text = artist.name,
+				fg_color = artist.color,
+				bg_color = "black",
+				credits_button = true,
+				action = function(b)
+					open_url(b, artist.url)
+				end,
+			})
+		)
+		x_offset = x_offset + (sfx_offset[i] or 0) * global_game_scale
+	end
+	yOffset = yOffset + y_dist
+
+	self.audio_mastering_section = collect_into(
+		self.credits_ui_elements,
+		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[orange]song mastering:", font = pixul_font } } })
+	)
+	self.audio_master = collect_into(
+		self.credits_ui_elements,
+		Button({
+			group = self.credits,
+			x = columns[2],
+			y = yOffset,
+			w = gw * 0.2,
+			button_text = "[wavy_rainbow]" .. person.Sul.name,
+			fg_color = "bg",
+			bg_color = "black",
+			credits_button = true,
+			action = function(b)
+				open_url(b, person.Sul.url)
+			end,
+		})
+	)
+
+	yOffset = yOffset + y_dist
+
 	self.artist_section = collect_into(
 		self.credits_ui_elements,
 		Text2({
@@ -978,11 +1129,27 @@ function open_credits(self)
 			lines = { { text = "[fg]art: ", font = pixul_font } },
 		})
 	)
+	self.bg_artist_button = collect_into(
+		self.credits_ui_elements,
+		Button({
+			group = self.credits,
+			x = columns[2] - 75 * global_game_scale,
+			y = yOffset,
+			w = gw * 0.3,
+			button_text = "[wavy_rainbow]background: " .. person.Kai.name,
+			fg_color = "bg",
+			bg_color = "black",
+			credits_button = true,
+			action = function(b)
+				open_url(b, person.Kai.url)
+			end,
+		})
+	)
 	self.artist_button = collect_into(
 		self.credits_ui_elements,
 		Button({
 			group = self.credits,
-			x = columns[2],
+			x = columns[2] + 75 * global_game_scale,
 			y = yOffset,
 			w = gw * 0.3,
 			button_text = "[wavy_rainbow]knight: aamatniekss",
@@ -1100,49 +1267,7 @@ function open_credits(self)
 	)
 
 	x_offset = x_offset + x_dist
-	-- self.libraries_button5 = collect_into(
-	-- 	self.credits_ui_elements,
-	-- 	Button({
-	-- 		group = ui_group,
-	-- 		x = columns[2] + x_offset,
-	-- 		y = yOffset,
-	-- 		w = x_width,
-	-- 		button_text = "inputfield",
-	-- 		fg_color = "bg",
-	-- 		bg_color = "blue",
-	-- 		credits_button = true,
-	-- 		action = function(b)
-	-- 			open_url(b, "https://github.com/ReFreezed/InputField")
-	-- 		end,
-	-- 	})
-	-- )
 
-	yOffset = yOffset + y_dist
-	self.music_section = collect_into(
-		self.credits_ui_elements,
-		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[green]music:", font = pixul_font } } })
-	)
-	-- self.music_button1 = collect_into(
-	-- 	self.credits_ui_elements,
-	-- 	Button({
-	-- 		group = ui_group,
-	-- 		x = columns[2],
-	-- 		y = yOffset,
-	-- 		button_text = "name",
-	-- 		fg_color = "bg",
-	-- 		bg_color = "green",
-	-- 		credits_button = true,
-	-- 		action = function(b)
-	-- 			open_url(b, "link")
-	-- 		end,
-	-- 	})
-	-- )
-
-	yOffset = yOffset + y_dist
-	self.sound_section = collect_into(
-		self.credits_ui_elements,
-		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[yellow]sounds:", font = pixul_font } } })
-	)
 	-- self.sound_button1 = collect_into(
 	-- 	self.credits_ui_elements,
 	-- 	Button({
@@ -1178,7 +1303,7 @@ function set_music_info(self, song)
 
 	local musicians = ""
 	for i, artist in ipairs(song.data.artists or {}) do
-		local comma = i < (#song.data.artists or 0) and "," or ""
+		local comma = i < (#song.data.artists or 0) and ", " or ""
 		musicians = musicians .. "[ wavy," .. artist.color .. "]" .. artist.nickname .. comma
 	end
 
@@ -1192,6 +1317,9 @@ function scene_transition(self, x_pos, y_pos, addition, go_to, text_args)
 	-- ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	-- ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 
+	if go_to.destination ~= "main_menu" then
+		random:table(level_dissapear):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+	end
 	-- if layer_type = "game" then don't pop?
 	while main.ui_layer_stack:size() > 1 do
 		local layer = main.ui_layer_stack:peek()
@@ -1212,6 +1340,11 @@ function scene_transition(self, x_pos, y_pos, addition, go_to, text_args)
 			system.save_state()
 			main:add(addition)
 			main:go_to(go_to.destination, go_to.args)
+			if go_to.destination ~= "main_menu" then
+				trigger:after(0.3, function()
+					random:table(level_appear):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+				end)
+			end
 		end,
 		text = Text({
 			{

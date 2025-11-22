@@ -57,9 +57,12 @@ function MainMenu:on_enter(from, args)
 			self:setup_level_menu(pack)
 		end
 		self:set_ui_to(args.menu_mode)
+	else
+		self:set_ui_to(menu.Title)
 	end
 
 	self.current_menu = args.menu_mode or menu.Title
+	self.note_y_offset = note_background and gh * 0.6 or 0
 end
 
 function MainMenu:on_exit()
@@ -80,6 +83,17 @@ function MainMenu:update(dt)
 	if self.song_info_text then
 		self.song_info_text:update(dt)
 	end
+
+	local play_y = gh * 0.615
+	self.play_button1.shape:move_to(self.play_button1.x, play_y + self.note_y_offset)
+	self.play_button1.y = play_y + self.note_y_offset
+
+	local option_y = play_y + gh * 0.07
+	self.options_button.shape:move_to(self.options_button.x, option_y + self.note_y_offset)
+	self.options_button.y = option_y + self.note_y_offset
+
+	self.credits_button.shape:move_to(self.credits_button.x, gh * 0.94 + self.note_y_offset)
+	self.credits_button.y = gh * 0.94 + self.note_y_offset
 
 	if input.escape.pressed then
 		if self.in_options then
@@ -108,10 +122,44 @@ function MainMenu:update(dt)
 end
 
 function MainMenu:draw()
-	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
+	if title_background then
+		-- local scale = 0.565 -- for cat background
+		local scale = 1.1
+		title_background:draw(gw / 2, gh / 2, 0, scale, scale, 0, 0, white[0])
+	end
+	if note_background then
+		if self.current_menu == menu.Title then
+			if self.previous_menu ~= menu.Title then
+				self.note_y_offset = gh * 0.6
+				trigger:tween(1.2, self, { note_y_offset = 0 }, math.cubic_in_out)
+				self.previous_menu = self.current_menu
+				self.noted = false
+				self.moved_note = false
 
-	local scale = 0.565
-	title_background:draw(gw / 2, gh / 2, 0, scale, scale, 0, 0, white[0])
+				trigger:after(0.3, function()
+					self.play_button1.invis = false
+					self.options_button.invis = false
+					self.credits_button.invis = false
+				end)
+			end
+		elseif self.previous_menu == menu.Title and not self.noted then
+			self.play_button1.invis = true
+			self.options_button.invis = true
+			self.credits_button.invis = true
+			trigger:tween(0.4, self, { note_y_offset = gh * 0.6 }, math.cubic_in_out, function(b)
+				-- b.moved_note = true
+			end)
+			self.noted = true
+		end
+
+		if self.moved_note then
+			self.note_y_offset = self.note_y_offset + math.sin(love.timer.getTime())
+			-- self.note_x_offset = self.note_y_offset + math.sin(love.timer.getTime())
+		end
+		local note_scale = 1.0
+		note_background:draw(gw * 0.465, gh / 2 + self.note_y_offset, 0, note_scale, note_scale, 0, 0, white[0])
+	end
+	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 
 	self.main_menu_ui:draw()
 
@@ -126,12 +174,12 @@ function MainMenu:draw()
 	self.keybinding_ui:draw()
 
 	if self.in_credits then
-		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
+		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent_2)
 	end
 	self.credits:draw()
 	if self.song_info_text then
 		graphics.rectangle(
-			gw * 0.2,
+			gw * 0.225,
 			gh * 0.96 - 5, --
 			self.song_info_text.w,
 			self.song_info_text.h,
@@ -139,7 +187,7 @@ function MainMenu:draw()
 			nil,
 			modal_transparent
 		)
-		self.song_info_text:draw(gw * 0.2, gh * 0.96, 0, 1, 1)
+		self.song_info_text:draw(gw * 0.225, gh * 0.96, 0, 1, 1)
 	end
 end
 
@@ -153,7 +201,7 @@ function MainMenu:setup_title_menu()
 		Text2({
 			group = ui_group,
 			x = gw / 2,
-			y = gh * 0.05,
+			y = gh * 0.4,
 			lines = {
 				{
 					text = "[wavy_mid, fg]Electroaccoustic Invaders!!!",
@@ -169,7 +217,7 @@ function MainMenu:setup_title_menu()
 		Text2({
 			group = ui_group,
 			x = gw / 2,
-			y = gh / 2,
+			y = gh * 0.35,
 			lines = {
 				{
 					text = "[wavy_title, green]Invaders",
@@ -216,7 +264,9 @@ function MainMenu:setup_title_menu()
 			bg_color = "green",
 			action = function(b)
 				local pack = self:get_pack_from_path("dev_maps/levels/")
-				self:setup_level_menu(pack)
+				if not self.levels_setup then
+					self:setup_level_menu(pack)
+				end
 				self:set_ui_to(menu.Levels)
 			end,
 		})
@@ -247,7 +297,7 @@ function MainMenu:setup_title_menu()
 		Button({
 			group = ui_group,
 			x = gw / 2,
-			y = gh * 0.95,
+			y = gh * 0.3,
 			button_text = "credits",
 			fg_color = "bg",
 			bg_color = "fg",
@@ -476,7 +526,7 @@ function MainMenu:setup_level_menu(pack)
 
 		collect_into(
 			ui_elements,
-			Level_Button({
+			RectangleButton({
 				delete_on_menu_change = menu_id,
 				group = ui_group,
 				x = x_start + col * spacing,
@@ -487,8 +537,10 @@ function MainMenu:setup_level_menu(pack)
 				force_update = true,
 				image_path = path .. "/level_img.png",
 				title_text = level.name,
+				-- fg_color = "white",
+				-- bg_color = "bg",
 				fg_color = "white",
-				bg_color = "bg",
+				bg_color = "black",
 				level = level,
 				action = function()
 					play_level(self, {
@@ -499,28 +551,6 @@ function MainMenu:setup_level_menu(pack)
 					})
 				end,
 			})
-			-- RectangleButton({
-			-- 	delete_on_menu_change = menu_id,
-			-- 	group = ui_group,
-			-- 	x = x_start + col * spacing,
-			-- 	y = y_start + row * spacing,
-			-- 	w = scale,
-			-- 	h = scale,
-			-- 	wrap = level.wrap or false,
-			-- 	force_update = true,
-			-- 	image_path = path .. "/level_img.png",
-			-- 	title_text = level.name,
-			-- 	fg_color = "white",
-			-- 	bg_color = "bg",
-			-- 	action = function()
-			-- 		play_level(self, {
-			-- 			creator_mode = false,
-			-- 			level = i,
-			-- 			pack = pack,
-			-- 			level_folder = level.path,
-			-- 		})
-			-- 	end,
-			-- })
 		)
 	end
 
@@ -611,6 +641,7 @@ function MainMenu:setup_level_menu(pack)
 		v.layer = ui_layer
 		v.force_update = true
 	end
+	self.levels_setup = true
 end
 
 function MainMenu:button_restriction()
@@ -625,7 +656,7 @@ function MainMenu:set_ui_to(target_menu)
 	end
 
 	local transition_duration = 0.4
-	local previous_menu = self.current_menu
+	self.previous_menu = self.current_menu
 	self.current_menu = target_menu
 
 	self.in_menu_transition = true
@@ -778,66 +809,4 @@ function MainMenu:load_custom_packs()
 	-- end
 
 	return packs
-end
-
---[[			Level_button({
-				delete_on_menu_change = menu_id,
-				group = ui_group,
-				x = x_start + col * spacing,
-				y = y_start + row * spacing,
-				w = scale,
-				h = scale,
-				wrap = level.wrap or false,
-				force_update = true,
-				image_path = path .. "/level_img.png",
-				title_text = level.name,
-				fg_color = "white",
-				bg_color = "bg",
-				action = function()
-					play_level(self, {
-						creator_mode = false,
-						level = i,
-						pack = pack,
-						level_folder = level.path,
-					})
-				end,
-			})
-]]
---
-Level_Button = RectangleButton:extend()
-function Level_Button:init(args)
-	RectangleButton.init(self, args)
-
-	self.level_name = self.level.name
-	if not state[self.level_name] then
-		state[self.level_name] = -1
-	end
-
-	self.pb_text = Text({
-		{
-			text = "[yellow]" .. ((state[self.level_name] > 0) and string.format("%.2f", state[self.level_name]) or ""),
-			font = pixul_font,
-			alignment = "center",
-		},
-	}, global_text_tags)
-end
-
-function Level_Button:update(dt)
-	RectangleButton.update(self, dt)
-
-	self.pb_text:set_text({
-		{
-			text = "[yellow]" .. ((state[self.level_name] > 0) and string.format("%.2f", state[self.level_name]) or ""),
-			font = pixul_font,
-			alignment = "center",
-		},
-	})
-end
-
-function Level_Button:draw()
-	RectangleButton.draw(self)
-
-	if self.pb_text then
-		self.pb_text:draw(self.x + self.w * 0.4, self.y - self.h * 0.4, math.pi / 4, self.spring.x, self.spring.y)
-	end
 end

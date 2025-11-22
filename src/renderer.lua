@@ -30,12 +30,15 @@ function renderer_init()
 		blue1 = ColorRamp(Color("#1982c4"), 0.025),
 		purple1 = ColorRamp(Color("#4267ac"), 0.025),
 		gray1 = ColorRamp(Color("#6a4c93"), 0.025),
+
+		p_blue1 = ColorRamp(Color("#4dd8ff"), 0.025),
 	}
 	for name, color in pairs(colors) do
 		_G[name] = color
 		_G[name .. "_transparent"] = Color(color[0].r, color[0].g, color[0].b, 0.5)
 		_G[name .. "_transparent_weak"] = Color(color[0].r, color[0].g, color[0].b, 0.25)
 	end
+	modal_transparent_lite = Color(0.1, 0.1, 0.1, 0.3)
 	modal_transparent = Color(0.1, 0.1, 0.1, 0.6)
 	modal_transparent_2 = Color(0.1, 0.1, 0.1, 0.9)
 
@@ -155,6 +158,11 @@ end
 
 local invisible = Color(1, 1, 1, 0)
 global_text_tags = {
+	p_blue1 = TextTag({
+		draw = function(c, i, text)
+			graphics.set_color(p_blue1[0])
+		end,
+	}),
 	red = TextTag({
 		draw = function(c, i, text)
 			graphics.set_color(red[0])

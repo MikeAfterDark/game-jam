@@ -1,5 +1,6 @@
 return {
 	["level_timer"] = 60,
+	["music_type"] = "yellow",
 	["walls"] = {
 		[1] = {
 			["type"] = "Player",
