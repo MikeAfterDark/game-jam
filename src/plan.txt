@@ -9,6 +9,3 @@ Ideas:
 - after a set of levels, stim cave cooldown
 - no stim mode setting: set all music to loop "rahhh anti-stim"
 - stim cave, random button jumpscares
-
-final TODO:
-- volume control on SFX

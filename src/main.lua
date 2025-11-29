@@ -52,13 +52,12 @@ function init()
 		Sul = { name = "Sul Ponticellist", nickname = "Sul", url = "https://www.youtube.com/@SulPonticellist", color = "purple" },
 		Freddie = { name = "Resident // Cryptid", nickname = "R//C", url = "https://www.residentcryptidmusic.com/ ", color = "yellow" },
 		Kai = { name = "KaiaRadio", nickname = "Kai", url = "https://www.youtube.com/@KaiaRadio", color = "blue" }, -- light blue
-
-		Apezilla = { name = "David Browne", nickname = "Apezilla", url = "https://youtube.com/@davidbrowne003?si=VfRtjg5YRjJ1enFa", color = "red" },
+		Apezilla = { name = "David Browne", nickname = "Apezilla", url = "https://www.youtube.com/@davidbrowne003", color = "red" },
 		Tectonic = { name = "TectonicHorizon", nickname = "Tectonic", url = "https://soundcloud.com/reedflow", color = "p_blue1" },
 
 		-- SFX
+		Cole = { name = "Cole Dabolish", nickname = "Cole", url = "https://youtube.com/@coledabolish", color = "p_blue1" },
 		Istaivan = { name = "Istaivan", nickname = "istavian", url = "https://exedexes1.com/", color = "purple" },
-		Cole = { name = "Cole Dabolish", nickname = "Cole", url = "https://youtube.com/@coledabolish?si=1-dRQgtCixEaHwlw", color = "p_blue1" },
 		Gerard = { name = "Gerard", nickname = "Gerard", url = "https://gerardito.itch.io/", color = "green" },
 	}
 
@@ -129,8 +128,9 @@ function init()
 		Sound(music_jam_folder .. "Invader Footsteps 4.mp3", sfx_tag),
 	}
 
-	-- load songs
-
+	--
+	-- META SONGS
+	--
 	music_tag = { tags = { music } } -- for volume control
 	song_stim_cave = Sound(
 		music_jam_folder .. "Guitar slop.mp3",
@@ -158,9 +158,14 @@ function init()
 		{ name = "Credit Theme UwU", artists = { person.Kai, person.Cole } }
 	)
 
-	temp = Sound(music_jam_folder .. "UI CLICK 2.mp3", music_tag, { name = "temp", artists = { person.Mikey } })
-
-	song_bass_slop = Sound(music_jam_folder .. "Bass Slop Master.mp3", music_tag, { name = "Bass Slop", artists = { person.Sul } })
+	--
+	-- GAMEPLAY SONGS
+	--
+	song_sul = Sound(
+		music_jam_folder .. "Bass Slop Master.mp3",
+		music_tag, --
+		{ name = "Bass Slop", artists = { person.Sul } }
+	)
 	song_freddie = Sound(
 		music_jam_folder .. "watch your step (and your back) Master.mp3",
 		music_tag,
@@ -173,32 +178,11 @@ function init()
 		main = { song_main_menu },
 		tutorial = { song_tutorial },
 		stim_cave = { song_stim_cave },
-		yellow = { song_bass_slop, song_freddie, song_apezilla },
+		yellow = { song_sul, song_freddie, song_apezilla },
 		paused = { song_pause },
 		options = { song_options },
 		credits = { song_credits },
-		-- main = { "song1", "song2", "song3", "song4", "song5" },
-		-- game = { "song1", "song2", "song3", "song4", "song5" },
-		-- paused = { "pause_song1", "pause_song2", "pause_song3" },
-		-- options = { "pause_song1", "pause_song2", "pause_song3" },
-		-- credits = { "pause_song1", "pause_song2", "pause_song3" },
-		--
 	}
-
-	-- song1 = Sound("neon-rush-retro-synthwave-uplifting-daily-vlog-fast-cuts-sv201-360195.mp3", { tags = { music } })
-	-- song2 = Sound("8-bit-gaming-background-music-358443.mp3", { tags = { music } })
-	-- song3 = Sound("edm003-retro-edm-_-gamepixel-racer-358045.mp3", { tags = { music } })
-	-- song4 = Sound("pixel-fantasia-355123.mp3", { tags = { music } })
-	-- song5 = Sound("pixel-fight-8-bit-arcade-music-background-music-for-video-208775.mp3", { tags = { music } })
-	-- song1 = Sound("funk-smooth-party-stylish-379509.mp3", music_tag)
-	-- song2 = Sound("groovy-ambient-funk-201745.mp3", music_tag)
-	-- song3 = Sound("drunk-on-funk-273910.mp3", music_tag)
-	-- song4 = Sound("midnight-quirk-255361.mp3", music_tag)
-	-- song5 = Sound("funky_main-187356.mp3", music_tag)
-	--
-	-- pause_song1 = Sound("jazzy-slow-background-music-244598.mp3", music_tag)
-	-- pause_song2 = Sound("glass-of-wine-143532.mp3", music_tag)
-	-- pause_song3 = Sound("for-elevator-jazz-music-124005.mp3", music_tag)
 
 	-- load images:
 	wall_arrow_particle = Image("wall_arrow_particle")

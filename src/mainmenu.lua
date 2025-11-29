@@ -131,7 +131,7 @@ function MainMenu:draw()
 		if self.current_menu == menu.Title then
 			if self.previous_menu ~= menu.Title then
 				self.note_y_offset = gh * 0.6
-				trigger:tween(1.2, self, { note_y_offset = 0 }, math.cubic_in_out)
+				trigger:tween(self.previous_menu and 0.8 or 1.6, self, { note_y_offset = 0 }, math.cubic_in_out)
 				self.previous_menu = self.current_menu
 				self.noted = false
 				self.moved_note = false
