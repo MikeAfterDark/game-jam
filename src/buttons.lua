@@ -40,13 +40,13 @@ function ButtonBase:update(dt)
 	else
 		if self.selected and input.m1.pressed then
 			if self.action then
-				random:table(ui_click):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+				-- random:table(ui_click):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 				self:action()
 			end
 		end
 		if self.selected and input.m2.pressed then
 			if self.action_2 then
-				random:table(ui_click):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+				-- random:table(ui_click):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 				self:action_2()
 			end
 		end
@@ -59,9 +59,9 @@ function ButtonBase:on_mouse_enter()
 	end
 
 	if self.enter_sfx then
-		random:table(self.enter_sfx):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+		-- random:table(self.enter_sfx):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 	else
-		random:table(ui_hover):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+		-- random:table(ui_hover):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 	end
 
 	-- buttonHover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })

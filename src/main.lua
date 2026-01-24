@@ -3,10 +3,10 @@ require("mainmenu")
 require("game")
 require("renderer")
 
-require("player")
-require("wall")
-require("runner")
-require("pill")
+-- require("player")
+-- require("wall")
+-- require("runner")
+-- require("pill")
 
 -- on linux, state is at: ~/.local/share/{love, project_name}/state.txt
 function init()
@@ -21,24 +21,12 @@ function init()
 		wall1 = { text = "Wall 1", default = { "1" }, input = state.input.wall1 },
 		wall2 = { text = "Wall 2", default = { "2" }, input = state.input.wall2 },
 		wall3 = { text = "Wall 3", default = { "3" }, input = state.input.wall3 },
-		wall4 = { text = "Wall 4", default = { "4" }, input = state.input.wall4 },
-		wall5 = { text = "Wall 5", default = { "5" }, input = state.input.wall5 },
-		wall6 = { text = "Wall 6", default = { "6" }, input = state.input.wall6 },
-		wall7 = { text = "Wall 7", default = { "7" }, input = state.input.wall7 },
-		wall8 = { text = "Wall 8", default = { "8" }, input = state.input.wall8 },
-		wall9 = { text = "Wall 9", default = { "9" }, input = state.input.wall9 },
 	}
 	options_keys_display_order = {
 		"reset",
 		"wall1",
 		"wall2",
 		"wall3",
-		"wall4",
-		"wall5",
-		"wall6",
-		"wall7",
-		"wall8",
-		"wall9",
 	}
 	for action, key in pairs(controls) do
 		input:bind(action, key.input or key.default)
@@ -47,18 +35,6 @@ function init()
 	person = {
 		-- dev:
 		Mikey = { name = "Mikey G", nickname = "Mikey", url = "https://gusakm.itch.io/", color = "green" },
-
-		-- music
-		Sul = { name = "Sul Ponticellist", nickname = "Sul", url = "https://www.youtube.com/@SulPonticellist", color = "purple" },
-		Freddie = { name = "Resident // Cryptid", nickname = "R//C", url = "https://www.residentcryptidmusic.com/ ", color = "yellow" },
-		Kai = { name = "KaiaRadio", nickname = "Kai", url = "https://www.youtube.com/@KaiaRadio", color = "blue" }, -- light blue
-		Apezilla = { name = "David Browne", nickname = "Apezilla", url = "https://www.youtube.com/@davidbrowne003", color = "red" },
-		Tectonic = { name = "TectonicHorizon", nickname = "Tectonic", url = "https://soundcloud.com/reedflow", color = "p_blue1" },
-
-		-- SFX
-		Cole = { name = "Cole Dabolish", nickname = "Cole", url = "https://youtube.com/@coledabolish", color = "p_blue1" },
-		Istaivan = { name = "Istaivan", nickname = "istavian", url = "https://exedexes1.com/", color = "purple" },
-		Gerard = { name = "Gerard", nickname = "Gerard", url = "https://gerardito.itch.io/", color = "green" },
 	}
 
 	-- load sounds:
@@ -66,149 +42,53 @@ function init()
 	music_fade = 1
 	-- ui
 	sfx_tag = { tags = { sfx } }
-	ui_hover = {
-		Sound(music_jam_folder .. "UI Hover 1.mp3", sfx_tag),
-		Sound(music_jam_folder .. "UI Hover 2.mp3", sfx_tag),
-		Sound(music_jam_folder .. "UI Hover 3.mp3", sfx_tag),
-	}
-	ui_click = {
-		Sound(music_jam_folder .. "UI CLICK 1.mp3", sfx_tag),
-		Sound(music_jam_folder .. "UI CLICK 2.mp3", sfx_tag),
-		Sound(music_jam_folder .. "UI CLICK 3.mp3", sfx_tag),
-	}
-	stim_cave = {
-		Sound(music_jam_folder .. "Stim Cave 1.mp3", sfx_tag),
-		Sound(music_jam_folder .. "Stim Cave 2.mp3", sfx_tag),
-		Sound(music_jam_folder .. "Stim Cave 3.mp3", sfx_tag),
-		Sound(music_jam_folder .. "Stim Cave 4.mp3", sfx_tag),
-	}
-
-	-- meta level
-	level_victory = {
-		Sound(music_jam_folder .. "Level WON Sting (G).mp3", sfx_tag),
-		Sound(music_jam_folder .. "Level WON Sting (C).mp3", sfx_tag),
-	}
-	level_failure = {
-		Sound(music_jam_folder .. "LEVEL LOST Sting (G1).mp3", sfx_tag),
-		Sound(music_jam_folder .. "LEVEL LOST Sting (C1).mp3", sfx_tag),
-	}
-	level_countdown_c = {
-		Sound(music_jam_folder .. "INVD-Ckey-3-short.mp3", sfx_tag),
-		Sound(music_jam_folder .. "INVD-Ckey-2-short.mp3", sfx_tag),
-		Sound(music_jam_folder .. "INVD-Ckey-1-short.mp3", sfx_tag),
-		Sound(music_jam_folder .. "INVD-Ckey-GO-short.mp3", sfx_tag),
-	}
-	level_countdown_g = {
-		Sound(music_jam_folder .. "INVD-Gkey-3.mp3", sfx_tag),
-		Sound(music_jam_folder .. "INVD-Gkey-2.mp3", sfx_tag),
-		Sound(music_jam_folder .. "INVD-Gkey-1.mp3", sfx_tag),
-		Sound(music_jam_folder .. "INVD-Gkey-GO.mp3", sfx_tag),
-	}
-	level_dissapear = {
-		Sound(music_jam_folder .. "platform disappear.mp3", sfx_tag),
-	}
-	level_appear = {
-		Sound(music_jam_folder .. "platform appear.mp3", sfx_tag),
-	}
-	menu_loading = {
-		Sound(music_jam_folder .. "loading.mp3", sfx_tag),
-	}
-
-	-- gameplay
-	invader_death = {
-		Sound(music_jam_folder .. "Invader Death 1.mp3", sfx_tag),
-		Sound(music_jam_folder .. "Invader Death 2.mp3", sfx_tag),
-		Sound(music_jam_folder .. "Invader Death 3.mp3", sfx_tag),
-	}
-
-	invader_footsteps = {
-		Sound(music_jam_folder .. "Invader Footsteps 1.mp3", sfx_tag),
-		Sound(music_jam_folder .. "Invader Footsteps 2.mp3", sfx_tag),
-		Sound(music_jam_folder .. "Invader Footsteps 3.mp3", sfx_tag),
-		Sound(music_jam_folder .. "Invader Footsteps 4.mp3", sfx_tag),
-	}
+	-- Sound(music_jam_folder .. "UI Hover 1.mp3", sfx_tag)
 
 	--
 	-- META SONGS
 	--
 	music_tag = { tags = { music } } -- for volume control
-	song_stim_cave = Sound(
-		music_jam_folder .. "Guitar slop.mp3",
-		music_tag, --
-		{ name = "Guitar Slop", artists = { person.Sul } }
-	)
-	song_main_menu = Sound(
-		music_jam_folder .. "Invaders Approach Master.mp3",
-		music_tag, --
-		{ name = "Main Menu Theme ig lol", artists = { person.Tectonic } }
-	)
-	song_options = Sound(
-		music_jam_folder .. "Options Theme Master.mp3",
-		music_tag, --
-		{ name = "Options Song ^_^", artists = { person.Kai, person.Cole } }
-	)
-	song_pause = Sound(
-		music_jam_folder .. "Pause Theme Master.mp3",
-		music_tag, --
-		{ name = "Pause Theme O_o", artists = { person.Kai, person.Cole } }
-	)
-	song_credits = Sound(
-		music_jam_folder .. "Credit Theme Master.mp3",
-		music_tag, --
-		{ name = "Credit Theme UwU", artists = { person.Kai, person.Cole } }
-	)
+	-- song_stim_cave = Sound(
+	-- 	music_jam_folder .. "Guitar slop.mp3",
+	-- 	music_tag, --
+	-- 	{ name = "Guitar Slop", artists = { person.Sul } }
+	-- )
 
 	--
 	-- GAMEPLAY SONGS
 	--
-	song_sul = Sound(
-		music_jam_folder .. "Bass Slop Master.mp3",
-		music_tag, --
-		{ name = "Bass Slop", artists = { person.Sul } }
-	)
-	song_freddie = Sound(
-		music_jam_folder .. "watch your step (and your back) Master.mp3",
-		music_tag,
-		{ name = "Watch Your Step (and your Back)", artists = { person.Freddie } }
-	)
-	song_apezilla = Sound(music_jam_folder .. "Singed Infringers Master.mp3", music_tag, { name = "Singed Infringers", artists = { person.Apezilla } })
-	song_tutorial = Sound(music_jam_folder .. "Tutorial Theme Master.mp3", music_tag, { name = "Tutorial Theme OvO", artists = { person.Kai } })
-
 	music_songs = {
-		main = { song_main_menu },
-		tutorial = { song_tutorial },
-		stim_cave = { song_stim_cave },
-		yellow = { song_sul, song_freddie, song_apezilla },
-		paused = { song_pause },
-		options = { song_options },
-		credits = { song_credits },
+		main = {},
+		tutorial = {},
+		stim_cave = {},
+		yellow = {},
+		paused = {},
+		options = {},
+		credits = {},
 	}
 
 	-- load images:
-	wall_arrow_particle = Image("wall_arrow_particle")
-	-- title_background = Image("cat_background")
-	title_background = Image("drawn_background")
-	note_background = Image("note_background2")
+	-- wall_arrow_particle = Image("wall_arrow_particle")
 
-	local is_path = true
-	knight_sprites = {
-		hitbox_width = 15,
-		hitbox_height = 35,
-
-		hitbox_center_x = -5,
-		hitbox_center_y = 22,
-
-		frame_width = 120,
-		frame_height = 80,
-		animation_speed = 0.07,
-		sprite_sheets = {
-			-- https://aamatniekss.itch.io/fantasy-knight-free-pixelart-animated-character by: aamatniekss
-			idle = Image("assets/images/knight/Colour1/Outline/120x80_PNGSheets/_Idle.png", is_path),
-			run = Image("assets/images/knight/Colour1/Outline/120x80_PNGSheets/_Run.png", is_path),
-			jump = Image("assets/images/knight/Colour1/Outline/120x80_PNGSheets/_Jump.png", is_path),
-			dead = Image("assets/images/knight/Colour1/Outline/120x80_PNGSheets/_DeathNoMovement.png", is_path),
-		},
-	}
+	-- local is_path = true
+	-- knight_sprites = {
+	-- 	hitbox_width = 15,
+	-- 	hitbox_height = 35,
+	--
+	-- 	hitbox_center_x = -5,
+	-- 	hitbox_center_y = 22,
+	--
+	-- 	frame_width = 120,
+	-- 	frame_height = 80,
+	-- 	animation_speed = 0.07,
+	-- 	sprite_sheets = {
+	-- 		-- https://aamatniekss.itch.io/fantasy-knight-free-pixelart-animated-character by: aamatniekss
+	-- 		idle = Image("assets/images/knight/Colour1/Outline/120x80_PNGSheets/_Idle.png", is_path),
+	-- 		run = Image("assets/images/knight/Colour1/Outline/120x80_PNGSheets/_Run.png", is_path),
+	-- 		jump = Image("assets/images/knight/Colour1/Outline/120x80_PNGSheets/_Jump.png", is_path),
+	-- 		dead = Image("assets/images/knight/Colour1/Outline/120x80_PNGSheets/_DeathNoMovement.png", is_path),
+	-- 	},
+	-- }
 
 	-- set logic init
 	slow_amount = 1
@@ -242,12 +122,10 @@ function init()
 	main.current_music_type = "silence"
 	play_music({ type = "main", volume = 0.3 })
 
-	start_countdown = 2.5
-
 	main:add(MainMenu("mainmenu"))
 	main:go_to("mainmenu", {})
 	-- main:add(Game("game")) -- TODO: TEMP
-	-- main:go_to("game", { level = 1, num_players = 1 })
+	-- main:go_to("game")
 
 	-- set sane defaults:
 	state.screen_flashes = true
@@ -990,118 +868,17 @@ function open_credits(self)
 		})
 	)
 	yOffset = yOffset + y_dist
-	-- self.libraries_button5 = collect_into(
-	-- 	self.credits_ui_elements,
-	-- 	Button({
-	-- 		group = ui_group,
-	-- 		x = columns[2] + x_offset,
-	-- 		y = yOffset,
-	-- 		w = x_width,
-	-- 		button_text = "inputfield",
-	-- 		fg_color = "bg",
-	-- 		bg_color = "blue",
-	-- 		credits_button = true,
-	-- 		action = function(b)
-	-- 			open_url(b, "https://github.com/ReFreezed/InputField")
-	-- 		end,
-	-- 	})
-	-- )
 
 	self.music_section = collect_into(
 		self.credits_ui_elements,
 		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[green]music:", font = pixul_font } } })
 	)
 
-	local musicians = { person.Kai, person.Tectonic, person.Sul, person.Freddie, person.Apezilla }
-	local musician_offset = { 85, 98, 0, 103 }
-	x_offset = -gw * 0.20
-	for i, musician in ipairs(musicians) do
-		collect_into(
-			self.credits_ui_elements,
-			Button({
-				group = ui_group,
-				x = columns[2] + x_offset,
-				y = yOffset,
-				button_text = musician.name,
-				fg_color = musician.color,
-				bg_color = "black",
-				credits_button = true,
-				action = function(b)
-					open_url(b, musician.url)
-				end,
-			})
-		)
-		x_offset = x_offset + (musician_offset[i] or 0) * global_game_scale
-		if i == 3 then
-			yOffset = yOffset + y_dist - gh * 0.02
-			x_offset = -gw * 0.08
-		end
-	end
-	-- self.music_button1 = collect_into(
-	-- 	self.credits_ui_elements,
-	-- 	Button({
-	-- 		group = ui_group,
-	-- 		x = columns[2],
-	-- 		y = yOffset,
-	-- 		button_text = "name",
-	-- 		fg_color = "bg",
-	-- 		bg_color = "green",
-	-- 		credits_button = true,
-	-- 		action = function(b)
-	-- 			open_url(b, "link")
-	-- 		end,
-	-- 	})
-	-- )
-
 	yOffset = yOffset + y_dist
 	self.sound_section = collect_into(
 		self.credits_ui_elements,
 		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[yellow]SFX:", font = pixul_font } } })
 	)
-	local sfx_artists = { person.Cole, person.Istaivan, person.Gerard }
-	local sfx_offset = { 75, 70 }
-	x_offset = -gw * 0.15
-	for i, artist in ipairs(sfx_artists) do
-		collect_into(
-			self.credits_ui_elements,
-			Button({
-				group = ui_group,
-				x = columns[2] + x_offset,
-				y = yOffset,
-				button_text = artist.name,
-				fg_color = artist.color,
-				bg_color = "black",
-				credits_button = true,
-				action = function(b)
-					open_url(b, artist.url)
-				end,
-			})
-		)
-		x_offset = x_offset + (sfx_offset[i] or 0) * global_game_scale
-	end
-	yOffset = yOffset + y_dist
-
-	self.audio_mastering_section = collect_into(
-		self.credits_ui_elements,
-		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[orange]song mastering:", font = pixul_font } } })
-	)
-	self.audio_master = collect_into(
-		self.credits_ui_elements,
-		Button({
-			group = self.credits,
-			x = columns[2],
-			y = yOffset,
-			w = gw * 0.2,
-			button_text = "[wavy_rainbow]" .. person.Sul.name,
-			fg_color = "bg",
-			bg_color = "black",
-			credits_button = true,
-			action = function(b)
-				open_url(b, person.Sul.url)
-			end,
-		})
-	)
-
 	yOffset = yOffset + y_dist
 
 	self.artist_section = collect_into(
@@ -1111,38 +888,6 @@ function open_credits(self)
 			x = columns[1],
 			y = yOffset,
 			lines = { { text = "[fg]art: ", font = pixul_font } },
-		})
-	)
-	self.bg_artist_button = collect_into(
-		self.credits_ui_elements,
-		Button({
-			group = self.credits,
-			x = columns[2] - 75 * global_game_scale,
-			y = yOffset,
-			w = gw * 0.3,
-			button_text = "[wavy_rainbow]background: " .. person.Kai.name,
-			fg_color = "bg",
-			bg_color = "black",
-			credits_button = true,
-			action = function(b)
-				open_url(b, person.Kai.url)
-			end,
-		})
-	)
-	self.artist_button = collect_into(
-		self.credits_ui_elements,
-		Button({
-			group = self.credits,
-			x = columns[2] + 75 * global_game_scale,
-			y = yOffset,
-			w = gw * 0.3,
-			button_text = "[wavy_rainbow]knight: aamatniekss",
-			fg_color = "bg",
-			bg_color = "black",
-			credits_button = true,
-			action = function(b)
-				open_url(b, "https://aamatniekss.itch.io/fantasy-knight-free-pixelart-animated-character")
-			end,
 		})
 	)
 
@@ -1302,7 +1047,7 @@ function scene_transition(self, x_pos, y_pos, addition, go_to, text_args)
 	-- ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 
 	if go_to.destination ~= "main_menu" then
-		random:table(level_dissapear):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+		-- random:table(level_dissapear):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 	end
 	-- if layer_type = "game" then don't pop?
 	while main.ui_layer_stack:size() > 1 do
@@ -1326,7 +1071,7 @@ function scene_transition(self, x_pos, y_pos, addition, go_to, text_args)
 			main:go_to(go_to.destination, go_to.args)
 			if go_to.destination ~= "main_menu" then
 				trigger:after(0.3, function()
-					random:table(level_appear):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+					-- random:table(level_appear):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 				end)
 			end
 		end,

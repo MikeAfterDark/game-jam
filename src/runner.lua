@@ -94,10 +94,10 @@ function Runner:update(dt)
 			self:set_velocity(vel * math.min(1, self.size / 1.6) + gx * dt, vy + gy * dt)
 
 			if not self.sfx.run or self.sfx.run:isStopped() then
-				self.sfx.run = random:table(invader_footsteps):play({
-					pitch = random:float(0.9, 1.2),
-					volume = 0.5,
-				})
+				-- self.sfx.run = random:table(invader_footsteps):play({
+				-- 	pitch = random:float(0.9, 1.2),
+				-- 	volume = 0.5,
+				-- })
 			end
 		end
 	elseif self.state == Runner_State.Dead then

@@ -593,7 +593,7 @@ wall_type = {
 			death_flash_alpha = 0.20 -- immediate flash value
 			trigger:tween(1.4, _G, { death_flash_alpha = 0 }, math.cubic_out, nil, "death_flash")
 			-- enemy_die1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-			random:table(invader_death):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+			-- random:table(invader_death):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 
 			other:set_state(Runner_State.Dead)
 			-- local _, vy = other:get_velocity()
@@ -916,9 +916,7 @@ function Wall:on_mouse_enter()
 		return
 	end
 
-	random:table(ui_hover):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
-	-- buttonHover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
-	-- buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	-- random:table(ui_hover):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 
 	self.spring:pull(0.01, 200, 10)
 	self.init_color = self.color

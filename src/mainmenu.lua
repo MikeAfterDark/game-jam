@@ -122,45 +122,6 @@ function MainMenu:update(dt)
 end
 
 function MainMenu:draw()
-	if title_background then
-		-- local scale = 0.565 -- for cat background
-		local scale = 1.1
-		title_background:draw(gw / 2, gh / 2, 0, scale, scale, 0, 0, white[0])
-	end
-	if note_background then
-		if self.current_menu == menu.Title then
-			if self.previous_menu ~= menu.Title then
-				self.note_y_offset = gh * 0.6
-				trigger:tween(self.previous_menu and 0.8 or 1.6, self, { note_y_offset = 0 }, math.cubic_in_out)
-				self.previous_menu = self.current_menu
-				self.noted = false
-				self.moved_note = false
-
-				trigger:after(0.3, function()
-					self.play_button1.invis = false
-					self.options_button.invis = false
-					self.credits_button.invis = false
-				end)
-			end
-		elseif self.previous_menu == menu.Title and not self.noted then
-			self.play_button1.invis = true
-			self.options_button.invis = true
-			self.credits_button.invis = true
-			trigger:tween(0.4, self, { note_y_offset = gh * 0.6 }, math.cubic_in_out, function(b)
-				-- b.moved_note = true
-			end)
-			self.noted = true
-		end
-
-		if self.moved_note then
-			self.note_y_offset = self.note_y_offset + math.sin(love.timer.getTime())
-			-- self.note_x_offset = self.note_y_offset + math.sin(love.timer.getTime())
-		end
-		local note_scale = 1.0
-		note_background:draw(gw * 0.465, gh / 2 + self.note_y_offset, 0, note_scale, note_scale, 0, 0, white[0])
-	end
-	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
-
 	self.main_menu_ui:draw()
 
 	if self.in_options then
@@ -178,16 +139,9 @@ function MainMenu:draw()
 	end
 	self.credits:draw()
 	if self.song_info_text then
-		graphics.rectangle(
-			gw * 0.225,
-			gh * 0.96 - 5, --
-			self.song_info_text.w,
-			self.song_info_text.h,
-			nil,
-			nil,
-			modal_transparent
-		)
-		self.song_info_text:draw(gw * 0.225, gh * 0.96, 0, 1, 1)
+		local x_pos, y_pos = gw * 0.275, gh * 0.95
+		graphics.rectangle(x_pos, y_pos - 5, self.song_info_text.w, self.song_info_text.h, nil, nil, modal_transparent)
+		self.song_info_text:draw(x_pos, y_pos, 0, 1, 1)
 	end
 end
 
