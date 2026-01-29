@@ -33,7 +33,7 @@ function ButtonBase:update(dt)
 				self.spring:pull(0.1, 200, 10)
 			end
 		end
-		if input.m1.released then
+		if self.selected and input.m1.released and self.press_time then
 			self.press_time = nil
 			self.spring:pull(0.1, 200, 10)
 		end
@@ -59,7 +59,7 @@ function ButtonBase:on_mouse_enter()
 	end
 
 	if self.enter_sfx then
-		-- random:table(self.enter_sfx):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+		self.enter_sfx:play({ pitch = random:float(0.94, 1.14), volume = 0.5 })
 	else
 		-- random:table(ui_hover):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 	end

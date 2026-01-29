@@ -72,7 +72,9 @@ function Slider:update(dt)
 			self._last_section = current_section
 
 			local pitch = current_section / self.max_sections + 0.5
-			-- buttonPop:play({ pitch = pitch, volume = 0.5 })
+			if self.increment_sfx then
+				self.increment_sfx:play({ pitch = pitch, volume = 0.5 })
+			end
 
 			if self.action then
 				self:action(self.value)

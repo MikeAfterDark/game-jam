@@ -413,7 +413,7 @@ function MainMenu:setup_stim_screen()
 					force_update = true,
 					no_image = true,
 					color = Color(r, g, b, 1),
-					enter_sfx = stim_cave,
+					enter_sfx = stim_cave_sfx,
 					action = function(b)
 						b.spring:pull(0.2, 200, 10)
 						-- buttonBoop:play({ pitch = random:float(0.75, 3.05), volume = 0.5 })

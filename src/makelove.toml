@@ -23,7 +23,7 @@ postbuild = [
 # This is obviously only for illustrative purposes, you will probaly want to wrap this in a script
 # "butler push {build_directory}/win32/SuperGame-win32.zip pfirsich/supergame:win32 --userversion {version}",
 "./setup_web_build.sh invaders", # WARN: arg needs to be {name} -AND- uses hardcoded 'build_directory'
-"./push.sh"
+# "./push.sh"
 ]
 
 [hooks.parameters]

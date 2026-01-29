@@ -1,7 +1,10 @@
 require("engine")
+require("renderer")
+
+-- scenes
 require("mainmenu")
 require("game")
-require("renderer")
+require("scene_audio_test")
 
 -- require("player")
 -- require("wall")
@@ -43,6 +46,7 @@ function init()
 	-- ui
 	sfx_tag = { tags = { sfx } }
 	-- Sound(music_jam_folder .. "UI Hover 1.mp3", sfx_tag)
+	stim_cave_sfx = Sound("sans-voice.mp3", sfx_tag)
 
 	--
 	-- META SONGS
@@ -106,6 +110,7 @@ function init()
 		Game = 7,
 
 		Test = 10,
+		AudioTest = 11,
 	}
 
 	main = Main()
@@ -122,10 +127,12 @@ function init()
 	main.current_music_type = "silence"
 	play_music({ type = "main", volume = 0.3 })
 
-	main:add(MainMenu("mainmenu"))
-	main:go_to("mainmenu", {})
+	-- main:add(MainMenu("mainmenu"))
+	-- main:go_to("mainmenu", {})
 	-- main:add(Game("game")) -- TODO: TEMP
 	-- main:go_to("game")
+	main:add(AudioTest("audio_test"))
+	main:go_to("audio_test", {})
 
 	-- set sane defaults:
 	state.screen_flashes = true

@@ -603,7 +603,15 @@ end
 function HitParticle:draw()
 	graphics.push(self.x, self.y, self.r)
 	if self.parent and not self.parent.dead then
-		graphics.rectangle(self.x, self.y, self.w, self.h, self.curve, self.curve, self.parent.hfx.hit.f and fg[0] or self.color)
+		graphics.rectangle(
+			self.x, --
+			self.y,
+			self.w,
+			self.h,
+			self.curve,
+			self.curve,
+			self.parent.hfx.hit.f and fg[0] or self.color
+		)
 	else
 		graphics.rectangle(self.x, self.y, self.w, self.h, self.curve, self.curve, self.color)
 	end
@@ -790,12 +798,44 @@ function Text2:set_text(new_text)
 end
 
 --
+-- width, height, world_x, world_y (centered)
+-- lines of text
+-- scroll_locked
+-- scroll direction (vertical, horizontal)
+-- require_mouse_hover (to 'select' which textbox to scroll)
+-- mouse_drag (so mouse can click and drag it)
+-- text_overflow (Clip, Wrap, Elipsis)
+--
+TextBox = Object:extend()
+TextBox:implement(GameObject)
+function TextBox:init(args)
+	self:init_game_object(args)
+	self.text = Text(args.lines, global_text_tags)
+	self.w, self.h = args.w or self.text.w, args.h or self.text.h
+
+	if self.scroll_box then
+		self.max_scroll = math.max(0, self.text.h - self.h + self.text.line_height / 2)
+		self.scroll_offset = 0
+		self.scroll_velocity = 0
+		self.scroll_speed = args.scroll_speed or 300
+		self.scroll_damping = args.scroll_damping or 8 -- how quickly it slows down
+		self.scroll_ease = args.scroll_ease or math.cubic_out
+	end
+end
+
+function TextBox:update(dt)
+	self:update_game_object(dt)
+	self.text:update(dt)
+end
+
+--
 --
 --
 --
 -- misc
 
 function slow(amount, duration, tween_method)
+	print("slowing")
 	amount = amount or 0.5
 	duration = duration or 0.5
 	tween_method = tween_method or math.cubic_in_out
