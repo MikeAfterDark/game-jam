@@ -127,12 +127,12 @@ function init()
 	main.current_music_type = "silence"
 	play_music({ type = "main", volume = 0.3 })
 
-	-- main:add(MainMenu("mainmenu"))
-	-- main:go_to("mainmenu", {})
+	main:add(MainMenu("mainmenu"))
+	main:go_to("mainmenu", {})
 	-- main:add(Game("game")) -- TODO: TEMP
 	-- main:go_to("game")
-	main:add(AudioTest("audio_test"))
-	main:go_to("audio_test", {})
+	-- main:add(AudioTest("audio_test"))
+	-- main:go_to("audio_test", {})
 
 	-- set sane defaults:
 	state.screen_flashes = true

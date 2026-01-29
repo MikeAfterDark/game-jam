@@ -84,17 +84,6 @@ function MainMenu:update(dt)
 		self.song_info_text:update(dt)
 	end
 
-	local play_y = gh * 0.615
-	self.play_button1.shape:move_to(self.play_button1.x, play_y + self.note_y_offset)
-	self.play_button1.y = play_y + self.note_y_offset
-
-	local option_y = play_y + gh * 0.07
-	self.options_button.shape:move_to(self.options_button.x, option_y + self.note_y_offset)
-	self.options_button.y = option_y + self.note_y_offset
-
-	self.credits_button.shape:move_to(self.credits_button.x, gh * 0.94 + self.note_y_offset)
-	self.credits_button.y = gh * 0.94 + self.note_y_offset
-
 	if input.escape.pressed then
 		if self.in_options then
 			if self.in_keybinding then
@@ -207,12 +196,13 @@ function MainMenu:setup_title_menu()
 
 	local button_offset = gh * 0.1
 	local button_dist_apart = gh * 0.08
+	local core_ui_x_pos = gw * 0.4
 	self.play_button1 = collect_into(
 		self.main_ui_elements,
 		Button({
 			group = ui_group,
-			x = gw / 2,
-			y = gh / 2 + button_offset,
+			x = core_ui_x_pos,
+			y = gh * 0.4 + button_offset,
 			button_text = "Play",
 			fg_color = "bg",
 			bg_color = "green",
@@ -231,8 +221,8 @@ function MainMenu:setup_title_menu()
 		self.main_ui_elements,
 		Button({
 			group = ui_group,
-			x = gw / 2,
-			y = gh / 2 + button_offset,
+			x = core_ui_x_pos,
+			y = gh * 0.4 + button_offset,
 			button_text = "options",
 			fg_color = "bg",
 			bg_color = "fg",
@@ -250,8 +240,8 @@ function MainMenu:setup_title_menu()
 		self.main_ui_elements,
 		Button({
 			group = ui_group,
-			x = gw / 2,
-			y = gh * 0.3,
+			x = core_ui_x_pos,
+			y = gh * 0.9,
 			button_text = "credits",
 			fg_color = "bg",
 			bg_color = "fg",
@@ -261,6 +251,43 @@ function MainMenu:setup_title_menu()
 			end,
 		})
 	)
+
+	local scenes = {
+		{ id = "main_menu", name = "Main Menu", destination = MainMenu },
+		{ id = "game", name = "Game", destination = Game },
+		{ id = "audio_test", name = "Audio Test", destination = AudioTest },
+	}
+
+	local debug_ui_x_pos = gw * 0.6
+	local debug_ui_y_pos = gh * 0.5
+	local debug_ui_y_offset = gh * 0.06
+	for i, scene in ipairs(scenes) do
+		collect_into(
+			self.main_ui_elements,
+			Button({
+				group = ui_group,
+				x = debug_ui_x_pos,
+				y = debug_ui_y_pos + (i - 1) * debug_ui_y_offset,
+				button_text = scene.name,
+				fg_color = "bg",
+				bg_color = "fg",
+				action = function()
+					scene_transition(
+						self, --
+						gw / 2,
+						gh / 2,
+						scene.destination(scene.id),
+						{ destination = scene.id, args = { clear_music = true } },
+						{
+							text = "loading " .. scene.id .. "...",
+							font = pixul_font,
+							alignment = "center",
+						}
+					)
+				end,
+			})
+		)
+	end
 
 	for _, v in pairs(self.main_ui_elements) do
 		-- v.group = ui_group
