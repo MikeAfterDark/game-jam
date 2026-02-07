@@ -84,7 +84,7 @@ function renderer_init()
 	death_flash_alpha = 0
 end
 
-function renderer_draw(draw_action)
+function renderer_draw(draw_action, shadow_draw_action)
 	star_canvas:draw_to(function()
 		star_group:draw()
 	end)
@@ -127,6 +127,7 @@ function renderer_draw(draw_action)
 	end)
 
 	shadow_canvas:draw_to(function()
+		-- shadow_draw_action()
 		graphics.set_color(white[0])
 		shadow_shader:set()
 		main_canvas:draw2(0, 0, 0, 1, 1)

@@ -4,7 +4,7 @@ require("renderer")
 -- scenes
 require("mainmenu")
 require("game")
-require("scene_audio_test")
+require("scene_audio_zoo")
 
 -- require("player")
 -- require("wall")
@@ -129,10 +129,6 @@ function init()
 
 	main:add(MainMenu("mainmenu"))
 	main:go_to("mainmenu", {})
-	-- main:add(Game("game")) -- TODO: TEMP
-	-- main:go_to("game")
-	-- main:add(AudioTest("audio_test"))
-	-- main:go_to("audio_test", {})
 
 	-- set sane defaults:
 	state.screen_flashes = true
@@ -156,6 +152,7 @@ end
 function draw()
 	renderer_draw(function()
 		main:draw()
+		-- main:shadow_draw()
 	end)
 end
 

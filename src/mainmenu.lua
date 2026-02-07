@@ -254,8 +254,8 @@ function MainMenu:setup_title_menu()
 
 	local scenes = {
 		{ id = "main_menu", name = "Main Menu", destination = MainMenu },
-		{ id = "game", name = "Game", destination = Game },
-		{ id = "audio_test", name = "Audio Test", destination = AudioTest },
+		{ id = "game",      name = "Game",      destination = Game },
+		{ id = "audio_zoo", name = "Audio Zoo", destination = AudioZoo },
 	}
 
 	local debug_ui_x_pos = gw * 0.6

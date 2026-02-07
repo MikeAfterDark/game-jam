@@ -1,12 +1,12 @@
-AudioTest = Object:extend()
-AudioTest:implement(State)
-AudioTest:implement(GameObject)
-function AudioTest:init(name)
+AudioZoo = Object:extend()
+AudioZoo:implement(State)
+AudioZoo:implement(GameObject)
+function AudioZoo:init(name)
 	self:init_state(name)
 	self:init_game_object()
 end
 
-function AudioTest:on_enter(from, args)
+function AudioZoo:on_enter(from, args)
 	local folder = "abc/"
 
 	local slider_sounds = {
@@ -14,24 +14,24 @@ function AudioTest:on_enter(from, args)
 		Sound("the-first-note-of-megalovania.mp3", sfx_tag),
 	}
 
-	local button_sounds = { -- setup for a max of 24
-		{ "lizard", Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
+	local button_sounds = {                            -- setup for a max of 24
+		{ "lizard",          Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
 		{ "bad to the bone", Sound("sound2.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "lizard", Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
+		{ "lizard",          Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
 		{ "bad to the bone", Sound("sound2.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "lizard", Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
+		{ "lizard",          Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
 		{ "bad to the bone", Sound("sound2.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "lizard", Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
+		{ "lizard",          Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
 		{ "bad to the bone", Sound("sound2.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "lizard", Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
+		{ "lizard",          Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
 		{ "bad to the bone", Sound("sound2.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "lizard", Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
+		{ "lizard",          Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
 		{ "bad to the bone", Sound("sound2.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "lizard", Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
+		{ "lizard",          Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
 		{ "bad to the bone", Sound("sound2.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "lizard", Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
+		{ "lizard",          Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
 		{ "bad to the bone", Sound("sound2.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "lizard", Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
+		{ "lizard",          Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
 		{ "bad to the bone", Sound("sound2.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
 		-- {"chips", Sound(folder .. "sound3.mp3", sfx_tag)}, -- assets/sounds/abc/sound2.mp3
 		-- {"poutine", Sound("../../sound4.mp3", sfx_tag)}, -- src/sound3.mp3
@@ -40,13 +40,13 @@ function AudioTest:on_enter(from, args)
 	self.ui = Group()
 	self.audio_text_ui_element = {}
 	main.ui_layer_stack:push({
-		layer = ui_interaction_layer.AudioTest,
+		layer = ui_interaction_layer.AudioZoo,
 		layer_has_music = false,
 		ui_elements = self.audio_text_ui_element,
 	})
 
 	local ui_group = self.ui
-	local ui_layer = ui_interaction_layer.AudioTest
+	local ui_layer = ui_interaction_layer.AudioZoo
 	local ui_elements = self.audio_text_ui_element
 	collect_into(
 		ui_elements,
@@ -133,7 +133,7 @@ function AudioTest:on_enter(from, args)
 	self.credits = Group():no_camera()
 end
 
-function AudioTest:on_exit()
+function AudioZoo:on_exit()
 	self.ui:destroy()
 	self.paused_ui:destroy()
 	self.options_ui:destroy()
@@ -146,7 +146,7 @@ function AudioTest:on_exit()
 	self.credits = nil
 end
 
-function AudioTest:update(dt)
+function AudioZoo:update(dt)
 	play_music({ volume = 0.3 })
 	if self.song_info_text then
 		self.song_info_text:update(dt)
@@ -201,7 +201,7 @@ function AudioTest:update(dt)
 	self.credits:update(dt * slow_amount)
 end
 
-function AudioTest:draw()
+function AudioZoo:draw()
 	-- self.floor:draw()
 	-- self.main:draw()
 	-- self.post_main:draw()

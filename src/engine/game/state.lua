@@ -81,6 +81,15 @@ function Main:draw()
   self.transitions:draw()
 end
 
+function Main:shadow_draw()
+  for _, state in pairs(self.states) do
+    if state.active or state.persistent_draw then
+      state:draw()
+    end
+  end
+  self.transitions:draw()
+end
+
 function Main:add(state)
   self.states[state.name] = state
 end

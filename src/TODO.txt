@@ -1,3 +1,5 @@
 TODO:
-- Make a sound_test scene for Gerard to test audio, music, sounds, buttons, etc. Add lots of comments
 - Figure out roles and what ppl want and what they wanna end up with
+
+Idea:
+- Shadow height
