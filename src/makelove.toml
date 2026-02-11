@@ -1,4 +1,4 @@
-name = "boop" # WARN: change in [hooks.parameters] too
+name = "brackey" # WARN: change in postbuild too
 
 default_targets = ["win32", "win64", "appimage", "lovejs", "macos"] #full
 # default_targets = ["win32", "win64", "appimage", "macos"] #everything but web
@@ -22,16 +22,14 @@ postbuild = [
 # {build_directory} and {version} will be replaced
 # This is obviously only for illustrative purposes, you will probaly want to wrap this in a script
 # "butler push {build_directory}/win32/SuperGame-win32.zip pfirsich/supergame:win32 --userversion {version}",
-"./setup_web_build.sh {name2}", # WARN: arg needs to be {name} -AND- uses hardcoded 'build_directory'
-# "./push.sh"
+"./setup_web_build.sh brackey", # WARN: arg needs to be {name} -AND- uses hardcoded 'build_directory'
+"./push.sh"
 ]
 
 [hooks.parameters]
-name2 = "boop" # WARN: change in first line too
-
 # This section will not be checked when the config is validated and may contain
 # anything. It is intended as a place for configuration for your hooks.
 
 [lovejs]
-title = "Bob"  # used on the resulting web page
+title = "Brackey"  # used on the resulting web page
 memory = "40000000"  # starting memory of the webpage (default is 20 MB)

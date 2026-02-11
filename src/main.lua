@@ -142,8 +142,9 @@ function init()
 	main:go_to("intro", {})
 
 	-- set sane defaults:
-	state.screen_flashes = true
-	state.tutorial = true
+	state.screen_flashes = state.screen_flashes or true
+	state.tutorial = state.tutorial or true
+	state.dark = state.dark or true
 
 	-- smooth_turn_speed = 0
 end
@@ -175,7 +176,7 @@ function love.run()
 	global_game_height = 270 * global_game_scale
 
 	return engine_run({
-		game_name = "Game/Music Jam 2025",
+		game_name = "Brackey 2026",
 		window_width = "max",
 		window_height = "max",
 	})
