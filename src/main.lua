@@ -5,6 +5,7 @@ require("renderer")
 require("mainmenu")
 require("game")
 require("scene_audio_zoo")
+require("scene_intro")
 
 -- require("player")
 -- require("wall")
@@ -52,6 +53,8 @@ function init()
 	-- META SONGS
 	--
 	music_tag = { tags = { music } } -- for volume control
+
+	intro_song = Sound("lets-go-cat.mp3", { tags = { intro } })
 	-- song_stim_cave = Sound(
 	-- 	music_jam_folder .. "Guitar slop.mp3",
 	-- 	music_tag, --
@@ -127,8 +130,16 @@ function init()
 	main.current_music_type = "silence"
 	play_music({ type = "main", volume = 0.3 })
 
-	main:add(MainMenu("mainmenu"))
-	main:go_to("mainmenu", {})
+	-- can comfortably fit 14 scenes atm
+	debug_scenes = {
+		{ id = "intro",     destination = Intro },
+		{ id = "main_menu", destination = MainMenu },
+		{ id = "game",      destination = Game },
+		{ id = "audio_zoo", destination = AudioZoo },
+	}
+
+	main:add(Intro("intro"))
+	main:go_to("intro", {})
 
 	-- set sane defaults:
 	state.screen_flashes = true
@@ -793,10 +804,21 @@ function pause_game(self)
 end
 
 function play_level(self, args)
-	scene_transition(self, gw / 2, gh / 2, Game("game"), {
-		destination = "game",
-		args = args,
-	}, { text = "another Squad invades...", font = pixul_font, alignment = "center" })
+	scene_transition(self, {
+		x = gw / 2,
+		y = gh / 2,
+		type = "circle",
+		target = {
+			scene = Game,
+			name = "game",
+			args = {},
+		},
+		display = {
+			text = "another Squad invades...",
+			font = pixul_font,
+			alignment = "center",
+		},
+	})
 end
 
 function unpause_game(self)
@@ -1045,35 +1067,38 @@ function set_music_info(self, song)
 	})
 end
 
-function scene_transition(self, x_pos, y_pos, addition, go_to, text_args)
+function scene_transition(self, args)
+	-- x_pos, y_pos, addition, go_to, text_args)
+
 	-- ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	-- ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	-- ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 
-	if go_to.destination ~= "main_menu" then
+	if args.target.name ~= "main_menu" then
 		-- random:table(level_dissapear):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 	end
 	-- if layer_type = "game" then don't pop?
 	while main.ui_layer_stack:size() > 1 do
 		local layer = main.ui_layer_stack:peek()
-		if layer.game and not go_to.args.clear_music then -- let the game decide when to pop the layer
+		if layer.game and not args.target.args.clear_music then -- let the game decide when to pop the layer
 			break
 		end
 		pop_ui_layer(self)
 	end
 	self.transitioning = true
 	TransitionEffect({
-		fast = go_to.args.fast_load or false,
+		fast = args.target.args.fast_load or false,
+		type = args.type,
 		group = main.transitions,
-		x = x_pos,
-		y = y_pos,
+		x = args.x,
+		y = args.y,
 		color = state.dark and bg[-2] or fg[0],
 		transition_action = function()
 			-- slow_amount = 1
 			system.save_state()
-			main:add(addition)
-			main:go_to(go_to.destination, go_to.args)
-			if go_to.destination ~= "main_menu" then
+			main:add(args.target.scene(args.target.name))
+			main:go_to(args.target.name, args.target.args)
+			if args.target.name ~= "main_menu" then
 				trigger:after(0.3, function()
 					-- random:table(level_appear):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 				end)
@@ -1081,9 +1106,9 @@ function scene_transition(self, x_pos, y_pos, addition, go_to, text_args)
 		end,
 		text = Text({
 			{
-				text = "[wavy, " .. tostring(state.dark and "fg" or "bg") .. "]" .. text_args.text,
-				font = text_args.font,
-				alignment = text_args.alignment,
+				text = "[wavy, " .. tostring(state.dark and "fg" or "bg") .. "]" .. args.display.text,
+				font = args.display.font,
+				alignment = args.display.alignment,
 			},
 		}, global_text_tags),
 	})

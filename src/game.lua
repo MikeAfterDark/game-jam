@@ -19,7 +19,7 @@ function Game:on_enter(from, args)
 		0,
 		1000,
 		{}
-		-- { "player", "transparent", "opaque", "runner", "pill" }
+	-- { "player", "transparent", "opaque", "runner", "pill" }
 	)
 	self.post_main = Group()
 	self.effects = Group()
@@ -119,18 +119,21 @@ function Game:update(dt)
 			local layer = main.ui_layer_stack:peek()
 
 			-- random:table(menu_loading):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
-			scene_transition(
-				self, --
-				gw / 2,
-				gh / 2,
-				MainMenu("main_menu"),
-				{ destination = "main_menu", args = { clear_music = true } },
-				{
+			scene_transition(self, {
+				x = gw / 2,
+				y = gh / 2,
+				type = "fade",
+				target = {
+					scene = MainMenu,
+					name = "main_menu",
+					args = { clear_music = true },
+				},
+				display = {
 					text = "loading main menu...",
 					font = pixul_font,
 					alignment = "center",
-				}
-			)
+				},
+			})
 			return
 		end
 	elseif input.escape.pressed and self.in_credits then

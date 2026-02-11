@@ -55,6 +55,9 @@ function renderer_init()
 	music = SoundTag()
 	music.volume = state.music_volume or 0.5
 
+	intro = SoundTag()
+	intro.volume = 1
+
 	if state.volume_muted then
 		sfx.volume = 0
 	end
@@ -477,36 +480,61 @@ TransitionEffect = Object:extend()
 TransitionEffect:implement(GameObject)
 function TransitionEffect:init(args)
 	self:init_game_object(args)
-	self.rs = 0
-	self.text_sx, self.text_sy = 0, 0
+
+	self.type = args.type or "circle"
 	local speed = self.fast and 2.5 or 1.5
-	self.t:after(0.25 / speed, function()
-		self.t:after(0.1 / speed, function()
-			self.t:tween(0.1 / speed, self, { text_sx = 1, text_sy = 1 }, math.cubic_in_out)
+
+	if self.type == "circle" then
+		self.rs = 0
+		self.text_sx, self.text_sy = 0, 0
+		self.t:after(0.25 / speed, function()
+			self.t:after(0.1 / speed, function()
+				self.t:tween(0.1 / speed, self, { text_sx = 1, text_sy = 1 }, math.cubic_in_out)
+			end)
+			self.t:tween(0.6 / speed, self, { rs = 1.2 * gw }, math.linear, function()
+				if self.transition_action then
+					self:transition_action(unpack(self.transition_action_args or {}))
+				end
+				self.t:after(0.3 / speed, function()
+					self.x, self.y = gw / 2, gh / 2
+					self.t:after(0.6 / speed, function()
+						self.t:tween(0.05 / speed, self, { text_sx = 0, text_sy = 0 }, math.cubic_in_out)
+					end)
+					if not args.dont_tween_out then
+						self.t:tween(0.6 / speed, self, { rs = 0 }, math.linear, function()
+							self.text = nil
+							self.dead = true
+						end)
+					else
+						self.t:after(0.6 / speed, function()
+							self.text = nil
+							self.dead = true
+						end)
+					end
+				end)
+			end)
 		end)
-		self.t:tween(0.6 / speed, self, { rs = 1.2 * gw }, math.linear, function()
+	elseif self.type == "fade" then
+		self.opacity = 0
+		self.text_opacity = 0
+
+		self.t:after(0.9 / speed, function()
+			self.t:tween(0.2 / speed, self, { text_opacity = 1 }, math.linear)
+		end)
+
+		self.t:tween(1.0 / speed, self, { opacity = 1 }, math.linear, function()
 			if self.transition_action then
 				self:transition_action(unpack(self.transition_action_args or {}))
 			end
-			self.t:after(0.3 / speed, function()
-				self.x, self.y = gw / 2, gh / 2
-				self.t:after(0.6 / speed, function()
-					self.t:tween(0.05 / speed, self, { text_sx = 0, text_sy = 0 }, math.cubic_in_out)
+			self.t:after(1.0 / speed, function()
+				self.t:tween(0.2 / speed, self, { text_opacity = 0 }, math.linear)
+				self.t:tween(0.3 / speed, self, { opacity = 0 }, math.linear, function()
+					self.text = nil
+					self.dead = true
 				end)
-				if not args.dont_tween_out then
-					self.t:tween(0.6 / speed, self, { rs = 0 }, math.linear, function()
-						self.text = nil
-						self.dead = true
-					end)
-				else
-					self.t:after(0.6 / speed, function()
-						self.text = nil
-						self.dead = true
-					end)
-				end
 			end)
 		end)
-	end)
+	end
 end
 
 function TransitionEffect:update(dt)
@@ -518,10 +546,16 @@ end
 
 function TransitionEffect:draw()
 	graphics.push(self.x, self.y, 0, self.sx, self.sy)
-	graphics.circle(self.x, self.y, self.rs, self.color)
+	if self.type == "circle" then
+		graphics.circle(self.x, self.y, self.rs, self.color)
+	end
 	graphics.pop()
+
+	if self.type == "fade" then
+		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, Color(0, 0, 0, self.opacity))
+	end
 	if self.text then
-		self.text:draw(gw / 2, gh / 2, 0, self.text_sx, self.text_sy)
+		self.text:draw(gw / 2, gh / 2, 0, self.text_sx, self.text_sy, self.text_opacity)
 	end
 end
 

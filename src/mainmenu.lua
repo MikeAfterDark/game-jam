@@ -1,5 +1,3 @@
-require("buttons")
-
 MainMenu = Object:extend()
 MainMenu:implement(State)
 MainMenu:implement(GameObject)
@@ -252,38 +250,35 @@ function MainMenu:setup_title_menu()
 		})
 	)
 
-	local scenes = {
-		{ id = "main_menu", name = "Main Menu", destination = MainMenu },
-		{ id = "game",      name = "Game",      destination = Game },
-		{ id = "audio_zoo", name = "Audio Zoo", destination = AudioZoo },
-	}
-
-	local debug_ui_x_pos = gw * 0.6
-	local debug_ui_y_pos = gh * 0.5
+	local debug_ui_x_pos = gw * 0.1
+	local debug_ui_y_pos = gh * 0.1
 	local debug_ui_y_offset = gh * 0.06
-	for i, scene in ipairs(scenes) do
+	for i, scene in ipairs(debug_scenes) do
 		collect_into(
 			self.main_ui_elements,
 			Button({
 				group = ui_group,
 				x = debug_ui_x_pos,
 				y = debug_ui_y_pos + (i - 1) * debug_ui_y_offset,
-				button_text = scene.name,
+				button_text = scene.id,
 				fg_color = "bg",
 				bg_color = "fg",
 				action = function()
-					scene_transition(
-						self, --
-						gw / 2,
-						gh / 2,
-						scene.destination(scene.id),
-						{ destination = scene.id, args = { clear_music = true } },
-						{
+					scene_transition(self, {
+						x = gw / 2,
+						y = gh / 2,
+						type = "circle",
+						target = {
+							scene = scene.destination,
+							name = scene.id,
+							args = { clear_music = true },
+						},
+						display = {
 							text = "loading " .. scene.id .. "...",
 							font = pixul_font,
 							alignment = "center",
-						}
-					)
+						},
+					})
 				end,
 			})
 		)
