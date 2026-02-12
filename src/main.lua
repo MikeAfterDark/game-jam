@@ -2,8 +2,8 @@ require("engine")
 require("renderer")
 
 -- scenes
-require("mainmenu")
-require("game")
+require("scene_mainmenu")
+require("scene_game")
 require("scene_audio_zoo")
 require("scene_intro")
 
@@ -76,6 +76,7 @@ function init()
 
 	-- load images:
 	-- wall_arrow_particle = Image("wall_arrow_particle")
+	logo = Image("logo")
 
 	-- local is_path = true
 	-- knight_sprites = {
@@ -145,8 +146,6 @@ function init()
 	state.screen_flashes = state.screen_flashes or true
 	state.tutorial = state.tutorial or true
 	state.dark = state.dark or true
-
-	-- smooth_turn_speed = 0
 end
 
 function update(dt)
@@ -1105,13 +1104,13 @@ function scene_transition(self, args)
 				end)
 			end
 		end,
-		text = Text({
+		text = args.display and Text({
 			{
 				text = "[wavy, " .. tostring(state.dark and "fg" or "bg") .. "]" .. args.display.text,
 				font = args.display.font,
 				alignment = args.display.alignment,
 			},
-		}, global_text_tags),
+		}, global_text_tags) or nil,
 	})
 end
 

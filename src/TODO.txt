@@ -1,5 +1,6 @@
 TODO:
 - Figure out roles and what ppl want and what they wanna end up with
+- Clean up self.text in scene_intro.lua, if we just want the logo or some text
 - Fix Textbox
 
 Ideas:

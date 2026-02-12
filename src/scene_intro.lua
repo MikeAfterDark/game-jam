@@ -15,21 +15,22 @@ function Intro:on_enter(from, args)
 	self.main_slow_amount = 1
 	slow_amount = 1
 
+	-- TODO: clean up (note the tweens that the logo relies on: self.text.y)
 	self.text = Text2({
 		group = self.main,
 		x = gw / 2,
 		y = gh,
 		lines = {
-			{
-				text = "[wavy_rainbow]Electroacoustic",
-				font = fat_title_font,
-				alignment = "center",
-			},
-			{
-				text = "[wavy_title, blue]Invaders",
-				font = mystery_font,
-				alignment = "center",
-			},
+			-- {
+			-- 	text = "[wavy_rainbow]Electroacoustic",
+			-- 	font = fat_title_font,
+			-- 	alignment = "center",
+			-- },
+			-- {
+			-- 	text = "[wavy_title, blue]Invaders",
+			-- 	font = mystery_font,
+			-- 	alignment = "center",
+			-- },
 		},
 	})
 
@@ -67,7 +68,10 @@ function Intro:update(dt)
 	intro.volume = self.intro_song_volume
 
 	if (self.intro_complete or input.escape.pressed) and not self.transitioning then
-		trigger:tween(0.5, self, { intro_song_volume = 0 }, math.quad_out, function() end, self.intro_song_volume_uid) -- fading the audio
+		trigger:tween(0.5, self, { intro_song_volume = 0 }, math.quad_out, function()
+			intro_song:stop()
+		end, self.intro_song_volume_uid) -- fading/stopping the audio
+
 		scene_transition(self, {
 			x = gw / 2,
 			y = gh / 2,
@@ -75,12 +79,7 @@ function Intro:update(dt)
 			target = {
 				scene = MainMenu,
 				name = "main_menu",
-				args = { clear_music = true },
-			},
-			display = {
-				text = "loading main menu...",
-				font = pixul_font,
-				alignment = "center",
+				args = { clear_music = true, fast_load = true },
 			},
 		})
 		return
@@ -90,7 +89,9 @@ function Intro:update(dt)
 end
 
 function Intro:draw()
-	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, Color(0, 0, 0, 1))         -- black background
+	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, Color(0, 0, 0, 1)) -- black background
 	self.main:draw()
+	logo:draw(gw / 2, self.text.y, 0, 3, 3, 0, 0, Color(1, 1, 1, 1))
+	-- function Image:draw(x, y, r, sx, sy, ox, oy, color)
 	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, Color(0, 0, 0, self.opacity)) -- fade foreground
 end

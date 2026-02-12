@@ -137,21 +137,21 @@ function MainMenu:setup_title_menu()
 	local ui_layer = ui_interaction_layer.Main
 	local ui_group = self.main_menu_ui
 
-	self.jam_name = collect_into(
-		self.main_ui_elements,
-		Text2({
-			group = ui_group,
-			x = gw / 2,
-			y = gh * 0.4,
-			lines = {
-				{
-					text = "[wavy_mid, fg]Electroaccoustic Invaders!!!",
-					font = pixul_font,
-					alignment = "center",
-				},
-			},
-		})
-	)
+	-- self.jam_name = collect_into(
+	-- 	self.main_ui_elements,
+	-- 	Text2({
+	-- 		group = ui_group,
+	-- 		x = gw / 2,
+	-- 		y = gh * 0.4,
+	-- 		lines = {
+	-- 			{
+	-- 				text = "[wavy_mid, fg]Electroaccoustic Invaders!!!",
+	-- 				font = pixul_font,
+	-- 				alignment = "center",
+	-- 			},
+	-- 		},
+	-- 	})
+	-- )
 
 	self.title_text = collect_into(
 		self.main_ui_elements,
@@ -161,7 +161,7 @@ function MainMenu:setup_title_menu()
 			y = gh * 0.35,
 			lines = {
 				{
-					text = "[wavy_title, green]Invaders",
+					text = "[wavy_title, green]Title",
 					font = fat_title_font,
 					alignment = "center",
 				},

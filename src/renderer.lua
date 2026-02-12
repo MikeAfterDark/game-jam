@@ -482,7 +482,7 @@ function TransitionEffect:init(args)
 	self:init_game_object(args)
 
 	self.type = args.type or "circle"
-	local speed = self.fast and 2.5 or 1.5
+	local speed = self.fast and 3.0 or 1.5
 
 	if self.type == "circle" then
 		self.rs = 0
