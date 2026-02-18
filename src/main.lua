@@ -7,6 +7,9 @@ require("scene_game")
 require("scene_audio_zoo")
 require("scene_intro")
 
+require("board")
+require("tile")
+
 -- require("player")
 -- require("wall")
 -- require("runner")
@@ -77,6 +80,12 @@ function init()
 	-- load images:
 	-- wall_arrow_particle = Image("wall_arrow_particle")
 	logo = Image("logo")
+	tile_sprites = {
+		default = { Image("tile") },
+	}
+	building_sprites = {
+		castle = { Image("castle") },
+	}
 
 	-- local is_path = true
 	-- knight_sprites = {
@@ -139,7 +148,9 @@ function init()
 		{ id = "audio_zoo", destination = AudioZoo },
 	}
 
-	main:add(Intro("intro"))
+	-- main:add(Intro("intro"))
+	-- main:go_to("intro", {})
+	main:add(Game("intro"))
 	main:go_to("intro", {})
 
 	-- set sane defaults:

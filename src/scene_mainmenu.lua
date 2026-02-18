@@ -205,11 +205,27 @@ function MainMenu:setup_title_menu()
 			fg_color = "bg",
 			bg_color = "green",
 			action = function(b)
-				local pack = self:get_pack_from_path("dev_maps/levels/")
-				if not self.levels_setup then
-					self:setup_level_menu(pack)
-				end
-				self:set_ui_to(menu.Levels)
+				scene_transition(self, {
+					x = gw / 2,
+					y = gh / 2,
+					type = "circle",
+					target = {
+						scene = Game,
+						name = "game",
+						args = { clear_music = true },
+					},
+					display = {
+						text = "loading...",
+						font = pixul_font,
+						alignment = "center",
+					},
+				})
+
+				-- local pack = self:get_pack_from_path("dev_maps/levels/")
+				-- if not self.levels_setup then
+				-- 	self:setup_level_menu(pack)
+				-- end
+				-- self:set_ui_to(menu.Levels)
 			end,
 		})
 	)

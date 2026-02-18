@@ -14,13 +14,14 @@ function Game:on_enter(from, args)
 	camera.r = 0
 
 	self.floor = Group()
-	self.main = Group():set_as_physics_world(
-		8 * global_game_scale,
-		0,
-		1000,
-		{}
+	self.main = Group()
+	-- :set_as_physics_world(
+	-- 8 * global_game_scale,
+	-- 0,
+	-- 1000,
+	-- {}
 	-- { "player", "transparent", "opaque", "runner", "pill" }
-	)
+	-- )
 	self.post_main = Group()
 	self.effects = Group()
 	self.ui = Group():no_camera()
@@ -71,7 +72,44 @@ function Game:on_enter(from, args)
 			ui_elements = self.game_ui_elements,
 		})
 	end
+
+	local num_tiles = 12
+	local tile_size = gh * 0.9 / (num_tiles + 1.8)
+
+	local run = system.load_run()
+	if next(run) == nil then -- new run
+		self.board = Board({
+			group = self.post_main,
+			x = gw / 2,
+			y = gh / 2,
+			tile_size = tile_size,
+			rows = num_tiles,
+			columns = num_tiles,
+		})
+		-- self.shop = Shop({
+		-- 	group = self.main,
+		-- 	x = gw / 2,
+		-- 	y = gh * 0.8,
+		-- 	tile_size = tile_size,
+		-- 	open_slots = 2,
+		-- 	max_slots = 6,
+		-- 	level = 1,
+		-- })
+		self.gold = { total = 5, gold_per_interest = 3 }
+		self.game_state = { turn = 1, phase = Game_Loop[1] }
+
+		-- self.shop:populate()
+	else -- rebuild run from savestate
+	end
 end
+
+Phases = { -- enum
+	Shop = 0,
+	Pieces = 1,
+	Move_Prep = 2,
+	Move = 3,
+}
+Game_Loop = { Phases.Shop, Phases.Pieces, Phases.Move_Prep, Phases.Pieces, Phases.Move }
 
 function Game:on_exit()
 	self.main:destroy()
@@ -143,6 +181,9 @@ function Game:update(dt)
 			self.credits_button:on_mouse_exit()
 		end
 		self.credits:update(0)
+	end
+
+	if input.space.pressed then
 	end
 
 	self:update_game_object(dt * slow_amount)
