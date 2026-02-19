@@ -36,8 +36,17 @@ end
 -- Returns a random value of the table.
 -- a = {7, 6, 5, 4}
 -- random:table(a) -> returns either 7, 6, 5 or 4 randomly
+-- function Random:table(t)
+--   return t[self.generator:random(1, #t)]
+-- end
+
 function Random:table(t)
-  return t[self.generator:random(1, #t)]
+  local keys = {}
+  for k in pairs(t) do
+    table.insert(keys, k)
+  end
+  local key = keys[self.generator:random(1, #keys)]
+  return t[key]
 end
 
 -- Returns a random value of the table and also removes it.

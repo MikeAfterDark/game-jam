@@ -38,6 +38,7 @@ function Board:init(args)
                         angle = math.pi * 0.25,
                         row = row,
                         col = col,
+                        type = random:bool() and Tile_Type.Default or Tile_Type.Grass,
                     })
                 )
             end
@@ -47,6 +48,29 @@ end
 
 function Board:update(dt)
     self:update_game_object(dt)
+end
+
+-- check if tile matches requirements, return tile if yes, return nil in all other cases
+function Board:valid_tile_for_building(building)
+    local selected_tile = nil
+    for _, tile in ipairs(self.tiles) do
+        if tile.selected then
+            selected_tile = tile
+            break
+        end
+    end
+
+    if selected_tile == nil or selected_tile.holding then
+        return nil, { "tile already contains a " .. selected_tile.holding.type.name }
+    end
+
+    local valid, errors = building:is_valid_placement({ tile = selected_tile })
+    return valid and selected_tile or nil, errors
+end
+
+function Board:place(building, tile)
+    building:place_on(tile)
+    tile:hold(building)
 end
 
 function Board:draw()

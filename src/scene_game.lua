@@ -73,28 +73,40 @@ function Game:on_enter(from, args)
 		})
 	end
 
+	game_mouse = {
+		holding = nil,
+	}
+
 	local num_tiles = 12
-	local tile_size = gh * 0.9 / (num_tiles + 1.8)
+	local tile_size = gh * 1 / (num_tiles + 1.8)
+	local shop_slot_size = gh * 0.03
 
 	local run = system.load_run()
 	if next(run) == nil then -- new run
 		self.board = Board({
-			group = self.post_main,
+			group = self.floor,
 			x = gw / 2,
 			y = gh / 2,
 			tile_size = tile_size,
 			rows = num_tiles,
 			columns = num_tiles,
 		})
-		-- self.shop = Shop({
-		-- 	group = self.main,
-		-- 	x = gw / 2,
-		-- 	y = gh * 0.8,
-		-- 	tile_size = tile_size,
-		-- 	open_slots = 2,
-		-- 	max_slots = 6,
-		-- 	level = 1,
-		-- })
+		self.shop = Shop({
+			group = self.main,
+			positions = { -- WARN: HARDCODED POSITIONS for 'global_game_scale = 4'
+				{ x = 337,  y = 647 },
+				{ x = 414,  y = 727 },
+				{ x = 523,  y = 810 },
+				{ x = 654,  y = 916 },
+				{ x = 1387, y = 741 },
+				{ x = 1536, y = 634 },
+			},
+			shop_slot_size = shop_slot_size,
+			open_slots = 2,
+			max_slots = 6,
+			level = 1,
+		})
+		-- self.next_button = Next_Button({})
 		self.gold = { total = 5, gold_per_interest = 3 }
 		self.game_state = { turn = 1, phase = Game_Loop[1] }
 
@@ -184,6 +196,32 @@ function Game:update(dt)
 	end
 
 	if input.space.pressed then
+		self.shop:reroll()
+	end
+
+	if input.m1.pressed then
+		-- 	local mouse_x, mouse_y = self.main:get_mouse_position()
+		-- 	print("Mouse at: (" .. mouse_x .. ", " .. mouse_y .. ")")
+	end
+
+	if input.select.released and game_mouse.holding then
+		local building = game_mouse.holding -- temp var for clarity
+
+		local valid_tile, errors = self.board:valid_tile_for_building(building)
+		if valid_tile then
+			self.board:place(building, valid_tile)
+			self.shop:clear_slot(building)
+		else
+			print(table.concat(errors, ", "))
+			building:return_to_origin()
+		end
+		game_mouse.holding = nil
+	end
+
+	if game_mouse.holding then
+		local mouse_x, mouse_y = self.main:get_mouse_position()
+		game_mouse.holding.x = mouse_x
+		game_mouse.holding.y = mouse_y
 	end
 
 	self:update_game_object(dt * slow_amount)

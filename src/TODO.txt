@@ -1,12 +1,5 @@
 TODO:
-- Figure out roles and what ppl want and what they wanna end up with
-- Clean up self.text in scene_intro.lua, if we just want the logo or some text
-- Fix Textbox
-
-Ideas:
-- Shadow height:
-Challenges: Balatro cheats it and has only two 'layers' that objects can be at, high/low. Where 'high' cards draw their shadow ontop of the 'low' layer. A more general case of infinite layers would be way too complicated to implement in 2d and would be better off with a 3d engine. (Raycasting edges to find where shadows go, but transparent sprites make that even harder, etc)
-
-- Move the 'stim cave' to the background behind a modal, instead of its own separate page
-
-
+- bonus rules
+- turns (next button)
+- buy new shop slots
+- events (earth split)

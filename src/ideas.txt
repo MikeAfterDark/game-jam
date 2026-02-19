@@ -1,0 +1,63 @@
+Alien City Builder
+- Food Sources
+- Dwelings
+- Military bases
+- Market
+- Castle
+- Industrial (ex: oil refinery)
+- Parks & Rec
+- School/Uni
+- Nature
+- Firehouse/Police
+- Hospital
+- Factory
+- Hotel
+- Cemetary
+- Bar
+- Zoo
+- A single tent (crazy dave)
+- Power plants
+
+Buildings:
+[Tent]                Tent:       +10g
+[Industrial, Biology] Farms:      +5g, +2 per residental building near it
+[Residental]          Dwelings:   +2, +5 per dweling near it
+[Military]            Castle:     +20 if no other buildings near it
+[Residental]          Market:     +1, +10 per residental building
+[Liquid]              Ship:       +2 per industrial building on water/shore
+[Life]                Necromancer +2 zombies per residental on map
+Restrictions on placement
+Zoning
+Food to feed aliens
+
+
+Tiles:
+[Heat, Liquid]          Lava
+[Biology, Solid]        Grass
+[Biology, Blue, Solid]  Blue Grass
+[Heat, Solid]           Desert
+[Cold, Biology, Liquid] Water
+[Cold, Solid]           Snow
+[Black Hole]            Black Hole
+[Plasma]                Sun
+[Ore]                   Asteroid
+
+
+Win Conditions:
+- Make X money per turn
+- Support X aliens
+
+Lose Conditions:
+- Kill X aliens
+- Make less than X money by turn Y
+
+Player can demolish buildings, depending on surroundings could have a % chance of X deaths
+
+Major Events (Boss Battles?):
+- Earthquake (3 turn notice)
+- Tornado (5 turn notice)
+- Asteroid (15 turn notice)
+- Cold Front (7 turn notice)
+- Flash Flooding (2 turn notice)
+- Solar Flare (3 turn notice)
+- Rogue black hole (15 turn notice, permanently destroys tiles)

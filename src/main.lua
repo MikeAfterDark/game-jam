@@ -7,13 +7,11 @@ require("scene_game")
 require("scene_audio_zoo")
 require("scene_intro")
 
+-- game objects
 require("board")
 require("tile")
-
--- require("player")
--- require("wall")
--- require("runner")
--- require("pill")
+require("shop")
+require("building")
 
 -- on linux, state is at: ~/.local/share/{love, project_name}/state.txt
 function init()
@@ -25,15 +23,11 @@ function init()
 	end
 	controls = {
 		reset = { text = "Restart", default = { "x" }, input = state.input.reset },
-		wall1 = { text = "Wall 1", default = { "1" }, input = state.input.wall1 },
-		wall2 = { text = "Wall 2", default = { "2" }, input = state.input.wall2 },
-		wall3 = { text = "Wall 3", default = { "3" }, input = state.input.wall3 },
+		select = { text = "Select", default = { "m1" }, input = state.input.select },
 	}
 	options_keys_display_order = {
+		"select",
 		"reset",
-		"wall1",
-		"wall2",
-		"wall3",
 	}
 	for action, key in pairs(controls) do
 		input:bind(action, key.input or key.default)
@@ -80,11 +74,18 @@ function init()
 	-- load images:
 	-- wall_arrow_particle = Image("wall_arrow_particle")
 	logo = Image("logo")
+
+	local tiles_folder = "tiles/"
 	tile_sprites = {
-		default = { Image("tile") },
+		default = { Image(tiles_folder .. "tile") },
+		grass = { Image(tiles_folder .. "grass") },
+		cover = { Image(tiles_folder .. "tile_cover") },
 	}
 	building_sprites = {
 		castle = { Image("castle") },
+	}
+	shop_sprites = {
+		shop_slot = { Image("shop_slot") },
 	}
 
 	-- local is_path = true
