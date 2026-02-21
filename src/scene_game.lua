@@ -114,7 +114,7 @@ function Game:on_enter(from, args)
 				{ x = 1536, y = 634 },
 			},
 			shop_slot_size = shop_slot_size,
-			open_slots = 2,
+			open_slots = 5,
 			max_slots = 6,
 			level = 1,
 		})
@@ -132,7 +132,7 @@ function Game:on_enter(from, args)
 			layer = ui_interaction_layer.Game,
 			x = gw * 0.9,
 			y = gh * 0.9,
-			w = gw * 0.1,
+			-- w = gw * 0.15,
 			button_text = "end turn",
 			fg_color = "bg",
 			bg_color = "fg",

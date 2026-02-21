@@ -9,9 +9,9 @@ function Board:init(args)
 		self.tile_map[row] = {}
 	end
 
-	local screen_vertical_offset = gh * 0.4
-	local depth_scale = 0.494
-	local horizontal_scale = 0.59
+	local screen_vertical_offset = gh * 0.45
+	local depth_scale = 0.543
+	local horizontal_scale = 0.635
 
 	local x_axis = {
 		x = self.tile_size * horizontal_scale,
@@ -40,7 +40,7 @@ function Board:init(args)
 					angle = math.pi * 0.25,
 					row = row,
 					col = col,
-					type = random:bool() and Tile_Type.Default or Tile_Type.Grass,
+					type = random:table(Tile_Type),
 				})
 				self.tile_map[row][col] = tile
 				table.insert(self.tiles, tile)
@@ -80,7 +80,11 @@ function Board:valid_tile_for_building(building)
 		end
 	end
 
-	local valid, errors = building:is_valid_placement({ tile = selected_tile, adjacent_tiles = adjacent_tiles })
+	local valid, errors = building:is_valid_placement({
+		tile = selected_tile,
+		adjacent_tiles = adjacent_tiles,
+		building = building,
+	})
 	return valid and selected_tile or nil, errors
 end
 

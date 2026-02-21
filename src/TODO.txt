@@ -7,3 +7,8 @@ TODO:
 - gold/bonuses
 
 - 'no adjacent buildings' report all adjacent found
+- refactor the rules to fit the game design
+
+QoL:
+- While holding a building, highlight all valid placement areas and how much bonus would be
+- Star background, or anything really, should be moving to avoid boredom

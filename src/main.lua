@@ -79,36 +79,33 @@ function init()
 
 	local tiles_folder = "tiles/"
 	tile_sprites = {
-		default = { Image(tiles_folder .. "tile") },
-		grass = { Image(tiles_folder .. "grass") },
 		cover = { Image(tiles_folder .. "tile_cover") },
-	}
-	building_sprites = {
-		castle = { Image("castle") },
-	}
-	shop_sprites = {
-		shop_slot = { Image("shop_slot") },
+
+		asteroid = { Image(tiles_folder .. "asteroid") },
+		blue_grass = { Image(tiles_folder .. "blue_grass") },
+		grass = { Image(tiles_folder .. "grass") },
+		sun = { Image(tiles_folder .. "literally_just_the_sun") },
+		sand = { Image(tiles_folder .. "sand") },
+		snow = { Image(tiles_folder .. "snow") },
+		stone = { Image(tiles_folder .. "stone") },
+		water = { Animation(3, AnimationFrames(Image(tiles_folder .. "liquid2"), 64, 64), "loop"), Color(0.3, 0.4, 0.9, 0.7) },
+		lava = { Animation(15, AnimationFrames(Image(tiles_folder .. "liquid2"), 64, 64), "loop"), Color(0.8, 0.4, 0.2, 0.9) },
 	}
 
-	-- local is_path = true
-	-- knight_sprites = {
-	-- 	hitbox_width = 15,
-	-- 	hitbox_height = 35,
-	--
-	-- 	hitbox_center_x = -5,
-	-- 	hitbox_center_y = 22,
-	--
-	-- 	frame_width = 120,
-	-- 	frame_height = 80,
-	-- 	animation_speed = 0.07,
-	-- 	sprite_sheets = {
-	-- 		-- https://aamatniekss.itch.io/fantasy-knight-free-pixelart-animated-character by: aamatniekss
-	-- 		idle = Image("assets/images/knight/Colour1/Outline/120x80_PNGSheets/_Idle.png", is_path),
-	-- 		run = Image("assets/images/knight/Colour1/Outline/120x80_PNGSheets/_Run.png", is_path),
-	-- 		jump = Image("assets/images/knight/Colour1/Outline/120x80_PNGSheets/_Jump.png", is_path),
-	-- 		dead = Image("assets/images/knight/Colour1/Outline/120x80_PNGSheets/_DeathNoMovement.png", is_path),
-	-- 	},
-	-- }
+	local buildings_folder = "buildings/"
+	building_sprites = {
+		castle = { Image(buildings_folder .. "castle") },
+		dwelling = { Image(buildings_folder .. "dwelling") },
+		farm = { Image(buildings_folder .. "farm") },
+		market = { Image(buildings_folder .. "market") },
+		necromancer = { Image(buildings_folder .. "necromancer") },
+		ship = { Image(buildings_folder .. "ship") },
+		tent = { Image(buildings_folder .. "tent") },
+	}
+	shop_sprites = {
+		shop_slot = { Image("black_hole_gray") },
+		lock = { Image("lock") },
+	}
 
 	-- set logic init
 	slow_amount = 1
@@ -145,9 +142,9 @@ function init()
 
 	-- can comfortably fit 14 scenes atm
 	debug_scenes = {
-		{ id = "intro",     destination = Intro },
+		{ id = "intro", destination = Intro },
 		{ id = "main_menu", destination = MainMenu },
-		{ id = "game",      destination = Game },
+		{ id = "game", destination = Game },
 		{ id = "audio_zoo", destination = AudioZoo },
 	}
 

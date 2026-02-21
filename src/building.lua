@@ -7,7 +7,7 @@ Building_Type = {
 		rules = {
 			placement = {
 				{ type = "on_solid_tile" },
-				{ type = "on_any_of_tile_type", values = { "grass", "stone" } },
+				{ type = "on_any_tile_type", values = { "grass", "stone" } },
 				{ type = "not_on_any_of_tile_type", values = { "sand", "swamp" } },
 				{ type = "no_adjacent_buildings" },
 			},
@@ -15,6 +15,79 @@ Building_Type = {
 				{ type = "no_adjacent_buildings" },
 				{ type = "within_range_of", values = { tiles = { type = "grass", amount = 5 }, buildings = { type = "farm", amount = 3 } } },
 			},
+		},
+	},
+	Dwelling = {
+		name = "dwelling",
+		sprites = function()
+			return building_sprites.dwelling
+		end,
+		rules = {
+			placement = {
+				{ type = "on_solid_tile" },
+			},
+			bonus = {},
+		},
+	},
+	Farm = {
+		name = "farm",
+		sprites = function()
+			return building_sprites.farm
+		end,
+		rules = {
+			placement = {
+				{ type = "on_solid_tile" },
+				{ type = "on_any_tile_type", values = { "grass", "blue grass" } },
+			},
+			bonus = {},
+		},
+	},
+	Market = {
+		name = "market",
+		sprites = function()
+			return building_sprites.market
+		end,
+		rules = {
+			placement = {
+				{ type = "on_solid_tile" },
+			},
+			bonus = {},
+		},
+	},
+	Necromancer = {
+		name = "necromancer",
+		sprites = function()
+			return building_sprites.necromancer
+		end,
+		rules = {
+			placement = {
+				{ type = "on_solid_tile" },
+			},
+			bonus = {},
+		},
+	},
+	Ship = {
+		name = "ship",
+		sprites = function()
+			return building_sprites.ship
+		end,
+		rules = {
+			placement = {
+				{ type = "on_solid_tile" },
+			},
+			bonus = {},
+		},
+	},
+	Tent = {
+		name = "tent",
+		sprites = function()
+			return building_sprites.tent
+		end,
+		rules = {
+			placement = {
+				{ type = "on_solid_tile" },
+			},
+			bonus = {},
 		},
 	},
 }
@@ -28,8 +101,14 @@ RuleLogic = {
 		return table.contains(context.tile.type.traits, "solid") ~= nil, error
 	end,
 
+	-- on_tile_with_any_of_trait = function(context, rule)
+	-- 	local error = context.tile.type.name ..
+	-- 		" tile doesn't have any one trait from: " .. table.concat(rule.values, ", ")
+	-- 	return table.contains(context.tile.type.traits,) ~= nil, error
+	-- end,
+
 	-- { type = "on_any_of_tile_type",     values = { "grass", "stone" } },
-	on_any_of_tile_type = function(context, rule)
+	on_any_tile_type = function(context, rule)
 		local error = context.tile.type.name .. " tile is not any one of: " .. table.concat(rule.values, ", ")
 		return table.contains(rule.values, context.tile.type.name) ~= nil, error
 	end,
@@ -44,7 +123,7 @@ RuleLogic = {
 	no_adjacent_buildings = function(context, rule)
 		local error = "needs to have no adjacent buildings"
 		for _, tile in ipairs(context.adjacent_tiles) do
-			if tile.holding then
+			if tile.holding and tile.holding ~= context.building then
 				return false, error .. ", has a " .. tile.holding.type.name
 			end
 		end
@@ -124,7 +203,7 @@ Building = Object:extend()
 Building:implement(GameObject)
 function Building:init(args)
 	self:init_game_object(args)
-	self.vertical_offset = -15 -- WARN: HARDCODED OFFSET to make the buildings like like they're sitting 'on' their surface
+	self.vertical_offset = 0 -- WARN: HARDCODED OFFSET to make the buildings like like they're sitting 'on' their surface
 	self.y = self.y + self.vertical_offset
 
 	self.shape = Circle(self.x, self.y, self.size)
@@ -195,7 +274,7 @@ function Building:draw()
 	graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
 	local color = white[0]
 	local scale = self.size * 0.04
-	self.shape:draw()
+	-- self.shape:draw()
 	self.type.sprites()[1]:draw(self.x, self.y, 0, scale, scale, 0, 0, color)
 	graphics.pop()
 end

@@ -47,6 +47,8 @@ function renderer_init()
 
 	graphics.set_background_color(bg[0])
 	graphics.set_color(fg[0])
+
+	graphics.set_background_color(black[0])
 	slow_amount = 1
 	music_slow_amount = 1
 
@@ -101,7 +103,7 @@ function renderer_draw(draw_action, shadow_draw_action)
 						local row = j * grid_size
 						local column = i * grid_size
 
-						local gray_val = 0.3
+						local gray_val = 0.0
 						local color = Color(gray_val, gray_val, gray_val, 1)
 						local line_width = 3
 						graphics.line(column, 0, column, gh, color, line_width)
@@ -115,8 +117,8 @@ function renderer_draw(draw_action, shadow_draw_action)
 			end
 		end
 
-		bg_gradient:draw(gw / 2, gh / 2, global_game_width, global_game_height)
-		bg_gradient:draw(gw / 2, gh * 1.5, global_game_width, global_game_height)
+		-- bg_gradient:draw(gw / 2, gh / 2, global_game_width, global_game_height)
+		-- bg_gradient:draw(gw / 2, gh * 1.5, global_game_width, global_game_height)
 		camera:detach()
 	end)
 
@@ -138,7 +140,7 @@ function renderer_draw(draw_action, shadow_draw_action)
 	end)
 
 	local x, y = 0, 0
-	background_canvas:draw(x, y, 0, sx, sy)
+	-- background_canvas:draw(x, y, 0, sx, sy)
 
 	local shadow_offset = 2.5
 	shadow_canvas:draw(x + shadow_offset * sx, y + shadow_offset * sy, 0, sx, sy)
@@ -664,74 +666,74 @@ end
 --
 --
 --
-Animation = Object:extend()
-Animation:implement(GameObject)
-function Animation:init(args)
-	self:init_game_object(args)
-
-	-- self.type = args.type
-	self.sprite_sheet = args.sheet.sprite_sheets[self.type]
-
-	self.frame_width = args.sheet.frame_width
-	self.frame_height = args.sheet.frame_height
-	self.animation_speed = args.sheet.animation_speed or 0.1
-
-	self.center_x = args.sheet.hitbox_center_x or 0
-	self.center_y = args.sheet.hitbox_center_y or 0
-
-	self.frame_time = 0
-	self.frame_counter = 1
-
-	local image_w, image_h = self.sprite_sheet.w, self.sprite_sheet.h
-	self.frames = {}
-
-	for y = 0, image_h - self.frame_height, self.frame_height do
-		for x = 0, image_w - self.frame_width, self.frame_width do
-			local quad = love.graphics.newQuad(x, y, self.frame_width, self.frame_height, image_w, image_h)
-			table.insert(self.frames, quad)
-		end
-	end
-
-	self.num_frames = #self.frames
-end
-
-function Animation:update(dt)
-	self.frame_time = self.frame_time + dt
-	if self.frame_time > self.animation_speed then
-		self.frame_time = self.frame_time % self.animation_speed
-		self.frame_counter = self.frame_counter + 1
-		if self.frame_counter > self.num_frames then
-			if self.stop_on_finish then
-				self.frame_counter = self.num_frames
-			else
-				self.frame_counter = 1
-			end
-		end
-	end
-end
-
-function Animation:draw(x, y, r, sx, sy, ox, oy, color)
-	local frame = self.frames[self.frame_counter]
-	local _r, g, b, a
-	if color then
-		_r, g, b, a = love.graphics.getColor()
-		graphics.set_color(color)
-	end
-	love.graphics.draw(
-		self.sprite_sheet.image,
-		frame,
-		x - self.center_x * sx,
-		y - self.center_y * sy,
-		r or 0,
-		sx or 1,
-		sy or sx or 1,
-		self.frame_width / 2 + (ox or 0),
-		self.frame_height / 2 + (oy or 0)
-	)
-	if color then
-		love.graphics.setColor(_r, g, b, a)
-	end
-end
+-- Animation = Object:extend()
+-- Animation:implement(GameObject)
+-- function Animation:init(args)
+-- 	self:init_game_object(args)
+--
+-- 	-- self.type = args.type
+-- 	self.sprite_sheet = args.sheet.sprite_sheets[self.type]
+--
+-- 	self.frame_width = args.sheet.frame_width
+-- 	self.frame_height = args.sheet.frame_height
+-- 	self.animation_speed = args.sheet.animation_speed or 0.1
+--
+-- 	self.center_x = args.sheet.hitbox_center_x or 0
+-- 	self.center_y = args.sheet.hitbox_center_y or 0
+--
+-- 	self.frame_time = 0
+-- 	self.frame_counter = 1
+--
+-- 	local image_w, image_h = self.sprite_sheet.w, self.sprite_sheet.h
+-- 	self.frames = {}
+--
+-- 	for y = 0, image_h - self.frame_height, self.frame_height do
+-- 		for x = 0, image_w - self.frame_width, self.frame_width do
+-- 			local quad = love.graphics.newQuad(x, y, self.frame_width, self.frame_height, image_w, image_h)
+-- 			table.insert(self.frames, quad)
+-- 		end
+-- 	end
+--
+-- 	self.num_frames = #self.frames
+-- end
+--
+-- function Animation:update(dt)
+-- 	self.frame_time = self.frame_time + dt
+-- 	if self.frame_time > self.animation_speed then
+-- 		self.frame_time = self.frame_time % self.animation_speed
+-- 		self.frame_counter = self.frame_counter + 1
+-- 		if self.frame_counter > self.num_frames then
+-- 			if self.stop_on_finish then
+-- 				self.frame_counter = self.num_frames
+-- 			else
+-- 				self.frame_counter = 1
+-- 			end
+-- 		end
+-- 	end
+-- end
+--
+-- function Animation:draw(x, y, r, sx, sy, ox, oy, color)
+-- 	local frame = self.frames[self.frame_counter]
+-- 	local _r, g, b, a
+-- 	if color then
+-- 		_r, g, b, a = love.graphics.getColor()
+-- 		graphics.set_color(color)
+-- 	end
+-- 	love.graphics.draw(
+-- 		self.sprite_sheet.image,
+-- 		frame,
+-- 		x - self.center_x * sx,
+-- 		y - self.center_y * sy,
+-- 		r or 0,
+-- 		sx or 1,
+-- 		sy or sx or 1,
+-- 		self.frame_width / 2 + (ox or 0),
+-- 		self.frame_height / 2 + (oy or 0)
+-- 	)
+-- 	if color then
+-- 		love.graphics.setColor(_r, g, b, a)
+-- 	end
+-- end
 
 Text2 = Object:extend()
 Text2:implement(GameObject)
