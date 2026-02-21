@@ -1,5 +1,9 @@
 TODO:
-- bonus rules
-- turns (next button)
+- next_turn(), game phases
+    - game.bord:trigger_buildings()
+    - game.board:trigger_Event(game.game_state.event)
 - buy new shop slots
 - events (earth split)
+- gold/bonuses
+
+- 'no adjacent buildings' report all adjacent found

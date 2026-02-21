@@ -1,7 +1,14 @@
 Tile_Type = {
     Default = {
         name = "swamp",
-        traits = { "swamp" },
+        traits = {
+            "solid",
+            "liquid",
+            "biology",
+            "wet",
+            "decay",
+            "low_oxygen",
+        },
         sprites = function()
             return tile_sprites.default
         end,
@@ -18,10 +25,10 @@ Tile_Type = {
             return tile_sprites.grass
         end,
     },
-    Forest = "forest",
-    Water = "water",
-    Lava = "lava",
-    Stone = "stone",
+    -- Forest = "forest",
+    -- Water = "water",
+    -- Lava = "lava",
+    -- Stone = "stone",
 }
 
 Tile = Object:extend()

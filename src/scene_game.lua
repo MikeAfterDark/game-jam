@@ -57,6 +57,18 @@ function Game:on_enter(from, args)
 	self.stuck = false
 	self.won = false
 
+	self.game_ui_elements = {}
+
+	-- local ui_layer =
+	-- local ui_group = self.options_ui
+	-- self.options_ui_elements = {}
+	-- main.ui_layer_stack:push({
+	-- 	layer = ui_interaction_layer.Options,
+	-- 	layer_has_music = not main.current.in_pause,
+	-- 	music_type = "options",
+	-- 	ui_elements = self.options_ui_elements,
+	-- })
+
 	-- if layer underneath this one has layer_type == "game" and the same music type then dont push
 	local layer = main.ui_layer_stack:peek()
 	if layer and layer.music_type ~= self.music_type then
@@ -94,10 +106,10 @@ function Game:on_enter(from, args)
 		self.shop = Shop({
 			group = self.main,
 			positions = { -- WARN: HARDCODED POSITIONS for 'global_game_scale = 4'
-				{ x = 337,  y = 647 },
-				{ x = 414,  y = 727 },
-				{ x = 523,  y = 810 },
-				{ x = 654,  y = 916 },
+				{ x = 337, y = 647 },
+				{ x = 414, y = 727 },
+				{ x = 523, y = 810 },
+				{ x = 654, y = 916 },
 				{ x = 1387, y = 741 },
 				{ x = 1536, y = 634 },
 			},
@@ -106,44 +118,80 @@ function Game:on_enter(from, args)
 			max_slots = 6,
 			level = 1,
 		})
-		-- self.next_button = Next_Button({})
 		self.gold = { total = 5, gold_per_interest = 3 }
-		self.game_state = { turn = 1, phase = Game_Loop[1] }
-
+		self.game_state = { turn = 1, phase = Game_Loop[1], phase_index = 1, event = Events.Calm }
+		self.players_turn = true
 		-- self.shop:populate()
 	else -- rebuild run from savestate
 	end
+
+	self.next_button = collect_into(
+		self.game_ui_elements,
+		Button({
+			group = self.ui,
+			layer = ui_interaction_layer.Game,
+			x = gw * 0.9,
+			y = gh * 0.9,
+			w = gw * 0.1,
+			button_text = "end turn",
+			fg_color = "bg",
+			bg_color = "fg",
+			action = function(b)
+				-- [SFX]
+				print("    next pressed")
+				self:next_turn(true) -- TODO: remove
+			end,
+		})
+	)
 end
 
-Phases = { -- enum
-	Shop = 0,
-	Pieces = 1,
-	Move_Prep = 2,
-	Move = 3,
+Phases = {
+	Shop = function(game)
+		print("shop")
+	end,
+	Pieces = function(game)
+		print("pieces")
+		-- game.board:trigger_buildings()
+		game:next_turn(true)
+	end,
+	Event = function(game)
+		game.game_state.event.current_countdown = game.game_state.event.current_countdown or game.game_state.event.countdown -- failsafe
+		print("event: " .. game.game_state.event.name .. ", countdown: " .. game.game_state.event.current_countdown)
+
+		if game.game_state.event.current_countdown > 0 then
+			game.game_state.event.current_countdown = game.game_state.event.current_countdown - 1
+		else
+			print("triggering " .. game.game_state.event.name .. " event")
+			-- game.board:trigger_event(game.game_state.event)
+			game.game_state.event = random:table(Events)
+			game.game_state.event.current_countdown = game.game_state.event.countdown
+		end
+		game:next_turn(true)
+	end,
 }
-Game_Loop = { Phases.Shop, Phases.Pieces, Phases.Move_Prep, Phases.Pieces, Phases.Move }
 
-function Game:on_exit()
-	self.main:destroy()
-	self.post_main:destroy()
-	self.effects:destroy()
-	self.ui:destroy()
-	self.end_ui:destroy()
-	self.paused_ui:destroy()
-	self.options_ui:destroy()
-	self.keybinding_ui:destroy()
+Events = {
+	Calm = { -- nothing happens
+		name = "calm",
+		countdown = 2,
+	},
+	Fissure = { -- earthquake, in a line converts tiles to lava and destroys buildings that can't handle 'shake' and lava traits
+		name = "fissue",
+		countdown = 4,
+	},
+}
+Game_Loop = { Phases.Shop, Phases.Pieces, Phases.Event }
 
-	self.main = nil
-	self.post_main = nil
-	self.effects = nil
-	self.ui = nil
-	self.end_ui = nil
-	self.paused_ui = nil
-	self.options_ui = nil
-	self.keybinding_ui = nil
-	self.credits = nil
-	self.flashes = nil
-	self.hfx = nil
+function Game:next_turn(force)
+	if not force and not self.players_turn then -- TODO: uncomment
+		return
+	end
+	self.players_turn = false
+
+	-- goto next phase, proc next phase,
+	self.game_state.phase_index = (self.game_state.phase_index % #Game_Loop) + 1
+	self.game_state.phase = Game_Loop[self.game_state.phase_index]
+	self.game_state.phase(self)
 end
 
 function Game:update(dt)
@@ -478,4 +526,27 @@ function Game:die()
 		-- end)
 	end
 	return true
+end
+
+function Game:on_exit()
+	self.main:destroy()
+	self.post_main:destroy()
+	self.effects:destroy()
+	self.ui:destroy()
+	self.end_ui:destroy()
+	self.paused_ui:destroy()
+	self.options_ui:destroy()
+	self.keybinding_ui:destroy()
+
+	self.main = nil
+	self.post_main = nil
+	self.effects = nil
+	self.ui = nil
+	self.end_ui = nil
+	self.paused_ui = nil
+	self.options_ui = nil
+	self.keybinding_ui = nil
+	self.credits = nil
+	self.flashes = nil
+	self.hfx = nil
 end

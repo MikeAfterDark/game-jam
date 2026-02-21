@@ -24,9 +24,11 @@ function init()
 	controls = {
 		reset = { text = "Restart", default = { "x" }, input = state.input.reset },
 		select = { text = "Select", default = { "m1" }, input = state.input.select },
+		next_turn = { text = "Next Turn", default = { "space" }, input = state.input.next_turn },
 	}
 	options_keys_display_order = {
 		"select",
+		"next_turn",
 		"reset",
 	}
 	for action, key in pairs(controls) do
