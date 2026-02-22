@@ -107,14 +107,12 @@ function Tile:init(args)
 	self:init_game_object(args)
 	self.color = random:color()
 
-	self.shape = Diamond(self.x, self.y - (self.size * 0.1), self.size * 1.153, self.size * 0.988) -- for mouse interaction
+	self.shape = Diamond(self.x, self.y - (self.size * 0.1), self.size * 1.25, self.size * 1.08) -- for mouse interaction
 	self.interact_with_mouse = true
 	self.selected = false
 	self.type = self.type or Tile_Type.Default
 end
 
--- player_sheet = Image('player_sheet')
--- player_idle_frames = AnimationFrames(player_sheet, 32, 32, {{1, 1}, {2, 1}})
 function Tile:update(dt)
 	self:update_game_object(dt)
 	if self.type.sprites()[1]:is(Animation) then
@@ -132,7 +130,6 @@ end
 
 function Tile:draw()
 	graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
-	-- self.shape:draw(self.color)
 	local scale = self.size * 0.02
 
 	self.type.sprites()[1]:draw(self.x, self.y, 0, scale, scale, 0, 0, self.type.sprites()[2] or white[0])
@@ -142,15 +139,16 @@ function Tile:draw()
 		tile_sprites.cover[1]:draw(self.x, self.y, 0, scale, scale, 0, 0, color)
 	end
 
-	if self.has_building and false then
-		local offset = -self.size * 0.1
-		building_sprites.castle[1]:draw(self.x, self.y + offset, 0, scale, scale, 0, 0, Color(1, 1, 1, 1))
-	end
+	-- self.shape:draw(self.color)
 	graphics.pop()
 end
 
 function Tile:on_mouse_enter()
+	if not on_current_ui_layer(self) then
+		return false
+	end
 	-- [SFX]
+	sfx.tile_mouse_enter:play({ pitch = random:float(0.95, 1.05), volume = 0.1 })
 	self.selected = true
 	-- self.spring:pull(0.15, 400, 32)
 	return true

@@ -12,8 +12,7 @@ Building_Type = {
 				{ type = "no_adjacent_buildings" },
 			},
 			bonus = {
-				{ type = "no_adjacent_buildings" },
-				{ type = "within_range_of", values = { tiles = { type = "grass", amount = 5 }, buildings = { type = "farm", amount = 3 } } },
+				{ type = "no_adjacent_buildings", amount = 5 },
 			},
 		},
 	},
@@ -257,10 +256,16 @@ function Building:is_valid_placement(context)
 end
 
 function Building:on_mouse_enter()
+	if not on_current_ui_layer(self) then
+		return false
+	end
 	-- if game_mouse.holding ~= nil then
 	--     return
 	-- end
 	-- [SFX]
+
+	self.spring:pull(0.15, 400, 32)
+	sfx.building_mouse_enter:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	self.selected = true
 	return true
 end
@@ -274,7 +279,9 @@ function Building:draw()
 	graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
 	local color = white[0]
 	local scale = self.size * 0.04
+	local outline_scale = 0.3
 	-- self.shape:draw()
+	self.type.sprites()[1]:draw(self.x, self.y + outline_scale * self.size / 2, 0, scale + outline_scale, scale + outline_scale, 0, 0, black[0])
 	self.type.sprites()[1]:draw(self.x, self.y, 0, scale, scale, 0, 0, color)
 	graphics.pop()
 end

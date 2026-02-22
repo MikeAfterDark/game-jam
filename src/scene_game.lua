@@ -88,6 +88,7 @@ function Game:on_enter(from, args)
 	game_mouse = {
 		holding = nil,
 	}
+	self.layer = ui_interaction_layer.Game
 
 	local num_tiles = 12
 	local tile_size = gh * 1 / (num_tiles + 1.8)
@@ -97,6 +98,7 @@ function Game:on_enter(from, args)
 	if next(run) == nil then -- new run
 		self.board = Board({
 			group = self.floor,
+			layer = ui_interaction_layer.Game,
 			x = gw / 2,
 			y = gh / 2,
 			tile_size = tile_size,
@@ -105,6 +107,7 @@ function Game:on_enter(from, args)
 		})
 		self.shop = Shop({
 			group = self.main,
+			layer = ui_interaction_layer.Game,
 			positions = { -- WARN: HARDCODED POSITIONS for 'global_game_scale = 4'
 				{ x = 337, y = 647 },
 				{ x = 414, y = 727 },
@@ -125,22 +128,35 @@ function Game:on_enter(from, args)
 	else -- rebuild run from savestate
 	end
 
-	self.next_button = collect_into(
+	-- self.next_button = collect_into(
+	-- 	self.game_ui_elements,
+	-- 	Button({
+	-- 		group = self.ui,
+	-- 		layer = ui_interaction_layer.Game,
+	-- 		x = gw * 0.9,
+	-- 		y = gh * 0.9,
+	-- 		-- w = gw * 0.15,
+	-- 		button_text = "end turn",
+	-- 		fg_color = "bg",
+	-- 		bg_color = "fg",
+	-- 		action = function(b)
+	-- 			-- [SFX]
+	-- 			print("    next pressed")
+	-- 			self:next_turn(true) -- TODO: remove
+	-- 		end,
+	-- 	})
+	-- )
+
+	collect_into( --
 		self.game_ui_elements,
-		Button({
+		Text2({
 			group = self.ui,
-			layer = ui_interaction_layer.Game,
-			x = gw * 0.9,
-			y = gh * 0.9,
-			-- w = gw * 0.15,
-			button_text = "end turn",
-			fg_color = "bg",
-			bg_color = "fg",
-			action = function(b)
-				-- [SFX]
-				print("    next pressed")
-				self:next_turn(true) -- TODO: remove
-			end,
+			x = gw * 0.23,
+			y = gh * 0.1,
+			lines = {
+				{ text = "[wavy_mid]Heavily incomplete, WIP, admire", font = pixul_font },
+				{ text = "[wavy_mid]the art and music for now:", font = pixul_font },
+			},
 		})
 	)
 end
@@ -243,8 +259,14 @@ function Game:update(dt)
 		self.credits:update(0)
 	end
 
-	if input.space.pressed then
-		self.shop:reroll()
+	if on_current_ui_layer(self) then
+		if input.reroll.pressed then
+			self.shop:reroll()
+		end
+		if input.next_turn.pressed then
+			print("    next pressed")
+			self:next_turn(true) -- TODO: remove
+		end
 	end
 
 	if input.m1.pressed then

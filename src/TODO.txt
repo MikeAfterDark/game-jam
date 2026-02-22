@@ -6,9 +6,11 @@ TODO:
 - events (earth split)
 - gold/bonuses
 
-- 'no adjacent buildings' report all adjacent found
+
 - refactor the rules to fit the game design
+- refactor credits to 'credit_people({person.A, person.B, person.C})' with automatic spacing
 
 QoL:
 - While holding a building, highlight all valid placement areas and how much bonus would be
 - Star background, or anything really, should be moving to avoid boredom
+- 'no adjacent buildings' report all adjacent found

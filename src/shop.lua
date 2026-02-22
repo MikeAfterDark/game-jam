@@ -9,6 +9,7 @@ function Shop:init(args)
 			self.slots,
 			Slot({
 				group = self.group,
+				layer = self.layer,
 				x = position.x,
 				y = position.y,
 				size = self.shop_slot_size,
@@ -34,8 +35,10 @@ function Shop:clear_slot(building)
 end
 
 function Shop:reroll()
+	local delay = 0
+	local speed = 0.05
 	for i, slot in ipairs(self.slots) do
-		slot:new_building()
+		delay = slot:new_building(delay, speed)
 	end
 end
 
@@ -74,15 +77,46 @@ function Slot:clear(building)
 	end
 end
 
-function Slot:new_building()
-	if self.locked or self.building ~= nil then
-		return
+function Slot:new_building(delay, speed)
+	if
+		self.locked --[[ or self.building ~= nil ]]
+	then
+		return delay
 	end
 
-	self.building = Building({
-		group = self.group,
-		x = self.x,
-		y = self.y,
-		size = self.size,
-	})
+	if self.building then
+		self.building.dead = true
+		self.building = nil
+	end
+
+	trigger:after(delay, function()
+		self.spring:pull(0.25, 400, 32)
+
+		local pitch = 0.6 + delay * 1.7 + random:float(0, 0.2)
+		sfx.shop_reroll:play({ pitch = pitch, volume = 0.5 })
+		self.building = Building({
+			group = self.group,
+			layer = self.layer,
+			x = self.x,
+			y = self.y,
+			size = self.size,
+		})
+	end)
+	return delay + speed
+end
+
+function Slot:on_mouse_enter()
+	if not on_current_ui_layer(self) then
+		return false
+	end
+	-- [SFX]
+	sfx.tile_mouse_enter:play({ pitch = random:float(0.95, 1.05), volume = 0.1 })
+	self.selected = true
+	-- self.spring:pull(0.15, 400, 32)
+	return true
+end
+
+function Slot:on_mouse_exit()
+	self.selected = false
+	return true
 end

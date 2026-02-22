@@ -52,19 +52,19 @@ function renderer_init()
 	slow_amount = 1
 	music_slow_amount = 1
 
-	sfx = SoundTag()
-	sfx.volume = state.sfx_volume or 0.5
-	music = SoundTag()
-	music.volume = state.music_volume or 0.5
+	sfx_control = SoundTag()
+	sfx_control.volume = state.sfx_volume or 0.5
+	music_control = SoundTag()
+	music_control.volume = state.music_volume or 0.5
 
 	intro = SoundTag()
 	intro.volume = 1
 
 	if state.volume_muted then
-		sfx.volume = 0
+		sfx_control.volume = 0
 	end
 	if state.music_muted then
-		music.volume = 0
+		music_control.volume = 0
 	end
 
 	fat_font = Font("FatPixelFont", 8 * global_game_scale)

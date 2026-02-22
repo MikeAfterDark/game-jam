@@ -34,6 +34,7 @@ function Board:init(args)
 
 				local tile = Tile({
 					group = self.group,
+					layer = self.layer,
 					x = screen_x,
 					y = screen_y,
 					size = self.tile_size,

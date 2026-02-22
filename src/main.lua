@@ -24,6 +24,7 @@ function init()
 	controls = {
 		reset = { text = "Restart", default = { "x" }, input = state.input.reset },
 		select = { text = "Select", default = { "m1" }, input = state.input.select },
+		reroll = { text = "Reroll", default = { "r" }, input = state.input.reroll },
 		next_turn = { text = "Next Turn", default = { "space" }, input = state.input.next_turn },
 	}
 	options_keys_display_order = {
@@ -36,24 +37,39 @@ function init()
 	end
 
 	person = {
-		-- dev:
-		Mikey = { name = "Mikey G", nickname = "Mikey", url = "https://gusakm.itch.io/", color = "green" },
+		Mikey = { name = "Mikey G", nickname = "Mikey", url = "https://gusakm.itch.io/", color = "green" }, -- main dev
+
+		Apezilla = { name = 'David "Apezilla" Browne', nickname = "Apezilla", url = "https://www.youtube.com/@davidbrowne003", color = "red" }, -- music
+		Patrick = { name = "Patrick Montanari", nickname = "Patrick", url = "https://www.succulentsoundstudios.com/", color = "yellow" }, -- jazz improv
+		Tectonic = { name = "TectonicHorizon", nickname = "Tectonic", url = "https://soundcloud.com/reedflow", color = "p_blue1" }, -- art/game design
+		Kai = { name = "KaiaRadio", nickname = "Kai", url = "https://www.youtube.com/@KaiaRadio", color = "blue" }, -- sfx
 	}
 
 	-- load sounds:
 	music_jam_folder = "music_jam/"
 	music_fade = 1
 	-- ui
-	sfx_tag = { tags = { sfx } }
+	sfx_tag = { tags = { sfx_control } }
+	local sfx_folder = "sfx/"
 	-- Sound(music_jam_folder .. "UI Hover 1.mp3", sfx_tag)
 	stim_cave_sfx = Sound("sans-voice.mp3", sfx_tag)
+	sfx = {
+		building_mouse_enter = Sound(sfx_folder .. "building mouse enter.flac", sfx_tag),
+		extra = Sound(sfx_folder .. "extra.flac", sfx_tag),
+		extra2 = Sound(sfx_folder .. "extra 2.flac", sfx_tag),
+		intro_jingle = Sound(sfx_folder .. "Intro Jingle.flac", sfx_tag),
+		shop_reroll = Sound(sfx_folder .. "Shop reroll.flac", sfx_tag),
+		tile_mouse_enter = Sound(sfx_folder .. "Tile mouse enter.flac", sfx_tag),
+	}
 
 	--
 	-- META SONGS
 	--
-	music_tag = { tags = { music } } -- for volume control
+	music_tag = { tags = { music_control } } -- for volume control
+	song = Sound("A Dark Displacement (Loop)[Jam Final 2-22].flac", music_tag)
+	song_playing = false
 
-	intro_song = Sound("lets-go-cat.mp3", { tags = { intro } })
+	intro_song = Sound(sfx_folder .. "Intro Jingle.flac", { tags = { intro } })
 	-- song_stim_cave = Sound(
 	-- 	music_jam_folder .. "Guitar slop.mp3",
 	-- 	music_tag, --
@@ -138,19 +154,18 @@ function init()
 	})
 
 	main.current_music_type = "silence"
-	play_music({ type = "main", volume = 0.3 })
+	-- play_music({ type = "main", volume = 0.3 })
 
 	-- can comfortably fit 14 scenes atm
 	debug_scenes = {
-		{ id = "intro", destination = Intro },
-		{ id = "main_menu", destination = MainMenu },
-		{ id = "game", destination = Game },
-		{ id = "audio_zoo", destination = AudioZoo },
+		-- { id = "intro", destination = Intro },
+		-- { id = "main_menu", destination = MainMenu },
+		-- { id = "game", destination = Game },
+		-- { id = "audio_zoo", destination = AudioZoo },
 	}
 
-	-- main:add(Intro("intro"))
-	-- main:go_to("intro", {})
-	main:add(Game("intro"))
+	main:add(Intro("intro"))
+	-- main:add(Game("intro"))
 	main:go_to("intro", {})
 
 	-- set sane defaults:
@@ -160,6 +175,22 @@ function init()
 end
 
 function update(dt)
+	song:update(dt)
+	if main.current:is(MainMenu) and not song_playing then
+		song_playing = true
+		song:play({
+			volume = 0.3,
+			-- pitch = 1.2, -- pitch changes via speed playback, so this increases the playback speed
+			loop = true,
+			-- seek = 15.0, -- where it starts
+			fadeDuration = 0.5, -- fade-in, requires sound:update(dt)
+			-- tags = { your_tag },
+			-- effects = {
+			-- reverb = true,
+			-- },
+		})
+	end
+
 	main:update(dt)
 
 	for i = 1, main.ui_layer_stack:size() do
@@ -252,8 +283,8 @@ function open_options(self)
 			spacing = slider_spacing,
 			value = state.sfx_volume or 0.1,
 			action = function(b)
-				sfx.volume = b.value
-				state.sfx_volume = sfx.volume
+				sfx_control.volume = b.value
+				state.sfx_volume = sfx_control.volume
 			end,
 		})
 	)
@@ -282,8 +313,8 @@ function open_options(self)
 			spacing = slider_spacing,
 			value = state.music_volume or 0.1,
 			action = function(b)
-				music.volume = b.value
-				state.music_volume = music.volume
+				music_control.volume = b.value
+				state.music_volume = music_control.volume
 			end,
 		})
 	)
@@ -446,23 +477,23 @@ function open_options(self)
 	-- )
 	-- button_offset = button_offset + button_distance
 
-	self.wall_toggle_controls = collect_into(
-		self.options_ui_elements,
-		Button({
-			x = column_x[column],
-			y = gh / 2 + button_offset,
-			w = gw * 0.20,
-			button_text = tostring(state.toggle_controls and "toggle controls" or "press n' hold"),
-			fg_color = "bg",
-			bg_color = "fg",
-			action = function(b)
-				-- ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-				state.toggle_controls = not state.toggle_controls
-				b:set_text(tostring(state.toggle_controls and "toggle controls" or "press n' hold"))
-			end,
-		})
-	)
-	button_offset = button_offset + button_distance
+	-- self.wall_toggle_controls = collect_into(
+	-- 	self.options_ui_elements,
+	-- 	Button({
+	-- 		x = column_x[column],
+	-- 		y = gh / 2 + button_offset,
+	-- 		w = gw * 0.20,
+	-- 		button_text = tostring(state.toggle_controls and "toggle controls" or "press n' hold"),
+	-- 		fg_color = "bg",
+	-- 		bg_color = "fg",
+	-- 		action = function(b)
+	-- 			-- ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+	-- 			state.toggle_controls = not state.toggle_controls
+	-- 			b:set_text(tostring(state.toggle_controls and "toggle controls" or "press n' hold"))
+	-- 		end,
+	-- 	})
+	-- )
+	-- button_offset = button_offset + button_distance
 
 	-- button_offset = button_offset + button_distance
 	-- self.tutorial_button = collect_into(
@@ -908,13 +939,43 @@ function open_credits(self)
 
 	self.music_section = collect_into(
 		self.credits_ui_elements,
-		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[green]music:", font = pixul_font } } })
+		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[green]composer and producer:", font = pixul_font } } })
 	)
-
+	collect_into(
+		self.credits_ui_elements,
+		Button({
+			group = ui_group,
+			x = columns[2],
+			y = yOffset,
+			button_text = person.Apezilla.name,
+			fg_color = person.Apezilla.color,
+			bg_color = "black",
+			credits_button = true,
+			action = function(b)
+				open_url(b, person.Apezilla.url)
+			end,
+		})
+	)
 	yOffset = yOffset + y_dist
+
 	self.sound_section = collect_into(
 		self.credits_ui_elements,
 		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[yellow]SFX:", font = pixul_font } } })
+	)
+	collect_into(
+		self.credits_ui_elements,
+		Button({
+			group = ui_group,
+			x = columns[2],
+			y = yOffset,
+			button_text = person.Kai.name,
+			fg_color = person.Kai.color,
+			bg_color = "black",
+			credits_button = true,
+			action = function(b)
+				open_url(b, person.Kai.url)
+			end,
+		})
 	)
 	yOffset = yOffset + y_dist
 
@@ -927,8 +988,49 @@ function open_credits(self)
 			lines = { { text = "[fg]art: ", font = pixul_font } },
 		})
 	)
-
+	collect_into(
+		self.credits_ui_elements,
+		Button({
+			group = ui_group,
+			x = columns[2],
+			y = yOffset,
+			button_text = person.Tectonic.name,
+			fg_color = person.Tectonic.color,
+			bg_color = "black",
+			credits_button = true,
+			action = function(b)
+				open_url(b, person.Tectonic.url)
+			end,
+		})
+	)
 	yOffset = yOffset + y_dist
+
+	self.sax_section = collect_into(
+		self.credits_ui_elements,
+		Text2({
+			group = ui_group,
+			x = columns[1],
+			y = yOffset,
+			lines = { { text = "[purple]saxophone: ", font = pixul_font } },
+		})
+	)
+	collect_into(
+		self.credits_ui_elements,
+		Button({
+			group = ui_group,
+			x = columns[2],
+			y = yOffset,
+			button_text = person.Patrick.name,
+			fg_color = person.Patrick.color,
+			bg_color = "black",
+			credits_button = true,
+			action = function(b)
+				open_url(b, person.Patrick.url)
+			end,
+		})
+	)
+	yOffset = yOffset + y_dist
+
 	self.code_basis_section = collect_into(
 		self.credits_ui_elements,
 		Text2({
@@ -1163,7 +1265,7 @@ function play_music(args)
 	end
 
 	local target_type = top_music_layer.music_type
-	local volume = args.volume or (music and music.volume or state.music_volume or 0.1)
+	local volume = args.volume or (music_control and music_control.volume or state.music_volume or 0.1)
 
 	if not current_playing_music or current_playing_music:isStopped() or (top_music_layer.music and top_music_layer.music:isStopped()) then
 		local song = random:table(music_songs[target_type])
