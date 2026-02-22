@@ -52,7 +52,7 @@ function init()
 	sfx_tag = { tags = { sfx_control } }
 	local sfx_folder = "sfx/"
 	-- Sound(music_jam_folder .. "UI Hover 1.mp3", sfx_tag)
-	stim_cave_sfx = Sound("sans-voice.mp3", sfx_tag)
+	stim_cave_sfx = nil --Sound("sans-voice.mp3", sfx_tag)
 	sfx = {
 		building_mouse_enter = Sound(sfx_folder .. "building mouse enter.flac", sfx_tag),
 		extra = Sound(sfx_folder .. "extra.flac", sfx_tag),
@@ -813,27 +813,27 @@ function pause_game(self)
 				end,
 			})
 		)
-		if love.filesystem.isFused() == false and not web then
-			self.creator_button = collect_into(
-				self.paused_ui_elements,
-				Button({
-					group = ui_group,
-					x = gw / 2,
-					y = gh / 2 + 80 * global_game_scale,
-					force_update = true,
-					button_text = "creator",
-					fg_color = "bg",
-					bg_color = "green",
-					action = function()
-						close_options(self) -- fix music cuz this option is only available in options
-						play_level(self, {
-							creator_mode = true,
-							level_folder = main.current:is(Game) and main.current.level_folder or "",
-						})
-					end,
-				})
-			)
-		end
+		-- if love.filesystem.isFused() == false and not web then
+		-- 	self.creator_button = collect_into(
+		-- 		self.paused_ui_elements,
+		-- 		Button({
+		-- 			group = ui_group,
+		-- 			x = gw / 2,
+		-- 			y = gh / 2 + 80 * global_game_scale,
+		-- 			force_update = true,
+		-- 			button_text = "creator",
+		-- 			fg_color = "bg",
+		-- 			bg_color = "green",
+		-- 			action = function()
+		-- 				close_options(self) -- fix music cuz this option is only available in options
+		-- 				play_level(self, {
+		-- 					creator_mode = true,
+		-- 					level_folder = main.current:is(Game) and main.current.level_folder or "",
+		-- 				})
+		-- 			end,
+		-- 		})
+		-- 	)
+		-- end
 
 		for _, v in pairs(self.paused_ui_elements) do
 			-- v.group = ui_group
@@ -856,7 +856,7 @@ function play_level(self, args)
 			args = {},
 		},
 		display = {
-			text = "another Squad invades...",
+			text = "loading...",
 			font = pixul_font,
 			alignment = "center",
 		},
