@@ -84,12 +84,12 @@ function Slot:new_building(delay, speed)
 		return delay
 	end
 
-	if self.building then
-		self.building.dead = true
-		self.building = nil
-	end
-
 	trigger:after(delay, function()
+		if self.building then
+			self.building.dead = true
+			self.building = nil
+		end
+
 		self.spring:pull(0.25, 400, 32)
 
 		local pitch = 0.6 + delay * 1.7 + random:float(0, 0.2)

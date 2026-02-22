@@ -95,7 +95,7 @@ function Game:on_enter(from, args)
 	local shop_slot_size = gh * 0.03
 
 	local run = system.load_run()
-	if next(run) == nil then -- new run
+	if true or next(run) == nil then -- new run
 		self.board = Board({
 			group = self.floor,
 			layer = ui_interaction_layer.Game,
@@ -274,7 +274,7 @@ function Game:update(dt)
 		-- 	print("Mouse at: (" .. mouse_x .. ", " .. mouse_y .. ")")
 	end
 
-	if input.select.released and game_mouse.holding then
+	if input.select.released and game_mouse.holding and not game_mouse.holding.dead then
 		local building = game_mouse.holding -- temp var for clarity
 
 		local valid_tile, errors = self.board:valid_tile_for_building(building)
