@@ -54,6 +54,23 @@ function Board:update(dt)
 	self:update_game_object(dt)
 end
 
+function Board:get_adjacent_tiles(tile)
+	local adjacent_tiles = {}
+
+	for i = -1, 1 do
+		for j = -1, 1 do
+			local row = tile.row + i
+			local col = tile.col + j
+
+			if not (i == 0 and j == 0) and self.tile_map[row] and self.tile_map[row][col] then
+				table.insert(adjacent_tiles, self.tile_map[row][col])
+			end
+		end
+	end
+
+	return adjacent_tiles
+end
+
 -- check if tile matches requirements, return tile if yes, return nil in all other cases
 function Board:valid_tile_for_building(building)
 	local selected_tile = nil
@@ -68,25 +85,37 @@ function Board:valid_tile_for_building(building)
 		return nil, { selected_tile and "tile already contains a " .. selected_tile.holding.type.name }
 	end
 
-	local adjacent_tiles = {}
+	local valid, errors = building:is_valid_placement({
+		tile = selected_tile,
+		adjacent_tiles = self:get_adjacent_tiles(selected_tile),
+	})
+	return valid and selected_tile or nil, errors
+end
 
-	for i = -1, 1 do
-		for j = -1, 1 do
-			local row = selected_tile.row + i
-			local col = selected_tile.col + j
+function Board:trigger_buildings()
+	-- go through each stage, go through all tiles' buildings and apply each stage
+	local stages = { "modifiers", "bonus", "secrets" }
 
-			if not (i == 0 and j == 0) and self.tile_map[row] and self.tile_map[row][col] then
-				table.insert(adjacent_tiles, self.tile_map[row][col])
+	local delay = 0.1
+	for _, stage in ipairs(stages) do
+		for i = 1, self.rows do
+			for j = 1, self.columns do
+				index = i * self.rows + j
+				trigger:after(i * sel)
+				local tile = self.tiles[i * self.rows + j]
+				tile.spring:pull(0.2, 200, 10)
+				local building = tile.holding
+				if building then
+					-- do building thing
+					building:apply({
+						stage = stage,
+						tile = tile,
+						adjacent_tiles = self:get_adjacent_tiles(tile),
+					})
+				end
 			end
 		end
 	end
-
-	local valid, errors = building:is_valid_placement({
-		tile = selected_tile,
-		adjacent_tiles = adjacent_tiles,
-		building = building,
-	})
-	return valid and selected_tile or nil, errors
 end
 
 function Board:place(building, tile)

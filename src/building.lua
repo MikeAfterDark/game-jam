@@ -244,15 +244,20 @@ end
 --
 -- returns bool, table of errors
 function Building:is_valid_placement(context)
+	context.building = self
+
 	local errors = {}
 	for _, rule in ipairs(self.type.rules.placement) do
 		local passed, error = RuleLogic[rule.type](context, rule)
-		-- print(passed .. "," .. error)
 		if not passed then
 			table.insert(errors, error)
 		end
 	end
 	return #errors == 0, errors
+end
+
+function Building:apply(context)
+	print("applying: ", context.stage, self.type.name)
 end
 
 function Building:on_mouse_enter()

@@ -163,11 +163,12 @@ end
 
 Phases = {
 	Shop = function(game)
+		game.players_turn = true
 		print("shop")
 	end,
 	Pieces = function(game)
 		print("pieces")
-		-- game.board:trigger_buildings()
+		game.board:trigger_buildings()
 		game:next_turn(true)
 	end,
 	Event = function(game)
@@ -199,15 +200,17 @@ Events = {
 Game_Loop = { Phases.Shop, Phases.Pieces, Phases.Event }
 
 function Game:next_turn(force)
-	if not force and not self.players_turn then -- TODO: uncomment
+	if not force and not self.players_turn then
 		return
 	end
 	self.players_turn = false
 
-	-- goto next phase, proc next phase,
-	self.game_state.phase_index = (self.game_state.phase_index % #Game_Loop) + 1
-	self.game_state.phase = Game_Loop[self.game_state.phase_index]
-	self.game_state.phase(self)
+	trigger:after(1, function()
+		-- goto next phase, proc next phase,
+		self.game_state.phase_index = (self.game_state.phase_index % #Game_Loop) + 1
+		self.game_state.phase = Game_Loop[self.game_state.phase_index]
+		self.game_state.phase(self)
+	end)
 end
 
 function Game:update(dt)
@@ -259,7 +262,7 @@ function Game:update(dt)
 		self.credits:update(0)
 	end
 
-	if on_current_ui_layer(self) then
+	if self.players_turn and on_current_ui_layer(self) then
 		if input.reroll.pressed then
 			self.shop:reroll()
 		end
