@@ -1,10 +1,12 @@
 TODO:
 - next_turn(), game phases
+    - async/await for letting objects take however long they need to do their thing
     - game.bord:trigger_buildings()
     - game.board:trigger_Event(game.game_state.event)
 - buy new shop slots
 - events (earth split)
 - gold/bonuses
+- saving/loading (care, web builds might break when trying to load a non-existent file run_v4.txt)
 
 
 - refactor the rules to fit the game design

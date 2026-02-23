@@ -94,8 +94,10 @@ function Game:on_enter(from, args)
 	local tile_size = gh * 1 / (num_tiles + 1.8)
 	local shop_slot_size = gh * 0.03
 
-	local run = system.load_run()
-	if true or next(run) == nil then -- new run
+	-- local run = system.load_run() --
+	if
+		true --[[ or next(run) == nil ]]
+	then -- new run
 		self.board = Board({
 			group = self.floor,
 			layer = ui_interaction_layer.Game,

@@ -54,23 +54,6 @@ function Board:update(dt)
 	self:update_game_object(dt)
 end
 
-function Board:get_adjacent_tiles(tile)
-	local adjacent_tiles = {}
-
-	for i = -1, 1 do
-		for j = -1, 1 do
-			local row = tile.row + i
-			local col = tile.col + j
-
-			if not (i == 0 and j == 0) and self.tile_map[row] and self.tile_map[row][col] then
-				table.insert(adjacent_tiles, self.tile_map[row][col])
-			end
-		end
-	end
-
-	return adjacent_tiles
-end
-
 -- check if tile matches requirements, return tile if yes, return nil in all other cases
 function Board:valid_tile_for_building(building)
 	local selected_tile = nil
@@ -96,25 +79,24 @@ function Board:trigger_buildings()
 	-- go through each stage, go through all tiles' buildings and apply each stage
 	local stages = { "modifiers", "bonus", "secrets" }
 
-	local delay = 0.1
-	for _, stage in ipairs(stages) do
-		for i = 1, self.rows do
-			for j = 1, self.columns do
-				index = i * self.rows + j
-				trigger:after(i * sel)
-				local tile = self.tiles[i * self.rows + j]
-				tile.spring:pull(0.2, 200, 10)
-				local building = tile.holding
-				if building then
-					-- do building thing
-					building:apply({
-						stage = stage,
-						tile = tile,
-						adjacent_tiles = self:get_adjacent_tiles(tile),
-					})
-				end
+	local delay = 0.002
+	for j, stage in ipairs(stages) do
+		trigger:after((j - 1) * (delay * #self.tiles), function()
+			for i = 1, #self.tiles do
+				trigger:after(i * delay, function()
+					local tile = self.tiles[i]
+					tile.spring:pull(0.1, 200, 10)
+					local building = tile.holding
+					if building then
+						building:apply({
+							stage = stage,
+							tile = tile,
+							adjacent_tiles = self:get_adjacent_tiles(tile),
+						})
+					end
+				end)
 			end
-		end
+		end)
 	end
 end
 
@@ -126,4 +108,21 @@ end
 function Board:draw()
 	graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
 	graphics.pop()
+end
+
+function Board:get_adjacent_tiles(tile)
+	local adjacent_tiles = {}
+
+	for i = -1, 1 do
+		for j = -1, 1 do
+			local row = tile.row + i
+			local col = tile.col + j
+
+			if not (i == 0 and j == 0) and self.tile_map[row] and self.tile_map[row][col] then
+				table.insert(adjacent_tiles, self.tile_map[row][col])
+			end
+		end
+	end
+
+	return adjacent_tiles
 end

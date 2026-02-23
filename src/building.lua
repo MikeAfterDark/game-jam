@@ -258,6 +258,9 @@ end
 
 function Building:apply(context)
 	print("applying: ", context.stage, self.type.name)
+	trigger:after(1, function()
+		print("done applying", context.stage, self.type.name)
+	end)
 end
 
 function Building:on_mouse_enter()
