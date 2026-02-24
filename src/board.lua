@@ -78,26 +78,29 @@ end
 function Board:trigger_buildings()
 	-- go through each stage, go through all tiles' buildings and apply each stage
 	local stages = { "modifiers", "bonus", "secrets" }
-
-	local delay = 0.002
-	for j, stage in ipairs(stages) do
-		trigger:after((j - 1) * (delay * #self.tiles), function()
-			for i = 1, #self.tiles do
-				trigger:after(i * delay, function()
-					local tile = self.tiles[i]
-					tile.spring:pull(0.1, 200, 10)
-					local building = tile.holding
-					if building then
-						building:apply({
-							stage = stage,
-							tile = tile,
-							adjacent_tiles = self:get_adjacent_tiles(tile),
-						})
-					end
-				end)
-			end
-		end)
+	local results = { order = {} }
+	for _, stage in ipairs(stages) do
+		table.insert(results.order, stage)
+		results[stage] = {}
 	end
+
+	for _, stage in ipairs(stages) do
+		for i = 1, #self.tiles do
+			local tile = self.tiles[i]
+			local building = tile.holding
+			if building then
+				table.insert(results[stage], {
+					building = building,
+					results = building:apply({
+						stage = stage,
+						tile = tile,
+						adjacent_tiles = self:get_adjacent_tiles(tile),
+					}),
+				})
+			end
+		end
+	end
+	return results
 end
 
 function Board:place(building, tile)

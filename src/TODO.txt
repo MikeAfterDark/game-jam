@@ -1,8 +1,9 @@
 TODO:
 - next_turn(), game phases
-    - async/await for letting objects take however long they need to do their thing
-    - game.bord:trigger_buildings()
-    - game.board:trigger_Event(game.game_state.event)
+    [x] [logic] game.board:trigger_buildings()
+    - [logic] game.board:trigger_Event(game.game_state.event)
+    - [visuals] buildings 
+    - [visuals] events
 - buy new shop slots
 - events (earth split)
 - gold/bonuses

@@ -107,6 +107,7 @@ function Game:on_enter(from, args)
 			rows = num_tiles,
 			columns = num_tiles,
 		})
+
 		self.shop = Shop({
 			group = self.main,
 			layer = ui_interaction_layer.Game,
@@ -123,31 +124,59 @@ function Game:on_enter(from, args)
 			max_slots = 6,
 			level = 1,
 		})
-		self.gold = { total = 5, gold_per_interest = 3 }
-		self.game_state = { turn = 1, phase = Game_Loop[1], phase_index = 1, event = Events.Calm }
+
+		self.resources = {
+			gold = {
+				total = 5,
+				gold_per_interest = 3,
+			},
+			people = { alive = 0 },
+		}
+
+		self.game_state = {
+			turn = 1,
+			phase = Game_Loop[1],
+			phase_index = 1,
+			event = Events.Calm,
+		}
 		self.players_turn = true
 		-- self.shop:populate()
 	else -- rebuild run from savestate
 	end
 
-	-- self.next_button = collect_into(
-	-- 	self.game_ui_elements,
-	-- 	Button({
-	-- 		group = self.ui,
-	-- 		layer = ui_interaction_layer.Game,
-	-- 		x = gw * 0.9,
-	-- 		y = gh * 0.9,
-	-- 		-- w = gw * 0.15,
-	-- 		button_text = "end turn",
-	-- 		fg_color = "bg",
-	-- 		bg_color = "fg",
-	-- 		action = function(b)
-	-- 			-- [SFX]
-	-- 			print("    next pressed")
-	-- 			self:next_turn(true) -- TODO: remove
-	-- 		end,
-	-- 	})
-	-- )
+	collect_into(
+		self.game_ui_elements,
+		Button({
+			group = self.ui,
+			layer = ui_interaction_layer.Game,
+			x = gw * 0.9,
+			y = gh * 0.88,
+			button_text = "reroll",
+			fg_color = "bg",
+			bg_color = "fg",
+			action = function(b)
+				-- [SFX]
+				self.shop:reroll()
+			end,
+		})
+	)
+
+	collect_into(
+		self.game_ui_elements,
+		Button({
+			group = self.ui,
+			layer = ui_interaction_layer.Game,
+			x = gw * 0.9,
+			y = gh * 0.94,
+			button_text = "end turn",
+			fg_color = "bg",
+			bg_color = "fg",
+			action = function(b)
+				-- [SFX]
+				self:next_turn()
+			end,
+		})
+	)
 
 	collect_into( --
 		self.game_ui_elements,
@@ -168,13 +197,33 @@ Phases = {
 		game.players_turn = true
 		print("shop")
 	end,
+
 	Pieces = function(game)
 		print("pieces")
-		game.board:trigger_buildings()
-		game:next_turn(true)
+
+		local building_triggers = game.board:trigger_buildings()
+
+		game._pending_results = {}
+		game._pending_index = 1
+		game._pending_timer = 0
+		game._processing_triggers = true
+
+		for _, stage in ipairs(building_triggers.order) do
+			for _, proc in ipairs(building_triggers[stage]) do
+				for _, result in ipairs(proc.results) do
+					if result.success then
+						table.insert(game._pending_results, {
+							building = proc.building,
+							effects = result.effects,
+						})
+					end
+				end
+			end
+		end
 	end,
+
 	Event = function(game)
-		game.game_state.event.current_countdown = game.game_state.event.current_countdown or game.game_state.event.countdown -- failsafe
+		game.game_state.event.current_countdown = game.game_state.event.current_countdown or game.game_state.event.countdown
 		print("event: " .. game.game_state.event.name .. ", countdown: " .. game.game_state.event.current_countdown)
 
 		if game.game_state.event.current_countdown > 0 then
@@ -194,7 +243,8 @@ Events = {
 		name = "calm",
 		countdown = 2,
 	},
-	Fissure = { -- earthquake, in a line converts tiles to lava and destroys buildings that can't handle 'shake' and lava traits
+	Fissure = { -- earthquake, in a line converts tiles to lava and destroys buildings that
+		-- can't handle 'shake' and lava traits
 		name = "fissue",
 		countdown = 4,
 	},
@@ -207,7 +257,7 @@ function Game:next_turn(force)
 	end
 	self.players_turn = false
 
-	trigger:after(1, function()
+	trigger:after(0.5, function()
 		-- goto next phase, proc next phase,
 		self.game_state.phase_index = (self.game_state.phase_index % #Game_Loop) + 1
 		self.game_state.phase = Game_Loop[self.game_state.phase_index]
@@ -272,25 +322,54 @@ function Game:update(dt)
 			print("    next pressed")
 			self:next_turn(true) -- TODO: remove
 		end
-	end
 
-	if input.m1.pressed then
-		-- 	local mouse_x, mouse_y = self.main:get_mouse_position()
-		-- 	print("Mouse at: (" .. mouse_x .. ", " .. mouse_y .. ")")
-	end
+		if input.select.released and game_mouse.holding and not game_mouse.holding.dead then
+			local building = game_mouse.holding -- temp var for clarity
 
-	if input.select.released and game_mouse.holding and not game_mouse.holding.dead then
-		local building = game_mouse.holding -- temp var for clarity
-
-		local valid_tile, errors = self.board:valid_tile_for_building(building)
-		if valid_tile then
-			self.board:place(building, valid_tile)
-			self.shop:clear_slot(building)
-		else
-			print(table.concat(errors, ", "))
-			building:return_to_origin()
+			local valid_tile, errors = self.board:valid_tile_for_building(building)
+			if valid_tile then
+				self.board:place(building, valid_tile)
+				self.shop:clear_slot(building)
+			else
+				print(table.concat(errors, ", "))
+				building:return_to_origin()
+			end
+			game_mouse.holding = nil
 		end
-		game_mouse.holding = nil
+	end
+
+	if self._processing_triggers then -- for processing Pieces event
+		self._pending_timer = self._pending_timer - dt
+
+		if self._pending_timer <= 0 then
+			local item = self._pending_results[self._pending_index]
+
+			if item then
+				-- Apply one result
+				item.building.spring:pull(0.2, 200, 10)
+
+				local gold = item.effects.gold or 0
+				local people = item.effects.people or 0
+
+				self.resources.gold.total = self.resources.gold.total + gold
+				self.resources.people.alive = self.resources.people.alive + people
+
+				if people < 0 then
+					self.resources.people.dead = self.resources.people.dead - people
+				end
+
+				print("Applying: " .. table.tostring(item.effects))
+
+				-- Move to next
+				self._pending_index = self._pending_index + 1
+				self._pending_timer = 0.4 -- delay between each animation
+			else
+				-- Done processing all
+				self._processing_triggers = false
+				print(table.tostring(self.resources))
+				self:next_turn(true)
+			end
+		end
 	end
 
 	if game_mouse.holding then

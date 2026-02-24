@@ -12,7 +12,8 @@ Building_Type = {
 				{ type = "no_adjacent_buildings" },
 			},
 			bonus = {
-				{ type = "no_adjacent_buildings", amount = 5 },
+				{ type = "no_adjacent_buildings", effects = { gold = 5 } },
+				{ type = "on_solid_tile", effects = { gold = 3, people = 1 } },
 			},
 		},
 	},
@@ -126,7 +127,7 @@ RuleLogic = {
 				return false, error .. ", has a " .. tile.holding.type.name
 			end
 		end
-		return true
+		return true, error
 	end,
 
 	-- { type = "adjacent_to_any_building_of_type", values = { "castle", "farm" } },
@@ -134,7 +135,7 @@ RuleLogic = {
 		local error = "needs to be adjacent to any building of type: " .. table.concat(rule.values, ", ")
 		for _, tile in ipairs(context.adjacent_tiles) do
 			if tile.holding and table.contains(rule.values, tile.holding.name) then
-				return true
+				return true, error
 			end
 		end
 		return false, error
@@ -156,11 +157,8 @@ RuleLogic = {
 			end
 		end
 
-		if #missing == 0 then
-			return true
-		end
-
-		return false, "needs to be adjacent to the building" .. #missing > 1 and "s" .. ": " .. table.concat(missing, ", ")
+		local error = "needs to be adjacent to the building" .. #missing > 1 and "s" .. ": " .. table.concat(missing, ", ")
+		return #missing == 0, error
 	end,
 
 	-- { type = "adjacent_to_any_tile_of_type", values = { "grass", "swamp" } },
@@ -168,7 +166,7 @@ RuleLogic = {
 		local error = "needs to be adjacent to any tile of type: " .. table.concat(rule.values, ", ")
 		for _, tile in ipairs(context.adjacent_tiles) do
 			if table.contains(rule.values, tile.type.name) then
-				return true
+				return true, error
 			end
 		end
 		return false, error
@@ -190,11 +188,8 @@ RuleLogic = {
 			end
 		end
 
-		if #missing == 0 then
-			return true
-		end
-
-		return false, "needs to be adjacent to the tile" .. #missing > 1 and "s" .. ": " .. table.concat(missing, ", ")
+		local error = "needs to be adjacent to the tile" .. #missing > 1 and "s" .. ": " .. table.concat(missing, ", ")
+		return #missing == 0, error
 	end,
 }
 
@@ -256,11 +251,17 @@ function Building:is_valid_placement(context)
 	return #errors == 0, errors
 end
 
-function Building:apply(context)
-	print("applying: ", context.stage, self.type.name)
-	trigger:after(1, function()
-		print("done applying", context.stage, self.type.name)
-	end)
+function Building:apply(context, on_complete)
+	local results = {}
+	if self.type.rules[context.stage] then
+		-- print("applying:", context.stage, self.type.name)
+
+		for _, rule in ipairs(self.type.rules[context.stage]) do
+			local passed, error = RuleLogic[rule.type](context, rule)
+			table.insert(results, { success = passed, error = error, effects = rule.effects })
+		end
+	end
+	return results
 end
 
 function Building:on_mouse_enter()
