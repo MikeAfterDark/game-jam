@@ -38,6 +38,8 @@ Building_Type = {
 			placement = {
 				{ type = "on_solid_tile" },
 				{ type = "on_any_tile_type", values = { "grass", "blue grass" } },
+				{ type = "on_tile_with_any_trait", values = { "biology", "wet" } },
+				{ type = "on_tile_with_none of_traits", values = { "dry", "cold" } },
 			},
 			bonus = {},
 		},
@@ -262,6 +264,15 @@ function Building:apply(context, on_complete)
 		end
 	end
 	return results
+end
+
+function Building:can_survive(conditions)
+	-- check if can be placed on tile, and if can survive the conditions in effects
+	return false
+end
+
+function Building:demolish()
+	self.dead = true
 end
 
 function Building:on_mouse_enter()

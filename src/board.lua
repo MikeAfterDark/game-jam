@@ -50,6 +50,46 @@ function Board:init(args)
 	end
 end
 
+function Board:mark_line(args)
+	local width = args.width or 1
+	local r = args.r or (math.pi * 2 * random:float(0, 1))
+
+	-- Random pivot in board space
+	local pivot_row = random:int(1, self.rows)
+	local pivot_col = random:int(1, self.columns)
+	print("marking: ", width, r, pivot_row, pivot_col)
+
+	-- Direction vector in board space
+	local dir_x = math.cos(r)
+	local dir_y = math.sin(r)
+
+	-- Normalize direction (important for correct width)
+	local len = math.sqrt(dir_x * dir_x + dir_y * dir_y)
+	dir_x = dir_x / len
+	dir_y = dir_y / len
+
+	-- Half width (so total thickness = width)
+	local half_width = width * 0.5
+
+	for _, tile in ipairs(self.tiles) do
+		local dx = tile.col - pivot_col
+		local dy = tile.row - pivot_row
+
+		-- Perpendicular distance to infinite line
+		local perp_dist = math.abs(dx * dir_y - dy * dir_x)
+
+		tile.marked = perp_dist <= half_width
+	end
+end
+
+function Board:convert_marked_tiles(args)
+	local target = args.target
+
+	for _, tile in ipairs(self.tiles) do
+		tile:convert_marked(args)
+	end
+end
+
 function Board:update(dt)
 	self:update_game_object(dt)
 end

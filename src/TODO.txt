@@ -1,13 +1,15 @@
-TODO:
+TODO: Legend: [X] = done, [\] partially done
+
+- display which phase we're in (text for now)
 - next_turn(), game phases
-    [x] [logic] game.board:trigger_buildings()
-    - [logic] game.board:trigger_Event(game.game_state.event)
-    - [visuals] buildings 
-    - [visuals] events
+    [X] [logic] game.board:trigger_buildings()
+    [\] [logic] game.board:trigger_event(game.game_state.event)
+    [\] [visuals] buildings 
+    [\] [visuals] events
 - buy new shop slots
 - events (earth split)
-- gold/bonuses
-- saving/loading (care, web builds might break when trying to load a non-existent file run_v4.txt)
+[\] gold/bonuses
+- saving/loading (careful, web builds might break when trying to load a non-existent file run_v4.txt)
 
 
 - refactor the rules to fit the game design
@@ -17,3 +19,5 @@ QoL:
 - While holding a building, highlight all valid placement areas and how much bonus would be
 - Star background, or anything really, should be moving to avoid boredom
 - 'no adjacent buildings' report all adjacent found
+- when spawning in the board, bring them from offscreen with a random delay to fill the board
+- earthquake particle effects when tiles/buildings are destroyed

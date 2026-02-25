@@ -137,7 +137,7 @@ function Game:on_enter(from, args)
 			turn = 1,
 			phase = Game_Loop[1],
 			phase_index = 1,
-			event = Events.Calm,
+			event = Events.Fissure,
 		}
 		self.players_turn = true
 		-- self.shop:populate()
@@ -223,30 +223,52 @@ Phases = {
 	end,
 
 	Event = function(game)
-		game.game_state.event.current_countdown = game.game_state.event.current_countdown or game.game_state.event.countdown
-		print("event: " .. game.game_state.event.name .. ", countdown: " .. game.game_state.event.current_countdown)
+		local state = game.game_state
+		local event = state.event
 
-		if game.game_state.event.current_countdown > 0 then
-			game.game_state.event.current_countdown = game.game_state.event.current_countdown - 1
-		else
-			print("triggering " .. game.game_state.event.name .. " event")
-			-- game.board:trigger_event(game.game_state.event)
-			game.game_state.event = random:table(Events)
-			game.game_state.event.current_countdown = game.game_state.event.countdown
+		event.current_countdown = event.current_countdown or event.countdown
+		if not event.prepared then
+			event.prep(game)
+			event.prepared = true
 		end
+
+		print("event: " .. event.name .. ", countdown: " .. event.current_countdown)
+
+		if event.current_countdown > 0 then
+			event.current_countdown = event.current_countdown - 1
+		else
+			print("triggering " .. event.name .. " event")
+			event.trigger(game)
+			-- game.board:trigger_event(event)
+			state.event = random:table(Events)
+			state.event.current_countdown = state.event.countdown
+			event.prepared = false
+		end
+
 		game:next_turn(true)
 	end,
 }
 
 Events = {
-	Calm = { -- nothing happens
-		name = "calm",
-		countdown = 2,
-	},
+	-- Calm = { -- nothing happens
+	-- 	name = "calm",
+	-- 	countdown = 2,
+	-- 	prep = function(game) -- choose and mark the areas/targets that'll be affected
+	-- 	end,
+	-- 	trigger = function(game) -- trigger the logic, save the result to a list that'll be processed in Game:update()
+	-- 	end,
+	-- },
 	Fissure = { -- earthquake, in a line converts tiles to lava and destroys buildings that
 		-- can't handle 'shake' and lava traits
-		name = "fissue",
-		countdown = 4,
+		name = "fissure",
+		countdown = 1,
+		prep = function(game)
+			game.board:mark_line({ width = 3, r = math.pi * 2 * random:float() })
+		end,
+		trigger = function(game)
+			camera:shake(20, 0.6)
+			game.board:convert_marked_tiles({ target = Tile_Type.Lava, effects = { "shake" } })
+		end,
 	},
 }
 Game_Loop = { Phases.Shop, Phases.Pieces, Phases.Event }
@@ -257,7 +279,7 @@ function Game:next_turn(force)
 	end
 	self.players_turn = false
 
-	trigger:after(0.5, function()
+	trigger:after(0.1, function()
 		-- goto next phase, proc next phase,
 		self.game_state.phase_index = (self.game_state.phase_index % #Game_Loop) + 1
 		self.game_state.phase = Game_Loop[self.game_state.phase_index]

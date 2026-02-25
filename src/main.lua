@@ -54,6 +54,7 @@ function init()
 	-- Sound(music_jam_folder .. "UI Hover 1.mp3", sfx_tag)
 	stim_cave_sfx = nil --Sound("sans-voice.mp3", sfx_tag)
 	sfx = {
+		earthquake = Sound("temp/earthquake-end.mp3", sfx_tag),
 		building_mouse_enter = Sound(sfx_folder .. "building mouse enter.flac", sfx_tag),
 		extra = Sound(sfx_folder .. "extra.flac", sfx_tag),
 		extra2 = Sound(sfx_folder .. "extra 2.flac", sfx_tag),
@@ -96,6 +97,7 @@ function init()
 	local tiles_folder = "tiles/"
 	tile_sprites = {
 		cover = { Image(tiles_folder .. "tile_cover") },
+		large_cover = { Image(tiles_folder .. "large_tile_cover") },
 
 		asteroid = { Image(tiles_folder .. "asteroid") },
 		blue_grass = { Image(tiles_folder .. "blue_grass") },

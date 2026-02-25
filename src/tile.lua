@@ -110,6 +110,7 @@ function Tile:init(args)
 	self.shape = Diamond(self.x, self.y - (self.size * 0.1), self.size * 1.25, self.size * 1.08) -- for mouse interaction
 	self.interact_with_mouse = true
 	self.selected = false
+	self.marked = false
 	self.type = self.type or Tile_Type.Default
 end
 
@@ -139,8 +140,27 @@ function Tile:draw()
 		tile_sprites.cover[1]:draw(self.x, self.y, 0, scale, scale, 0, 0, color)
 	end
 
+	if self.marked then
+		local color = Color(1.0, 0.3, 0.1, 0.8)
+		tile_sprites.large_cover[1]:draw(self.x, self.y - 6, 0, scale, scale, 0, 0, color)
+	end
+
 	-- self.shape:draw(self.color)
 	graphics.pop()
+end
+
+function Tile:convert_marked(args)
+	if self.marked then
+		trigger:after(random:float() * 0.5, function()
+			sfx.earthquake:play({ pitch = random:float(0.95, 1.05), volume = 0.1 })
+			self.type = args.target
+			self.marked = false
+			if self.holding and not self.holding:can_survive({ tile = self, effects = args.effects }) then
+				self.holding:demolish()
+				self.holding = nil
+			end
+		end)
+	end
 end
 
 function Tile:on_mouse_enter()
