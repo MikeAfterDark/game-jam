@@ -135,16 +135,20 @@ function Game:on_enter(from, args)
 
 		self.game_state = {
 			turn = 1,
-			phase = Game_Loop[1],
+			phase = Game_Loop[1](),
 			phase_index = 1,
-			event = Events.Fissure,
+			event = Events.Fissure(),
 		}
+
+		self.game_state.phase:run(self)
 		self.players_turn = true
+		self.game_state.in_events = false
+		self.events = {}
 		-- self.shop:populate()
 	else -- rebuild run from savestate
 	end
 
-	collect_into(
+	self.reroll_button = collect_into(
 		self.game_ui_elements,
 		Button({
 			group = self.ui,
@@ -161,7 +165,7 @@ function Game:on_enter(from, args)
 		})
 	)
 
-	collect_into(
+	self.end_turn_button = collect_into(
 		self.game_ui_elements,
 		Button({
 			group = self.ui,
@@ -178,74 +182,126 @@ function Game:on_enter(from, args)
 		})
 	)
 
-	collect_into( --
+	self.phase_text = collect_into(
 		self.game_ui_elements,
 		Text2({
 			group = self.ui,
 			x = gw * 0.23,
 			y = gh * 0.1,
 			lines = {
-				{ text = "[wavy_mid]Heavily incomplete, WIP, admire", font = pixul_font },
-				{ text = "[wavy_mid]the art and music for now:", font = pixul_font },
+				{ text = self.game_state.phase.name, font = pixul_font },
 			},
 		})
 	)
+
+	self.resources_text = collect_into(
+		self.game_ui_elements,
+		Text2({
+			group = self.ui,
+			x = gw * 0.8,
+			y = gh * 0.1,
+			lines = {
+				{ text = "[yellow]Gold: " .. self.resources.gold.total .. "     [green]People: " .. self.resources.people.alive, font = pixul_font },
+			},
+		})
+	)
+	self._pending_tile_results = {}
 end
 
 Phases = {
-	Shop = function(game)
-		game.players_turn = true
-		print("shop")
+	Shop = function()
+		local phase = {
+			name = "Shop",
+			background_color = Color(0.1, 0.1, 0.1, 0.3),
+		}
+
+		function phase:run(game)
+			print(self.name)
+			game.players_turn = true
+		end
+
+		return phase
 	end,
 
-	Pieces = function(game)
-		print("pieces")
+	Pieces = function()
+		local phase = {
+			name = "Pieces",
+			background_color = Color(0.6, 0.9, 0.3, 0.3),
+		}
 
-		local building_triggers = game.board:trigger_buildings()
+		function phase:run(game)
+			print(self.name)
 
-		game._pending_results = {}
-		game._pending_index = 1
-		game._pending_timer = 0
-		game._processing_triggers = true
+			local building_triggers = game.board:trigger_buildings()
 
-		for _, stage in ipairs(building_triggers.order) do
-			for _, proc in ipairs(building_triggers[stage]) do
-				for _, result in ipairs(proc.results) do
-					if result.success then
-						table.insert(game._pending_results, {
-							building = proc.building,
-							effects = result.effects,
-						})
+			game._pending_results = {}
+			game._pending_index = 1
+			game._pending_timer = 0
+			game._processing_triggers = true
+
+			for _, stage in ipairs(building_triggers.order) do
+				for _, proc in ipairs(building_triggers[stage]) do
+					for _, result in ipairs(proc.results) do
+						if result.success then
+							table.insert(game._pending_results, {
+								building = proc.building,
+								effects = result.effects,
+							})
+						end
 					end
 				end
 			end
 		end
+
+		return phase
 	end,
 
-	Event = function(game)
-		local state = game.game_state
-		local event = state.event
+	Event = function()
+		local phase = {
+			name = "Event",
+			background_color = Color(0.9, 0.1, 0.1, 0.2),
+		}
 
-		event.current_countdown = event.current_countdown or event.countdown
-		if not event.prepared then
-			event.prep(game)
-			event.prepared = true
+		function phase:run(game)
+			print(self.name)
+
+			local state = game.game_state
+			local events = game.events
+
+			local new_event = random:table(Events)()
+			new_event.current_countdown = state.event.countdown
+			new_event.prepared = false
+			table.insert(events, new_event)
+			print("new event: " .. new_event.name .. ", countdown: " .. new_event.current_countdown)
+
+			for i, event in ipairs(events) do
+				event.current_countdown = event.current_countdown or event.countdown
+				if not event.prepared then
+					event:prep(game)
+					event.prepared = true
+				end
+
+				if event.current_countdown > 0 then
+					event.current_countdown = event.current_countdown - 1
+				else
+					print("triggering " .. event.name .. " event")
+					state.in_events = true
+					event.complete = false
+					event.triggered = true
+					event:trigger(game)
+				end
+
+				if not event.triggered then
+					print("event: " .. event.name .. ", countdown: " .. event.current_countdown)
+				end
+			end
+
+			if not state.in_events then
+				game:next_turn(true)
+			end
 		end
 
-		print("event: " .. event.name .. ", countdown: " .. event.current_countdown)
-
-		if event.current_countdown > 0 then
-			event.current_countdown = event.current_countdown - 1
-		else
-			print("triggering " .. event.name .. " event")
-			event.trigger(game)
-			-- game.board:trigger_event(event)
-			state.event = random:table(Events)
-			state.event.current_countdown = state.event.countdown
-			event.prepared = false
-		end
-
-		game:next_turn(true)
+		return phase
 	end,
 }
 
@@ -258,19 +314,57 @@ Events = {
 	-- 	trigger = function(game) -- trigger the logic, save the result to a list that'll be processed in Game:update()
 	-- 	end,
 	-- },
-	Fissure = { -- earthquake, in a line converts tiles to lava and destroys buildings that
-		-- can't handle 'shake' and lava traits
-		name = "fissure",
-		countdown = 1,
-		prep = function(game)
-			game.board:mark_line({ width = 3, r = math.pi * 2 * random:float() })
-		end,
-		trigger = function(game)
+
+	Fissure = function()
+		local event = {
+			id = random:uid(),
+			name = "fissure",
+			countdown = 1,
+			tiles = {},
+		}
+
+		function event:prep(game)
+			self.tiles = game.board:mark_line({
+				width = 3,
+				r = math.pi * 2 * random:float(),
+				event_id = self.id,
+			})
+		end
+
+		function event:trigger(game)
 			camera:shake(20, 0.6)
-			game.board:convert_marked_tiles({ target = Tile_Type.Lava, effects = { "shake" } })
-		end,
-	},
+
+			for i, tile in ipairs(self.tiles) do
+				trigger:after(random:float() * 0.1, function()
+					tile:bounce(30, 0.2)
+					trigger:after(0.2, function()
+						tile:convert_tile({
+							event_id = self.id,
+							tiles = tiles,
+							target = Tile_Type.Lava,
+							effects = { "shake" },
+						})
+					end)
+				end)
+			end
+		end
+
+		function event:update(game) -- so that each event can control the visuals of what it does
+			if not self.complete then
+				local all_done = true
+				for i, tile in ipairs(self.tiles) do
+					if table.contains(tile.event_ids, self.id) then
+						all_done = false
+					end
+				end
+				self.complete = all_done
+			end
+		end
+
+		return event
+	end,
 }
+
 Game_Loop = { Phases.Shop, Phases.Pieces, Phases.Event }
 
 function Game:next_turn(force)
@@ -279,11 +373,19 @@ function Game:next_turn(force)
 	end
 	self.players_turn = false
 
-	trigger:after(0.1, function()
-		-- goto next phase, proc next phase,
-		self.game_state.phase_index = (self.game_state.phase_index % #Game_Loop) + 1
-		self.game_state.phase = Game_Loop[self.game_state.phase_index]
-		self.game_state.phase(self)
+	-- goto next phase, proc next phase,
+	self.game_state.phase_index = (self.game_state.phase_index % #Game_Loop) + 1
+	self.game_state.phase = Game_Loop[self.game_state.phase_index]()
+	self.phase_text:set_text({
+		{ text = self.game_state.phase.name, font = pixul_font },
+	})
+
+	local color = self.game_state.phase.background_color
+	trigger:tween(0.2, background_color, { r = color.r, g = color.g, b = color.g, a = color.a }, math.linear)
+
+	trigger:after(0.5, function()
+		print("running phase")
+		self.game_state.phase:run(self)
 	end)
 end
 
@@ -291,6 +393,14 @@ function Game:update(dt)
 	play_music({ volume = 0.3 })
 	if self.song_info_text then
 		self.song_info_text:update(dt)
+	end
+
+	if self.phase_text then
+		self.phase_text:update(dt)
+	end
+
+	if self.resources_text then
+		self.resources_text:update(dt)
 	end
 
 	if not self.in_pause and not self.stuck and not self.won then
@@ -309,7 +419,6 @@ function Game:update(dt)
 		else
 			local layer = main.ui_layer_stack:peek()
 
-			-- random:table(menu_loading):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 			scene_transition(self, {
 				x = gw / 2,
 				y = gh / 2,
@@ -336,13 +445,18 @@ function Game:update(dt)
 		self.credits:update(0)
 	end
 
+	self.reroll_button.locked = not self.players_turn
+	self.end_turn_button.locked = not self.players_turn
+
+	--
+	-- Player actions
+	--
 	if self.players_turn and on_current_ui_layer(self) then
 		if input.reroll.pressed then
 			self.shop:reroll()
 		end
 		if input.next_turn.pressed then
-			print("    next pressed")
-			self:next_turn(true) -- TODO: remove
+			self:next_turn()
 		end
 
 		if input.select.released and game_mouse.holding and not game_mouse.holding.dead then
@@ -360,14 +474,22 @@ function Game:update(dt)
 		end
 	end
 
-	if self._processing_triggers then -- for processing Pieces event
+	if game_mouse.holding then
+		local mouse_x, mouse_y = self.main:get_mouse_position()
+		game_mouse.holding.x = mouse_x
+		game_mouse.holding.y = mouse_y
+	end
+
+	--
+	-- for processing Pieces event
+	--
+	if self._processing_triggers then
 		self._pending_timer = self._pending_timer - dt
 
 		if self._pending_timer <= 0 then
 			local item = self._pending_results[self._pending_index]
 
 			if item then
-				-- Apply one result
 				item.building.spring:pull(0.2, 200, 10)
 
 				local gold = item.effects.gold or 0
@@ -380,24 +502,52 @@ function Game:update(dt)
 					self.resources.people.dead = self.resources.people.dead - people
 				end
 
+				-- self.resources_text.spring:pull(0.1, 200, 10)
+				-- self.resources_text:set_text({
+				self.resources_text:set_text({
+					{
+						text = "[yellow]Gold: " .. self.resources.gold.total .. "     [green]People: " .. self.resources.people.alive,
+						font = pixul_font,
+					},
+				})
+
 				print("Applying: " .. table.tostring(item.effects))
+				self.board:automata_step() -- in case the building did anything to tiles
 
 				-- Move to next
 				self._pending_index = self._pending_index + 1
-				self._pending_timer = 0.4 -- delay between each animation
+				self._pending_timer = 0.3 -- delay between each animation
 			else
 				-- Done processing all
 				self._processing_triggers = false
-				print(table.tostring(self.resources))
+				-- print(table.tostring(self.resources))
 				self:next_turn(true)
 			end
 		end
 	end
 
-	if game_mouse.holding then
-		local mouse_x, mouse_y = self.main:get_mouse_position()
-		game_mouse.holding.x = mouse_x
-		game_mouse.holding.y = mouse_y
+	--
+	-- for processing Tile events
+	--
+	if self.game_state.in_events then
+		table.delete(self.events, function(v)
+			v:update()
+			return v.complete
+		end)
+
+		local done = true
+		for i, event in ipairs(self.events) do
+			if event.triggered and not event.complete then
+				done = false
+			end
+		end
+
+		if done then
+			print("event finished")
+			self.game_state.in_events = false
+			self.board:automata_step()
+			self:next_turn(true)
+		end
 	end
 
 	self:update_game_object(dt * slow_amount)

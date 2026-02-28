@@ -45,10 +45,11 @@ function renderer_init()
 	bg_off = Color(46, 46, 46)
 	bg_gradient = GradientImage("vertical", Color(128, 128, 128, 0), Color(0, 0, 0, 0.9))
 
-	graphics.set_background_color(bg[0])
+	-- graphics.set_background_color(bg[0])
 	graphics.set_color(fg[0])
 
 	graphics.set_background_color(black[0])
+	background_color = black[0]:clone()
 	slow_amount = 1
 	music_slow_amount = 1
 
@@ -119,6 +120,7 @@ function renderer_draw(draw_action, shadow_draw_action)
 
 		-- bg_gradient:draw(gw / 2, gh / 2, global_game_width, global_game_height)
 		-- bg_gradient:draw(gw / 2, gh * 1.5, global_game_width, global_game_height)
+		graphics.rectangle(gw / 2, gh / 2, gw, gh, 0, 0, background_color)
 		camera:detach()
 	end)
 
@@ -140,7 +142,7 @@ function renderer_draw(draw_action, shadow_draw_action)
 	end)
 
 	local x, y = 0, 0
-	-- background_canvas:draw(x, y, 0, sx, sy)
+	background_canvas:draw(x, y, 0, sx, sy)
 
 	local shadow_offset = 2.5
 	shadow_canvas:draw(x + shadow_offset * sx, y + shadow_offset * sy, 0, sx, sy)

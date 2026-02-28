@@ -165,6 +165,20 @@ function table.pop(t)
   return table.remove(t, #t), t
 end
 
+-- Removes value from table and returns it
+-- t = {1, 2, 3, 4}
+-- table.pop(t, 3) -> {1, 2, 4}
+function table.pop_item(t, v)
+    for i = 1, #t do
+        if t[i] == v then
+            local removed = t[i]
+            table.remove(t, i)
+            return removed
+        end
+    end
+    return nil
+end
+
 
 -- Deletes all instances of value v
 -- t = {1, 1, 2, 3, 2, 3, 4, 4}

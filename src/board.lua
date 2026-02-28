@@ -1,5 +1,6 @@
 Board = Object:extend()
 Board:implement(GameObject)
+
 function Board:init(args)
 	self:init_game_object(args)
 
@@ -23,78 +24,81 @@ function Board:init(args)
 		y = self.tile_size * depth_scale,
 	}
 
-	-- back to front ordering
-	for sum = 2, self.rows + self.columns do
-		for row = 1, self.rows do
-			local col = sum - row
+	for row = 1, self.rows do
+		for col = 1, self.columns do
+			local screen_x = self.x + (col - 1) * x_axis.x + (row - 1) * y_axis.x
+			local screen_y = self.y + (col - 1) * x_axis.y + (row - 1) * y_axis.y - screen_vertical_offset
 
-			if col >= 1 and col <= self.columns then
-				local screen_x = self.x + (col - 1) * x_axis.x + (row - 1) * y_axis.x
-				local screen_y = self.y + (col - 1) * x_axis.y + (row - 1) * y_axis.y - screen_vertical_offset
+			local tile = Tile({
+				group = self.group,
+				layer = self.layer,
+				x = screen_x,
+				y = screen_y,
+				size = self.tile_size,
+				row = row,
+				col = col,
+				type = random:table(Tile_Type),
+			})
 
-				local tile = Tile({
-					group = self.group,
-					layer = self.layer,
-					x = screen_x,
-					y = screen_y,
-					size = self.tile_size,
-					angle = math.pi * 0.25,
-					row = row,
-					col = col,
-					type = random:table(Tile_Type),
-				})
-				self.tile_map[row][col] = tile
-				table.insert(self.tiles, tile)
-			end
+			self.tile_map[row][col] = tile
+			table.insert(self.tiles, tile)
 		end
 	end
+
+	self.automata = CellularAutomata({ board = self })
+	apply_cellular_automata_rules(self.automata)
+	self:automata_step()
+end
+
+function Board:automata_step()
+	self.automata:step()
 end
 
 function Board:mark_line(args)
 	local width = args.width or 1
 	local r = args.r or (math.pi * 2 * random:float(0, 1))
 
-	-- Random pivot in board space
 	local pivot_row = random:int(1, self.rows)
 	local pivot_col = random:int(1, self.columns)
-	print("marking: ", width, r, pivot_row, pivot_col)
 
-	-- Direction vector in board space
 	local dir_x = math.cos(r)
 	local dir_y = math.sin(r)
 
-	-- Normalize direction (important for correct width)
 	local len = math.sqrt(dir_x * dir_x + dir_y * dir_y)
 	dir_x = dir_x / len
 	dir_y = dir_y / len
 
-	-- Half width (so total thickness = width)
 	local half_width = width * 0.5
 
+	local tiles = {}
 	for _, tile in ipairs(self.tiles) do
 		local dx = tile.col - pivot_col
 		local dy = tile.row - pivot_row
-
-		-- Perpendicular distance to infinite line
 		local perp_dist = math.abs(dx * dir_y - dy * dir_x)
 
 		tile.marked = perp_dist <= half_width
+		if perp_dist <= half_width then
+			table.insert(tile.event_ids, args.event_id)
+			table.insert(tiles, tile)
+		end
 	end
+	return tiles
 end
 
-function Board:convert_marked_tiles(args)
-	local target = args.target
-
+function Board:get_tiles_marked_for_event(id)
+	local tiles = {}
 	for _, tile in ipairs(self.tiles) do
-		tile:convert_marked(args)
+		if table.contains(tile.event_ids, id) then
+			table.insert(tiles, tile)
+		end
 	end
+	return tiles
 end
 
 function Board:update(dt)
 	self:update_game_object(dt)
 end
 
--- check if tile matches requirements, return tile if yes, return nil in all other cases
 function Board:valid_tile_for_building(building)
 	local selected_tile = nil
 	for _, tile in ipairs(self.tiles) do
@@ -112,13 +116,14 @@ function Board:valid_tile_for_building(building)
 		tile = selected_tile,
 		adjacent_tiles = self:get_adjacent_tiles(selected_tile),
 	})
+
 	return valid and selected_tile or nil, errors
 end
 
 function Board:trigger_buildings()
-	-- go through each stage, go through all tiles' buildings and apply each stage
 	local stages = { "modifiers", "bonus", "secrets" }
 	local results = { order = {} }
+
 	for _, stage in ipairs(stages) do
 		table.insert(results.order, stage)
 		results[stage] = {}
@@ -140,6 +145,7 @@ function Board:trigger_buildings()
 			end
 		end
 	end
+
 	return results
 end
 
@@ -160,7 +166,6 @@ function Board:get_adjacent_tiles(tile)
 		for j = -1, 1 do
 			local row = tile.row + i
 			local col = tile.col + j
-
 			if not (i == 0 and j == 0) and self.tile_map[row] and self.tile_map[row][col] then
 				table.insert(adjacent_tiles, self.tile_map[row][col])
 			end

@@ -54,7 +54,7 @@ function ButtonBase:update(dt)
 end
 
 function ButtonBase:on_mouse_enter()
-	if not on_current_ui_layer(self) or (main.current.button_restriction and main.current:button_restriction()) or self.invis then
+	if not on_current_ui_layer(self) or (main.current.button_restriction and main.current:button_restriction()) or self.invis or self.locked then
 		return false
 	end
 
@@ -96,6 +96,10 @@ end
 function Button:update(dt)
 	ButtonBase.update(self, dt)
 	self.text:update(dt)
+
+	if self.locked then
+		self:on_mouse_exit()
+	end
 end
 
 function Button:draw()
@@ -117,7 +121,7 @@ function Button:draw()
 		graphics.set_line_width(1)
 	end
 
-	graphics.rectangle(self.x, self.y, self.shape.w, self.shape.h, 4, 4, _G[self.bg_color][0])
+	graphics.rectangle(self.x, self.y, self.shape.w, self.shape.h, 4, 4, self.locked and _G[self.fg_color][-3] or _G[self.bg_color][0])
 	self.text:draw(self.x, self.y + 5, 0, 1, 1)
 	graphics.pop()
 end

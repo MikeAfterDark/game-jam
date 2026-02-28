@@ -38,8 +38,8 @@ Building_Type = {
 			placement = {
 				{ type = "on_solid_tile" },
 				{ type = "on_any_tile_type", values = { "grass", "blue grass" } },
-				{ type = "on_tile_with_any_trait", values = { "biology", "wet" } },
-				{ type = "on_tile_with_none of_traits", values = { "dry", "cold" } },
+				-- { type = "on_tile_with_any_trait", values = { "biology", "wet" } },
+				-- { type = "on_tile_with_none of_traits", values = { "dry", "cold" } },
 			},
 			bonus = {},
 		},
@@ -297,7 +297,20 @@ end
 
 function Building:draw()
 	graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
+
 	local color = white[0]
+	local flash_interval = 0.4
+
+	if self.tile and self.tile.marked then
+		-- time-based flashing
+		local t = love.timer.getTime()
+		if math.floor(t / flash_interval) % 2 == 0 then
+			color = Color(1, 0, 0, 1) -- red
+		else
+			color = white[0] -- normal color
+		end
+	end
+
 	local scale = self.size * 0.04
 	local outline_scale = 0.3
 	-- self.shape:draw()

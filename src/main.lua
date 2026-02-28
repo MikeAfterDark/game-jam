@@ -13,6 +13,12 @@ require("tile")
 require("shop")
 require("building")
 
+-- helpers
+require("cellular_automata")
+
+-- game data
+require("cellular_automata_rules")
+
 -- on linux, state is at: ~/.local/share/{love, project_name}/state.txt
 function init()
 	renderer_init()
@@ -166,8 +172,8 @@ function init()
 		-- { id = "audio_zoo", destination = AudioZoo },
 	}
 
-	main:add(Intro("intro"))
-	-- main:add(Game("intro"))
+	-- main:add(Intro("intro"))
+	main:add(Game("intro"))
 	main:go_to("intro", {})
 
 	-- set sane defaults:

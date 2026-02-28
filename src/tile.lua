@@ -47,6 +47,7 @@ Tile_Type = {
 	Water = {
 		name = "water",
 		traits = {
+			"water",
 			"liquid",
 			"wet",
 			"biology",
@@ -59,6 +60,7 @@ Tile_Type = {
 	Lava = {
 		name = "lava",
 		traits = {
+			"lava",
 			"liquid",
 			"hot",
 		},
@@ -110,8 +112,10 @@ function Tile:init(args)
 	self.shape = Diamond(self.x, self.y - (self.size * 0.1), self.size * 1.25, self.size * 1.08) -- for mouse interaction
 	self.interact_with_mouse = true
 	self.selected = false
-	self.marked = false
+	self.event_ids = {}
 	self.type = self.type or Tile_Type.Default
+
+	self.base_y = self.y -- for tile:bounce() to not drift
 end
 
 function Tile:update(dt)
@@ -140,7 +144,7 @@ function Tile:draw()
 		tile_sprites.cover[1]:draw(self.x, self.y, 0, scale, scale, 0, 0, color)
 	end
 
-	if self.marked then
+	if #self.event_ids > 0 then
 		local color = Color(1.0, 0.3, 0.1, 0.8)
 		tile_sprites.large_cover[1]:draw(self.x, self.y - 6, 0, scale, scale, 0, 0, color)
 	end
@@ -149,17 +153,20 @@ function Tile:draw()
 	graphics.pop()
 end
 
-function Tile:convert_marked(args)
-	if self.marked then
-		trigger:after(random:float() * 0.5, function()
-			sfx.earthquake:play({ pitch = random:float(0.95, 1.05), volume = 0.1 })
-			self.type = args.target
-			self.marked = false
-			if self.holding and not self.holding:can_survive({ tile = self, effects = args.effects }) then
-				self.holding:demolish()
-				self.holding = nil
-			end
-		end)
+function Tile:set_type(args)
+	self.type = args.target
+	if self.holding and not self.holding:can_survive({ tile = self, effects = args.effects }) then
+		self.holding:demolish()
+		self.holding = nil
+	end
+end
+
+function Tile:convert_tile(args)
+	if table.pop_item(self.event_ids, args.event_id) then
+		-- trigger:after(random:float() * 0.5, function()
+		sfx.earthquake:play({ pitch = random:float(0.95, 1.05), volume = 0.1 })
+		self:set_type(args)
+		-- end)
 	end
 end
 
@@ -177,4 +184,19 @@ end
 function Tile:on_mouse_exit()
 	self.selected = false
 	return true
+end
+
+function Tile:bounce(amount, total_duration)
+	if not self.bouncing then
+		self.bouncing = true
+		local duration = total_duration / 2
+		local base_y = self.base_y
+
+		trigger:tween(duration, self, { y = base_y - amount }, math.quad_out, function()
+			trigger:tween(duration, self, { y = base_y }, math.bounce_out, function()
+				self.y = base_y -- force exact reset
+				self.bouncing = false
+			end)
+		end)
+	end
 end
