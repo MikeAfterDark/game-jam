@@ -50,11 +50,67 @@ Slot = Object:extend()
 Slot:implement(GameObject)
 function Slot:init(args)
 	self:init_game_object(args)
-	self.shape = Circle(self.x, self.y, self.size - 3)
+	self.shape = Circle(self.x, self.y, self.size - 1)
+	self.interact_with_mouse = true
+	self.selected = false
+
+	self.unlock_menu = Circle_Menu({
+		group = self.group,
+		layer = self.layer,
+		x = self.x,
+		y = self.y,
+		size = self.size * 3,
+		rotation = 5 * math.pi / 4,
+		options = {
+			{
+				color = yellow[-5],
+				text = "[yellow]3g",
+				action = function()
+					self:unlock(1)
+				end,
+				space = 0.75,
+			},
+			{
+				color = red[-5],
+				text = "[red]10g",
+				action = function()
+					self:unlock(2)
+				end,
+				space = 0.1,
+			},
+			{
+				color = green[-5],
+				text = "[green]25g",
+				action = function()
+					self:unlock(3)
+				end,
+			},
+		},
+	})
 end
 
 function Slot:update(dt)
 	self:update_game_object(dt)
+
+	if self.locked then
+		if self.selected and not game_mouse.holding and input.select.pressed then
+			self.unlock_menu:expand(true)
+		end
+
+		-- center area is a 'safe zone' to cancel
+		-- if self.selected and self.unlock_menu.expanded and input.select.released then
+		-- 	self.unlock_menu:expand(false)
+		-- end
+	end
+end
+
+function Slot:unlock(num)
+	print(num)
+	self.unlock_menu:expand(false)
+	trigger:after(0.5, function()
+		self.locked = false -- lock brbeaking animation?
+		self:new_building(0, 0.05)
+	end)
 end
 
 function Slot:draw()
@@ -63,11 +119,12 @@ function Slot:draw()
 	local lock_color = white[0]
 	local scale = self.size * 0.04
 
-	-- self.shape:draw(color)
 	shop_sprites.shop_slot[1]:draw(self.x, self.y, 0, scale, scale, 0, 0, color)
 	if self.locked then
 		shop_sprites.lock[1]:draw(self.x, self.y, 0, scale, sclae, 0, 0, lock_color)
 	end
+
+	-- self.shape:draw(color, 2)
 	graphics.pop()
 end
 
@@ -86,6 +143,9 @@ function Slot:new_building(delay, speed)
 
 	trigger:after(delay, function()
 		if self.building then
+			if game_mouse.holding == self.building then
+				game_mouse.holding = nil
+			end
 			self.building.dead = true
 			self.building = nil
 		end
@@ -106,7 +166,7 @@ function Slot:new_building(delay, speed)
 end
 
 function Slot:on_mouse_enter()
-	if not on_current_ui_layer(self) then
+	if not on_current_ui_layer(self) or self.unlock_menu.expanded then
 		return false
 	end
 	-- [SFX]
@@ -117,6 +177,10 @@ function Slot:on_mouse_enter()
 end
 
 function Slot:on_mouse_exit()
+	if self.unlock_menu.expanded then
+		return
+	end
+
 	self.selected = false
 	return true
 end

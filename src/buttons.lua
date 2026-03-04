@@ -260,7 +260,7 @@ function RectangleButton:init(args)
 			})
 	end
 
-	if not self.no_image then
+	if not self.no_image and self.image_path then
 		self.image = love.filesystem.getInfo(self.image_path) and Image(self.image_path, true) or nil
 	end
 

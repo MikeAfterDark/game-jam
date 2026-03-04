@@ -1,38 +1,60 @@
 TODO: Legend: [X] = done, [\] partially done
 
-- display which phase we're in (text for now)
-- next_turn(), game phases
+[X] display which phase we're in (text for now)
+[X] next_turn(), game phases
     [X] [logic] game.board:trigger_buildings()
-    [\] [logic] game.board:trigger_event(game.game_state.event)
-    [\] [visuals] buildings 
-    [\] [visuals] events
+    [X] [logic] game.board:trigger_event(game.game_state.event)
+    [X] [visuals] buildings 
+    [X] [visuals] events
 - buy new shop slots
-- events (earth split)
-[\] gold/bonuses
+[X] events (earth split)
+[X] gold/bonuses
 - saving/loading (careful, web builds might break when trying to load a non-existent file run_v4.txt)
 
-Refactoring:
-- refactor the rules to fit the game design
+
+Refactoring (nice to haves):
 - refactor credits to 'credit_people({person.A, person.B, person.C})' with automatic spacing
-- currently all the updates and tiles and buuildings are happening all over the place, at random times, put it all in one place
 
 Bugfix:
 - holding buildings should be on a higher ui layer so they dont get overlapped by things on the board
 
-QoL:
+Gameplay QoL:
 - While holding a building, highlight all valid placement areas and how much bonus would be
 - 'no adjacent buildings' report all adjacent found
-- flash (blink red?) the buildings that are in danger
+[X] flash (blink red?) the buildings that are in danger
+[\] info display that explains what each tile/building does/is affected by
+    - figure out what info to show and how
 
 Visual Candy:
 - Star background, or anything really, should be moving to avoid boredom
 - when spawning in the board, bring them from offscreen with a random delay to fill the board
 - earthquake particle effects when tiles/buildings are destroyed
+- Game:play_intro() animation (slow zoom in, the tiles rise up into the board randomly?)
+
+
 
 Ideas:
 - fancy buildings (have some extra effect on top of regular)
-- cellular automata
-- events should be able to overlap
+[X] cellular automata
+[X] events should be able to overlap
 - assign 'people' to buildings that give it some scaling for something
 - shop rarity - tied to # of people assigned to a builiding (ex: market tied to a shop slot)
 - buildings should affect tiles near/under them (temporary/permanent changes?)
+
+
+Game Design/Release Roadmap:
+- Player Goals/Incentives, what to encourage/discourage, game-feel stems from this
+- Decide on steam integration/plan for mod support
+- Building Rules
+- Building Conditions/Effects
+- Tile Conditions/Effects
+- Events Condictions/Effects
+- Cellular Automata Rules
+- Seed:
+    - World Generation
+    - Random effects like events/tiles/buildings to follow seed's randomness
+    (info: need two randoms, got one for game startup wit no seed for uuids, make one for gameplay)
+- Balancing
+- Special Starting conditions/scenarios
+- Mod Support
+

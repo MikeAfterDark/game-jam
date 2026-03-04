@@ -97,40 +97,14 @@ function renderer_draw(draw_action, shadow_draw_action)
 
 	background_canvas:draw_to(function()
 		camera:attach()
-		if main.current:is(Game) then
-			if main.current.creator_mode then
-				for i = 1, gw / grid_size do
-					for j = 1, gh / grid_size do
-						local row = j * grid_size
-						local column = i * grid_size
-
-						local gray_val = 0.0
-						local color = Color(gray_val, gray_val, gray_val, 1)
-						local line_width = 3
-						graphics.line(column, 0, column, gh, color, line_width)
-						graphics.line(0, row, gw, row, color, line_width)
-					end
-				end
-			end
-		elseif main.current:is(MainMenu) then
-			if main.current.current_menu == menu.Stim_Screen then
-				-- TODO: rainbow background or somethigng
-			end
-		end
-
 		-- bg_gradient:draw(gw / 2, gh / 2, global_game_width, global_game_height)
 		-- bg_gradient:draw(gw / 2, gh * 1.5, global_game_width, global_game_height)
-		graphics.rectangle(gw / 2, gh / 2, gw, gh, 0, 0, background_color)
+		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, 0, 0, background_color)
 		camera:detach()
 	end)
 
 	main_canvas:draw_to(function()
 		draw_action()
-		if state.screen_flashes then
-			if death_flash_alpha > 0 then
-				graphics.rectangle(gw / 2, gh / 2, gw, gh, nil, nil, Color(0.8, 0, 0, death_flash_alpha))
-			end
-		end
 	end)
 
 	shadow_canvas:draw_to(function()

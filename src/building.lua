@@ -81,7 +81,7 @@ Building_Type = {
 		},
 	},
 	Tent = {
-		name = "tent",
+		name = "goblin's tent",
 		sprites = function()
 			return building_sprites.tent
 		end,
@@ -287,6 +287,7 @@ function Building:on_mouse_enter()
 	self.spring:pull(0.15, 400, 32)
 	sfx.building_mouse_enter:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	self.selected = true
+	game_mouse.hovering = not game_mouse.holding and self or nil
 	return true
 end
 

@@ -177,6 +177,7 @@ function Tile:on_mouse_enter()
 	-- [SFX]
 	sfx.tile_mouse_enter:play({ pitch = random:float(0.95, 1.05), volume = 0.1 })
 	self.selected = true
+	game_mouse.tile_hovered = self
 	-- self.spring:pull(0.15, 400, 32)
 	return true
 end

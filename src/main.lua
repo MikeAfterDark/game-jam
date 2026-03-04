@@ -13,6 +13,10 @@ require("tile")
 require("shop")
 require("building")
 
+-- ui
+require("info_display")
+require("circle_menu")
+
 -- helpers
 require("cellular_automata")
 
@@ -21,6 +25,7 @@ require("cellular_automata_rules")
 
 -- on linux, state is at: ~/.local/share/{love, project_name}/state.txt
 function init()
+	-- state.info_display_on_right_side = false -- TEMP
 	renderer_init()
 
 	new_keys = {} -- init for rebinding options
@@ -467,23 +472,27 @@ function open_options(self)
 	)
 	button_offset = button_offset + button_distance
 
-	-- self.screen_flashes_button = collect_into(
-	-- 	self.options_ui_elements,
-	-- 	Button({
-	-- 		x = column_x[column],
-	-- 		y = gh / 2 + button_offset,
-	-- 		w = gw * 0.20,
-	-- 		button_text = tostring(state.screen_flashes and "screen flashes" or "no flashes"),
-	-- 		fg_color = "bg",
-	-- 		bg_color = "fg",
-	-- 		action = function(b)
-	-- 			ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-	-- 			state.screen_flashes = not state.screen_flashes
-	-- 			b:set_text(tostring(state.screen_flashes and "sreen flashes" or "no flashes"))
-	-- 		end,
-	-- 	})
-	-- )
-	-- button_offset = button_offset + button_distance
+	self.info_display_side_selection_button = collect_into(
+		self.options_ui_elements,
+		Button({
+			x = column_x[column],
+			y = gh / 2 + button_offset,
+			w = gw * 0.20,
+			button_text = tostring(state.info_display_on_right_side and "info on right" or "info on left"),
+			fg_color = "bg",
+			bg_color = "fg",
+			action = function(b)
+				state.info_display_on_right_side = not state.info_display_on_right_side
+				system.save_state()
+				b:set_text(tostring(state.info_display_on_right_side and "info on right" or "info on left"))
+
+				if main.current:is(Game) then
+					main.current:swap_info_display_side()
+				end
+			end,
+		})
+	)
+	button_offset = button_offset + button_distance
 
 	-- self.wall_toggle_controls = collect_into(
 	-- 	self.options_ui_elements,

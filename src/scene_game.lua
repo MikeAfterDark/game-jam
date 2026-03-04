@@ -24,8 +24,8 @@ function Game:on_enter(from, args)
 	-- )
 	self.post_main = Group()
 	self.effects = Group()
-	self.ui = Group():no_camera()
-	self.end_ui = Group()
+	self.ui = Group() --:no_camera()
+	self.end_ui = Group():no_camera()
 	self.paused_ui = Group():no_camera()
 	self.options_ui = Group():no_camera()
 	self.keybinding_ui = Group():no_camera()
@@ -112,7 +112,7 @@ function Game:on_enter(from, args)
 			group = self.main,
 			layer = ui_interaction_layer.Game,
 			positions = { -- WARN: HARDCODED POSITIONS for 'global_game_scale = 4'
-				{ x = 337, y = 647 },
+				{ x = 337, y = 647 }, --
 				{ x = 414, y = 727 },
 				{ x = 523, y = 810 },
 				{ x = 654, y = 916 },
@@ -140,11 +140,8 @@ function Game:on_enter(from, args)
 			event = Events.Fissure(),
 		}
 
-		self.game_state.phase:run(self)
-		self.players_turn = true
 		self.game_state.in_events = false
 		self.events = {}
-		-- self.shop:populate()
 	else -- rebuild run from savestate
 	end
 
@@ -153,7 +150,7 @@ function Game:on_enter(from, args)
 		Button({
 			group = self.ui,
 			layer = ui_interaction_layer.Game,
-			x = gw * 0.9,
+			x = gw * 0.7,
 			y = gh * 0.88,
 			button_text = "reroll",
 			fg_color = "bg",
@@ -170,7 +167,7 @@ function Game:on_enter(from, args)
 		Button({
 			group = self.ui,
 			layer = ui_interaction_layer.Game,
-			x = gw * 0.9,
+			x = gw * 0.7,
 			y = gh * 0.94,
 			button_text = "end turn",
 			fg_color = "bg",
@@ -186,7 +183,7 @@ function Game:on_enter(from, args)
 		self.game_ui_elements,
 		Text2({
 			group = self.ui,
-			x = gw * 0.23,
+			x = gw * 0.34,
 			y = gh * 0.1,
 			lines = {
 				{ text = self.game_state.phase.name, font = pixul_font },
@@ -198,7 +195,7 @@ function Game:on_enter(from, args)
 		self.game_ui_elements,
 		Text2({
 			group = self.ui,
-			x = gw * 0.8,
+			x = gw * 0.70,
 			y = gh * 0.1,
 			lines = {
 				{ text = "[yellow]Gold: " .. self.resources.gold.total .. "     [green]People: " .. self.resources.people.alive, font = pixul_font },
@@ -206,6 +203,41 @@ function Game:on_enter(from, args)
 		})
 	)
 	self._pending_tile_results = {}
+
+	self.info_display = Info_Display({
+		group = self.end_ui,
+		x = state.info_display_on_right_side and gw * 1.125 or -gw * 0.125,
+		y = gh / 2,
+		w = gw * 0.25,
+		h = gh * 0.95,
+		left_button_action = function()
+			self:expand_info_display(not state.expanded_info_display)
+		end,
+		right_button_action = function()
+			self:expand_info_display(not state.expanded_info_display)
+		end,
+	})
+
+	self:play_intro()
+end
+
+function Game:play_intro()
+	-- some intro animation
+	--
+	-- do this at the end of the intro
+	local color = self.game_state.phase.background_color
+	trigger:tween(0.5, background_color, { r = color.r, g = color.g, b = color.g, a = color.a }, math.linear)
+
+	trigger:after(0.4, function()
+		if state.expanded_info_display then
+			self:expand_info_display(true)
+		end
+		trigger:after(0.2, function()
+			self.players_turn = true
+			self.shop:reroll()
+			self.game_state.phase:run(self)
+		end)
+	end)
 end
 
 Phases = {
@@ -467,7 +499,9 @@ function Game:update(dt)
 				self.board:place(building, valid_tile)
 				self.shop:clear_slot(building)
 			else
-				print(table.concat(errors, ", "))
+				if #errors > 0 then
+					print("cannot place a " .. game_mouse.holding.type.name .. " there: " .. table.concat(errors, ", "))
+				end
 				building:return_to_origin()
 			end
 			game_mouse.holding = nil
@@ -804,6 +838,72 @@ function Game:die()
 		-- end)
 	end
 	return true
+end
+
+function Game:expand_info_display(expand, time)
+	if self.info_display.moving then
+		return
+	end
+
+	time = time or 0.3
+	self.info_display.moving = true
+
+	local side = state.info_display_on_right_side and 1 or -1
+	local direction = expand and -side or side
+
+	state.expanded_info_display = expand
+	system.save_state()
+
+	trigger:tween(
+		time,
+		self.info_display,
+		{
+			x = self.info_display.x + direction * self.info_display.w,
+		},
+		math.quad_in_out,
+		function()
+			self.info_display.moving = false
+		end
+	)
+
+	local target_camera_x
+
+	if state.info_display_on_right_side then
+		target_camera_x = expand and gw * 0.6 or gw / 2
+	else
+		target_camera_x = expand and gw * 0.38 or gw / 2
+	end
+
+	trigger:tween(time, camera, {
+		x = target_camera_x,
+	}, math.quad_in_out)
+end
+
+function Game:swap_info_display_side()
+	if self.info_display.moving then
+		return
+	end
+
+	local time = 0.1
+	local was_expanded = state.expanded_info_display
+
+	if was_expanded then
+		state.info_display_on_right_side = not state.info_display_on_right_side -- stupid jank
+		self:expand_info_display(false, time)
+		state.info_display_on_right_side = not state.info_display_on_right_side
+	end
+
+	trigger:after(time + 0.01, function()
+		if state.info_display_on_right_side then
+			self.info_display.x = gw + self.info_display.w / 2
+		else
+			self.info_display.x = -self.info_display.w / 2
+		end
+
+		if was_expanded then
+			self:expand_info_display(true, time)
+		end
+	end)
 end
 
 function Game:on_exit()

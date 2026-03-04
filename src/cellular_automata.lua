@@ -32,7 +32,7 @@ end
 
 function CellularAutomata:step(count)
 	local count = count or 0
-	print("--step: " .. count .. "--")
+	-- print("--step: " .. count .. "--")
 
 	local changes = {}
 
