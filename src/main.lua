@@ -16,6 +16,7 @@ require("building")
 -- ui
 require("info_display")
 require("circle_menu")
+require("circle_slider")
 
 -- helpers
 require("cellular_automata")
@@ -35,6 +36,7 @@ function init()
 	controls = {
 		reset = { text = "Restart", default = { "x" }, input = state.input.reset },
 		select = { text = "Select", default = { "m1" }, input = state.input.select },
+		modify = { text = "Modify", default = { "m2" }, input = state.input.modify },
 		reroll = { text = "Reroll", default = { "r" }, input = state.input.reroll },
 		next_turn = { text = "Next Turn", default = { "space" }, input = state.input.next_turn },
 	}

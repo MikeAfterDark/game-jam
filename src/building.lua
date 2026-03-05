@@ -7,13 +7,25 @@ Building_Type = {
 		rules = {
 			placement = {
 				{ type = "on_solid_tile" },
-				{ type = "on_any_tile_type", values = { "grass", "stone" } },
-				{ type = "not_on_any_of_tile_type", values = { "sand", "swamp" } },
+				{
+					type = "on_any_tile_type",
+					values = { "grass", "stone" },
+				},
 				{ type = "no_adjacent_buildings" },
+				{
+					type = "not_on_any_of_tile_type",
+					values = { "sand", "swamp" },
+				},
 			},
 			bonus = {
-				{ type = "no_adjacent_buildings", effects = { gold = 5 } },
-				{ type = "on_solid_tile", effects = { gold = 3, people = 1 } },
+				{
+					type = "on_solid_tile",
+					effects = { gold = 3, people = 1 },
+				},
+				{
+					type = "no_adjacent_buildings",
+					effects = { gold = 5 },
+				},
 			},
 		},
 	},
@@ -159,7 +171,8 @@ RuleLogic = {
 			end
 		end
 
-		local error = "needs to be adjacent to the building" .. #missing > 1 and "s" .. ": " .. table.concat(missing, ", ")
+		local error = "needs to be adjacent to the building" --
+				.. #missing > 1 and "s" .. ": " .. table.concat(missing, ", ")
 		return #missing == 0, error
 	end,
 
@@ -210,6 +223,35 @@ function Building:init(args)
 	self.type = self.type or random:table(Building_Type)
 	self.spring:pull(0.15, 400, 32)
 	-- [SFX]
+
+	self.people_slider = Circle_Slider({
+		group = main.current.ui,
+		layer = self.layer,
+		x = self.x,
+		y = self.y,
+		size = self.size * 5,
+		rotation = math.pi / 2,
+		value = 0,
+		min_value = 0,
+		max_value = 20,
+		text = { description = "People:" },
+		action = function(p)
+			self:assign_people(p)
+		end,
+	})
+
+	self.people_assigned_text = Text2({
+		layer = self.layer,
+		x = self.x,
+		y = self.y,
+		lines = { { text = "", font = small_pixul_font } },
+	})
+end
+
+function Building:assign_people(p)
+	print("assigned " .. p .. " people")
+	self.people = p
+	self.people_assigned_text:set_text({ { text = "[green]" .. tostring(self.people), font = small_pixul_font } })
 end
 
 function Building:update(dt)
@@ -217,6 +259,17 @@ function Building:update(dt)
 
 	if self.selected and input.select.pressed then
 		game_mouse.holding = self
+	end
+
+	local offset = 25
+	self.people_assigned_text:move_to(self.x + offset, self.y - offset)
+	self.people_assigned_text:update(dt)
+
+	self.people_slider.shape:move_to(self.x, self.y)
+	self.people_slider.x = self.x
+	self.people_slider.y = self.y
+	if self.tile and self.selected and input.modify.pressed then
+		self.people_slider:expand(true)
 	end
 end
 
@@ -315,7 +368,17 @@ function Building:draw()
 	local scale = self.size * 0.04
 	local outline_scale = 0.3
 	-- self.shape:draw()
-	self.type.sprites()[1]:draw(self.x, self.y + outline_scale * self.size / 2, 0, scale + outline_scale, scale + outline_scale, 0, 0, black[0])
+	self.type.sprites()[1]:draw(
+		self.x, --
+		self.y + outline_scale * self.size / 2,
+		0,
+		scale + outline_scale,
+		scale + outline_scale,
+		0,
+		0,
+		black[0]
+	)
 	self.type.sprites()[1]:draw(self.x, self.y, 0, scale, scale, 0, 0, color)
+	self.people_assigned_text:draw()
 	graphics.pop()
 end

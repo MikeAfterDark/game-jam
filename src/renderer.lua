@@ -810,6 +810,11 @@ function Text2:set_text(new_text)
 	self.text:set_text(new_text)
 end
 
+function Text2:move_to(x, y)
+	self.x = x
+	self.y = y
+end
+
 --
 -- width, height, world_x, world_y (centered)
 -- lines of text

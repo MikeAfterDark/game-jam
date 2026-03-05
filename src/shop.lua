@@ -14,6 +14,7 @@ function Shop:init(args)
 				y = position.y,
 				size = self.shop_slot_size,
 				locked = i > self.open_slots,
+				shop = self,
 			})
 		)
 	end
@@ -55,16 +56,16 @@ function Slot:init(args)
 	self.selected = false
 
 	self.unlock_menu = Circle_Menu({
-		group = self.group,
+		group = main.current.ui,
 		layer = self.layer,
 		x = self.x,
 		y = self.y,
-		size = self.size * 3,
+		size = self.size * 5,
 		rotation = 5 * math.pi / 4,
 		options = {
 			{
 				color = yellow[-5],
-				text = "[yellow]3g",
+				text = { requirement = "[yellow]3g", result = "lvl 1 unlock" },
 				action = function()
 					self:unlock(1)
 				end,
@@ -72,7 +73,7 @@ function Slot:init(args)
 			},
 			{
 				color = red[-5],
-				text = "[red]10g",
+				text = { requirement = "[red]10g", result = "lvl 2" },
 				action = function()
 					self:unlock(2)
 				end,
@@ -80,7 +81,7 @@ function Slot:init(args)
 			},
 			{
 				color = green[-5],
-				text = "[green]25g",
+				text = { requirement = "[green]25g", result = "level 3 unlock" },
 				action = function()
 					self:unlock(3)
 				end,
@@ -92,40 +93,34 @@ end
 function Slot:update(dt)
 	self:update_game_object(dt)
 
-	if self.locked then
-		if self.selected and not game_mouse.holding and input.select.pressed then
-			self.unlock_menu:expand(true)
-		end
-
-		-- center area is a 'safe zone' to cancel
-		-- if self.selected and self.unlock_menu.expanded and input.select.released then
-		-- 	self.unlock_menu:expand(false)
-		-- end
+	if self.locked and self.selected and not game_mouse.holding and (input.select.pressed or input.modify.pressed) then
+		self.unlock_menu:expand(true)
 	end
 end
 
 function Slot:unlock(num)
-	print(num)
+	print("unlocked shop slot with option: " .. num)
 	self.unlock_menu:expand(false)
+	self.shop.open_slots = self.shop.open_slots + 1 -- TODO: save run?
 	trigger:after(0.5, function()
-		self.locked = false -- lock brbeaking animation?
+		self.locked = false -- lock breaking animation?
 		self:new_building(0, 0.05)
 	end)
 end
 
 function Slot:draw()
-	graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
 	local color = Color(1, 0.5, 1, 1)
 	local lock_color = white[0]
 	local scale = self.size * 0.04
 
 	shop_sprites.shop_slot[1]:draw(self.x, self.y, 0, scale, scale, 0, 0, color)
 	if self.locked then
+		graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
 		shop_sprites.lock[1]:draw(self.x, self.y, 0, scale, sclae, 0, 0, lock_color)
+		graphics.pop()
 	end
 
 	-- self.shape:draw(color, 2)
-	graphics.pop()
 end
 
 function Slot:clear(building)
@@ -160,6 +155,7 @@ function Slot:new_building(delay, speed)
 			x = self.x,
 			y = self.y,
 			size = self.size,
+			shop = self,
 		})
 	end)
 	return delay + speed
@@ -170,9 +166,12 @@ function Slot:on_mouse_enter()
 		return false
 	end
 	-- [SFX]
-	sfx.tile_mouse_enter:play({ pitch = random:float(0.95, 1.05), volume = 0.1 })
+	if self.building or self.locked then
+		sfx.tile_mouse_enter:play({ pitch = random:float(0.95, 1.05), volume = 0.1 })
+	end
 	self.selected = true
 	-- self.spring:pull(0.15, 400, 32)
+	self.spring:pull(0.25, 400, 32)
 	return true
 end
 

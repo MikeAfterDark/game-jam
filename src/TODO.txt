@@ -6,10 +6,14 @@ TODO: Legend: [X] = done, [\] partially done
     [X] [logic] game.board:trigger_event(game.game_state.event)
     [X] [visuals] buildings 
     [X] [visuals] events
-- buy new shop slots
+[X] buy new shop slots
 [X] events (earth split)
+    - Building:can_survive()
 [X] gold/bonuses
 - saving/loading (careful, web builds might break when trying to load a non-existent file run_v4.txt)
+[X] circle menu
+[X] cellular automata
+[X] events should be able to overlap
 
 
 Refactoring (nice to haves):
@@ -25,18 +29,19 @@ Gameplay QoL:
 [\] info display that explains what each tile/building does/is affected by
     - figure out what info to show and how
 
-Visual Candy:
-- Star background, or anything really, should be moving to avoid boredom
-- when spawning in the board, bring them from offscreen with a random delay to fill the board
-- earthquake particle effects when tiles/buildings are destroyed
-- Game:play_intro() animation (slow zoom in, the tiles rise up into the board randomly?)
-
+Visuals:
+- [Candy] Star background, or anything really, should be moving to avoid boredom
+- [Candy] when spawning in the board, bring them from offscreen with a random delay to fill the board
+- [Candy] earthquake particle effects when tiles/buildings are destroyed
+- [Candy] Game:play_intro() animation (slow zoom in, the tiles rise up into the board randomly?)
+- [UX] Text overhaul:
+    - textboxes that work with smooth movement/moving camera
+    - outline
+- [UX] display phases/phase changes clearly
 
 
 Ideas:
 - fancy buildings (have some extra effect on top of regular)
-[X] cellular automata
-[X] events should be able to overlap
 - assign 'people' to buildings that give it some scaling for something
 - shop rarity - tied to # of people assigned to a builiding (ex: market tied to a shop slot)
 - buildings should affect tiles near/under them (temporary/permanent changes?)

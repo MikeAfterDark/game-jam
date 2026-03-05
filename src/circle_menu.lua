@@ -13,7 +13,6 @@ function Circle_Menu:init(args)
 	self.hovered_index = nil
 	self.inner_deadzone = 0.5 -- center safe zone (percent of radius)
 
-	self.slices = {}
 	local full_circle = math.pi * 2
 
 	local defined_space = 0
@@ -45,6 +44,23 @@ function Circle_Menu:init(args)
 		option.end_angle = end_angle
 
 		cumulative_angle = cumulative_angle + angle_size
+
+		local offset = 14
+		option.requirement_text = Text2({
+			-- group = self.group,
+			layer = self.layer,
+			x = self.x,
+			y = self.y - offset,
+			lines = { { text = option.text.requirement, font = small_pixul_font } },
+		})
+
+		option.result_text = Text2({
+			-- group = self.group,
+			layer = self.layer,
+			x = self.x,
+			y = self.y + offset,
+			lines = { { text = option.text.result, font = small_pixul_font } },
+		})
 	end
 end
 
@@ -56,6 +72,11 @@ function Circle_Menu:update(dt)
 		return
 	end
 
+	for i, option in ipairs(self.options) do
+		option.requirement_text:update(dt)
+		option.result_text:update(dt)
+	end
+
 	local mx, my = main.current.main:get_mouse_position()
 	local dx = mx - self.x
 	local dy = my - self.y
@@ -65,7 +86,7 @@ function Circle_Menu:update(dt)
 	if --[[ dist > self.visible_size or ]]
 		dist < self.visible_size * self.inner_deadzone
 	then
-		if input.select.released then
+		if input.select.released or input.modify.released then
 			self:expand(false)
 		end
 		return
@@ -81,7 +102,7 @@ function Circle_Menu:update(dt)
 		end
 	end
 
-	if self.hovered_index and input.select.released then
+	if self.hovered_index and (input.select.released or input.modify.released) then
 		local option = self.options[self.hovered_index]
 		if option and option.action then
 			option.action()
@@ -123,18 +144,18 @@ function Circle_Menu:draw()
 		local radius = is_hovered and r * selected_slice_scale or r
 
 		local fill_color = is_hovered and option.color or option.color:clone():darken(0.2)
-		local line_color = white[0]
+		local line_color = black[0]
 
 		graphics.arc("pie", self.x, self.y, radius, start_angle, end_angle, fill_color)
 		if self.expanded then
-			graphics.arc("open", self.x, self.y, radius, start_angle, end_angle, line_color, 2)
+			graphics.arc("open", self.x, self.y, radius, start_angle, end_angle, line_color, 5)
 		end
 	end
 
 	if self.hovered_index then
 		graphics.line(
 			self.x,
-			self.y, --
+			self.y,
 			self.x + math.cos(self.mouse_angle) * r * selected_slice_scale,
 			self.y + math.sin(self.mouse_angle) * r * selected_slice_scale,
 			white[0],
@@ -143,6 +164,11 @@ function Circle_Menu:draw()
 	end
 
 	graphics.circle(self.x, self.y, r * self.inner_deadzone, black[0])
+	if self.hovered_index then
+		self.options[self.hovered_index].requirement_text:draw()
+		self.options[self.hovered_index].result_text:draw()
+	end
+
 	graphics.pop()
 end
 

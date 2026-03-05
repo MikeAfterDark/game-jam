@@ -416,7 +416,6 @@ function Game:next_turn(force)
 	trigger:tween(0.2, background_color, { r = color.r, g = color.g, b = color.g, a = color.a }, math.linear)
 
 	trigger:after(0.5, function()
-		print("running phase")
 		self.game_state.phase:run(self)
 	end)
 end
