@@ -107,8 +107,8 @@ Tile = Object:extend()
 Tile:implement(GameObject)
 function Tile:init(args)
 	self:init_game_object(args)
-	self.color = random:color()
-
+	-- self.color = random:color()
+	self.opacity = 1
 	self.shape = Diamond(self.x, self.y - (self.size * 0.1), self.size * 1.25, self.size * 1.08) -- for mouse interaction
 	self.interact_with_mouse = true
 	self.selected = false
@@ -127,6 +127,11 @@ function Tile:update(dt)
 	if not self.selected and self.colliding_with_mouse then
 		self:on_mouse_enter()
 	end
+
+	if self.holding then
+		self.holding.y = self.y
+		self.holding.opacity = self.opacity
+	end
 end
 
 function Tile:hold(building)
@@ -137,7 +142,10 @@ function Tile:draw()
 	graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
 	local scale = self.size * 0.02
 
-	self.type.sprites()[1]:draw(self.x, self.y, 0, scale, scale, 0, 0, self.type.sprites()[2] or white[0])
+	local sprite_color = self.type.sprites()[2] and self.type.sprites()[2]:clone() or white[0]:clone()
+	sprite_color.a = self.opacity
+
+	self.type.sprites()[1]:draw(self.x, self.y, 0, scale, scale, 0, 0, sprite_color)
 
 	if self.selected then
 		local color = Color(0.5, 1, 0.5, 0.5)

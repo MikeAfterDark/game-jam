@@ -1,6 +1,5 @@
 ### Goals:
-- Strategy Incremental Game?
-- Maybe add roguelike aspects?
+- Strategy/Puzzle Incremental Game
 - 20+ hours of *interesting* gameplay (not just tedious achievement hunting)
 
 ### Implemented User Actions:

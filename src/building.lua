@@ -241,6 +241,7 @@ function Building:init(args)
 	self.selected = false
 	self.origin = { x = self.x, y = self.y }
 
+	self.opacity = 1
 	self.type = self.type or random:table(Building_Type)
 	self.spring:pull(0.15, 400, 32)
 	-- [SFX]
@@ -416,6 +417,9 @@ function Building:draw()
 			color = white[0] -- normal color
 		end
 	end
+
+	color = color:clone()
+	color.a = self.opacity
 
 	local scale = self.size * 0.04
 	local outline_scale = 0.3

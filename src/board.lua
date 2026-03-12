@@ -22,11 +22,27 @@ function Board:clear_all()
 	local fall_distance = gh * 0.1
 	for _, tile in ipairs(self.tiles) do
 		trigger:after(random:float(0.3, 0.9), function()
-			trigger:tween(1.0, tile, { y = tile.y + fall_distance }, math.expo_in, function()
-				tile.dead = true
-				tile = nil
-				self.num_tiles = self.num_tiles - 1
-			end)
+			local offset = random:bool() and fall_distance or -fall_distance
+			trigger:tween(
+				1.0,
+				tile,
+				{
+					y = tile.y + offset,
+					opacity = 0,
+				},
+				math.expo_in,
+				function()
+					if tile.holding then
+						tile.holding.dead = true
+						tile.holding = nil
+					end
+
+					tile.dead = true
+					tile = nil
+
+					self.num_tiles = self.num_tiles - 1
+				end
+			)
 		end)
 	end
 
@@ -54,10 +70,10 @@ function Board:generate_board(data)
 	}
 
 	local board_offset = {
-		x = data.direction == "right" and gw * 0.65 --
-			or data.direction == "left" and -gw * 0.65
+		x = data.direction == "right" and gw * 0.75 --
+			or data.direction == "left" and -gw * 0.75
 			or 0,
-		y = data.direction and -gh * 0.85 or 0,
+		y = data.direction and -gh * 1.2 or 0,
 	}
 
 	self.new_tiles = 0
