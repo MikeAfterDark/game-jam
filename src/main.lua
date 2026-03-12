@@ -50,12 +50,12 @@ function init()
 	end
 
 	person = {
-		Mikey = { name = "Mikey G", nickname = "Mikey", url = "https://gusakm.itch.io/", color = "green" }, -- main dev
+		Mikey = { name = "Mikey G", nickname = "Mikey", url = "https://gusakm.itch.io/", color = "green" },                               -- main dev
 
 		Apezilla = { name = 'David "Apezilla" Browne', nickname = "Apezilla", url = "https://www.youtube.com/@davidbrowne003", color = "red" }, -- music
 		Patrick = { name = "Patrick Montanari", nickname = "Patrick", url = "https://www.succulentsoundstudios.com/", color = "yellow" }, -- jazz improv
-		Tectonic = { name = "TectonicHorizon", nickname = "Tectonic", url = "https://soundcloud.com/reedflow", color = "p_blue1" }, -- art/game design
-		Kai = { name = "KaiaRadio", nickname = "Kai", url = "https://www.youtube.com/@KaiaRadio", color = "blue" }, -- sfx
+		Tectonic = { name = "TectonicHorizon", nickname = "Tectonic", url = "https://soundcloud.com/reedflow", color = "p_blue1" },       -- art/game design
+		Kai = { name = "KaiaRadio", nickname = "Kai", url = "https://www.youtube.com/@KaiaRadio", color = "blue" },                       -- sfx
 	}
 
 	-- load sounds:
@@ -138,6 +138,56 @@ function init()
 		lock = { Image("lock") },
 	}
 
+	board_shapes = {}
+	local dir = "board_shapes"
+
+	local function rgb(r, g, b)
+		return r * 65536 + g * 256 + b
+	end
+
+	local function key(r, g, b)
+		return rgb(math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5), math.floor(b * 255 + 0.5))
+	end
+
+	local color_to_tile = { -- must be type's object name
+		[rgb(255, 0, 0)] = "Grass",
+		[rgb(0, 255, 0)] = "Water",
+		[rgb(255, 255, 255)] = "random",
+	}
+
+	for _, file in ipairs(love.filesystem.getDirectoryItems(dir)) do
+		if file:match("%.png$") then
+			local name = file:gsub("%.png$", "")
+			local img = love.image.newImageData(dir .. "/" .. file)
+
+			local w, h = img:getWidth(), img:getHeight()
+			local shape = {}
+
+			for y = 0, h - 1 do
+				local row = {}
+				for x = 0, w - 1 do
+					local r, g, b, a = img:getPixel(x, y)
+					local tile = color_to_tile[key(r, g, b)]
+
+					if type(tile) == "function" then
+						row[x + 1] = tile(x, y) -- run special action
+					elseif tile == "random" then
+						row[x + 1] = random:table(Tile_Type)
+					elseif type(tile) == "string" then
+						row[x + 1] = Tile_Type[tile]
+					else
+						row[x + 1] = nil -- empty tile
+					end
+
+					if row[x + 1] == nil then
+						row[x + 1] = false
+					end
+				end
+				shape[y + 1] = row
+			end
+			table.insert(board_shapes, shape)
+		end
+	end
 	-- set logic init
 	slow_amount = 1
 	music_slow_amount = 1

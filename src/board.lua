@@ -6,7 +6,36 @@ function Board:init(args)
 
 	self.tiles = {}
 	self.tile_map = {}
-	for row = 1, self.rows do
+	self.num_tiles = 0
+
+	self.automata = CellularAutomata({ board = self })
+	apply_cellular_automata_rules(self.automata)
+	-- self:automata_step()
+end
+
+function Board:automata_step()
+	self.automata:step()
+end
+
+function Board:clear_all()
+	self.clear_animation = true
+	local fall_distance = gh * 0.1
+	for _, tile in ipairs(self.tiles) do
+		trigger:after(random:float(0.3, 0.9), function()
+			trigger:tween(1.0, tile, { y = tile.y + fall_distance }, math.expo_in, function()
+				tile.dead = true
+				tile = nil
+				self.num_tiles = self.num_tiles - 1
+			end)
+		end)
+	end
+
+	self.tiles = {}
+	self.tile_map = {}
+end
+
+function Board:generate_board(data)
+	for row = 1, #data.shape do
 		self.tile_map[row] = {}
 	end
 
@@ -24,34 +53,55 @@ function Board:init(args)
 		y = self.tile_size * depth_scale,
 	}
 
-	for row = 1, self.rows do
-		for col = 1, self.columns do
-			local screen_x = self.x + (col - 1) * x_axis.x + (row - 1) * y_axis.x
-			local screen_y = self.y + (col - 1) * x_axis.y + (row - 1) * y_axis.y - screen_vertical_offset
+	local board_offset = {
+		x = data.direction == "right" and gw * 0.65 --
+			or data.direction == "left" and -gw * 0.65
+			or 0,
+		y = data.direction and -gh * 0.85 or 0,
+	}
 
-			local tile = Tile({
-				group = self.group,
-				layer = self.layer,
-				x = screen_x,
-				y = screen_y,
-				size = self.tile_size,
-				row = row,
-				col = col,
-				type = random:table(Tile_Type),
-			})
+	self.new_tiles = 0
+	for row = 1, #data.shape do
+		for col = 1, #data.shape[row] do
+			local type = data.shape[row][col]
+			if type then
+				local center_x = self.x --
+					+ (col - 1) * x_axis.x
+					+ (row - 1) * y_axis.x
+				local center_y = self.y --
+					+ (col - 1) * x_axis.y
+					+ (row - 1) * y_axis.y
+					- screen_vertical_offset
 
-			self.tile_map[row][col] = tile
-			table.insert(self.tiles, tile)
+				local tile = Tile({
+					group = self.group,
+					layer = self.layer,
+					x = center_x + board_offset.x,
+					y = center_y + board_offset.y,
+					center_x = center_x,
+					center_y = center_y,
+					size = self.tile_size,
+					row = row,
+					col = col,
+					type = type,
+				})
+
+				self.new_tiles = self.new_tiles + 1
+				self.tile_map[row][col] = tile
+				table.insert(self.tiles, tile)
+			end
 		end
 	end
 
-	self.automata = CellularAutomata({ board = self })
-	apply_cellular_automata_rules(self.automata)
-	self:automata_step()
+	if self.num_tiles == 0 then
+		self.num_tiles = self.new_tiles
+	end
 end
 
-function Board:automata_step()
-	self.automata:step()
+function Board:move_new_board_to_center()
+	for _, tile in ipairs(self.tiles) do
+		trigger:tween(2, tile, { x = tile.center_x, y = tile.center_y }, math.quart_out, function() end)
+	end
 end
 
 function Board:mark_line(args)
@@ -97,6 +147,12 @@ end
 
 function Board:update(dt)
 	self:update_game_object(dt)
+
+	if self.clear_animation and self.num_tiles == 0 then
+		self.clear_animation = false
+		self.num_tiles = self.new_tiles
+		self:move_new_board_to_center()
+	end
 end
 
 function Board:valid_tile_for_building(building)

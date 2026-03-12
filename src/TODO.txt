@@ -14,13 +14,19 @@ TODO: Legend: [X] = done, [\] partially done
 [X] circle menu
 [X] cellular automata
 [X] events should be able to overlap
-
+[\] assign 'people' to buildings that give it some scaling for something
+    [\] assign people ui, unique amounts per building?
+    - Actually subtract from # people in game.resources
+    - scaling in building rules/effects
+- decide when/how events are created
+- Tie colours to tile types
 
 Refactoring (nice to haves):
 - refactor credits to 'credit_people({person.A, person.B, person.C})' with automatic spacing
 
 Bugfix:
 - holding buildings should be on a higher ui layer so they dont get overlapped by things on the board
+- lava moving fast as fuck at large board size
 
 Gameplay QoL:
 - While holding a building, highlight all valid placement areas and how much bonus would be
@@ -38,11 +44,11 @@ Visuals:
     - textboxes that work with smooth movement/moving camera
     - outline
 - [UX] display phases/phase changes clearly
+- [UI] figure out proper groups to put each element into
 
 
 Ideas:
 - fancy buildings (have some extra effect on top of regular)
-- assign 'people' to buildings that give it some scaling for something
 - shop rarity - tied to # of people assigned to a builiding (ex: market tied to a shop slot)
 - buildings should affect tiles near/under them (temporary/permanent changes?)
 

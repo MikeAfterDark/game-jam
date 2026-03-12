@@ -15,35 +15,14 @@ function Game:on_enter(from, args)
 
 	self.floor = Group()
 	self.main = Group()
-	-- :set_as_physics_world(
-	-- 8 * global_game_scale,
-	-- 0,
-	-- 1000,
-	-- {}
-	-- { "player", "transparent", "opaque", "runner", "pill" }
-	-- )
 	self.post_main = Group()
 	self.effects = Group()
-	self.ui = Group() --:no_camera()
+	self.ui = Group()
 	self.end_ui = Group():no_camera()
 	self.paused_ui = Group():no_camera()
 	self.options_ui = Group():no_camera()
 	self.keybinding_ui = Group():no_camera()
 	self.credits = Group():no_camera()
-
-	-- self.main:disable_collision_between("runner", "runner")
-	-- self.main:disable_collision_between("runner", "transparent")
-	-- self.main:disable_collision_between("runner", "pill")
-	--
-	-- self.main:enable_trigger_between("player", "transparent")
-	-- self.main:enable_trigger_between("transparent", "player")
-	--
-	-- self.main:enable_trigger_between("runner", "transparent")
-	-- self.main:enable_trigger_between("transparent", "runner")
-	--
-	-- self.main:enable_trigger_between("runner", "pill")
-	-- self.main:enable_trigger_between("pill", "runner")
-	-- self.main:enable_trigger_between("wall", "player")
 
 	self.main_slow_amount = 1
 	slow_amount = 1
@@ -58,16 +37,6 @@ function Game:on_enter(from, args)
 	self.won = false
 
 	self.game_ui_elements = {}
-
-	-- local ui_layer =
-	-- local ui_group = self.options_ui
-	-- self.options_ui_elements = {}
-	-- main.ui_layer_stack:push({
-	-- 	layer = ui_interaction_layer.Options,
-	-- 	layer_has_music = not main.current.in_pause,
-	-- 	music_type = "options",
-	-- 	ui_elements = self.options_ui_elements,
-	-- })
 
 	-- if layer underneath this one has layer_type == "game" and the same music type then dont push
 	local layer = main.ui_layer_stack:peek()
@@ -94,50 +63,64 @@ function Game:on_enter(from, args)
 	local tile_size = gh * 1 / (num_tiles + 1.8)
 	local shop_slot_size = gh * 0.03
 
+	-- init game elements:
+	-- board, shop, UI
+	self.board = Board({
+		group = self.floor,
+		layer = ui_interaction_layer.Game,
+		x = gw / 2,
+		y = gh / 2,
+		tile_size = tile_size,
+	})
+
+	self.shop = Shop({
+		group = self.main,
+		layer = ui_interaction_layer.Game,
+		positions = {    -- WARN: HARDCODED POSITIONS for 'global_game_scale = 4'
+			{ x = 337,  y = 647 }, --
+			{ x = 414,  y = 727 },
+			{ x = 523,  y = 810 },
+			{ x = 654,  y = 916 },
+			{ x = 1387, y = 741 },
+			{ x = 1536, y = 634 },
+		},
+		shop_slot_size = shop_slot_size,
+		open_slots = 5,
+		max_slots = 6,
+		level = 1,
+	})
+
 	-- local run = system.load_run() --
 	if
 		true --[[ or next(run) == nil ]]
 	then -- new run
-		self.board = Board({
-			group = self.floor,
-			layer = ui_interaction_layer.Game,
-			x = gw / 2,
-			y = gh / 2,
-			tile_size = tile_size,
-			rows = num_tiles,
-			columns = num_tiles,
-		})
-
-		self.shop = Shop({
-			group = self.main,
-			layer = ui_interaction_layer.Game,
-			positions = { -- WARN: HARDCODED POSITIONS for 'global_game_scale = 4'
-				{ x = 337, y = 647 }, --
-				{ x = 414, y = 727 },
-				{ x = 523, y = 810 },
-				{ x = 654, y = 916 },
-				{ x = 1387, y = 741 },
-				{ x = 1536, y = 634 },
-			},
-			shop_slot_size = shop_slot_size,
-			open_slots = 5,
-			max_slots = 6,
-			level = 1,
-		})
+		self.run_data = {
+			board = { x = 1, y = 1 },
+		}
+		self:new_board({ x = 1, y = 1, shape = table.random(board_shapes) })
+		-- self.board = Board({
+		-- 	group = self.floor,
+		-- 	layer = ui_interaction_layer.Game,
+		-- 	x = gw / 2,
+		-- 	y = gh / 2,
+		-- 	tile_size = tile_size,
+		-- 	rows = num_tiles,
+		-- 	columns = num_tiles,
+		-- })
 
 		self.resources = {
 			gold = {
-				total = 5,
+				total = 15,
 				gold_per_interest = 3,
 			},
-			people = { alive = 0 },
+			people = { alive = 25 },
 		}
 
 		self.game_state = {
 			turn = 1,
 			phase = Game_Loop[1](),
 			phase_index = 1,
-			event = Events.Fissure(),
+			max_turns = 5,
 		}
 
 		self.game_state.in_events = false
@@ -179,6 +162,52 @@ function Game:on_enter(from, args)
 		})
 	)
 
+	self.top_left_escape_button = collect_into(
+		self.game_ui_elements,
+		Button({
+			group = self.ui,
+			layer = ui_interaction_layer.Game,
+			x = gw * 0.3,
+			y = gh * 0.15,
+			button_text = "500 gold",
+			fg_color = "bg",
+			bg_color = "fg",
+			action = function(b)
+				if self.resources.gold.total > 10 then
+					self:new_board({
+						x = self.run_data.board.x,
+						direction = "left",
+						y = self.run_data.board.y + 1,
+						shape = table.random(board_shapes),
+					})
+				end
+			end,
+		})
+	)
+
+	self.top_right_escape_button = collect_into(
+		self.game_ui_elements,
+		Button({
+			group = self.ui,
+			layer = ui_interaction_layer.Game,
+			x = gw * 0.6,
+			y = gh * 0.15,
+			button_text = "300 gold",
+			fg_color = "bg",
+			bg_color = "fg",
+			action = function(b)
+				if self.resources.gold.total > 5 then
+					self:new_board({
+						x = self.run_data.board.x + 1, --
+						y = self.run_data.board.y,
+						direction = "right",
+						shape = table.random(board_shapes),
+					})
+				end
+			end,
+		})
+	)
+
 	self.phase_text = collect_into(
 		self.game_ui_elements,
 		Text2({
@@ -198,7 +227,7 @@ function Game:on_enter(from, args)
 			x = gw * 0.70,
 			y = gh * 0.1,
 			lines = {
-				{ text = "[yellow]Gold: " .. self.resources.gold.total .. "     [green]People: " .. self.resources.people.alive, font = pixul_font },
+				{ text = "[yellow]Gold: " .. self.resources.gold.total .. "     [green]Babies: " .. self.resources.people.alive, font = pixul_font },
 			},
 		})
 	)
@@ -240,6 +269,38 @@ function Game:play_intro()
 	end)
 end
 
+function Game:new_board(data)
+	-- clean up old board:
+	--		apply any permanent buffs/bonuses
+	--		remove all buildings,
+	self.board:clear_all() -- animation: each tile drops out of frame in a 'happy' way
+	--		remove all tiles,
+	--		remove all events,
+	--		clear/reset shop upgrades
+	self.shop:reset()    -- animation: incremental pops down to base level
+	--		reset self.game_state variables
+	self:clear_game_state() -- animation: blank out all indicators while other animations play
+	self.new_board_animation = true
+
+	--
+	-- new board:
+	--		init new board,
+	self.board:generate_board({ shape = data.shape, direction = data.direction, x = data.x, y = data.y })
+	--		set self.game_state variables
+	self.game_state = {
+		turn = 1,
+		phase = Game_Loop[1](),
+		phase_index = 1,
+		max_turns = 5,
+	}
+	self.run_data.board.x = data.x
+	self.run_data.board.y = data.y
+	--		apply any events/bonuses on this board
+	--
+end
+
+function Game:clear_game_state() end
+
 Phases = {
 	Shop = function()
 		local phase = {
@@ -248,8 +309,17 @@ Phases = {
 		}
 
 		function phase:run(game)
-			print(self.name)
-			game.players_turn = true
+			local end_turns = game.game_state.turn - game.game_state.max_turns
+			if end_turns == 3 then
+				print("GAME OVER")
+			elseif end_turns > 0 then
+				print("MAX TURNS REACHED, START ENDING: " .. tostring(end_turns))
+			end
+
+			if end_turns < 3 then
+				print("Turn " .. game.game_state.turn .. ": ", self.name)
+				game.players_turn = true
+			end
 		end
 
 		return phase
@@ -301,7 +371,7 @@ Phases = {
 			local events = game.events
 
 			local new_event = random:table(Events)()
-			new_event.current_countdown = state.event.countdown
+			new_event.current_countdown = new_event.countdown
 			new_event.prepared = false
 			table.insert(events, new_event)
 			print("new event: " .. new_event.name .. ", countdown: " .. new_event.current_countdown)
@@ -402,6 +472,10 @@ Game_Loop = { Phases.Shop, Phases.Pieces, Phases.Event }
 function Game:next_turn(force)
 	if not force and not self.players_turn then
 		return
+	end
+
+	if self.players_turn then
+		self.game_state.turn = self.game_state.turn + 1
 	end
 	self.players_turn = false
 
@@ -539,7 +613,8 @@ function Game:update(dt)
 				-- self.resources_text:set_text({
 				self.resources_text:set_text({
 					{
-						text = "[yellow]Gold: " .. self.resources.gold.total .. "     [green]People: " .. self.resources.people.alive,
+						text = "[yellow]Gold: " ..
+						self.resources.gold.total .. "     [green]Babies: " .. self.resources.people.alive,
 						font = pixul_font,
 					},
 				})

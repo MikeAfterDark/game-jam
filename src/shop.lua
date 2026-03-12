@@ -43,6 +43,8 @@ function Shop:reroll()
 	end
 end
 
+function Shop:reset() end
+
 --
 --
 --
@@ -103,7 +105,7 @@ function Slot:unlock(num)
 	self.unlock_menu:expand(false)
 	self.shop.open_slots = self.shop.open_slots + 1 -- TODO: save run?
 	trigger:after(0.5, function()
-		self.locked = false -- lock breaking animation?
+		self.locked = false                      -- lock breaking animation?
 		self:new_building(0, 0.05)
 	end)
 end

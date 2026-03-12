@@ -27,6 +27,9 @@ Building_Type = {
 					effects = { gold = 5 },
 				},
 			},
+			survival = {
+				{ type = "on_solid_tile" },
+			},
 		},
 	},
 	Dwelling = {
@@ -39,6 +42,9 @@ Building_Type = {
 				{ type = "on_solid_tile" },
 			},
 			bonus = {},
+			survival = {
+				{ type = "on_solid_tile" },
+			},
 		},
 	},
 	Farm = {
@@ -54,6 +60,9 @@ Building_Type = {
 				-- { type = "on_tile_with_none of_traits", values = { "dry", "cold" } },
 			},
 			bonus = {},
+			survival = {
+				{ type = "on_solid_tile" },
+			},
 		},
 	},
 	Market = {
@@ -66,6 +75,9 @@ Building_Type = {
 				{ type = "on_solid_tile" },
 			},
 			bonus = {},
+			survival = {
+				{ type = "on_solid_tile" },
+			},
 		},
 	},
 	Necromancer = {
@@ -78,6 +90,9 @@ Building_Type = {
 				{ type = "on_solid_tile" },
 			},
 			bonus = {},
+			survival = {
+				{ type = "on_solid_tile" },
+			},
 		},
 	},
 	Ship = {
@@ -90,6 +105,9 @@ Building_Type = {
 				{ type = "on_solid_tile" },
 			},
 			bonus = {},
+			survival = {
+				{ type = "on_solid_tile" },
+			},
 		},
 	},
 	Tent = {
@@ -102,6 +120,9 @@ Building_Type = {
 				{ type = "on_solid_tile" },
 			},
 			bonus = {},
+			survival = {
+				{ type = "on_solid_tile" },
+			},
 		},
 	},
 }
@@ -172,7 +193,7 @@ RuleLogic = {
 		end
 
 		local error = "needs to be adjacent to the building" --
-				.. #missing > 1 and "s" .. ": " .. table.concat(missing, ", ")
+			.. #missing > 1 and "s" .. ": " .. table.concat(missing, ", ")
 		return #missing == 0, error
 	end,
 
@@ -241,6 +262,7 @@ function Building:init(args)
 	})
 
 	self.people_assigned_text = Text2({
+		group = main.current.post_main,
 		layer = self.layer,
 		x = self.x,
 		y = self.y,
@@ -263,7 +285,7 @@ function Building:update(dt)
 
 	local offset = 25
 	self.people_assigned_text:move_to(self.x + offset, self.y - offset)
-	self.people_assigned_text:update(dt)
+	-- self.people_assigned_text:update(dt)
 
 	self.people_slider.shape:move_to(self.x, self.y)
 	self.people_slider.x = self.x
@@ -321,7 +343,37 @@ end
 
 function Building:can_survive(conditions)
 	-- check if can be placed on tile, and if can survive the conditions in effects
-	return false
+	--
+	-- { tile = self, effects = args.effects })
+	conditions.building = self
+
+	local errors = {}
+	for _, rule in ipairs(self.type.rules.survival) do
+		local passed, error = RuleLogic[rule.type](conditions, rule)
+		if not passed then
+			table.insert(errors, error)
+		end
+	end
+
+	if #errors == 0 or true then
+		self:bounce(40, 0.3)
+	end
+	return true -- #errors == 0, errors
+end
+
+function Building:bounce(amount, total_duration)
+	if not self.bouncing then
+		self.bouncing = true
+		local duration = total_duration / 2
+		local base_y = self.origin.y
+
+		trigger:tween(duration, self, { y = base_y - amount }, math.quad_out, function()
+			trigger:tween(duration, self, { y = base_y }, math.bounce_out, function()
+				self.y = base_y -- force exact reset
+				self.bouncing = false
+			end)
+		end)
+	end
 end
 
 function Building:demolish()
@@ -379,6 +431,6 @@ function Building:draw()
 		black[0]
 	)
 	self.type.sprites()[1]:draw(self.x, self.y, 0, scale, scale, 0, 0, color)
-	self.people_assigned_text:draw()
+	-- self.people_assigned_text:draw()
 	graphics.pop()
 end
