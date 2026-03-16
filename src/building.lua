@@ -262,13 +262,12 @@ function Building:init(args)
 		end,
 	})
 
-	self.people_assigned_text = Text2({
-		group = main.current.post_main,
-		layer = self.layer,
-		x = self.x,
-		y = self.y,
-		lines = { { text = "", font = small_pixul_font } },
-	})
+	self.people_assigned_text = Text({
+		{
+			text = "",
+			font = small_pixul_font,
+		},
+	}, global_text_tags)
 end
 
 function Building:assign_people(p)
@@ -284,10 +283,6 @@ function Building:update(dt)
 		game_mouse.holding = self
 	end
 
-	local offset = 25
-	if self.people_assigned_text then
-		self.people_assigned_text:move_to(self.x + offset, self.y - offset)
-	end
 	-- self.people_assigned_text:update(dt)
 
 	self.people_slider.shape:move_to(self.x, self.y)
@@ -442,5 +437,8 @@ function Building:draw()
 	)
 	self.type.sprites()[1]:draw(self.x, self.y, 0, scale, scale, 0, 0, color)
 	-- self.people_assigned_text:draw()
+
+	local offset = 25
+	self.people_assigned_text:draw(self.x + offset, self.y - offset, 0, 1, 1, self.opacity)
 	graphics.pop()
 end
