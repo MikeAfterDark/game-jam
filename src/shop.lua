@@ -56,6 +56,8 @@ function Shop:reset()
 					sfx.shop_reroll:play({ pitch = pitch, volume = 0.5 })
 				end
 			end)
+		else
+			slot.unlock_menu:expand(false)
 		end
 	end
 end
@@ -79,6 +81,10 @@ function Slot:init(args)
 		y = self.y,
 		size = self.size * 5,
 		rotation = 5 * math.pi / 4,
+		no_selection = {
+			text = "[red]cancel unlock",
+			-- sprite = big_red_x_sprite,
+		},
 		options = {
 			{
 				color = yellow[-5],
@@ -119,6 +125,7 @@ function Slot:unlock(num)
 	print("unlocked shop slot with option: " .. num)
 	self.unlock_menu:expand(false)
 	self.shop.open_slots = self.shop.open_slots + 1 -- TODO: save run?
+	sfx.extra:play({ pitch = 1.4, volume = 0.5 })
 	trigger:after(0.5, function()
 		self.locked = false -- lock breaking animation?
 		self:new_building(0, 0.05)
@@ -189,23 +196,28 @@ function Slot:new_building(delay, speed)
 end
 
 function Slot:on_mouse_enter()
-	if not on_current_ui_layer(self) or not main.current.players_turn or self.unlock_menu.expanded then
+	if not on_current_ui_layer(self) then
 		return false
 	end
+	self.selected = true
+
+	if not main.current.players_turn or self.unlock_menu.expanded then
+		return true
+	end
+
 	-- [SFX]
 	if self.building or self.locked then
 		sfx.tile_mouse_enter:play({ pitch = random:float(0.95, 1.05), volume = 0.1 })
 	end
-	self.selected = true
 	-- self.spring:pull(0.15, 400, 32)
 	self.spring:pull(0.25, 400, 32)
 	return true
 end
 
 function Slot:on_mouse_exit()
-	if self.unlock_menu.expanded then
-		return
-	end
+	-- if self.unlock_menu.expanded then
+	-- 	return
+	-- end
 
 	self.selected = false
 	return true

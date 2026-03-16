@@ -247,7 +247,7 @@ function Building:init(args)
 	-- [SFX]
 
 	self.people_slider = Circle_Slider({
-		group = main.current.ui,
+		-- group = main.current.ui,
 		layer = self.layer,
 		x = self.x,
 		y = self.y,
@@ -284,12 +284,18 @@ function Building:update(dt)
 	end
 
 	-- self.people_assigned_text:update(dt)
+	if self.people_slider then
+		self.people_slider.shape:move_to(self.x, self.y)
+		self.people_slider.x = self.x
+		self.people_slider.y = self.y
+		if self.tile and self.selected and input.modify.pressed then
+			self.people_slider:expand(true)
+		end
 
-	self.people_slider.shape:move_to(self.x, self.y)
-	self.people_slider.x = self.x
-	self.people_slider.y = self.y
-	if self.tile and self.selected and input.modify.pressed then
-		self.people_slider:expand(true)
+		-- if self.opacity < 1 then
+		-- 	self.people_slider:expand(false)
+		-- end
+		self.people_slider:update(dt)
 	end
 end
 
@@ -379,6 +385,9 @@ function Building:demolish()
 		-- self.people_assigned_text.dead = true
 		self.people_assigned_text = nil
 	end
+
+	self.people_slider.dead = true
+	self.people_slider = nil
 	self.dead = true
 end
 
@@ -401,6 +410,10 @@ end
 function Building:on_mouse_exit()
 	self.selected = false
 	return true
+end
+
+function Building:prep_demolish()
+	self.people_slider:expand(false)
 end
 
 function Building:draw()
@@ -440,5 +453,7 @@ function Building:draw()
 
 	local offset = 25
 	self.people_assigned_text:draw(self.x + offset, self.y - offset, 0, 1, 1, self.opacity)
+
+	self.people_slider:draw()
 	graphics.pop()
 end

@@ -6,6 +6,7 @@ function Circle_Menu:init(args)
 	self.shape = Circle(self.x, self.y, self.visible_size)
 	self.interact_with_mouse = true
 	self.expanded = false
+	self.ready = false
 
 	self.options = args.options or {}
 	self.rotation = args.rotation or 0
@@ -62,12 +63,21 @@ function Circle_Menu:init(args)
 			lines = { { text = option.text.result, font = small_pixul_font } },
 		})
 	end
+
+	if self.no_selection then
+		self.no_selection_text = Text2({
+			layer = self.layer,
+			x = self.x,
+			y = self.y,
+			lines = { { text = self.no_selection.text, font = small_pixul_font } },
+		})
+	end
 end
 
 function Circle_Menu:update(dt)
 	self:update_game_object(dt)
 
-	if not self.expanded then
+	if not self.expanded or not self.ready then
 		self.hovered_index = nil
 		return
 	end
@@ -75,6 +85,9 @@ function Circle_Menu:update(dt)
 	for i, option in ipairs(self.options) do
 		option.requirement_text:update(dt)
 		option.result_text:update(dt)
+	end
+	if self.no_selection_text then
+		self.no_selection_text:update(dt)
 	end
 
 	local mx, my = main.current.main:get_mouse_position()
@@ -90,6 +103,7 @@ function Circle_Menu:update(dt)
 			self:expand(false)
 		end
 		return
+	else
 	end
 
 	self.mouse_angle = math.atan2(dy, dx)
@@ -115,7 +129,9 @@ function Circle_Menu:expand(grow)
 	local size = grow and self.size or 0
 	self.expanded = grow
 	self.shape.rs = size
-	trigger:tween(0.4, self, { visible_size = size }, math.expo_out)
+	trigger:tween(0.4, self, { visible_size = size }, math.expo_out, function()
+		self.ready = self.expanded
+	end)
 end
 
 function Circle_Menu:draw()
@@ -164,15 +180,20 @@ function Circle_Menu:draw()
 	end
 
 	graphics.circle(self.x, self.y, r * self.inner_deadzone, black[0])
-	if self.hovered_index then
-		self.options[self.hovered_index].requirement_text:draw()
-		self.options[self.hovered_index].result_text:draw()
+	if self.expanded then
+		if self.hovered_index then
+			self.options[self.hovered_index].requirement_text:draw()
+			self.options[self.hovered_index].result_text:draw()
+		elseif self.no_selection then
+			self.no_selection_text:draw()
+		end
 	end
 
 	graphics.pop()
 end
 
 function Circle_Menu:on_mouse_exit()
-	-- self:expand(false)
+	self:expand(false)
+	self.selected = false
 	return true
 end

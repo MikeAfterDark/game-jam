@@ -28,8 +28,6 @@ Refactoring (nice to haves):
 Bugfix:
 - holding buildings should be on a higher ui layer so they dont get overlapped by things on the board
 - lava moving fast as fuck at large board size
-- text on buildings remains after buildings are removed
-- if a building's selection is open, its possible to escape the board and it'll stay open (left/right click)
 
 Gameplay QoL:
 - While holding a building, highlight all valid placement areas and how much bonus would be

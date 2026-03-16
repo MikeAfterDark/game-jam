@@ -14,14 +14,12 @@ function Circle_Slider:init(args)
 
 	self.text_offset = 14
 	self.description_text = Text2({
-		-- group = self.group,
 		layer = self.layer,
 		x = self.x,
 		y = self.y - self.text_offset,
 		lines = { { text = self.text.description, font = small_pixul_font } },
 	})
 	self.value_text = Text2({
-		-- group = self.group,
 		layer = self.layer,
 		x = self.x,
 		y = self.y + self.text_offset,
@@ -30,8 +28,6 @@ function Circle_Slider:init(args)
 end
 
 function Circle_Slider:update(dt)
-	self:update_game_object(dt)
-
 	if not self.expanded then
 		self.hovered_index = nil
 		return
@@ -140,7 +136,6 @@ function Circle_Slider:draw()
 	end
 
 	if self.expanded and self.mouse_angle then
-		-- print(love.timer.getTime(), self.visible_size)
 		angle = (self.mouse_in_deadzone and self.hovered_index) and self.hovered_index * slice_angle or self.mouse_angle
 		graphics.line(
 			self.x,

@@ -22,6 +22,7 @@ function Board:clear_all()
 	local fall_distance = gh * 0.1
 	for _, tile in ipairs(self.tiles) do
 		trigger:after(random:float(0, 0.2), function()
+			tile:prep_clearing()
 			local offset = random:bool() and fall_distance or -fall_distance
 			trigger:tween(
 				1.0,

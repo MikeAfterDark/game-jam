@@ -128,7 +128,7 @@ function Tile:update(dt)
 		self:on_mouse_enter()
 	end
 
-	if self.holding then
+	if self.holding and self.clearing then
 		self.holding.y = self.y
 		self.holding.opacity = self.opacity
 	end
@@ -175,6 +175,13 @@ function Tile:convert_tile(args)
 		sfx.earthquake:play({ pitch = random:float(0.95, 1.05), volume = 0.1 })
 		self:set_type(args)
 		-- end)
+	end
+end
+
+function Tile:prep_clearing()
+	self.clearing = true
+	if self.holding then
+		self.holding:prep_demolish()
 	end
 end
 
