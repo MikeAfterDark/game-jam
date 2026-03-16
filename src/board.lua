@@ -21,7 +21,7 @@ function Board:clear_all()
 	self.clear_animation = true
 	local fall_distance = gh * 0.1
 	for _, tile in ipairs(self.tiles) do
-		trigger:after(random:float(0.3, 0.9), function()
+		trigger:after(random:float(0, 0.2), function()
 			local offset = random:bool() and fall_distance or -fall_distance
 			trigger:tween(
 				1.0,
@@ -115,9 +115,14 @@ function Board:generate_board(data)
 end
 
 function Board:move_new_board_to_center()
+	local move_time = 2
 	for _, tile in ipairs(self.tiles) do
-		trigger:tween(2, tile, { x = tile.center_x, y = tile.center_y }, math.quart_out, function() end)
+		tile:move_to({ duration = move_time, x = tile.center_x, y = tile.center_y, easing = math.quad_out })
 	end
+
+	trigger:after(move_time, function()
+		self.new_board_in_position = true
+	end)
 end
 
 function Board:mark_line(args)
@@ -164,7 +169,8 @@ end
 function Board:update(dt)
 	self:update_game_object(dt)
 
-	if self.clear_animation and self.num_tiles == 0 then
+	if self.clear_animation and self.num_tiles <= 0 then
+		self.num_tiles = 0
 		self.clear_animation = false
 		self.num_tiles = self.new_tiles
 		self:move_new_board_to_center()

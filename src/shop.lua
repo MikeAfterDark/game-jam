@@ -31,7 +31,7 @@ end
 
 function Shop:clear_slot(building)
 	for i, slot in ipairs(self.slots) do
-		slot:clear(building)
+		slot:clear_building(building)
 	end
 end
 
@@ -43,7 +43,22 @@ function Shop:reroll()
 	end
 end
 
-function Shop:reset() end
+function Shop:reset()
+	for i, slot in ipairs(self.slots) do
+		if slot.locked == false then
+			trigger:after(i * 0.05, function()
+				local cleared = slot:clear()
+
+				if cleared then
+					slot.spring:pull(0.25, 400, 32)
+
+					local pitch = 0.6 - i * 0.08 + random:float(0, 0.2)
+					sfx.shop_reroll:play({ pitch = pitch, volume = 0.5 })
+				end
+			end)
+		end
+	end
+end
 
 --
 --
@@ -59,7 +74,7 @@ function Slot:init(args)
 
 	self.unlock_menu = Circle_Menu({
 		group = main.current.ui,
-		layer = self.layer,
+		layer = self.laye,
 		x = self.x,
 		y = self.y,
 		size = self.size * 5,
@@ -105,7 +120,7 @@ function Slot:unlock(num)
 	self.unlock_menu:expand(false)
 	self.shop.open_slots = self.shop.open_slots + 1 -- TODO: save run?
 	trigger:after(0.5, function()
-		self.locked = false                      -- lock breaking animation?
+		self.locked = false -- lock breaking animation?
 		self:new_building(0, 0.05)
 	end)
 end
@@ -115,20 +130,30 @@ function Slot:draw()
 	local lock_color = white[0]
 	local scale = self.size * 0.04
 
+	graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
 	shop_sprites.shop_slot[1]:draw(self.x, self.y, 0, scale, scale, 0, 0, color)
 	if self.locked then
-		graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
 		shop_sprites.lock[1]:draw(self.x, self.y, 0, scale, sclae, 0, 0, lock_color)
-		graphics.pop()
 	end
 
+	graphics.pop()
 	-- self.shape:draw(color, 2)
 end
 
-function Slot:clear(building)
+function Slot:clear_building(building)
 	if building == self.building then
+		-- self.building:demolish()
 		self.building = nil
 	end
+end
+
+function Slot:clear()
+	if self.building then
+		self.building:demolish()
+		self.building = nil
+		return true
+	end
+	return false
 end
 
 function Slot:new_building(delay, speed)
@@ -143,7 +168,7 @@ function Slot:new_building(delay, speed)
 			if game_mouse.holding == self.building then
 				game_mouse.holding = nil
 			end
-			self.building.dead = true
+			self.building:demolish()
 			self.building = nil
 		end
 
@@ -164,7 +189,7 @@ function Slot:new_building(delay, speed)
 end
 
 function Slot:on_mouse_enter()
-	if not on_current_ui_layer(self) or self.unlock_menu.expanded then
+	if not on_current_ui_layer(self) or not main.current.players_turn or self.unlock_menu.expanded then
 		return false
 	end
 	-- [SFX]

@@ -193,7 +193,7 @@ RuleLogic = {
 		end
 
 		local error = "needs to be adjacent to the building" --
-			.. #missing > 1 and "s" .. ": " .. table.concat(missing, ", ")
+				.. #missing > 1 and "s" .. ": " .. table.concat(missing, ", ")
 		return #missing == 0, error
 	end,
 
@@ -285,7 +285,9 @@ function Building:update(dt)
 	end
 
 	local offset = 25
-	self.people_assigned_text:move_to(self.x + offset, self.y - offset)
+	if self.people_assigned_text then
+		self.people_assigned_text:move_to(self.x + offset, self.y - offset)
+	end
 	-- self.people_assigned_text:update(dt)
 
 	self.people_slider.shape:move_to(self.x, self.y)
@@ -378,11 +380,15 @@ function Building:bounce(amount, total_duration)
 end
 
 function Building:demolish()
+	if self.people_assigned_text then
+		-- self.people_assigned_text.dead = true
+		self.people_assigned_text = nil
+	end
 	self.dead = true
 end
 
 function Building:on_mouse_enter()
-	if not on_current_ui_layer(self) then
+	if not on_current_ui_layer(self) or not main.current.players_turn then
 		return false
 	end
 	-- if game_mouse.holding ~= nil then

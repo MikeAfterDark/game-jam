@@ -20,6 +20,7 @@ TODO: Legend: [X] = done, [\] partially done
     - scaling in building rules/effects
 - decide when/how events are created
 - Tie colours to tile types
+- board line tile marking is broken, always pivots around the top center
 
 Refactoring (nice to haves):
 - refactor credits to 'credit_people({person.A, person.B, person.C})' with automatic spacing
@@ -27,6 +28,7 @@ Refactoring (nice to haves):
 Bugfix:
 - holding buildings should be on a higher ui layer so they dont get overlapped by things on the board
 - lava moving fast as fuck at large board size
+- text on buildings remains after buildings are removed
 
 Gameplay QoL:
 - While holding a building, highlight all valid placement areas and how much bonus would be

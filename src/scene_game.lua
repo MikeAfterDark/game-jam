@@ -76,11 +76,11 @@ function Game:on_enter(from, args)
 	self.shop = Shop({
 		group = self.main,
 		layer = ui_interaction_layer.Game,
-		positions = {    -- WARN: HARDCODED POSITIONS for 'global_game_scale = 4'
-			{ x = 337,  y = 647 }, --
-			{ x = 414,  y = 727 },
-			{ x = 523,  y = 810 },
-			{ x = 654,  y = 916 },
+		positions = { -- WARN: HARDCODED POSITIONS for 'global_game_scale = 4'
+			{ x = 337, y = 647 }, --
+			{ x = 414, y = 727 },
+			{ x = 523, y = 810 },
+			{ x = 654, y = 916 },
 			{ x = 1387, y = 741 },
 			{ x = 1536, y = 634 },
 		},
@@ -89,6 +89,8 @@ function Game:on_enter(from, args)
 		max_slots = 6,
 		level = 1,
 	})
+
+	self.intro_complete = false
 
 	-- local run = system.load_run() --
 	if
@@ -128,84 +130,97 @@ function Game:on_enter(from, args)
 	else -- rebuild run from savestate
 	end
 
+	self.player_buttons = {}
 	self.reroll_button = collect_into(
-		self.game_ui_elements,
-		Button({
-			group = self.ui,
-			layer = ui_interaction_layer.Game,
-			x = gw * 0.7,
-			y = gh * 0.88,
-			button_text = "reroll",
-			fg_color = "bg",
-			bg_color = "fg",
-			action = function(b)
-				-- [SFX]
-				self.shop:reroll()
-			end,
-		})
+		self.player_buttons,
+		collect_into(
+			self.game_ui_elements,
+			Button({
+				group = self.ui,
+				layer = ui_interaction_layer.Game,
+				x = gw * 0.7,
+				y = gh * 0.88,
+				button_text = "reroll",
+				fg_color = "bg",
+				bg_color = "fg",
+				action = function(b)
+					-- [SFX]
+					self.shop:reroll()
+				end,
+			})
+		)
 	)
 
 	self.end_turn_button = collect_into(
-		self.game_ui_elements,
-		Button({
-			group = self.ui,
-			layer = ui_interaction_layer.Game,
-			x = gw * 0.7,
-			y = gh * 0.94,
-			button_text = "end turn",
-			fg_color = "bg",
-			bg_color = "fg",
-			action = function(b)
-				-- [SFX]
-				self:next_turn()
-			end,
-		})
+		self.player_buttons,
+		collect_into(
+			self.game_ui_elements,
+			Button({
+				group = self.ui,
+				layer = ui_interaction_layer.Game,
+				x = gw * 0.7,
+				y = gh * 0.94,
+				button_text = "end turn",
+				fg_color = "bg",
+				bg_color = "fg",
+				action = function(b)
+					-- [SFX]
+					self:next_turn()
+				end,
+			})
+		)
 	)
 
 	self.top_left_escape_button = collect_into(
-		self.game_ui_elements,
-		Button({
-			group = self.ui,
-			layer = ui_interaction_layer.Game,
-			x = gw * 0.3,
-			y = gh * 0.15,
-			button_text = "500 gold",
-			fg_color = "bg",
-			bg_color = "fg",
-			action = function(b)
-				if self.resources.gold.total > 10 then
-					self:new_board({
-						x = self.run_data.board.x,
-						direction = "left",
-						y = self.run_data.board.y + 1,
-						shape = table.random(board_shapes),
-					})
-				end
-			end,
-		})
+		self.player_buttons,
+		collect_into(
+			self.game_ui_elements,
+			Button({
+				group = self.ui,
+				layer = ui_interaction_layer.Game,
+				x = gw * 0.3,
+				y = gh * 0.15,
+				button_text = "500 gold",
+				fg_color = "bg",
+				bg_color = "fg",
+				action = function(b)
+					if self.resources.gold.total > 10 then
+						self:new_board({
+							x = self.run_data.board.x,
+							direction = "left",
+							y = self.run_data.board.y + 1,
+							shape = table.random(board_shapes),
+						})
+					end
+				end,
+			})
+		)
 	)
 
 	self.top_right_escape_button = collect_into(
-		self.game_ui_elements,
-		Button({
-			group = self.ui,
-			layer = ui_interaction_layer.Game,
-			x = gw * 0.6,
-			y = gh * 0.15,
-			button_text = "300 gold",
-			fg_color = "bg",
-			bg_color = "fg",
-			action = function(b)
-				if self.resources.gold.total > 5 then
-					self:new_board({
-						x = self.run_data.board.x + 1, --
-						y = self.run_data.board.y,
-						direction = "right",
-						shape = table.random(board_shapes),
-					})
-				end
-			end,
-		})
+		self.player_buttons,
+		collect_into(
+			self.game_ui_elements,
+			Button({
+				group = self.ui,
+				layer = ui_interaction_layer.Game,
+				x = gw * 0.6,
+				y = gh * 0.15,
+				button_text = "300 gold",
+				fg_color = "bg",
+				bg_color = "fg",
+				action = function(b)
+					if self.resources.gold.total > 5 then
+						self:new_board({
+							x = self.run_data.board.x + 1, --
+							y = self.run_data.board.y,
+							direction = "right",
+							shape = table.random(board_shapes),
+						})
+					end
+				end,
+			})
+		)
 	)
 
 	self.phase_text = collect_into(
@@ -232,6 +247,7 @@ function Game:on_enter(from, args)
 		})
 	)
 	self._pending_tile_results = {}
+	self.new_board_animation = false
 
 	self.info_display = Info_Display({
 		group = self.end_ui,
@@ -265,26 +281,31 @@ function Game:play_intro()
 			self.players_turn = true
 			self.shop:reroll()
 			self.game_state.phase:run(self)
+			self.intro_complete = true
 		end)
 	end)
 end
 
 function Game:new_board(data)
+	self.players_turn = false
+
 	-- clean up old board:
 	--		apply any permanent buffs/bonuses
 	--		remove all buildings,
-	self.board:clear_all() -- animation: each tile drops out of frame in a 'happy' way
-	--		remove all tiles,
-	--		remove all events,
-	--		clear/reset shop upgrades
-	self.shop:reset()    -- animation: incremental pops down to base level
+	if self.intro_complete then
+		self.board:clear_all() -- animation: each tile drops out of frame in a 'happy' way
+		--		remove all tiles,
+		--		remove all events,
+		--		clear/reset shop upgrades
+		self.shop:reset() -- animation: incremental pops down to base level
+	end
 	--		reset self.game_state variables
 	self:clear_game_state() -- animation: blank out all indicators while other animations play
-	self.new_board_animation = true
 
 	--
 	-- new board:
 	--		init new board,
+	self.new_board_animation = true
 	self.board:generate_board({ shape = data.shape, direction = data.direction, x = data.x, y = data.y })
 	--		set self.game_state variables
 	self.game_state = {
@@ -550,8 +571,11 @@ function Game:update(dt)
 		self.credits:update(0)
 	end
 
-	self.reroll_button.locked = not self.players_turn
-	self.end_turn_button.locked = not self.players_turn
+	for _, button in ipairs(self.player_buttons) do
+		button.locked = not self.players_turn
+	end
+	self.board.locked = not self.players_turn
+	self.shop.locked = not self.players_turn
 
 	--
 	-- Player actions
@@ -613,8 +637,7 @@ function Game:update(dt)
 				-- self.resources_text:set_text({
 				self.resources_text:set_text({
 					{
-						text = "[yellow]Gold: " ..
-						self.resources.gold.total .. "     [green]Babies: " .. self.resources.people.alive,
+						text = "[yellow]Gold: " .. self.resources.gold.total .. "     [green]Babies: " .. self.resources.people.alive,
 						font = pixul_font,
 					},
 				})
@@ -656,6 +679,18 @@ function Game:update(dt)
 			self.board:automata_step()
 			self:next_turn(true)
 		end
+	end
+
+	--
+	-- For board actions
+	--
+	if self.board.new_board_in_position then
+		self.board.new_board_in_position = false
+		self.shop:reroll()
+		camera:shake(5, 0.5, 20)
+		trigger:after(0.2, function()
+			self.players_turn = true
+		end)
 	end
 
 	self:update_game_object(dt * slow_amount)

@@ -731,6 +731,7 @@ end
 
 function Text2:update(dt)
 	self:update_game_object(dt)
+
 	self.text:update(dt)
 
 	if self.scroll_box then

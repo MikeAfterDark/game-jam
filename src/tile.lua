@@ -179,7 +179,7 @@ function Tile:convert_tile(args)
 end
 
 function Tile:on_mouse_enter()
-	if not on_current_ui_layer(self) then
+	if not on_current_ui_layer(self) or not main.current.players_turn then
 		return false
 	end
 	-- [SFX]
@@ -208,4 +208,10 @@ function Tile:bounce(amount, total_duration)
 			end)
 		end)
 	end
+end
+
+function Tile:move_to(args)
+	trigger:tween(args.duration, self, { x = args.x, y = args.y }, args.easing, function()
+		self.shape:move_to(args.x, args.y)
+	end)
 end

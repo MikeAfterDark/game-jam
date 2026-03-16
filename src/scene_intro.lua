@@ -42,11 +42,11 @@ function Intro:on_enter(from, args)
 
 	intro_song:play({ volume = 0.2 })
 
-	trigger:tween(2, self.text, { y = gh / 2 }, math.cubic_in_out) -- positioning title text to center at the start
+	trigger:tween(1.2, self.text, { y = gh / 2 }, math.cubic_in_out) -- positioning title text to center at the start
 	trigger:after(0.1, function()
 		trigger:tween(0.4, self, { opacity = 0 }, math.quad_in_out, function() -- lowering foreground opactiy
-			trigger:after(2, function()
-				trigger:tween(5, self.text, { y = -gh }, math.cubic_in_out) -- moving title text up at the end
+			trigger:after(1, function()
+				trigger:tween(2, self.text, { y = -gh }, math.cubic_in_out) -- moving title text up at the end
 			end)
 		end)
 		if not self.transitioning then
@@ -54,7 +54,7 @@ function Intro:on_enter(from, args)
 		end
 	end)
 
-	trigger:after(1.8, function()
+	trigger:after(1.5, function()
 		self.intro_complete = true
 	end)
 end

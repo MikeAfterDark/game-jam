@@ -50,12 +50,12 @@ function init()
 	end
 
 	person = {
-		Mikey = { name = "Mikey G", nickname = "Mikey", url = "https://gusakm.itch.io/", color = "green" },                               -- main dev
+		Mikey = { name = "Mikey G", nickname = "Mikey", url = "https://gusakm.itch.io/", color = "green" }, -- main dev
 
 		Apezilla = { name = 'David "Apezilla" Browne', nickname = "Apezilla", url = "https://www.youtube.com/@davidbrowne003", color = "red" }, -- music
 		Patrick = { name = "Patrick Montanari", nickname = "Patrick", url = "https://www.succulentsoundstudios.com/", color = "yellow" }, -- jazz improv
-		Tectonic = { name = "TectonicHorizon", nickname = "Tectonic", url = "https://soundcloud.com/reedflow", color = "p_blue1" },       -- art/game design
-		Kai = { name = "KaiaRadio", nickname = "Kai", url = "https://www.youtube.com/@KaiaRadio", color = "blue" },                       -- sfx
+		Tectonic = { name = "TectonicHorizon", nickname = "Tectonic", url = "https://soundcloud.com/reedflow", color = "p_blue1" }, -- art/game design
+		Kai = { name = "KaiaRadio", nickname = "Kai", url = "https://www.youtube.com/@KaiaRadio", color = "blue" }, -- sfx
 	}
 
 	-- load sounds:
@@ -223,10 +223,10 @@ function init()
 
 	-- can comfortably fit 14 scenes atm
 	debug_scenes = {
-		-- { id = "intro", destination = Intro },
-		-- { id = "main_menu", destination = MainMenu },
-		-- { id = "game", destination = Game },
-		-- { id = "audio_zoo", destination = AudioZoo },
+		{ id = "intro", destination = Intro },
+		{ id = "main_menu", destination = MainMenu },
+		{ id = "game", destination = Game },
+		-- { id = "audio_zoo", destination = AudioZoo }, -- todo: fix
 	}
 
 	-- main:add(Intro("intro"))
