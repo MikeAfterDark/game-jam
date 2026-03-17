@@ -220,5 +220,6 @@ end
 function Tile:move_to(args)
 	trigger:tween(args.duration, self, { x = args.x, y = args.y }, args.easing, function()
 		self.shape:move_to(args.x, args.y)
+		self.base_y = args.y -- for tile:bounce() to not drift
 	end)
 end
