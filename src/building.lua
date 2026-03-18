@@ -362,7 +362,7 @@ function Building:can_survive(conditions)
 	if #errors == 0 or true then
 		self:bounce(40, 0.3)
 	end
-	return true -- #errors == 0, errors
+	return false -- #errors == 0, errors
 end
 
 function Building:bounce(amount, total_duration)

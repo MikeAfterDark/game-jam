@@ -235,6 +235,18 @@ function Game:on_enter(from, args)
 		})
 	)
 
+	self.turn_text = collect_into(
+		self.game_ui_elements,
+		Text2({
+			group = self.ui,
+			x = gw * 0.34,
+			y = gh * 0.05,
+			lines = {
+				{ text = "Turn " .. self.game_state.turn .. "/" .. self.game_state.max_turns .. "[red]+2", font = pixul_font },
+			},
+		})
+	)
+
 	self.resources_text = collect_into(
 		self.game_ui_elements,
 		Text2({
@@ -331,6 +343,11 @@ Phases = {
 
 		function phase:run(game)
 			local end_turns = game.game_state.turn - game.game_state.max_turns
+			local turn_color = end_turns > 0 and "[red]" or ""
+			game.turn_text:set_text({
+				{ text = "Turn " .. turn_color .. game.game_state.turn .. "/" .. game.game_state.max_turns .. "[red]+2", font = pixul_font },
+			})
+
 			if end_turns == 3 then
 				print("GAME OVER")
 			elseif end_turns > 0 then
@@ -503,14 +520,14 @@ function Game:next_turn(force)
 	-- goto next phase, proc next phase,
 	self.game_state.phase_index = (self.game_state.phase_index % #Game_Loop) + 1
 	self.game_state.phase = Game_Loop[self.game_state.phase_index]()
-	self.phase_text:set_text({
-		{ text = self.game_state.phase.name, font = pixul_font },
-	})
 
 	local color = self.game_state.phase.background_color
 	trigger:tween(0.2, background_color, { r = color.r, g = color.g, b = color.g, a = color.a }, math.linear)
 
 	trigger:after(0.5, function()
+		self.phase_text:set_text({
+			{ text = self.game_state.phase.name, font = pixul_font },
+		})
 		self.game_state.phase:run(self)
 	end)
 end

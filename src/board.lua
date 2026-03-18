@@ -56,7 +56,8 @@ function Board:generate_board(data)
 		self.tile_map[row] = {}
 	end
 
-	local screen_vertical_offset = gh * 0.45
+	local screen_vertical_offset = 0
+	local half_height_offset = #data.shape / 2 * self.tile_size
 	local depth_scale = 0.543
 	local horizontal_scale = 0.635
 
@@ -88,6 +89,7 @@ function Board:generate_board(data)
 				local center_y = self.y --
 					+ (col - 1) * x_axis.y
 					+ (row - 1) * y_axis.y
+					- half_height_offset
 					- screen_vertical_offset
 
 				local tile = Tile({
