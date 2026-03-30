@@ -10,29 +10,21 @@ function AudioZoo:on_enter(from, args)
 	local folder = "abc/"
 
 	local slider_sounds = {
-		Sound("sound1.mp3", sfx_tag),
-		Sound("the-first-note-of-megalovania.mp3", sfx_tag),
+		sfx.earthquake,
+		sfx.intro_jingle,
 	}
 
-	local button_sounds = {                            -- setup for a max of 24
-		{ "lizard",          Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "bad to the bone", Sound("sound2.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "lizard",          Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "bad to the bone", Sound("sound2.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "lizard",          Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "bad to the bone", Sound("sound2.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "lizard",          Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "bad to the bone", Sound("sound2.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "lizard",          Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "bad to the bone", Sound("sound2.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "lizard",          Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "bad to the bone", Sound("sound2.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "lizard",          Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "bad to the bone", Sound("sound2.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "lizard",          Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "bad to the bone", Sound("sound2.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "lizard",          Sound("sound1.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
-		{ "bad to the bone", Sound("sound2.mp3", sfx_tag) }, -- assets/sounds/sound1.mp3
+	local button_sounds = {     -- setup for a max of 24
+		{ "lizard", sfx.earthquake }, -- assets/sounds/sound1.mp3
+		{ "lizard", sfx.earthquake }, -- assets/sounds/sound1.mp3
+		{ "lizard", sfx.earthquake }, -- assets/sounds/sound1.mp3
+		{ "lizard", sfx.earthquake }, -- assets/sounds/sound1.mp3
+		{ "lizard", sfx.earthquake }, -- assets/sounds/sound1.mp3
+		{ "lizard", sfx.earthquake }, -- assets/sounds/sound1.mp3
+		{ "lizard", sfx.earthquake }, -- assets/sounds/sound1.mp3
+		{ "lizard", sfx.earthquake }, -- assets/sounds/sound1.mp3
+		{ "lizard", sfx.earthquake }, -- assets/sounds/sound1.mp3
+		{ "lizard", sfx.earthquake }, -- assets/sounds/sound1.mp3
 		-- {"chips", Sound(folder .. "sound3.mp3", sfx_tag)}, -- assets/sounds/abc/sound2.mp3
 		-- {"poutine", Sound("../../sound4.mp3", sfx_tag)}, -- src/sound3.mp3
 	}

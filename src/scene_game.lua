@@ -76,11 +76,11 @@ function Game:on_enter(from, args)
 	self.shop = Shop({
 		group = self.main,
 		layer = ui_interaction_layer.Game,
-		positions = { -- WARN: HARDCODED POSITIONS for 'global_game_scale = 4'
-			{ x = 337, y = 647 }, --
-			{ x = 414, y = 727 },
-			{ x = 523, y = 810 },
-			{ x = 654, y = 916 },
+		positions = {    -- WARN: HARDCODED POSITIONS for 'global_game_scale = 4'
+			{ x = 337,  y = 647 }, --
+			{ x = 414,  y = 727 },
+			{ x = 523,  y = 810 },
+			{ x = 654,  y = 916 },
 			{ x = 1387, y = 741 },
 			{ x = 1536, y = 634 },
 		},
@@ -318,7 +318,16 @@ function Game:new_board(data)
 	-- new board:
 	--		init new board,
 	self.new_board_animation = true
-	self.board:generate_board({ shape = data.shape, direction = data.direction, x = data.x, y = data.y })
+
+	self.shape_counter = self.shape_counter and (self.shape_counter % #board_shapes) + 1 or 1
+	local shape = board_shapes[self.shape_counter]
+	self.board:generate_board({
+		--[[ data. ]]
+		shape = shape,
+		direction = data.direction,
+		x = data.x,
+		y = data.y,
+	})
 	--		set self.game_state variables
 	self.game_state = {
 		turn = 1,
@@ -654,7 +663,8 @@ function Game:update(dt)
 				-- self.resources_text:set_text({
 				self.resources_text:set_text({
 					{
-						text = "[yellow]Gold: " .. self.resources.gold.total .. "     [green]Babies: " .. self.resources.people.alive,
+						text = "[yellow]Gold: " ..
+						self.resources.gold.total .. "     [green]Babies: " .. self.resources.people.alive,
 						font = pixul_font,
 					},
 				})
