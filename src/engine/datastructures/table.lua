@@ -157,7 +157,6 @@ function table.unshift(t, ...)
   return t
 end
 
-
 -- Removes the last value and returns it as well as the modified table
 -- t = {1, 2, 3, 4}
 -- table.pop(t) -> 4, {1, 2, 3}

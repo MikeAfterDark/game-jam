@@ -28,6 +28,10 @@ function Color:init(r, g, b, a)
 	end
 end
 
+function Color:random()
+	return Color(random:float(), random:float(), random:float(), 1)
+end
+
 function Color:clone()
 	return Color(self.r, self.g, self.b, self.a)
 end
@@ -117,5 +121,6 @@ function Color:_to_rgb(h, s, l)
 	end
 	local q = l < 0.5 and l * (1 + s) or l + s - l * s
 	local p = 2 * l - q
-	return math.clamp(to(p, q, h + 0.33334), 0, 1), math.clamp(to(p, q, h), 0, 1), math.clamp(to(p, q, h - 0.33334), 0, 1)
+	return math.clamp(to(p, q, h + 0.33334), 0, 1), math.clamp(to(p, q, h), 0, 1),
+		math.clamp(to(p, q, h - 0.33334), 0, 1)
 end

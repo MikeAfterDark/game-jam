@@ -39,7 +39,6 @@ end
 -- function Random:table(t)
 --   return t[self.generator:random(1, #t)]
 -- end
-
 function Random:table(t)
   local keys = {}
   for k in pairs(t) do

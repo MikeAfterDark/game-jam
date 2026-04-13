@@ -460,7 +460,7 @@ function TransitionEffect:init(args)
 	self:init_game_object(args)
 
 	self.type = args.type or "circle"
-	local speed = self.fast and 3.0 or 1.5
+	local speed = self.speed or self.fast and 3.0 or 1.5
 
 	if self.type == "circle" then
 		self.rs = 0
@@ -642,6 +642,29 @@ end
 --
 --
 --
+--
+--
+--
+RectangleCover = Object:extend()
+RectangleCover:implement(GameObject)
+function RectangleCover:init(args)
+	self:init_game_object(args)
+	self.shape = Rectangle(self.x, self.y, self.w, self.h)
+end
+
+function RectangleCover:update(dt)
+	self:update_game_object(dt)
+end
+
+function RectangleCover:draw()
+	graphics.push(self.x, self.y, self.r)
+	self.shape:draw(self.color)
+	graphics.pop()
+end
+
+--
+--
+--
 -- Animation = Object:extend()
 -- Animation:implement(GameObject)
 -- function Animation:init(args)
@@ -763,7 +786,8 @@ function Text2:draw()
 		self.text:draw(self.x, draw_y, self.r, self.spring.x * self.sx, self.spring.x * self.sy)
 		love.graphics.setScissor()
 	else
-		self.text:draw(self.x, self.y, self.r, self.spring.x * self.sx, self.spring.x * self.sy)
+		local y = self.top_aligned and self.y + self.text.h / 2 or self.y
+		self.text:draw(self.x, y, self.r, self.spring.x * self.sx, self.spring.x * self.sy)
 	end
 
 	if self.scroll_box then
@@ -808,7 +832,20 @@ function Text2:clear()
 end
 
 function Text2:set_text(new_text)
+	-- if self.top_aligned then
+	-- 	print("prev height: ", self.h)
+	-- end
 	self.text:set_text(new_text)
+	if self.text.h > self.h then
+		self.h = self.text.h
+	end
+	if self.text.w > self.w then
+		self.w = self.text.w
+	end
+
+	-- if self.top_aligned then
+	-- 	print("new height: ", self.text.h, self.h)
+	-- end
 end
 
 function Text2:move_to(x, y)

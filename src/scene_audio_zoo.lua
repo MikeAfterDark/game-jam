@@ -144,7 +144,7 @@ function AudioZoo:update(dt)
 		self.song_info_text:update(dt)
 	end
 
-	if not self.in_pause and not self.stuck and not self.won then
+	if not self.in_pause then
 		run_time = run_time + dt
 	end
 

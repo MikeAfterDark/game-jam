@@ -1,72 +1,23 @@
-TODO: Legend: [X] = done, [\] partially done
-
-[X] display which phase we're in (text for now)
-[X] next_turn(), game phases
-    [X] [logic] game.board:trigger_buildings()
-    [X] [logic] game.board:trigger_event(game.game_state.event)
-    [X] [visuals] buildings 
-    [X] [visuals] events
-[X] buy new shop slots
-[X] events (earth split)
-    [\] Building:can_survive(), just need to figure out the survival rules
-[X] gold/bonuses
-[X] circle menu
-[X] cellular automata
-[X] events should be able to overlap
-[\] assign 'people' to buildings that give it some scaling for something
-    [\] assign people ui, unique amounts per building?
-    - Actually subtract from # people in game.resources
-    - scaling in building rules/effects
-- decide when/how events are created
-- Tie colours to tile types in board.shape loading
-- board line tile marking is broken, always pivots around the top center
-- saving/loading (careful, web builds might break when trying to load a non-existent file run_v4.txt)
-
-Refactoring (nice to haves):
-- refactor credits to 'credit_people({person.A, person.B, person.C})' with automatic spacing
-
-Bugfix:
-- lava moving fast as fuck at large board size
-
-Gameplay QoL:
-- Holding buildings should be on a higher ui layer so they dont get overlapped by things on the board
-- While holding a building, highlight all valid placement areas and how much bonus would be
-- 'no adjacent buildings' report all adjacent found
-[X] flash (blink red?) the buildings that are in danger
-[\] info display that explains what each tile/building does/is affected by
-    - figure out what info to show and how
-
-Visuals:
-- [Candy] Star background, or anything really, should be moving to avoid boredom, depends on visual theme
-- [Candy] when spawning in the board, bring them from offscreen with a random delay to fill the board? 
-- [Candy] earthquake particle effects when tiles/buildings are destroyed
-- [Candy] Game:play_intro() animation (slow zoom in, the tiles rise up into the board randomly?)
-- [UX] Text overhaul:
-    - textboxes that work with smooth movement/moving camera
-    - outline
-- [UX] display phases/phase changes clearly
-- [UI] figure out proper groups to put each element into
+Options/Credits Scene (load it first, keep it loaded, care for settings that are diff during gameplay)
 
 
-Ideas:
-- fancy buildings (have some extra effect on top of regular)
-- shop rarity - tied to # of people assigned to a builiding (ex: market tied to a shop slot)
-- buildings should affect tiles near/under them (temporary/permanent changes?)
+Main Menu
+Level Selection
+Group Formation
+    - Character Selection
+    - Character Editing
+[PLAY]
+
+(
+    countdown 3,2,1
+    start/resume song
+)
+Turn order: queue of units in play
+Action track is built offscreen based off turn order
+Map: Room system like hades/binding of isaac (defeat all enemies in room to progress?)
 
 
-Game Design/Release Roadmap:
-- Player Goals/Incentives, what to encourage/discourage, game-feel stems from this
-- Decide on steam integration/plan for mod support
-- Building Rules
-- Building Conditions/Effects
-- Tile Conditions/Effects
-- Events Condictions/Effects
-- Cellular Automata Rules
-- Seed:
-    - World Generation
-    - Random effects like events/tiles/buildings to follow seed's randomness
-    (info: need two randoms, got one for game startup wit no seed for uuids, make one for gameplay)
-- Balancing
-- Special Starting conditions/scenarios
-- Mod Support
+Notes:
+- Map has controls for moving units ----> move to scene_game
+- timeline has metronome timings + sfx -----> move to scene_game or other audio manager of some kind
 

@@ -7,22 +7,23 @@ require("scene_game")
 require("scene_audio_zoo")
 require("scene_intro")
 
+require("scene_level_select")
+require("scene_character_setup")
+
 -- game objects
-require("board")
-require("tile")
-require("shop")
-require("building")
+require("timing_line")
+require("map")
+require("timeline")
+require("turn_order")
+require("unit")
 
 -- ui
-require("info_display")
-require("circle_menu")
-require("circle_slider")
+-- require("circle_menu")
+-- require("circle_slider")
 
 -- helpers
-require("cellular_automata")
 
 -- game data
-require("cellular_automata_rules")
 
 -- on linux, state is at: ~/.local/share/{love, project_name}/state.txt
 function init()
@@ -34,39 +35,37 @@ function init()
 		state.input = {}
 	end
 	controls = {
-		reset = { text = "Restart", default = { "x" }, input = state.input.reset },
-		select = { text = "Select", default = { "m1" }, input = state.input.select },
-		modify = { text = "Modify", default = { "m2" }, input = state.input.modify },
-		reroll = { text = "Reroll", default = { "r" }, input = state.input.reroll },
-		next_turn = { text = "Next Turn", default = { "space" }, input = state.input.next_turn },
+		up = { text = "Up", default = { "up", "w" }, input = state.input.up },
+		down = { text = "Down", default = { "down", "s" }, input = state.input.down },
+		left = { text = "Left", default = { "left", "a" }, input = state.input.left },
+		right = { text = "Right", default = { "right", "d" }, input = state.input.right },
 	}
 	options_keys_display_order = {
-		"select",
-		"next_turn",
-		"reset",
+		"up",
+		"down",
+		"left",
+		"right",
 	}
 	for action, key in pairs(controls) do
 		input:bind(action, key.input or key.default)
 	end
 
 	person = {
-		Mikey = { name = "Mikey G", nickname = "Mikey", url = "https://gusakm.itch.io/", color = "green" },                               -- main dev
+		Mikey = { name = "Mikey G", nickname = "Mikey", url = "https://gusakm.itch.io/", color = "green" }, -- dev
 
 		Apezilla = { name = 'David "Apezilla" Browne', nickname = "Apezilla", url = "https://www.youtube.com/@davidbrowne003", color = "red" }, -- music
 		Patrick = { name = "Patrick Montanari", nickname = "Patrick", url = "https://www.succulentsoundstudios.com/", color = "yellow" }, -- jazz improv
-		Tectonic = { name = "TectonicHorizon", nickname = "Tectonic", url = "https://soundcloud.com/reedflow", color = "p_blue1" },       -- art/game design
-		Kai = { name = "KaiaRadio", nickname = "Kai", url = "https://www.youtube.com/@KaiaRadio", color = "blue" },                       -- sfx
+		Tectonic = { name = "TectonicHorizon", nickname = "Tectonic", url = "https://soundcloud.com/reedflow", color = "p_blue1" }, -- art/game design
+		Kai = { name = "KaiaRadio", nickname = "Kai", url = "https://www.youtube.com/@KaiaRadio", color = "blue" }, -- sfx
 	}
 
-	-- load sounds:
-	music_jam_folder = "music_jam/"
-	music_fade = 1
-	-- ui
 	sfx_tag = { tags = { sfx_control } }
 	local sfx_folder = "sfx/"
-	-- Sound(music_jam_folder .. "UI Hover 1.mp3", sfx_tag)
 	stim_cave_sfx = nil --Sound("sans-voice.mp3", sfx_tag)
+
 	sfx = {
+		metronome = Sound("temp/metronome.wav", sfx_tag),
+
 		earthquake = Sound("temp/earthquake-end.mp3", sfx_tag),
 		building_mouse_enter = Sound(sfx_folder .. "building mouse enter.flac", sfx_tag),
 		extra = Sound(sfx_folder .. "extra.flac", sfx_tag),
@@ -79,11 +78,19 @@ function init()
 	--
 	-- META SONGS
 	--
+	music_jam_folder = "music_jam/"
+	music_fade = 0
 	music_tag = { tags = { music_control } } -- for volume control
+
 	song = Sound("A Dark Displacement (Loop)[Jam Final 2-22].flac", music_tag)
 	song_playing = false
 
 	intro_song = Sound(sfx_folder .. "Intro Jingle.flac", { tags = { intro } })
+
+	music = {
+		megalovania = Sound("temp/megalovania.ogg", music_tag),
+		intro = Sound(sfx_folder .. "Intro Jingle.flac", { tags = { intro } }),
+	}
 	-- song_stim_cave = Sound(
 	-- 	music_jam_folder .. "Guitar slop.mp3",
 	-- 	music_tag, --
@@ -94,100 +101,101 @@ function init()
 	-- GAMEPLAY SONGS
 	--
 	music_songs = {
-		main = {},
-		tutorial = {},
-		stim_cave = {},
-		yellow = {},
-		paused = {},
-		options = {},
-		credits = {},
+		main = { music.megalovania },
+		tutorial = { sfx.extra },
+		stim_cave = { sfx.extra },
+		yellow = { sfx.extra },
+		paused = { sfx.extra },
+		options = { sfx.extra },
+		credits = { sfx.extra },
 	}
 
 	-- load images:
 	-- wall_arrow_particle = Image("wall_arrow_particle")
 	logo = Image("logo")
 
-	local tiles_folder = "tiles/"
-	tile_sprites = {
-		cover = { Image(tiles_folder .. "tile_cover") },
-		large_cover = { Image(tiles_folder .. "large_tile_cover") },
+	-- local tiles_folder = "tiles/"
+	-- tile_sprites = {
+	-- 	cover = { Image(tiles_folder .. "tile_cover") },
+	-- 	large_cover = { Image(tiles_folder .. "large_tile_cover") },
+	--
+	-- 	asteroid = { Image(tiles_folder .. "asteroid") },
+	-- 	blue_grass = { Image(tiles_folder .. "blue_grass") },
+	-- 	grass = { Image(tiles_folder .. "grass") },
+	-- 	sun = { Image(tiles_folder .. "literally_just_the_sun") },
+	-- 	sand = { Image(tiles_folder .. "sand") },
+	-- 	snow = { Image(tiles_folder .. "snow") },
+	-- 	stone = { Image(tiles_folder .. "stone") },
+	-- 	water = { Animation(3, AnimationFrames(Image(tiles_folder .. "liquid2"), 64, 64), "loop"), Color(0.3, 0.4, 0.9, 0.7) },
+	-- 	lava = { Animation(15, AnimationFrames(Image(tiles_folder .. "liquid2"), 64, 64), "loop"), Color(0.8, 0.4, 0.2, 0.9) },
+	-- }
+	--
+	-- local buildings_folder = "buildings/"
+	-- building_sprites = {
+	-- 	castle = { Image(buildings_folder .. "castle") },
+	-- 	dwelling = { Image(buildings_folder .. "dwelling") },
+	-- 	farm = { Image(buildings_folder .. "farm") },
+	-- 	market = { Image(buildings_folder .. "market") },
+	-- 	necromancer = { Image(buildings_folder .. "necromancer") },
+	-- 	ship = { Image(buildings_folder .. "ship") },
+	-- 	tent = { Image(buildings_folder .. "tent") },
+	-- }
+	-- shop_sprites = {
+	-- 	shop_slot = { Image("black_hole_gray") },
+	-- 	lock = { Image("lock") },
+	-- }
+	--
+	-- board_shapes = {}
+	-- local dir = "board_shapes"
+	--
+	-- local function rgb(r, g, b)
+	-- 	return r * 65536 + g * 256 + b
+	-- end
+	--
+	-- local function key(r, g, b)
+	-- 	return rgb(math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5), math.floor(b * 255 + 0.5))
+	-- end
+	--
+	-- local color_to_tile = { -- must be type's object name
+	-- 	[rgb(255, 0, 0)] = "Grass",
+	-- 	[rgb(0, 255, 0)] = "Water",
+	-- 	[rgb(255, 255, 255)] = "random",
+	-- }
+	--
+	-- for _, file in ipairs(love.filesystem.getDirectoryItems(dir)) do
+	-- 	if file:match("%.png$") then
+	-- 		local name = file:gsub("%.png$", "")
+	-- 		local img = love.image.newImageData(dir .. "/" .. file)
+	--
+	-- 		local w, h = img:getWidth(), img:getHeight()
+	-- 		local shape = {}
+	--
+	-- 		for y = 0, h - 1 do
+	-- 			local row = {}
+	-- 			for x = 0, w - 1 do
+	-- 				local r, g, b, a = img:getPixel(x, y)
+	-- 				local tile = color_to_tile[key(r, g, b)]
+	--
+	-- 				if type(tile) == "function" then
+	-- 					row[x + 1] = tile(x, y) -- run special action
+	-- 				elseif tile == "random" then
+	-- 					row[x + 1] = random:table(Tile_Type)
+	-- 				elseif type(tile) == "string" then
+	-- 					row[x + 1] = Tile_Type[tile]
+	-- 				else
+	-- 					row[x + 1] = nil -- empty tile
+	-- 				end
+	--
+	-- 				if row[x + 1] == nil then
+	-- 					row[x + 1] = false
+	-- 				end
+	-- 			end
+	-- 			shape[y + 1] = row
+	-- 		end
+	-- 		table.insert(board_shapes, shape)
+	-- 	end
+	-- end
 
-		asteroid = { Image(tiles_folder .. "asteroid") },
-		blue_grass = { Image(tiles_folder .. "blue_grass") },
-		grass = { Image(tiles_folder .. "grass") },
-		sun = { Image(tiles_folder .. "literally_just_the_sun") },
-		sand = { Image(tiles_folder .. "sand") },
-		snow = { Image(tiles_folder .. "snow") },
-		stone = { Image(tiles_folder .. "stone") },
-		water = { Animation(3, AnimationFrames(Image(tiles_folder .. "liquid2"), 64, 64), "loop"), Color(0.3, 0.4, 0.9, 0.7) },
-		lava = { Animation(15, AnimationFrames(Image(tiles_folder .. "liquid2"), 64, 64), "loop"), Color(0.8, 0.4, 0.2, 0.9) },
-	}
-
-	local buildings_folder = "buildings/"
-	building_sprites = {
-		castle = { Image(buildings_folder .. "castle") },
-		dwelling = { Image(buildings_folder .. "dwelling") },
-		farm = { Image(buildings_folder .. "farm") },
-		market = { Image(buildings_folder .. "market") },
-		necromancer = { Image(buildings_folder .. "necromancer") },
-		ship = { Image(buildings_folder .. "ship") },
-		tent = { Image(buildings_folder .. "tent") },
-	}
-	shop_sprites = {
-		shop_slot = { Image("black_hole_gray") },
-		lock = { Image("lock") },
-	}
-
-	board_shapes = {}
-	local dir = "board_shapes"
-
-	local function rgb(r, g, b)
-		return r * 65536 + g * 256 + b
-	end
-
-	local function key(r, g, b)
-		return rgb(math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5), math.floor(b * 255 + 0.5))
-	end
-
-	local color_to_tile = { -- must be type's object name
-		[rgb(255, 0, 0)] = "Grass",
-		[rgb(0, 255, 0)] = "Water",
-		[rgb(255, 255, 255)] = "random",
-	}
-
-	for _, file in ipairs(love.filesystem.getDirectoryItems(dir)) do
-		if file:match("%.png$") then
-			local name = file:gsub("%.png$", "")
-			local img = love.image.newImageData(dir .. "/" .. file)
-
-			local w, h = img:getWidth(), img:getHeight()
-			local shape = {}
-
-			for y = 0, h - 1 do
-				local row = {}
-				for x = 0, w - 1 do
-					local r, g, b, a = img:getPixel(x, y)
-					local tile = color_to_tile[key(r, g, b)]
-
-					if type(tile) == "function" then
-						row[x + 1] = tile(x, y) -- run special action
-					elseif tile == "random" then
-						row[x + 1] = random:table(Tile_Type)
-					elseif type(tile) == "string" then
-						row[x + 1] = Tile_Type[tile]
-					else
-						row[x + 1] = nil -- empty tile
-					end
-
-					if row[x + 1] == nil then
-						row[x + 1] = false
-					end
-				end
-				shape[y + 1] = row
-			end
-			table.insert(board_shapes, shape)
-		end
-	end
 	-- set logic init
 	slow_amount = 1
 	music_slow_amount = 1
@@ -202,9 +210,11 @@ function init()
 		Win = 5,
 		Loss = 6,
 		Game = 7,
-
-		Test = 10,
-		AudioTest = 11,
+		Level_Select = 8,
+		Test = 9,
+		AudioTest = 10,
+		Character_Setup = 11,
+		Group_Selection = 12,
 	}
 
 	main = Main()
@@ -223,14 +233,18 @@ function init()
 
 	-- can comfortably fit 14 scenes atm
 	debug_scenes = {
-		{ id = "intro",     destination = Intro },
+		{ id = "intro", destination = Intro },
 		{ id = "main_menu", destination = MainMenu },
-		{ id = "game",      destination = Game },
+		{ id = "level_select", destination = Level_Select },
+		{ id = "character_setup", destination = Character_Setup },
+		{ id = "game", destination = Game },
 		{ id = "audio_zoo", destination = AudioZoo }, -- todo: fix
 	}
 
 	-- main:add(Intro("intro"))
-	main:add(Game("intro"))
+	-- main:add(Game("intro"))
+	-- main:add(Level_Select("intro"))
+	main:add(Character_Setup("intro"))
 	main:go_to("intro", {})
 
 	-- set sane defaults:
@@ -240,21 +254,21 @@ function init()
 end
 
 function update(dt)
-	song:update(dt)
-	if main.current:is(MainMenu) and not song_playing then
-		song_playing = true
-		song:play({
-			volume = 0.3,
-			-- pitch = 1.2, -- pitch changes via speed playback, so this increases the playback speed
-			loop = true,
-			-- seek = 15.0, -- where it starts
-			fadeDuration = 0.5, -- fade-in, requires sound:update(dt)
-			-- tags = { your_tag },
-			-- effects = {
-			-- reverb = true,
-			-- },
-		})
-	end
+	-- song:update(dt)
+	-- if main.current:is(MainMenu) and not song_playing then
+	-- 	song_playing = true
+	-- 	song:play({
+	-- 		volume = 0.3,
+	-- 		-- pitch = 1.2, -- pitch changes via speed playback, so this increases the playback speed
+	-- 		loop = true,
+	-- 		-- seek = 15.0, -- where it starts
+	-- 		fadeDuration = 0, -- fade-in, requires sound:update(dt)
+	-- 		-- tags = { your_tag },
+	-- 		-- effects = {
+	-- 		-- reverb = true,
+	-- 		-- },
+	-- 	})
+	-- end
 
 	main:update(dt)
 
@@ -282,7 +296,7 @@ function love.run()
 	global_game_height = 270 * global_game_scale
 
 	return engine_run({
-		game_name = "Brackey 2026",
+		game_name = "Rhythm",
 		window_width = "max",
 		window_height = "max",
 	})
@@ -772,11 +786,6 @@ function close_options(self)
 	pop_ui_layer(self)
 
 	system.save_state()
-	if self:is(MainMenu) then
-		input:set_mouse_visible(true)
-	elseif self:is(Game) then
-		input:set_mouse_visible(true)
-	end
 end
 
 function pause_game(self)
@@ -793,125 +802,126 @@ function pause_game(self)
 		ui_elements = self.paused_ui_elements,
 	})
 
-	trigger:tween(0.15, _G, { slow_amount = 0 }, math.linear, function()
-		slow_amount = 0
+	-- trigger:tween(0.0, _G, { slow_amount = 0 }, math.linear, function()
+	slow_amount = 0
 
-		self.paused_menu_title_text = collect_into(
-			self.paused_ui_elements,
-			Text2({
-				group = ui_group,
-				x = gw / 2,
-				y = gh / 2 - 40 * global_game_scale,
-				lines = {
-					{
-						text = "[wavy_smooth, green]Paused",
-						font = fat_font,
-						alignment = "center",
-					},
+	self.paused_menu_title_text = collect_into(
+		self.paused_ui_elements,
+		Text2({
+			group = ui_group,
+			x = gw / 2,
+			y = gh / 2 - 40 * global_game_scale,
+			lines = {
+				{
+					text = "[wavy_smooth, green]Paused",
+					font = fat_font,
+					alignment = "center",
 				},
-			})
-		)
+			},
+		})
+	)
 
-		self.continue_button = collect_into(
-			self.paused_ui_elements,
-			Button({
-				group = ui_group,
-				x = gw / 2, --- 35 * global_game_scale,
-				y = gh / 2,
-				force_update = true,
-				button_text = "continue",
-				fg_color = "bg",
-				bg_color = "green",
-				action = function(b)
-					unpause_game(self)
-				end,
-			})
-		)
+	self.continue_button = collect_into(
+		self.paused_ui_elements,
+		Button({
+			group = ui_group,
+			x = gw / 2, --- 35 * global_game_scale,
+			y = gh / 2,
+			force_update = true,
+			button_text = "continue",
+			fg_color = "bg",
+			bg_color = "green",
+			action = function(b)
+				unpause_game(self)
+			end,
+		})
+	)
 
-		self.options_button = collect_into(
-			self.paused_ui_elements,
-			Button({
-				group = ui_group,
-				x = gw / 2, --+ 35 * global_game_scale,
-				y = gh / 2 + 20 * global_game_scale,
-				force_update = true,
-				button_text = "options",
-				fg_color = "bg",
-				bg_color = "fg",
-				action = function(b)
-					open_options(self)
-					b.selected = true
-				end,
-			})
-		)
+	self.options_button = collect_into(
+		self.paused_ui_elements,
+		Button({
+			group = ui_group,
+			x = gw / 2, --+ 35 * global_game_scale,
+			y = gh / 2 + 20 * global_game_scale,
+			force_update = true,
+			button_text = "options",
+			fg_color = "bg",
+			bg_color = "fg",
+			action = function(b)
+				open_options(self)
+				b.selected = true
+			end,
+		})
+	)
 
-		self.credits_button = collect_into(
-			self.paused_ui_elements,
-			Button({
-				group = ui_group,
-				x = gw / 2, --+ 35 * global_game_scale,
-				y = gh / 2 + 40 * global_game_scale,
-				force_update = true,
-				button_text = "credits",
-				fg_color = "bg",
-				bg_color = "yellow",
-				action = function(b)
-					open_credits(self)
-					b.selected = true
-				end,
-			})
-		)
+	self.credits_button = collect_into(
+		self.paused_ui_elements,
+		Button({
+			group = ui_group,
+			x = gw / 2, --+ 35 * global_game_scale,
+			y = gh / 2 + 40 * global_game_scale,
+			force_update = true,
+			button_text = "credits",
+			fg_color = "bg",
+			bg_color = "yellow",
+			action = function(b)
+				open_credits(self)
+				b.selected = true
+			end,
+		})
+	)
 
-		self.restart_button = collect_into(
-			self.paused_ui_elements,
-			Button({
-				group = ui_group,
-				x = gw / 2,
-				y = gh / 2 + 60 * global_game_scale,
-				force_update = true,
-				button_text = "restart",
-				fg_color = "bg",
-				bg_color = "orange",
-				action = function()
-					play_level(self, {
-						creator_mode = main.current.creator_mode,
-						level = main.current.level,
-						pack = main.current.pack,
-						level_folder = main.current.level_folder,
-					})
-				end,
-			})
-		)
-		-- if love.filesystem.isFused() == false and not web then
-		-- 	self.creator_button = collect_into(
-		-- 		self.paused_ui_elements,
-		-- 		Button({
-		-- 			group = ui_group,
-		-- 			x = gw / 2,
-		-- 			y = gh / 2 + 80 * global_game_scale,
-		-- 			force_update = true,
-		-- 			button_text = "creator",
-		-- 			fg_color = "bg",
-		-- 			bg_color = "green",
-		-- 			action = function()
-		-- 				close_options(self) -- fix music cuz this option is only available in options
-		-- 				play_level(self, {
-		-- 					creator_mode = true,
-		-- 					level_folder = main.current:is(Game) and main.current.level_folder or "",
-		-- 				})
-		-- 			end,
-		-- 		})
-		-- 	)
-		-- end
+	-- self.restart_button = collect_into(
+	-- 	self.paused_ui_elements,
+	-- 	Button({
+	-- 		group = ui_group,
+	-- 		x = gw / 2,
+	-- 		y = gh / 2 + 60 * global_game_scale,
+	-- 		force_update = true,
+	-- 		button_text = "restart",
+	-- 		fg_color = "bg",
+	-- 		bg_color = "orange",
+	-- 		action = function()
+	-- 			play_level(self, {
+	-- 				creator_mode = main.current.creator_mode,
+	-- 				level = main.current.level,
+	-- 				pack = main.current.pack,
+	-- 				level_folder = main.current.level_folder,
+	-- 			})
+	-- 		end,
+	-- 	})
+	-- )
 
-		for _, v in pairs(self.paused_ui_elements) do
-			-- v.group = ui_group
-			-- ui_group:add(v)
+	-- if love.filesystem.isFused() == false and not web then
+	-- 	self.creator_button = collect_into(
+	-- 		self.paused_ui_elements,
+	-- 		Button({
+	-- 			group = ui_group,
+	-- 			x = gw / 2,
+	-- 			y = gh / 2 + 80 * global_game_scale,
+	-- 			force_update = true,
+	-- 			button_text = "creator",
+	-- 			fg_color = "bg",
+	-- 			bg_color = "green",
+	-- 			action = function()
+	-- 				close_options(self) -- fix music cuz this option is only available in options
+	-- 				play_level(self, {
+	-- 					creator_mode = true,
+	-- 					level_folder = main.current:is(Game) and main.current.level_folder or "",
+	-- 				})
+	-- 			end,
+	-- 		})
+	-- 	)
+	-- end
 
-			v.layer = ui_layer
-			v.force_update = true
-		end
-	end, "pause")
+	for _, v in pairs(self.paused_ui_elements) do
+		-- v.group = ui_group
+		-- ui_group:add(v)
+
+		v.layer = ui_layer
+		v.force_update = true
+	end
+	-- end, "pause")
 end
 
 function play_level(self, args)
@@ -935,7 +945,7 @@ end
 function unpause_game(self)
 	self.in_pause = false
 	pop_ui_layer(self)
-	trigger:tween(0.25, _G, { slow_amount = 1 }, math.linear, function()
+	trigger:tween(0.0, _G, { slow_amount = 1 }, math.linear, function()
 		slow_amount = 1
 	end)
 end
@@ -1250,8 +1260,6 @@ function set_music_info(self, song)
 end
 
 function scene_transition(self, args)
-	-- x_pos, y_pos, addition, go_to, text_args)
-
 	-- ui_transition2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	-- ui_switch2:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	-- ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
@@ -1259,16 +1267,10 @@ function scene_transition(self, args)
 	if args.target.name ~= "main_menu" then
 		-- random:table(level_dissapear):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 	end
-	-- if layer_type = "game" then don't pop?
-	while main.ui_layer_stack:size() > 1 do
-		local layer = main.ui_layer_stack:peek()
-		if layer.game and not args.target.args.clear_music then -- let the game decide when to pop the layer
-			break
-		end
-		pop_ui_layer(self)
-	end
+
 	self.transitioning = true
 	TransitionEffect({
+		speed = args.speed,
 		fast = args.target.args.fast_load or false,
 		type = args.type,
 		group = main.transitions,
@@ -1276,6 +1278,14 @@ function scene_transition(self, args)
 		y = args.y,
 		color = state.dark and bg[-2] or fg[0],
 		transition_action = function()
+			while main.ui_layer_stack:size() > 1 do
+				local layer = main.ui_layer_stack:peek()
+				if layer.game and not args.target.args.clear_music then -- let the game decide when to pop the layer
+					break
+				end
+				pop_ui_layer(self)
+			end
+
 			-- slow_amount = 1
 			system.save_state()
 			main:add(args.target.scene(args.target.name))
@@ -1305,7 +1315,7 @@ function play_music(args)
 	]]
 
 	if main.ui_layer_stack:is_empty() then
-		return
+		return 1
 	end
 
 	local index = 0
@@ -1320,7 +1330,7 @@ function play_music(args)
 	end
 
 	if not top_music_layer then
-		return
+		return 2
 	end
 
 	local current_playing_music = nil
@@ -1335,15 +1345,16 @@ function play_music(args)
 
 	local target_type = top_music_layer.music_type
 	local volume = args.volume or (music_control and music_control.volume or state.music_volume or 0.1)
+	local pitch = args.pitch or 1
 
 	if not current_playing_music or current_playing_music:isStopped() or (top_music_layer.music and top_music_layer.music:isStopped()) then
 		local song = random:table(music_songs[target_type])
 		if not song then
-			set_music_info(main.current, nil)
-			return
+			-- set_music_info(main.current, nil)
+			return 3
 		end
 
-		top_music_layer.music = song:play({ volume = volume, fadeDuration = music_fade })
+		top_music_layer.music = song:play({ volume = volume, fadeDuration = music_fade, pitch = pitch })
 		top_music_layer.song = song
 		main.current_music_type = target_type
 	elseif main.current_music_type ~= target_type then
@@ -1353,16 +1364,20 @@ function play_music(args)
 		else
 			local song = random:table(music_songs[target_type])
 			if not song then
-				set_music_info(main.current, nil)
-				return
+				-- set_music_info(main.current, nil)
+				return 4
 			end
-			top_music_layer.music = song:play({ volume = volume, fadeDuration = music_fade })
+			top_music_layer.music = song:play({ volume = volume, fadeDuration = music_fade, pitch = pitch })
 			top_music_layer.song = song
 		end
 		main.current_music_type = target_type
 	end
 
-	set_music_info(main.current, top_music_layer.song)
+	-- set_music_info(main.current, top_music_layer.song)
+
+	if args.return_song then
+		return top_music_layer.music
+	end
 end
 
 function stop_current_music()
