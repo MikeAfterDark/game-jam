@@ -63,30 +63,31 @@ function Game:on_enter(from, args)
 	-- [spawn units] and [spawn enemies]
 	-- [setup timeline] and [add units to turn queue]
 	-- [start countdown] and [start/resume song]
-	self.playing = false
-	self.countdown = 0
-	self.countdown_duration = 3000
+	self.song_position = 0
 
 	-- controls the unit locations, hp, collisions and fights
 	-- based on user input triggers
+	local cell_size = gh * 0.08 * 1
 	self.map = Map({
 		group = self.main,
 		x = gw * 0.5,
 		y = gh * 0.5, -- center aligned
 		scale = 1,
+		cell_size = cell_size,
 		level = self.level,
 		player_units = self.player_units,
 	})
 
 	-- displays times and holds and displays the beats for the current turn
 	self.timeline = Timeline({
-		group = self.game_ui,
+		group = self.main,
 		x = gw * 0.5,
 		y = gh * 0.94, -- center aligned
 		w = gw * 0.9,
 		hit_window = 0.1, -- seconds
 		beat_spread = gw * 0.1, -- TODO: look into this VS beat speed
 		beats_per_sec = 120 / 60,
+		cell_size = cell_size,
 	})
 	self.beats_per_sec = 120 / 60
 
@@ -104,7 +105,6 @@ function Game:on_enter(from, args)
 	self.turn_order:insert(self.map:get_all_alive_units())
 	self:next_turn()
 
-	self.song_position = 0
 	-- self.beat_number = 0
 
 	-- self.hit_window = 0.4 -- seconds
@@ -144,7 +144,8 @@ function Game:next_turn()
 	end
 
 	local unit = self.turn_order:pop()
-	self.timeline:add(unit)
+	print("song pos: ", self.song_position)
+	self.timeline:add(unit, self.song_position)
 	self.focused_unit = unit
 	self.focused_unit:highlight(1)
 	camera:follow_object(self.focused_unit)
@@ -177,6 +178,7 @@ function Game:update(dt)
 				if valid_hit then
 					sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
 					self.map:react_to_beat({ unit = self.focused_unit, beat = valid_hit })
+					self.timeline:react_to_beat()
 
 					local unit = self.focused_unit
 					if input.up.pressed then
@@ -198,6 +200,7 @@ function Game:update(dt)
 			if miss then
 				sfx.tile_mouse_enter:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
 				self.map:react_to_miss({ unit = self.focused_unit, beat = valid_hit })
+				self.timeline:react_to_miss()
 			end
 
 			self.map:beat_tracker(self.song_position)

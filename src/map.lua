@@ -4,7 +4,6 @@ Map:implement(GameObject)
 function Map:init(args)
 	self:init_game_object(args)
 
-	self.cell_size = gh * 0.08 * self.scale
 	self.grid = {}
 	self.units = {}
 

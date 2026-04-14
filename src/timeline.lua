@@ -15,6 +15,9 @@ function Timeline:init(args)
 
 	self.beats = {}
 	self.beat_index = 1
+
+	self.unit_start_time = 0
+	self.time = 0
 end
 
 function Timeline:update(dt)
@@ -35,17 +38,21 @@ function Timeline:update(dt)
 	end
 end
 
-function Timeline:add(unit)
+function Timeline:add(unit, song_time)
 	for i, tick in ipairs(unit.timeline) do
 		local color = tick.color or Color(0, 0, 0, 1)
 		table.insert(self.tick_colors, color)
 	end
 
+	self.unit = unit
 	for i, action in ipairs(unit.timeline) do
 		local time = (#self.beats + 1) / self.beats_per_sec
 		-- print("inserted time: ", time)
 		table.insert(self.beats, Beat({ action = action, unit = unit, time = time }))
 	end
+
+	self.unit_start_time = song_time
+	print("start time: ", self.unit_start_time)
 end
 
 -- returns true if a valid beat was hit
@@ -92,6 +99,7 @@ function Timeline:beat_tracker(time)
 		end
 	end
 
+	self.time = time
 	return self:beats_left(), miss
 end
 
@@ -99,8 +107,108 @@ function Timeline:beats_left()
 	return #self.beats - self.beat_index
 end
 
+function Timeline:react_to_beat()
+	-- self.spring:pull(0.2, 200, 10)
+end
+
+function Timeline:react_to_miss()
+	-- self.spring:pull(0.1, 100, 10)
+end
+
 function Timeline:draw()
-	graphics.push(self.x, self.y, self.r)
+	-- TODO: gpt is being stupid
+	-- - draw beats to be hit_window wide (either speed up circle or shrink size)
+	-- - make sure beats are properly spaced apart
+	-- - make sure highlight detection is TIME based, stupid gpt is doing atan garbage
+	--
+	local unit = self.unit
+	graphics.push(unit.x, unit.y, self.r, unit.spring.x, unit.spring.y)
+
+	local radius = self.cell_size * 0.9
+	local thickness = radius * 0.3
+	graphics.circle(unit.x, unit.y, radius, Color(1, 1, 1, 0.8), thickness)
+
+	local max_beats = 6
+	local total_segments = 8
+	local radians_per_segment = (2 * math.pi) / total_segments
+	local spacing = radians_per_segment * 0.2
+
+	local speed = 1
+	local time_offset = (self.time - self.unit_start_time) * speed
+	local rotation = time_offset % (2 * math.pi)
+
+	-- 👇 fixed indicator (top of circle)
+	local indicator_angle = -math.pi / 2
+
+	for i = 1, max_beats do
+		local beat = self.beats[i]
+		local action = beat.action or Timings.Empty
+		local color = action.color
+
+		local base_angle = (i - 1) * radians_per_segment
+		local start_angle = base_angle + spacing / 2 + rotation
+		local end_angle = base_angle + radians_per_segment - spacing / 2 + rotation
+
+		-- normalize angles for comparison
+		local mid_angle = (start_angle + end_angle) / 2
+
+		-- 👇 detect if this segment is near the indicator
+		local diff = math.atan2(math.sin(mid_angle - indicator_angle), math.cos(mid_angle - indicator_angle))
+		local hit_window = radians_per_segment * 0.4
+
+		local is_hit = math.abs(diff) < hit_window
+
+		local draw_thickness = thickness
+		local draw_color = color
+
+		if is_hit and action ~= Timings.Empty then
+			-- highlight hit window
+			draw_thickness = thickness * 1.4
+			draw_color = Color(1, 1, 1, 1) -- or brighten original color
+		end
+
+		graphics.arc("open", unit.x, unit.y, radius, start_angle, end_angle, draw_color, draw_thickness)
+	end
+
+	-- 👇 draw indicator line (always on top)
+	local line_length = radius + 12
+	local ix = unit.x + math.cos(indicator_angle) * radius
+	local iy = unit.y + math.sin(indicator_angle) * radius
+	local ox = unit.x + math.cos(indicator_angle) * line_length
+	local oy = unit.y + math.sin(indicator_angle) * line_length
+
+	graphics.line(ix, iy, ox, oy, Color(1, 1, 1, 1), 2)
+
+	-- local unit = self.unit
+	--
+	--
+	--
+	-- graphics.push(unit.x, unit.y, self.r, unit.spring.x, unit.spring.y)
+	--
+	-- local radius = self.cell_size * 0.9
+	-- local thickness = radius * 0.3
+	-- graphics.circle(unit.x, unit.y, radius, Color(1, 1, 1, 0.8), thickness)
+	--
+	-- local radians_per_beat = 2 * math.pi / 8 -- should be able to change depending on user preferences with how fast the circle moves, but this might put actions out of view so idk
+	-- local spacing = math.pi / 16
+	-- local speed = 1
+	-- local max_beats = 6
+	-- for i = 1, max_beats do
+	-- 	local beat = self.beats[i]
+	-- 	local action = beat.action or Timings.Empty
+	--
+	-- 	local time_offset = self.time - self.unit_start_time
+	--
+	-- 	local start_angle = i * (radians_per_beat + spacing) + time_offset * speed
+	-- 	local end_angle = (i + 1) * (radians_per_beat - spacing) + time_offset * speed
+	-- 	local beat_color = action.color
+	-- 	graphics.arc("open", unit.x, unit.y, radius, start_angle, end_angle, beat_color, thickness)
+	-- end
+	--
+	--
+	--
+	--
+	--
 
 	-- local line_color = Color(1, 1, 1, 1)
 	-- local line_thickness = 5
