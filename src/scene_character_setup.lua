@@ -295,9 +295,9 @@ Timings = {
 function Character_Setup:load_characters()
 	return {
 		{ type = Unit_Type.A, timeline = { Timings.Beat, Timings.Empty, Timings.Hold, Timings.Beat, Timings.Empty, Timings.Beat } },
-		{ type = Unit_Type.B, timeline = { Timings.Empty, Timings.Beat, Timings.Beat, Timings.Empty } },
+		{ type = Unit_Type.B, timeline = { Timings.Beat, Timings.Beat, Timings.Empty } },
 		{ type = Unit_Type.C, timeline = { Timings.Beat, Timings.Beat, Timings.Beat, Timings.Beat, Timings.Beat } },
-		{ type = Unit_Type.D, timeline = { Timings.Empty, Timings.Empty, Timings.Beat, Timings.Empty, Timings.Beat, Timings.Beat } },
+		{ type = Unit_Type.D, timeline = { Timings.Empty, Timings.Beat, Timings.Empty, Timings.Beat, Timings.Beat } },
 		{ type = Unit_Type.E, timeline = { Timings.Beat, Timings.Empty, Timings.Beat, Timings.Beat, Timings.Empty, Timings.Beat } },
 	}
 end

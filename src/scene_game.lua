@@ -82,9 +82,10 @@ function Game:on_enter(from, args)
 	self.timeline = Timeline({
 		group = self.main,
 		x = gw * 0.5,
-		y = gh * 0.94, -- center aligned
+		y = gh * 0.94,    -- center aligned
 		w = gw * 0.9,
 		hit_window = 0.1, -- seconds
+		max_beats = 6,
 		beat_spread = gw * 0.1, -- TODO: look into this VS beat speed
 		beats_per_sec = 120 / 60,
 		cell_size = cell_size,
@@ -133,8 +134,6 @@ function Game:on_enter(from, args)
 end
 
 function Game:next_turn()
-	self.turn_advanced = true
-
 	if self.focused_unit then
 		self.focused_unit:highlight(0)
 	end
@@ -144,7 +143,6 @@ function Game:next_turn()
 	end
 
 	local unit = self.turn_order:pop()
-	print("song pos: ", self.song_position)
 	self.timeline:add(unit, self.song_position)
 	self.focused_unit = unit
 	self.focused_unit:highlight(1)
@@ -168,6 +166,10 @@ function Game:update(dt)
 			self.last_song_time = song_time
 
 			self.song_position = self.song_position + delta
+		end
+
+		if input.z.pressed then
+			self.timeline:print_beats()
 		end
 
 		if self.map.new_room_loaded then
@@ -206,12 +208,8 @@ function Game:update(dt)
 			self.map:beat_tracker(self.song_position)
 			self.focused_unit:beats_remaining(beats_left)
 
-			if beats_left <= 0 and not self.turn_advanced then
-				self:next_turn()
-			end
-
-			if beats_left > 0 then
-				self.turn_advanced = false
+			if beats_left < 0 then
+				self:next_turn() -- TODO: last beat never shown on timeline
 			end
 		end
 	end

@@ -105,7 +105,8 @@ function Random:color(min, max)
   local b = (min > max and (self.generator:random() * (min - max) + max)) or
   (self.generator:random() * (max - min) + min)
 
-  return { r = r, g = g, b = b }
+  -- return { r = r, g = g, b = b }
+  return Color(r, g, b, 1)
 end
 
 -- Returns a unique identifier.

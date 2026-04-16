@@ -6,7 +6,7 @@ function Unit:init(args)
 	self.hp = self.type.hp or random:int(2, 6)
 	self.speed = self.type.speed or random:int(1, 3)
 	self.sprites = self.type.sprites()
-	self.color = random:color()
+	self.color = random:color():lighten(0.2)
 
 	self.base_x = self.x
 	self.base_y = self.y
@@ -37,18 +37,19 @@ function Unit:highlight(on)
 	self.border = on
 	if self.border then
 		self.beats_count = #self.timeline
-		self.border_color = self.border == 1 and Color(0, 1, 0, 1) or self.border == 2 and Color(0.5, 0, 1, 1) or Color(0, 0, 0, 1)
+		self.border_color = self.border == 1 and Color(0, 1, 0, 1) or self.border == 2 and Color(0.5, 0, 1, 1) or
+		Color(0, 0, 0, 1)
 		self.text:set_text({
-			{ text = "[fg]" .. self.type.name, font = small_pixul_font },
-			{ text = "[fg]" .. tostring(self.beats_count), font = small_pixul_font },
+			{ text = "[bg]" .. self.type.name,             font = small_pixul_font },
+			{ text = "[bg]" .. tostring(self.beats_count), font = pixul_font },
 		})
 	end
 end
 
 function Unit:beats_remaining(beats)
 	self.text:set_text({
-		{ text = "[fg]" .. self.type.name, font = small_pixul_font },
-		{ text = "[fg]" .. tostring(beats), font = small_pixul_font },
+		{ text = "[bg]" .. self.type.name,      font = small_pixul_font },
+		{ text = "[bg]" .. tostring(beats + 1), font = pixul_font },
 	})
 end
 
@@ -64,7 +65,8 @@ function Unit:draw()
 		local border_color = self.border_color
 
 		if self.border > 0 then
-			graphics.rectangle(x, y, self.width - visual_shrink + border_size, self.height - visual_shrink + border_size, 2, 2, border_color)
+			graphics.rectangle(x, y, self.width - visual_shrink + border_size, self.height - visual_shrink + border_size,
+				2, 2, border_color)
 		end
 
 		graphics.rectangle(x, y, self.width - visual_shrink, self.height - visual_shrink, 2, 2, self.color)

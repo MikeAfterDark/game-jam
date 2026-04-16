@@ -45,14 +45,15 @@ function Timeline:add(unit, song_time)
 	end
 
 	self.unit = unit
+	local time = ((#self.beats + 1) / self.beats_per_sec)
+	table.insert(self.beats, Beat({ action = Timings.Empty, unit = unit, time = time }))
 	for i, action in ipairs(unit.timeline) do
-		local time = (#self.beats + 1) / self.beats_per_sec
-		-- print("inserted time: ", time)
+		time = ((#self.beats + 1) / self.beats_per_sec)
 		table.insert(self.beats, Beat({ action = action, unit = unit, time = time }))
 	end
 
 	self.unit_start_time = song_time
-	print("start time: ", self.unit_start_time)
+	self.unit_start_index = self.beat_index
 end
 
 -- returns true if a valid beat was hit
@@ -63,11 +64,10 @@ function Timeline:beat_hit_at(time)
 	-- increment beat_index up to its at/ahead of the hit beat
 	local hit_beats = {}
 	for i = self.beat_index, #self.beats do
-		local past = self.beats[i].time - self.hit_window
-		local future = self.beats[i].time + self.hit_window
-		if time >= past and time <= future then
+		local beat_time = self.beats[i].time
+		if self:beat_can_be_hit_at(beat_time, time) then
 			-- print("including: ", past, time, future)
-			local min_time_offset = math.min(time - past, future - time)
+			local min_time_offset = math.min(time - self:past(beat_time), self:future(beat_time) - time)
 			table.insert(hit_beats, { beat = self.beats[i], index = i, time_offset = min_time_offset })
 		else
 			break
@@ -87,14 +87,31 @@ function Timeline:beat_hit_at(time)
 	end
 end
 
+function Timeline:beat_can_be_hit_at(beat_time, hit_time)
+	return self.beats[self.beat_index].action ~= Timings.Empty --
+		and hit_time >= self:past(beat_time)
+		and hit_time <= self:future(beat_time)
+end
+
+function Timeline:past(time)
+	return time - self.hit_window
+end
+
+function Timeline:future(time)
+	return time + self.hit_window
+end
+
 -- returns number of beats left, updates beat positions
 function Timeline:beat_tracker(time)
 	local miss = false
 	for i = self.beat_index, #self.beats do
-		local future = self.beats[i].time + self.hit_window
-		if time > future then
+		local beat = self.beats[i]
+		if time > self:future(beat.time) then
 			self.beat_index = i + 1
-			miss = true
+
+			if beat.action ~= Timings.Empty then
+				miss = true
+			end
 			break
 		end
 	end
@@ -115,117 +132,92 @@ function Timeline:react_to_miss()
 	-- self.spring:pull(0.1, 100, 10)
 end
 
+function Timeline:print_beats()
+	print("Beats: ")
+	for i, beat in ipairs(self.beats) do
+		print(i, self.beat_index, beat.action.name, beat.unit.type.name)
+	end
+end
+
 function Timeline:draw()
-	-- TODO: gpt is being stupid
-	-- - draw beats to be hit_window wide (either speed up circle or shrink size)
-	-- - make sure beats are properly spaced apart
-	-- - make sure highlight detection is TIME based, stupid gpt is doing atan garbage
-	--
 	local unit = self.unit
 	graphics.push(unit.x, unit.y, self.r, unit.spring.x, unit.spring.y)
 
 	local radius = self.cell_size * 0.9
 	local thickness = radius * 0.3
-	graphics.circle(unit.x, unit.y, radius, Color(1, 1, 1, 0.8), thickness)
+	graphics.circle(unit.x, unit.y, radius, Color(1, 1, 1, 0.8), thickness * 1.2)
 
-	local max_beats = 6
-	local total_segments = 8
-	local radians_per_segment = (2 * math.pi) / total_segments
-	local spacing = radians_per_segment * 0.2
+	local tau = 2 * math.pi
+	local speed = 2
 
-	local speed = 1
-	local time_offset = (self.time - self.unit_start_time) * speed
-	local rotation = time_offset % (2 * math.pi)
+	local radians_per_segment = speed * (tau / self.max_beats)
+	local rotation_speed = self.beats_per_sec * radians_per_segment
+	local max_visible_time = tau / rotation_speed
 
-	-- 👇 fixed indicator (top of circle)
-	local indicator_angle = -math.pi / 2
-
-	for i = 1, max_beats do
+	local i = #self.beats
+	while i >= self.beat_index do
 		local beat = self.beats[i]
-		local action = beat.action or Timings.Empty
-		local color = action.color
 
-		local base_angle = (i - 1) * radians_per_segment
-		local start_angle = base_angle + spacing / 2 + rotation
-		local end_angle = base_angle + radians_per_segment - spacing / 2 + rotation
+		if beat and beat.action ~= Timings.Empty then
+			local dt = beat.time - self.time
 
-		-- normalize angles for comparison
-		local mid_angle = (start_angle + end_angle) / 2
+			if math.abs(dt) <= max_visible_time then
+				local angle = dt * rotation_speed
 
-		-- 👇 detect if this segment is near the indicator
-		local diff = math.atan2(math.sin(mid_angle - indicator_angle), math.cos(mid_angle - indicator_angle))
-		local hit_window = radians_per_segment * 0.4
+				if angle < math.pi * 1.6 and angle > -math.pi * 1.5 then -- visibility range
+					-- angle = (angle + math.pi) % tau - math.pi
 
-		local is_hit = math.abs(diff) < hit_window
+					local hit_window_angle = self.hit_window * rotation_speed
+					local spacing = radians_per_segment * 0.1
 
-		local draw_thickness = thickness
-		local draw_color = color
+					angle = angle - math.pi / 2
+					local start_angle = angle - hit_window_angle + spacing * 0.5
+					local end_angle = angle + hit_window_angle - spacing * 0.5
 
-		if is_hit and action ~= Timings.Empty then
-			-- highlight hit window
-			draw_thickness = thickness * 1.4
-			draw_color = Color(1, 1, 1, 1) -- or brighten original color
+					local draw_thickness = thickness
+					local draw_color = beat.action.color
+
+					local background_color = Color(0, 0, 0, 1)
+					local background_width = spacing * 0.5
+
+					local tick_size = 0.05
+					local tick_start_angle = angle - tick_size
+					local tick_end_angle = angle + tick_size
+
+					if self:beat_can_be_hit_at(beat.time, self.time) then
+						draw_thickness = thickness * 1.4
+						draw_color = draw_color:clone():lighten(0.6)
+					end
+
+					local tick_color = draw_color:clone():darken(0.3)
+
+					graphics.arc(
+						"open",
+						unit.x,
+						unit.y,
+						radius,
+						start_angle - background_width,
+						end_angle + background_width,
+						background_color,
+						draw_thickness * 1.5
+					)
+					graphics.arc("open", unit.x, unit.y, radius, start_angle, end_angle, draw_color, draw_thickness)
+					graphics.arc("open", unit.x, unit.y, radius, tick_start_angle, tick_end_angle, tick_color,
+						draw_thickness / 2)
+				end
+			end
 		end
 
-		graphics.arc("open", unit.x, unit.y, radius, start_angle, end_angle, draw_color, draw_thickness)
+		i = i - 1
 	end
-
-	-- 👇 draw indicator line (always on top)
+	local indicator_angle = -math.pi / 2
 	local line_length = radius + 12
 	local ix = unit.x + math.cos(indicator_angle) * radius
 	local iy = unit.y + math.sin(indicator_angle) * radius
 	local ox = unit.x + math.cos(indicator_angle) * line_length
 	local oy = unit.y + math.sin(indicator_angle) * line_length
 
-	graphics.line(ix, iy, ox, oy, Color(1, 1, 1, 1), 2)
-
-	-- local unit = self.unit
-	--
-	--
-	--
-	-- graphics.push(unit.x, unit.y, self.r, unit.spring.x, unit.spring.y)
-	--
-	-- local radius = self.cell_size * 0.9
-	-- local thickness = radius * 0.3
-	-- graphics.circle(unit.x, unit.y, radius, Color(1, 1, 1, 0.8), thickness)
-	--
-	-- local radians_per_beat = 2 * math.pi / 8 -- should be able to change depending on user preferences with how fast the circle moves, but this might put actions out of view so idk
-	-- local spacing = math.pi / 16
-	-- local speed = 1
-	-- local max_beats = 6
-	-- for i = 1, max_beats do
-	-- 	local beat = self.beats[i]
-	-- 	local action = beat.action or Timings.Empty
-	--
-	-- 	local time_offset = self.time - self.unit_start_time
-	--
-	-- 	local start_angle = i * (radians_per_beat + spacing) + time_offset * speed
-	-- 	local end_angle = (i + 1) * (radians_per_beat - spacing) + time_offset * speed
-	-- 	local beat_color = action.color
-	-- 	graphics.arc("open", unit.x, unit.y, radius, start_angle, end_angle, beat_color, thickness)
-	-- end
-	--
-	--
-	--
-	--
-	--
-
-	-- local line_color = Color(1, 1, 1, 1)
-	-- local line_thickness = 5
-	-- graphics.line(self.x - self.w / 2, self.y, self.x + self.w / 2, self.y, line_color, line_thickness)
-	-- graphics.line(self.x - self.w / 2, self.y - 20, self.x - self.w / 2, self.y + 20, line_color, line_thickness)
-	--
-	-- local tick_height = 20
-	-- local tick_thickness = tick_height * 0.4
-	-- for i = 1, self.tick_count, 1 do
-	-- 	local x = (self.x - self.w / 2) + i * self.beat_spread - self.tick_offset
-	-- 	-- local x = i * self.beat_spread - self.tick_offset
-	-- 	graphics.line(x, self.y - tick_height, x, self.y + tick_height, self.tick_colors[i], tick_thickness)
-	-- end
-	--
-	-- if self.draw_circle > 0 then
-	-- 	graphics.circle(self.x - self.w / 2, self.y, self.draw_circle, Color(1, 0, 0, 1))
-	-- end
+	graphics.line(ix, iy, ox, oy, Color(0, 0, 0, 1), 5)
 
 	graphics.pop()
 end
