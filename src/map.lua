@@ -29,10 +29,20 @@ function Map:init(args)
 
 		table.insert(self.units, new_unit)
 	end
+
+	self.base_reaction_color = Color(0.3, 0.3, 0.3, 0.1)
+	self.reaction_color = self.base_reaction_color
+	self.reaction_color_t = 0
 end
 
 function Map:update(dt)
 	self:update_game_object(dt)
+
+	local speed = 0.1
+	if self.reaction_color_t < 1 then
+		self.reaction_color_t = self.reaction_color_t + dt * speed
+	end
+	self.reaction_color = self.reaction_color:lerp(self.base_reaction_color, math.linear, self.reaction_color_t)
 end
 
 function Map:load_next_room()
@@ -40,7 +50,8 @@ function Map:load_next_room()
 	for i = 1, self.rows do
 		self.grid[i] = {}
 		for j = 1, self.cols do
-			local color = Color(0.3, 0.3, 0.3, random:float(0.7, 1))
+			local shade = random:float(0.2, 0.4)
+			local color = Color(shade, shade, shade, 1)
 			self.grid[i][j] = random:float() <= 1.9 and { color = color, unit = nil } or nil
 		end
 	end
@@ -61,6 +72,11 @@ end
 function Map:react_to_beat(args)
 	args.unit.spring:pull(0.2, 200, 10)
 	self.spring:pull(0.2, 200, 10)
+	self.reaction_color = args.beat.action.color:clone():darken(0.3)
+	self.reaction_color_t = 0
+	-- trigger:tween(0.6, self, { reaction_color_t = 1 }, math.linear, function()
+	-- self.reaction_color = self.base_reaction_color
+	-- end)
 end
 
 function Map:react_to_miss(args)
@@ -189,12 +205,12 @@ end
 function Map:draw()
 	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.y)
 	graphics.rectangle(self.x, self.y, self.cell_size * (self.rows + 4), self.cell_size * (self.cols + 4), 0, 0,
-		Color(0.3, 0.3, 0.3, 0.1))
+		self.reaction_color)
 	graphics.pop()
 
 	graphics.push(self.x, self.y, 1 - self.r, self.spring.x, self.spring.y)
 	graphics.rectangle(self.x, self.y, self.cell_size * (self.rows + 2), self.cell_size * (self.cols + 2), 0, 0,
-		Color(0.5, 0.5, 0.5, 0.1))
+		self.reaction_color)
 	graphics.pop()
 
 	graphics.push(self.x, self.y, 0)

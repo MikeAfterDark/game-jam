@@ -43,10 +43,10 @@ function Color:lerp(other_color, easing, t)
 		print("no easing of type: " .. tostring(easing) .. ", using linear")
 	end
 
-	local r = other_color.r * (1 - t) + self.r * t
-	local g = other_color.g * (1 - t) + self.g * t
-	local b = other_color.b * (1 - t) + self.b * t
-	local a = other_color.a * (1 - t) + self.a * t
+	local r = other_color.r * t + self.r * (1 - t)
+	local g = other_color.g * t + self.g * (1 - t)
+	local b = other_color.b * t + self.b * (1 - t)
+	local a = other_color.a * t + self.a * (1 - t)
 	return Color(r, g, b, a)
 end
 

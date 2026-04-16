@@ -12,6 +12,7 @@ function Game:on_enter(from, args)
 
 	self.level = args.level
 	self.player_units = args.player_units
+	self.pitch = args.pitch or 1
 
 	camera.x, camera.y = gw / 2, gh / 2
 	camera.r = 0
@@ -163,6 +164,14 @@ local directions = {
 
 function Game:update(dt)
 	self.song = play_music({ return_song = true, pitch = self.pitch })
+
+	if input.z.pressed then
+		self.pitch = self.pitch - 0.1
+	end
+	if input.x.pressed then
+		self.pitch = self.pitch + 0.1
+	end
+	self.song._source:setPitch(self.pitch)
 
 	if not self.in_pause and not self.won then
 		run_time = run_time + dt
