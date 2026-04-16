@@ -73,6 +73,49 @@ function Map:beat_tracker(time)
 	self.r = math.cos(time * speed)
 end
 
+Beat_Actions = {
+	Empty = function(self, args)
+		-- do nothing
+	end,
+
+	Beat = function(self, args)
+		self:move_unit(args.unit, args.x, args.y)
+	end,
+
+	Special = function(self, args)
+		self:shoot(args)
+	end,
+}
+
+local directions = {
+	up = { x = 0, y = -1 },
+	down = { x = 0, y = 1 },
+	left = { x = -1, y = 0 },
+	right = { x = 1, y = 0 },
+}
+
+function Map:handle_press(args)
+	local direction = args.dir
+	local unit = args.unit
+	local beat_action = args.beat.action
+
+	local dir = directions[direction]
+	if not dir then
+		return
+	end
+
+	local args = {
+		unit = unit,
+		x = unit.tile_x + dir.x,
+		y = unit.tile_y + dir.y,
+	}
+
+	local action = Beat_Actions[beat_action.id]
+	if action then
+		action(self, args)
+	end
+end
+
 function Map:get_all_alive_units()
 	return (table.select(self.units, function(v)
 		return v.hp and v.hp > 0 or false
@@ -82,6 +125,8 @@ end
 function Map:get_random_unit()
 	return table.random(self.units) or {}
 end
+
+function Map:shoot(args) end
 
 function Map:move_unit(unit, new_x, new_y)
 	if self:can_place(unit, new_x, new_y) then
@@ -134,7 +179,7 @@ end
 
 function rects_overlap(a, b) -- unit x unit collision check
 	return not (
-		a.x + a.w <= b.x --
+		a.x + a.w <= b.x     --
 		or b.x + b.w <= a.x
 		or a.y + a.h <= b.y
 		or b.y + b.h <= a.y
@@ -143,11 +188,13 @@ end
 
 function Map:draw()
 	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.y)
-	graphics.rectangle(self.x, self.y, self.cell_size * (self.rows + 4), self.cell_size * (self.cols + 4), 0, 0, Color(0.3, 0.3, 0.3, 0.1))
+	graphics.rectangle(self.x, self.y, self.cell_size * (self.rows + 4), self.cell_size * (self.cols + 4), 0, 0,
+		Color(0.3, 0.3, 0.3, 0.1))
 	graphics.pop()
 
 	graphics.push(self.x, self.y, 1 - self.r, self.spring.x, self.spring.y)
-	graphics.rectangle(self.x, self.y, self.cell_size * (self.rows + 2), self.cell_size * (self.cols + 2), 0, 0, Color(0.5, 0.5, 0.5, 0.1))
+	graphics.rectangle(self.x, self.y, self.cell_size * (self.rows + 2), self.cell_size * (self.cols + 2), 0, 0,
+		Color(0.5, 0.5, 0.5, 0.1))
 	graphics.pop()
 
 	graphics.push(self.x, self.y, 0)
@@ -163,7 +210,7 @@ function Map:draw()
 					0,
 					0,
 					cell.color
-					-- cell.unit and cell.unit.color or cell.color
+				-- cell.unit and cell.unit.color or cell.color
 				)
 			end
 		end

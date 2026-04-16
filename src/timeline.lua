@@ -103,21 +103,21 @@ end
 
 -- returns number of beats left, updates beat positions
 function Timeline:beat_tracker(time)
-	local miss = false
+	local missed_beat = nil
 	for i = self.beat_index, #self.beats do
 		local beat = self.beats[i]
 		if time > self:future(beat.time) then
 			self.beat_index = i + 1
 
 			if beat.action ~= Timings.Empty then
-				miss = true
+				missed_beat = beat
 			end
 			break
 		end
 	end
 
 	self.time = time
-	return self:beats_left(), miss
+	return self:beats_left(), missed_beat
 end
 
 function Timeline:beats_left()
@@ -130,13 +130,6 @@ end
 
 function Timeline:react_to_miss()
 	-- self.spring:pull(0.1, 100, 10)
-end
-
-function Timeline:print_beats()
-	print("Beats: ")
-	for i, beat in ipairs(self.beats) do
-		print(i, self.beat_index, beat.action.name, beat.unit.type.name)
-	end
 end
 
 function Timeline:draw()

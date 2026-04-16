@@ -154,6 +154,13 @@ function Game:next_turn()
 	end
 end
 
+local directions = {
+	up = { x = 0, y = -1 },
+	down = { x = 0, y = 1 },
+	left = { x = -1, y = 0 },
+	right = { x = 1, y = 0 },
+}
+
 function Game:update(dt)
 	self.song = play_music({ return_song = true, pitch = self.pitch })
 
@@ -168,40 +175,31 @@ function Game:update(dt)
 			self.song_position = self.song_position + delta
 		end
 
-		if input.z.pressed then
-			self.timeline:print_beats()
-		end
-
 		if self.map.new_room_loaded then
 			local valid_hit = nil
 			if input.up.pressed or input.down.pressed or input.left.pressed or input.right.pressed then
-				valid_hit = self.timeline:beat_hit_at(self.song_position)
+				local valid_hit, hit_time = self.timeline:beat_hit_at(self.song_position)
 
 				if valid_hit then
 					sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
-					self.map:react_to_beat({ unit = self.focused_unit, beat = valid_hit })
+					local data = { unit = self.focused_unit, beat = valid_hit, time_offset = hit_time }
+					self.map:react_to_beat(data)
 					self.timeline:react_to_beat()
 
 					local unit = self.focused_unit
-					if input.up.pressed then
-						self.map:move_unit(unit, unit.tile_x + 0, unit.tile_y - 1)
-					end
-					if input.down.pressed then
-						self.map:move_unit(unit, unit.tile_x + 0, unit.tile_y + 1)
-					end
-					if input.left.pressed then
-						self.map:move_unit(unit, unit.tile_x - 1, unit.tile_y + 0)
-					end
-					if input.right.pressed then
-						self.map:move_unit(unit, unit.tile_x + 1, unit.tile_y + 0)
+					for dir, _ in pairs(directions) do
+						if input[dir].pressed then
+							data.dir = dir
+							self.map:handle_press(data)
+						end
 					end
 				end
 			end
 
-			local beats_left, miss = self.timeline:beat_tracker(self.song_position)
-			if miss then
+			local beats_left, missed_beat = self.timeline:beat_tracker(self.song_position)
+			if missed_beat then
 				sfx.tile_mouse_enter:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
-				self.map:react_to_miss({ unit = self.focused_unit, beat = valid_hit })
+				self.map:react_to_miss({ unit = self.focused_unit, beat = missed_beat })
 				self.timeline:react_to_miss()
 			end
 

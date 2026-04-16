@@ -286,10 +286,10 @@ function Character_Setup:set_stage(stage)
 end
 
 Timings = {
-	Empty = { name = "empty", color = Color(0, 0, 0, 1) },
-	Beat = { name = "beat", color = Color(0, 1, 0, 1) },
-	Hold = { name = "hold", color = Color(1, 0, 0, 1) },
-	Special = { name = "special", color = Color(1, 1, 0, 1) },
+	Empty = { id = "Empty", name = "empty", color = Color(0, 0, 0, 1) },
+	Beat = { id = "Beat", name = "beat", color = Color(0, 1, 0, 1) },
+	Hold = { id = "Hold", name = "hold", color = Color(1, 0, 0, 1) },
+	Special = { id = "Special", name = "special", color = Color(1, 1, 0, 1) },
 }
 
 function Character_Setup:load_characters()
