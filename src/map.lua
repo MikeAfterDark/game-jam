@@ -4,8 +4,9 @@ Map:implement(GameObject)
 function Map:init(args)
 	self:init_game_object(args)
 
-	self.grid = {}
-	self.units = {}
+	self.grid = {}  -- for the tiles that make up the map
+	self.units = {} -- for the units that take actions
+	self.entities = {} -- for non-action objects that dont take up a cell and follow a pre-determined set of actions
 
 	self.rows = 10
 	self.cols = 10
@@ -46,6 +47,13 @@ function Map:update(dt)
 end
 
 function Map:load_next_room()
+	-- todo:
+	-- make sure self.units only has 'alive' units (should be only player units)
+	for _, entity in pairs(self.entities) do
+		entity.dead = true
+	end
+	self.entities = {}
+
 	-- load the next room from the level data
 	for i = 1, self.rows do
 		self.grid[i] = {}
@@ -84,23 +92,27 @@ function Map:react_to_miss(args)
 	self.spring:pull(0.1, 100, 10)
 end
 
-function Map:beat_tracker(time)
+function Map:beat_tracker(time, is_new_beat)
 	local speed = 2.1
 	self.r = math.cos(time * speed)
+
+	for i, entity in ipairs(self.entities) do
+		entity:beat_tracker(time, is_new_beat)
+	end
 end
 
 Beat_Actions = {
-	Empty = function(self, args)
-		-- do nothing
-	end,
+	Empty = function(self, args) end,
 
 	Beat = function(self, args)
-		self:move_unit(args.unit, args.x, args.y)
+		self:move_unit(args.unit, args.tile_x, args.tile_y)
 	end,
 
-	Special = function(self, args)
+	Hold = function(self, args)
 		self:shoot(args)
 	end,
+
+	Special = function(self, args) end,
 }
 
 local directions = {
@@ -111,22 +123,10 @@ local directions = {
 }
 
 function Map:handle_press(args)
-	local direction = args.dir
-	local unit = args.unit
-	local beat_action = args.beat.action
+	args.tile_x = args.unit.tile_x + args.dir.x
+	args.tile_y = args.unit.tile_y + args.dir.y
 
-	local dir = directions[direction]
-	if not dir then
-		return
-	end
-
-	local args = {
-		unit = unit,
-		x = unit.tile_x + dir.x,
-		y = unit.tile_y + dir.y,
-	}
-
-	local action = Beat_Actions[beat_action.id]
+	local action = Beat_Actions[args.beat.action.id]
 	if action then
 		action(self, args)
 	end
@@ -142,7 +142,25 @@ function Map:get_random_unit()
 	return table.random(self.units) or {}
 end
 
-function Map:shoot(args) end
+function Map:shoot(args)
+	-- spawn a projectile that updates based on the beat
+	-- projectile type selected based on the unit that fired it
+	-- projectile updates based on its type
+	local projectile_type = args.unit:get_projectile_type()
+	local projectile = Projectile({
+		group = self.group,
+		x = args.unit.base_x,
+		y = args.unit.base_y,
+		tile_x = args.unit.tile_x, -- top left alinged
+		tile_y = args.unit.tile_y,
+		dir_x = args.dir.x,
+		dir_y = args.dir.y,
+		cell_size = self.cell_size,
+		type = projectile_type,
+	})
+
+	table.insert(self.entities, projectile)
+end
 
 function Map:move_unit(unit, new_x, new_y)
 	if self:can_place(unit, new_x, new_y) then

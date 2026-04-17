@@ -165,7 +165,7 @@ local directions = {
 function Game:update(dt)
 	self.song = play_music({ return_song = true, pitch = self.pitch })
 
-	if input.z.pressed then
+	if input.z.pressed and self.pitch > 0.1 then
 		self.pitch = self.pitch - 0.1
 	end
 	if input.x.pressed then
@@ -185,9 +185,10 @@ function Game:update(dt)
 		end
 
 		if self.map.new_room_loaded then
-			local valid_hit = nil
+			local new_beat_from_hit = false
 			if input.up.pressed or input.down.pressed or input.left.pressed or input.right.pressed then
-				local valid_hit, hit_time = self.timeline:beat_hit_at(self.song_position)
+				local valid_hit, hit_time
+				valid_hit, hit_time, new_beat_from_hit = self.timeline:beat_hit_at(self.song_position)
 
 				if valid_hit then
 					sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
@@ -196,8 +197,8 @@ function Game:update(dt)
 					self.timeline:react_to_beat()
 
 					local unit = self.focused_unit
-					for dir, _ in pairs(directions) do
-						if input[dir].pressed then
+					for key, dir in pairs(directions) do
+						if input[key].pressed then
 							data.dir = dir
 							self.map:handle_press(data)
 						end
@@ -205,18 +206,20 @@ function Game:update(dt)
 				end
 			end
 
-			local beats_left, missed_beat = self.timeline:beat_tracker(self.song_position)
+			local beats_left, missed_beat, new_beat = self.timeline:beat_tracker(self.song_position)
 			if missed_beat then
 				sfx.tile_mouse_enter:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
 				self.map:react_to_miss({ unit = self.focused_unit, beat = missed_beat })
 				self.timeline:react_to_miss()
 			end
 
-			self.map:beat_tracker(self.song_position)
+			local is_new_beat = new_beat_from_hit or new_beat
+			-- print(is_new_beat)
+			self.map:beat_tracker(self.song_position, is_new_beat)
 			self.focused_unit:beats_remaining(beats_left)
 
 			if beats_left < 0 then
-				self:next_turn() -- TODO: last beat never shown on timeline
+				self:next_turn()
 			end
 		end
 	end

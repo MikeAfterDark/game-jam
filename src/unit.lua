@@ -53,6 +53,10 @@ function Unit:beats_remaining(beats)
 	})
 end
 
+function Unit:get_projectile_type()
+	return Projectile_Type.A
+end
+
 function Unit:draw()
 	graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
 

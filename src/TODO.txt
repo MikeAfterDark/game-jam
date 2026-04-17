@@ -16,8 +16,10 @@ Turn order: queue of units in play
 Action track is built offscreen based off turn order
 Map: Room system like hades/binding of isaac (defeat all enemies in room to progress?)
 
+bugs: 
+- When the song ends the song_time resets to 0, but beats are at time = song_time + total_song_duration
 
-Notes:
-- Map has controls for moving units ----> move to scene_game
-- timeline has metronome timings + sfx -----> move to scene_game or other audio manager of some kind
-
+todo:
+- projectile collisions (keep in mind high speed will skip over tiles)
+- projectile out of bounds & self deletion
+- HP display and projectile HP dmg

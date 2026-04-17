@@ -81,7 +81,8 @@ function Timeline:beat_hit_at(time)
 
 	if closest_hit then
 		self.beat_index = closest_hit.index + 1
-		return closest_hit.beat, closest_hit.time_offset
+		local is_new_beat = true
+		return closest_hit.beat, closest_hit.time_offset, is_new_beat
 	else
 		return false
 	end
@@ -104,10 +105,12 @@ end
 -- returns number of beats left, updates beat positions
 function Timeline:beat_tracker(time)
 	local missed_beat = nil
+	local is_new_beat = false
 	for i = self.beat_index, #self.beats do
 		local beat = self.beats[i]
 		if time > self:future(beat.time) then
 			self.beat_index = i + 1
+			is_new_beat = true
 
 			if beat.action ~= Timings.Empty then
 				missed_beat = beat
@@ -117,7 +120,7 @@ function Timeline:beat_tracker(time)
 	end
 
 	self.time = time
-	return self:beats_left(), missed_beat
+	return self:beats_left(), missed_beat, is_new_beat
 end
 
 function Timeline:beats_left()
