@@ -127,7 +127,7 @@ function Timeline:beats_left()
 	return #self.beats - self.beat_index
 end
 
-function Timeline:react_to_beat()
+function Timeline:react_to_hit()
 	-- self.spring:pull(0.2, 200, 10)
 end
 

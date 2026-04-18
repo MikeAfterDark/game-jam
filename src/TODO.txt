@@ -24,3 +24,6 @@ todo:
 - projectile collisions (keep in mind high self.speed will skip over tiles)
 - projectile out of bounds & self deletion
 - HP display and projectile HP dmg
+
+ideas:
+- multiplayer rhythm game: local machine co-op, all the way up to online multiplayer

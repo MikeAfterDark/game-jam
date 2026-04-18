@@ -23,7 +23,11 @@ function Turn_Order:update(dt)
 	}
 	for i, unit in ipairs(self.turns) do
 		table.insert(units, {
-			text = (unit.type and unit.type.name or "???") .. ": " .. (unit.speed or "###") .. "/" .. self.duplicate_speed,
+			text = (unit.type and unit.type.name or "???") --
+				.. ": "
+				.. (unit.speed or "###")
+				.. "/"
+				.. self.duplicate_speed,
 			font = pixul_font,
 		})
 	end
@@ -49,12 +53,31 @@ function Turn_Order:insert(units)
 	local duplicate_speed_threshold = 8
 	local turns = {}
 	for i, unit in ipairs(units) do
-		if unit.speed then
+		local include_unit = unit.is_enemy --
+			and not main.current.enemies_act_every_beat
+			and not main.current.enemies_act_at_end_of_round
+
+		if include_unit and unit.speed then
 			for j = 1, math.ceil(unit.speed / duplicate_speed_threshold), 1 do
 				table.insert(turns, unit)
 			end
-		else
+		elseif not unit.speed then
 			print("unit has no speed:", unit.type.name)
+		end
+	end
+
+	if main.current.enemies_act_at_end_of_round and not main.current.enemies_act_every_beat then
+		print("adding to the end")
+		for i, unit in ipairs(units) do
+			local include_unit = unit.is_enemy
+
+			if include_unit and unit.speed then
+				for j = 1, math.ceil(unit.speed / duplicate_speed_threshold), 1 do
+					table.insert(turns, unit)
+				end
+			elseif not unit.speed then
+				print("enemy unit has no speed:", unit.type.name)
+			end
 		end
 	end
 

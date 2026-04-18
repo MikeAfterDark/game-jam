@@ -60,10 +60,15 @@ function Game:on_enter(from, args)
 		})
 	end
 
-	-- [load room draw grid (future: tilemap)]
-	-- [spawn units] and [spawn enemies]
-	-- [setup timeline] and [add units to turn queue]
-	-- [start countdown] and [start/resume song]
+	-- game design flags:
+	-- true: enemies act on every beat
+	-- falee: enemies have their own turns
+	self.enemies_act_every_beat = false
+
+	-- true: enemies will get queued up based on initiative
+	-- falee: all enemies will all go at the end of all turns
+	self.enemies_act_at_end_of_round = true
+
 	self.song_position = 0
 
 	-- controls the unit locations, hp, collisions and fights
@@ -185,35 +190,41 @@ function Game:update(dt)
 		end
 
 		if self.map.new_room_loaded then
-			local new_beat_from_hit = false
-			if input.up.pressed or input.down.pressed or input.left.pressed or input.right.pressed then
-				local valid_hit, hit_time
-				valid_hit, hit_time, new_beat_from_hit = self.timeline:beat_hit_at(self.song_position)
+			local is_new_beat = false
+			if not self.focused_unit.is_enemy then
+				local new_beat_from_hit = false
+				if input.up.pressed or input.down.pressed or input.left.pressed or input.right.pressed then
+					local valid_hit, hit_time
+					valid_hit, hit_time, new_beat_from_hit = self.timeline:beat_hit_at(self.song_position)
 
-				if valid_hit then
-					sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
-					local data = { unit = self.focused_unit, beat = valid_hit, time_offset = hit_time }
-					self.map:react_to_beat(data)
-					self.timeline:react_to_beat()
+					if valid_hit then
+						sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+						local data = { unit = self.focused_unit, beat = valid_hit, time_offset = hit_time }
+						self.map:react_to_hit(data)
+						self.timeline:react_to_hit()
 
-					local unit = self.focused_unit
-					for key, dir in pairs(directions) do
-						if input[key].pressed then
-							data.dir = dir
-							self.map:handle_press(data)
+						local unit = self.focused_unit
+						for key, dir in pairs(directions) do
+							if input[key].pressed then
+								data.dir = dir
+								self.map:handle_press(data)
+							end
 						end
 					end
 				end
+
+				local beats_left, missed_beat, new_beat = self.timeline:beat_tracker(self.song_position)
+				if missed_beat then
+					sfx.tile_mouse_enter:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+					self.map:react_to_miss({ unit = self.focused_unit, beat = missed_beat })
+					self.timeline:react_to_miss()
+				end
+
+				is_new_beat = new_beat_from_hit or new_beat
+			else
+				is_new_beat = false -- TODO:
 			end
 
-			local beats_left, missed_beat, new_beat = self.timeline:beat_tracker(self.song_position)
-			if missed_beat then
-				sfx.tile_mouse_enter:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
-				self.map:react_to_miss({ unit = self.focused_unit, beat = missed_beat })
-				self.timeline:react_to_miss()
-			end
-
-			local is_new_beat = new_beat_from_hit or new_beat
 			-- print(is_new_beat)
 			self.map:beat_tracker(self.song_position, is_new_beat)
 			self.focused_unit:beats_remaining(beats_left)

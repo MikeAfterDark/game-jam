@@ -65,6 +65,28 @@ function Map:load_next_room()
 	end
 
 	-- spawn each unit onto the board
+	local num_enemies = 6
+	for i = 1, num_enemies do
+		local new_x = self.cols - i
+		local new_y = self.rows
+		local type = random:table(Enemy_Type)
+		local new_unit = Unit({
+			group = self.group,
+			x = self.x + self.cell_size * ((0 - 0.0) - self.rows / 2),
+			y = self.y + self.cell_size * ((0 - 0.0) - self.cols / 2),
+			tile_x = new_x, -- top left alinged
+			tile_y = new_y,
+			w = random:int(1, 1),
+			h = random:int(1, 1),
+			type = type,
+			timeline = type.timeline,
+			cell_size = self.cell_size,
+			visible = false,
+			is_enemy = true,
+		})
+
+		table.insert(self.units, new_unit)
+	end
 
 	-- init each unit for this specific level
 	for _, unit in ipairs(self:get_all_alive_units()) do
@@ -77,7 +99,7 @@ function Map:load_next_room()
 	self.new_room_loaded = true
 end
 
-function Map:react_to_beat(args)
+function Map:react_to_hit(args)
 	args.unit.spring:pull(0.2, 200, 10)
 	self.spring:pull(0.2, 200, 10)
 	self.reaction_color = args.beat.action.color:clone():darken(0.3)
