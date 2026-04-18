@@ -20,6 +20,7 @@ bugs:
 - When the song ends the song_time resets to 0, but beats are at time = song_time + total_song_duration
 
 todo:
-- projectile collisions (keep in mind high speed will skip over tiles)
+- enemies
+- projectile collisions (keep in mind high self.speed will skip over tiles)
 - projectile out of bounds & self deletion
 - HP display and projectile HP dmg

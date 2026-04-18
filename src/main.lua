@@ -17,6 +17,7 @@ require("timeline")
 require("turn_order")
 require("unit")
 require("projectile")
+require("enemy")
 
 -- ui
 -- require("circle_menu")

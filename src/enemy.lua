@@ -1,6 +1,6 @@
-Projectile = Object:extend()
-Projectile:implement(GameObject)
-function Projectile:init(args)
+Enemy = Object:extend()
+Enemy:implement(GameObject)
+function Enemy:init(args)
     self:init_game_object(args)
 
     self.speed = 1 --self.type.speed or random:int(1, 3)
@@ -18,7 +18,7 @@ function Projectile:init(args)
     })
 end
 
-function Projectile:update(dt)
+function Enemy:update(dt)
     self:update_game_object(dt)
 
     self.x = self.base_x + (self.tile_x - 0.5) * self.cell_size
@@ -29,7 +29,7 @@ function Projectile:update(dt)
     self.text:update(dt)
 end
 
-function Projectile:beat_tracker(time, is_new_beat)
+function Enemy:beat_tracker(time, is_new_beat)
     if is_new_beat then
         -- WARN: its IRL time = 0.2s, smaller beat increments/hit_windows will fuck this over
         trigger:tween(0.2, self,
@@ -40,7 +40,7 @@ function Projectile:beat_tracker(time, is_new_beat)
     end
 end
 
-function Projectile:draw()
+function Enemy:draw()
     graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
 
     local x = self.x --+ (self.tile_x - 1) * self.cell_size + width / 2
@@ -54,10 +54,28 @@ function Projectile:draw()
     graphics.pop()
 end
 
-Projectile_Type = {
+-- Timings = {
+-- 	Empty = { id = "Empty", name = "empty", color = Color(0, 0, 0, 1) },
+-- 	Beat = { id = "Beat", name = "beat", color = Color(0, 1, 0, 1) },
+-- 	Hold = { id = "Hold", name = "hold", color = Color(1, 0, 0, 1) },
+-- 	Special = { id = "Special", name = "special", color = Color(1, 1, 0, 1) },
+-- }
+
+function Character_Setup:load_characters()
+    return {
+        { type = Unit_Type.A, timeline = { Timings.Beat, Timings.Empty, Timings.Hold, Timings.Beat, Timings.Empty, Timings.Beat } },
+        { type = Unit_Type.B, timeline = { Timings.Beat, Timings.Beat, Timings.Empty } },
+        { type = Unit_Type.C, timeline = { Timings.Beat, Timings.Beat, Timings.Beat, Timings.Beat, Timings.Beat } },
+        { type = Unit_Type.D, timeline = { Timings.Beat, Timings.Hold, Timings.Beat, Timings.Hold, Timings.Beat, Timings.Beat } },
+        { type = Unit_Type.E, timeline = { Timings.Beat, Timings.Empty, Timings.Beat, Timings.Beat, Timings.Empty, Timings.Beat } },
+    }
+end
+
+Enemy_Type = {
     A = {
         name = "a",
         speed = 10,
+        timeline = { Timings.Beat, Timings.Empty, Timings.Beat, Timings.Beat, Timings.Empty, Timings.Beat },
         color = Color(1, 0, 0, 1),
         sprites = function()
             return nil
