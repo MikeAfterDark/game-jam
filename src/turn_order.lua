@@ -53,7 +53,7 @@ function Turn_Order:insert(units)
 	local duplicate_speed_threshold = 8
 	local turns = {}
 	for i, unit in ipairs(units) do
-		local include_unit = unit.is_enemy --
+		local include_unit = unit.is_player --
 			and not main.current.enemies_act_every_beat
 			and not main.current.enemies_act_at_end_of_round
 
@@ -69,7 +69,7 @@ function Turn_Order:insert(units)
 	if main.current.enemies_act_at_end_of_round and not main.current.enemies_act_every_beat then
 		print("adding to the end")
 		for i, unit in ipairs(units) do
-			local include_unit = unit.is_enemy
+			local include_unit = not unit.is_player
 
 			if include_unit and unit.speed then
 				for j = 1, math.ceil(unit.speed / duplicate_speed_threshold), 1 do

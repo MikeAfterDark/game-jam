@@ -88,7 +88,7 @@ function Game:on_enter(from, args)
 	self.timeline = Timeline({
 		group = self.main,
 		x = gw * 0.5,
-		y = gh * 0.94,    -- center aligned
+		y = gh * 0.94, -- center aligned
 		w = gw * 0.9,
 		hit_window = 0.1, -- seconds
 		max_beats = 6,
@@ -191,7 +191,9 @@ function Game:update(dt)
 
 		if self.map.new_room_loaded then
 			local is_new_beat = false
-			if not self.focused_unit.is_enemy then
+			local beats_left = 1
+
+			if self.focused_unit.is_player then
 				local new_beat_from_hit = false
 				if input.up.pressed or input.down.pressed or input.left.pressed or input.right.pressed then
 					local valid_hit, hit_time
@@ -203,7 +205,6 @@ function Game:update(dt)
 						self.map:react_to_hit(data)
 						self.timeline:react_to_hit()
 
-						local unit = self.focused_unit
 						for key, dir in pairs(directions) do
 							if input[key].pressed then
 								data.dir = dir
@@ -213,21 +214,34 @@ function Game:update(dt)
 					end
 				end
 
-				local beats_left, missed_beat, new_beat = self.timeline:beat_tracker(self.song_position)
+				local missed_beat, new_beat
+				beats_left, missed_beat, new_beat = self.timeline:beat_tracker(self.song_position)
 				if missed_beat then
 					sfx.tile_mouse_enter:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
 					self.map:react_to_miss({ unit = self.focused_unit, beat = missed_beat })
 					self.timeline:react_to_miss()
 				end
+				self.focused_unit:beats_remaining(beats_left)
 
 				is_new_beat = new_beat_from_hit or new_beat
-			else
-				is_new_beat = false -- TODO:
+			elseif not self.enemies_act_every_beat then -- non-player turn
+				is_new_beat = self.timeline:check_for_new_beat(self.song_position)
+				if is_new_beat then
+					-- sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+					local data = { unit = self.focused_unit, beat = valid_hit, time_offset = hit_time }
+					self.map:react_to_hit(data)
+					self.timeline:react_to_hit()
+				end
 			end
 
-			-- print(is_new_beat)
+			if self.enemies_act_every_beat then
+				is_new_beat = self.timeline:check_for_new_beat(self.song_position)
+				if is_new_beat then
+					self.map:all_enemies_act()
+				end
+			end
+
 			self.map:beat_tracker(self.song_position, is_new_beat)
-			self.focused_unit:beats_remaining(beats_left)
 
 			if beats_left < 0 then
 				self:next_turn()

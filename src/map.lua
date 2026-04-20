@@ -4,7 +4,7 @@ Map:implement(GameObject)
 function Map:init(args)
 	self:init_game_object(args)
 
-	self.grid = {}  -- for the tiles that make up the map
+	self.grid = {} -- for the tiles that make up the map
 	self.units = {} -- for the units that take actions
 	self.entities = {} -- for non-action objects that dont take up a cell and follow a pre-determined set of actions
 
@@ -26,6 +26,7 @@ function Map:init(args)
 			timeline = unit.timeline,
 			cell_size = self.cell_size,
 			visible = false,
+			is_player = true,
 		})
 
 		table.insert(self.units, new_unit)
@@ -82,7 +83,6 @@ function Map:load_next_room()
 			timeline = type.timeline,
 			cell_size = self.cell_size,
 			visible = false,
-			is_enemy = true,
 		})
 
 		table.insert(self.units, new_unit)
@@ -235,7 +235,7 @@ end
 
 function rects_overlap(a, b) -- unit x unit collision check
 	return not (
-		a.x + a.w <= b.x     --
+		a.x + a.w <= b.x --
 		or b.x + b.w <= a.x
 		or a.y + a.h <= b.y
 		or b.y + b.h <= a.y
@@ -244,13 +244,11 @@ end
 
 function Map:draw()
 	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.y)
-	graphics.rectangle(self.x, self.y, self.cell_size * (self.rows + 4), self.cell_size * (self.cols + 4), 0, 0,
-		self.reaction_color)
+	graphics.rectangle(self.x, self.y, self.cell_size * (self.rows + 4), self.cell_size * (self.cols + 4), 0, 0, self.reaction_color)
 	graphics.pop()
 
 	graphics.push(self.x, self.y, 1 - self.r, self.spring.x, self.spring.y)
-	graphics.rectangle(self.x, self.y, self.cell_size * (self.rows + 2), self.cell_size * (self.cols + 2), 0, 0,
-		self.reaction_color)
+	graphics.rectangle(self.x, self.y, self.cell_size * (self.rows + 2), self.cell_size * (self.cols + 2), 0, 0, self.reaction_color)
 	graphics.pop()
 
 	graphics.push(self.x, self.y, 0)
@@ -266,7 +264,7 @@ function Map:draw()
 					0,
 					0,
 					cell.color
-				-- cell.unit and cell.unit.color or cell.color
+					-- cell.unit and cell.unit.color or cell.color
 				)
 			end
 		end
