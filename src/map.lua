@@ -66,7 +66,7 @@ function Map:load_next_room()
 	end
 
 	-- spawn each unit onto the board
-	local num_enemies = 6
+	local num_enemies = 3
 	for i = 1, num_enemies do
 		local new_x = self.cols - i
 		local new_y = self.rows
@@ -104,9 +104,51 @@ function Map:react_to_hit(args)
 	self.spring:pull(0.2, 200, 10)
 	self.reaction_color = args.beat.action.color:clone():darken(0.3)
 	self.reaction_color_t = 0
-	-- trigger:tween(0.6, self, { reaction_color_t = 1 }, math.linear, function()
-	-- self.reaction_color = self.base_reaction_color
-	-- end)
+
+	if not args.unit.is_player then -- player actions handled in handle_press()
+		-- enemy AI
+		-- if beat is move then
+		--		where does unit want to go?
+		--		map decides route and moves it
+		--	elseif beat is attack then
+		--		select based off unit's priority target
+		--		map acts out the attack
+
+		if args.beat.action == Timings.Beat then -- move
+			local target, range, axis_distance = args.unit:choose_move_target(self:get_all_alive_units(), self:get_all_interactible_entities())
+			-- WARN: Current issue: randomly chooses new target every beat
+
+			-- TODO: include range and stuff
+
+			local target_x = target.tile_x
+			local target_y = target.tile_y
+			local new_x, new_y = self:pathfind(args.unit, args.unit.tile_x, args.unit.tile_y, target_x, target_y)
+			self:move_unit(args.unit, new_x, new_y)
+		elseif args.beat.action == Timings.Hold then -- attack
+			local targets, attack = args.unit:choose_attack_targets(self:get_all_alive_units(), self:get_all_interactible_entities())
+			-- WARN: Current issue: randomly chooses new target every beat
+			--
+			if targets and #targets > 0 and attack then
+				table.insert(
+					self.entities,
+					attack({
+						source = args.unit,
+						targets = targets,
+						map = self,
+					})
+				)
+			end
+		end
+	end
+end
+
+function Map:all_enemies_act(time)
+	for i, unit in ipairs(self.units) do
+		if not unit.is_player then
+			local data = { unit = unit, beat = unit:get_next_beat() }
+			self:react_to_hit(data)
+		end
+	end
 end
 
 function Map:react_to_miss(args)
@@ -120,7 +162,14 @@ function Map:beat_tracker(time, is_new_beat)
 
 	for i, entity in ipairs(self.entities) do
 		entity:beat_tracker(time, is_new_beat)
+		if entity.tile_x < 0 or entity.tile_x > self.cols + 1 or entity.tile_y < 0 or entity.tile_y > self.rows + 1 then
+			entity.dead = true
+		end
 	end
+
+	table.reject(self.entities, function(v)
+		return v.dead == true
+	end)
 end
 
 Beat_Actions = {
@@ -157,6 +206,12 @@ end
 function Map:get_all_alive_units()
 	return (table.select(self.units, function(v)
 		return v.hp and v.hp > 0 or false
+	end)) or {}
+end
+
+function Map:get_all_interactible_entities()
+	return (table.select(self.entities, function(v)
+		return not v:is(Projectile)
 	end)) or {}
 end
 
@@ -198,12 +253,12 @@ function Map:can_place(unit, x, y)
 	for i = x, x + unit.w - 1 do
 		for j = y, y + unit.h - 1 do
 			if not self.grid[i] or not self.grid[i][j] then
-				print("bounds", i, j)
+				-- print("bounds", i, j)
 				return false -- out of bounds
 			end
 
 			if self.grid[i][j].unit and self.grid[i][j].unit.id ~= unit.id then
-				print("occupied by ", self.grid[i][j].unit.type.name, i, j)
+				-- print("occupied by ", self.grid[i][j].unit.type.name, i, j)
 				return false -- occupied
 			end
 		end
@@ -212,7 +267,7 @@ function Map:can_place(unit, x, y)
 end
 
 function Map:place_unit(unit, x, y)
-	print("Placing: " .. unit.type.name .. " at: ", x, y)
+	-- print("Placing: " .. unit.type.name .. " at: ", x, y)
 	unit.tile_x = x
 	unit.tile_y = y
 
@@ -271,4 +326,71 @@ function Map:draw()
 	end
 
 	graphics.pop()
+end
+
+function Map:pathfind(unit, x1, y1, x2, y2)
+	local function key(x, y)
+		return y * 10000 + x
+	end
+
+	local queue = {}
+	local came_from = {}
+	local visited = {}
+
+	table.insert(queue, { x = x1, y = y1 })
+	visited[key(x1, y1)] = true
+
+	local found = false
+
+	while #queue > 0 do
+		local current = table.remove(queue, 1)
+
+		if current.x == x2 and current.y == y2 then
+			found = true
+			break
+		end
+
+		local dirs = {
+			{ 1, 0 },
+			{ -1, 0 },
+			{ 0, 1 },
+			{ 0, -1 },
+		}
+
+		for _, d in ipairs(table.shuffle(dirs)) do -- shuffle to spice up pathfinding
+			local nx = current.x + d[1]
+			local ny = current.y + d[2]
+			local k = key(nx, ny)
+
+			if not visited[k] then
+				local can_move = self:can_place(unit, nx, ny)
+
+				if can_move or (nx == x2 and ny == y2) then
+					visited[k] = true
+					came_from[k] = current
+					table.insert(queue, { x = nx, y = ny })
+				end
+			end
+		end
+	end
+
+	if not found then
+		return x1, y1
+	end
+
+	-- reconstruct path
+	local path = {}
+	local current = { x = x2, y = y2 }
+
+	while current do
+		table.insert(path, 1, current)
+		local k = key(current.x, current.y)
+		current = came_from[k]
+	end
+
+	if #path > 1 then
+		return path[2].x, path[2].y
+	end
+
+	return x1, y1
 end

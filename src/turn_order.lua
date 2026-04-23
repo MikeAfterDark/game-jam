@@ -54,8 +54,10 @@ function Turn_Order:insert(units)
 	local turns = {}
 	for i, unit in ipairs(units) do
 		local include_unit = unit.is_player --
-			and not main.current.enemies_act_every_beat
-			and not main.current.enemies_act_at_end_of_round
+			or (
+				not main.current.enemies_act_every_beat --
+				and not main.current.enemies_act_at_end_of_round
+			)
 
 		if include_unit and unit.speed then
 			for j = 1, math.ceil(unit.speed / duplicate_speed_threshold), 1 do

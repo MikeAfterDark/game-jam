@@ -15,6 +15,7 @@ function Timeline:init(args)
 
 	self.beats = {}
 	self.beat_index = 1
+	self.new_beat_checked = 0
 
 	self.unit_start_time = 0
 	self.time = 0
@@ -46,7 +47,9 @@ function Timeline:add(unit, song_time)
 
 	self.unit = unit
 	local time = ((#self.beats + 1) / self.beats_per_sec)
-	table.insert(self.beats, Beat({ action = Timings.Empty, unit = unit, time = time }))
+	if unit.is_player then -- QoL so player has a beat to react to new unit
+		table.insert(self.beats, Beat({ action = Timings.Empty, unit = unit, time = time }))
+	end
 	for i, action in ipairs(unit.timeline) do
 		time = ((#self.beats + 1) / self.beats_per_sec)
 		table.insert(self.beats, Beat({ action = action, unit = unit, time = time }))
@@ -94,12 +97,12 @@ function Timeline:beat_can_be_hit_at(beat_time, hit_time)
 		and hit_time <= self:future(beat_time)
 end
 
-function Timeline:past(time)
-	return time - self.hit_window
+function Timeline:past(time, window)
+	return time - (window or self.hit_window)
 end
 
-function Timeline:future(time)
-	return time + self.hit_window
+function Timeline:future(time, window)
+	return time + (window or self.hit_window)
 end
 
 -- returns number of beats left, updates beat positions
@@ -121,6 +124,45 @@ function Timeline:beat_tracker(time)
 
 	self.time = time
 	return self:beats_left(), missed_beat, is_new_beat
+end
+
+-- is_new_beat = self.timeline:check_for_new_beat(self.song_position)
+function Timeline:check_for_new_beat_to_hit(time, window)
+	local action_beat = nil
+	local is_new_beat = false
+	for i = self.beat_index, #self.beats do
+		local beat = self.beats[i]
+		if time > self:future(beat.time, window) then
+			self.beat_index = i + 1
+			is_new_beat = true
+
+			if beat.action ~= Timings.Empty then
+				action_beat = beat
+			end
+			break
+		end
+	end
+
+	self.time = time
+	return self:beats_left(), action_beat, is_new_beat
+end
+
+function Timeline:is_new_beat(time, window)
+	local is_new_beat = false
+
+	if self.beat_index > self.new_beat_checked then
+		for i = self.beat_index, #self.beats do
+			local beat = self.beats[i]
+			if time > self:future(beat.time, window) then
+				self.new_beat_checked = self.beat_index
+				is_new_beat = true
+				break
+			end
+		end
+	end
+
+	self.time = time
+	return is_new_beat
 end
 
 function Timeline:beats_left()
@@ -198,8 +240,7 @@ function Timeline:draw()
 						draw_thickness * 1.5
 					)
 					graphics.arc("open", unit.x, unit.y, radius, start_angle, end_angle, draw_color, draw_thickness)
-					graphics.arc("open", unit.x, unit.y, radius, tick_start_angle, tick_end_angle, tick_color,
-						draw_thickness / 2)
+					graphics.arc("open", unit.x, unit.y, radius, tick_start_angle, tick_end_angle, tick_color, draw_thickness / 2)
 				end
 			end
 		end

@@ -62,13 +62,18 @@ function Game:on_enter(from, args)
 
 	-- game design flags:
 	-- true: enemies act on every beat
-	-- falee: enemies have their own turns
-	self.enemies_act_every_beat = false
+	-- false: enemies have their own turns
+	self.enemies_act_every_beat = state.enemies_act_every_beat
 
-	-- true: enemies will get queued up based on initiative
-	-- falee: all enemies will all go at the end of all turns
-	self.enemies_act_at_end_of_round = true
+	-- true: all enemies will all go at the end of all turns
+	-- false: enemies will get queued up based on initiative
+	self.enemies_act_at_end_of_round = state.enemies_act_at_end_of_round
 
+	-- true: enemies only move (including projectiles) if the player doesn't hit a beat/has no beat
+	-- false: enemies will move every beat
+	self.enemies_only_move_when_player_doesnt = state.enemies_only_move_when_player_doesnt
+
+	self.enemy_hit_window = 0.05
 	self.song_position = 0
 
 	-- controls the unit locations, hp, collisions and fights
@@ -225,19 +230,22 @@ function Game:update(dt)
 
 				is_new_beat = new_beat_from_hit or new_beat
 			elseif not self.enemies_act_every_beat then -- non-player turn
-				is_new_beat = self.timeline:check_for_new_beat(self.song_position)
+				local beat = nil
+				beats_left, beat, is_new_beat = self.timeline:check_for_new_beat_to_hit(self.song_position, self.enemy_hit_window)
 				if is_new_beat then
 					-- sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
-					local data = { unit = self.focused_unit, beat = valid_hit, time_offset = hit_time }
+					local data = { unit = self.focused_unit, beat = beat }
 					self.map:react_to_hit(data)
 					self.timeline:react_to_hit()
 				end
 			end
 
 			if self.enemies_act_every_beat then
-				is_new_beat = self.timeline:check_for_new_beat(self.song_position)
+				if self.enemies_only_move_when_player_doesnt then
+					is_new_beat = self.timeline:is_new_beat(self.song_position, self.enemy_hit_window)
+				end
 				if is_new_beat then
-					self.map:all_enemies_act()
+					self.map:all_enemies_act(self.song_position)
 				end
 			end
 

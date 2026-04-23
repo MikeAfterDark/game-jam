@@ -1,6 +1,11 @@
 require("engine")
 require("renderer")
 
+-- NOTE: loading order matters... cuz its still C all the way down
+
+-- game data
+require("attacks.shoot_attack")
+
 -- scenes
 require("scene_mainmenu")
 require("scene_game")
@@ -17,15 +22,12 @@ require("timeline")
 require("turn_order")
 require("unit")
 require("projectile")
-require("enemy")
 
 -- ui
 -- require("circle_menu")
 -- require("circle_slider")
 
 -- helpers
-
--- game data
 
 -- on linux, state is at: ~/.local/share/{love, project_name}/state.txt
 function init()
@@ -53,12 +55,12 @@ function init()
 	end
 
 	person = {
-		Mikey = { name = "Mikey G", nickname = "Mikey", url = "https://gusakm.itch.io/", color = "green" },                               -- dev
+		Mikey = { name = "Mikey G", nickname = "Mikey", url = "https://gusakm.itch.io/", color = "green" }, -- dev
 
 		Apezilla = { name = 'David "Apezilla" Browne', nickname = "Apezilla", url = "https://www.youtube.com/@davidbrowne003", color = "red" }, -- music
 		Patrick = { name = "Patrick Montanari", nickname = "Patrick", url = "https://www.succulentsoundstudios.com/", color = "yellow" }, -- jazz improv
-		Tectonic = { name = "TectonicHorizon", nickname = "Tectonic", url = "https://soundcloud.com/reedflow", color = "p_blue1" },       -- art/game design
-		Kai = { name = "KaiaRadio", nickname = "Kai", url = "https://www.youtube.com/@KaiaRadio", color = "blue" },                       -- sfx
+		Tectonic = { name = "TectonicHorizon", nickname = "Tectonic", url = "https://soundcloud.com/reedflow", color = "p_blue1" }, -- art/game design
+		Kai = { name = "KaiaRadio", nickname = "Kai", url = "https://www.youtube.com/@KaiaRadio", color = "blue" }, -- sfx
 	}
 
 	sfx_tag = { tags = { sfx_control } }
@@ -235,12 +237,12 @@ function init()
 
 	-- can comfortably fit 14 scenes atm
 	debug_scenes = {
-		{ id = "intro",           destination = Intro },
-		{ id = "main_menu",       destination = MainMenu },
-		{ id = "level_select",    destination = Level_Select },
+		{ id = "intro", destination = Intro },
+		{ id = "main_menu", destination = MainMenu },
+		{ id = "level_select", destination = Level_Select },
 		{ id = "character_setup", destination = Character_Setup },
-		{ id = "game",            destination = Game },
-		{ id = "audio_zoo",       destination = AudioZoo }, -- todo: fix
+		{ id = "game", destination = Game },
+		{ id = "audio_zoo", destination = AudioZoo }, -- todo: fix
 	}
 
 	-- main:add(Intro("intro"))
@@ -540,22 +542,66 @@ function open_options(self)
 	)
 	button_offset = button_offset + button_distance
 
-	self.info_display_side_selection_button = collect_into(
+	self.enemies_act_every_beat_button = collect_into(
 		self.options_ui_elements,
 		Button({
 			x = column_x[column],
 			y = gh / 2 + button_offset,
 			w = gw * 0.20,
-			button_text = tostring(state.info_display_on_right_side and "info on right" or "info on left"),
+			button_text = tostring(state.enemies_act_every_beat and "enemies every beat" or "enemies got turns"),
 			fg_color = "bg",
 			bg_color = "fg",
 			action = function(b)
-				state.info_display_on_right_side = not state.info_display_on_right_side
+				state.enemies_act_every_beat = not state.enemies_act_every_beat
 				system.save_state()
-				b:set_text(tostring(state.info_display_on_right_side and "info on right" or "info on left"))
+				b:set_text(tostring(state.enemies_act_every_beat and "enemies every beat" or "enemies got turns"))
 
 				if main.current:is(Game) then
-					main.current:swap_info_display_side()
+					main.current.enemies_act_every_beat = state.enemies_act_every_beat
+				end
+			end,
+		})
+	)
+	button_offset = button_offset + button_distance
+
+	self.enemies_act_at_end_of_round_button = collect_into(
+		self.options_ui_elements,
+		Button({
+			x = column_x[column],
+			y = gh / 2 + button_offset,
+			w = gw * 0.20,
+			button_text = tostring(state.enemies_act_at_end_of_round and "enemies go last" or "enemies initiative"),
+			fg_color = "bg",
+			bg_color = "fg",
+			action = function(b)
+				state.enemies_act_at_end_of_round = not state.enemies_act_at_end_of_round
+				system.save_state()
+				b:set_text(tostring(state.enemies_act_at_end_of_round and "enemies go last" or "enemies initiative"))
+
+				if main.current:is(Game) then
+					main.current.enemies_act_at_end_of_round = state.enemies_act_at_end_of_round
+				end
+			end,
+		})
+	)
+	button_offset = button_offset + button_distance
+
+	self.enemies_only_move_when_player_doesnt_button = collect_into(
+		self.options_ui_elements,
+		Button({
+			x = column_x[column],
+			y = gh / 2 + button_offset,
+			w = gw * 0.20,
+			button_text = tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or "dont freeze"),
+			fg_color = "bg",
+			bg_color = "fg",
+			action = function(b)
+				state.enemies_only_move_when_player_doesnt = not state.enemies_only_move_when_player_doesnt
+				system.save_state()
+				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or "dont freeze"))
+
+				if main.current:is(Game) then
+					main.current.enemies_only_move_when_player_doesnt = state.enemies_only_move_when_player_doesnt
 				end
 			end,
 		})

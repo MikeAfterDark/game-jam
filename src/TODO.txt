@@ -22,7 +22,6 @@ bugs:
 todo:
 - enemies
 - projectile collisions (keep in mind high self.speed will skip over tiles)
-- projectile out of bounds & self deletion
 - HP display and projectile HP dmg
 
 ideas:
