@@ -612,6 +612,28 @@ function open_options(self)
 	)
 	button_offset = button_offset + button_distance
 
+	self.timeline_speed_slider = collect_into(
+		self.options_ui_elements,
+		Slider({
+			group = ui_group,
+			x = column_x[column],
+			y = gh / 2 + button_offset,
+			length = gw * 0.20,
+			thickness = gw * 0.02,
+			fg_color = "fg",
+			bg_color = "bg",
+			rotation = 0,
+			max_sections = 15, -- recommend factors of length that are < length/2
+			spacing = slider_spacing,
+			value = state.timeline_speed or 0.5,
+			action = function(b)
+				state.timeline_speed = b.value
+				system.save_state()
+			end,
+		})
+	)
+	button_offset = button_offset + button_distance
+
 	-- self.wall_toggle_controls = collect_into(
 	-- 	self.options_ui_elements,
 	-- 	Button({

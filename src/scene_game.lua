@@ -86,13 +86,13 @@ function Game:on_enter(from, args)
 
 	-- displays times and holds and displays the beats for the current turn
 	self.timeline = Timeline({
-		group = self.main,
+		group = self.ui,
 		x = gw * 0.5,
 		y = gh * 0.94,    -- center aligned
 		w = gw * 0.9,
-		hit_window = 0.2, -- seconds
+		hit_window = 0.15, -- seconds
 		max_beats = 6,
-		beat_spread = gw * 0.3, -- TODO: look into this VS beat speed
+		beat_spread = gw * 0.2, -- TODO: look into this VS beat speed
 		beats_per_sec = 120 / 60,
 		cell_size = cell_size,
 	})

@@ -69,7 +69,6 @@ function Turn_Order:insert(units)
 	end
 
 	if main.current.enemies_act_at_end_of_round and not main.current.enemies_act_every_beat then
-		print("adding to the end")
 		for i, unit in ipairs(units) do
 			local include_unit = not unit.is_player
 

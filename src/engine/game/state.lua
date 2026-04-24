@@ -74,7 +74,13 @@ end
 
 function Main:draw()
   for _, state in pairs(self.states) do
-    if state.active or state.persistent_draw then
+    if state.active and not state.persistent_draw then
+      state:draw()
+    end
+  end
+
+  for _, state in pairs(self.states) do
+    if state.persistent_draw then
       state:draw()
     end
   end
@@ -83,7 +89,13 @@ end
 
 function Main:shadow_draw()
   for _, state in pairs(self.states) do
-    if state.active or state.persistent_draw then
+    if state.active and not state.persistent_draw then
+      state:draw()
+    end
+  end
+
+  for _, state in pairs(self.states) do
+    if state.active and state.persistent_draw then
       state:draw()
     end
   end
