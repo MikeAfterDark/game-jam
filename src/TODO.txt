@@ -26,3 +26,30 @@ todo:
 
 ideas:
 - multiplayer rhythm game: local machine co-op, all the way up to online multiplayer
+
+- tutorial mode for playtesters (slower song/bpm)
+- hold spacebar == shoot, no spacebar == move
+- player could be able to swap which characters (lego rockband on DS)
+- countdown 3-2-1-GO at the start and after pause (make sure its in sync with beat)
+- the indicator circle should be overtop the game
+- keep the timeline to always be in teh same spot on the screen
+- settings slider for timeline's `speed` in Timeline:draw
+
+Cae playtesting: 
+- [BAD] hard to know which unit im going to control next
+- [GOOD] group selection is intuitive
+- [GOOD] player is focused on hitting beats and moving around
+- "There's so much happening" - during enemies every beat + freeze
+- Potential
+- Hard to shoot in specific direction, if im moving
+- What if each chatacter has the same moveset, but different BPMs
+    - moves on offbeat
+    - every beat
+    - every 2 beats
+    - quarter/eight notes - inverses - offbeats
+    - [xx-x]?
+- overall: i really wanna see where this goes
+- movement could be more snappy
+- player could be able to swap which characters (lego rockband on DS)
+
+- Felt good: single character, enemies got turns, enemies go last

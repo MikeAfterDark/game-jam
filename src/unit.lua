@@ -28,8 +28,10 @@ function Unit:update(dt)
 	local new_x = self.base_x + (self.tile_x - 1) * self.cell_size + self.width / 2
 	local new_y = self.base_y + (self.tile_y - 1) * self.cell_size + self.height / 2
 	if not self.moving and (self.x ~= new_x or self.y ~= new_y) then
+		-- self.x = new_x
+		-- self.y = new_y
 		self.moving = true
-		trigger:tween(0.2, self, { x = new_x, y = new_y }, math.cubic_in_out, function()
+		trigger:tween(0.05, self, { x = new_x, y = new_y }, math.cubic_in_out, function()
 			self.moving = false
 		end)
 	end
@@ -47,7 +49,7 @@ function Unit:highlight(on)
 			or self.border == 2 and Color(0.5, 0, 1, 1)
 			or Color(0, 0, 0, 1)
 		self.text:set_text({
-			{ text = "[bg]" .. self.type.name, font = small_pixul_font },
+			{ text = "[bg]" .. self.type.name,             font = small_pixul_font },
 			{ text = "[bg]" .. tostring(self.beats_count), font = pixul_font },
 		})
 	end
@@ -55,7 +57,7 @@ end
 
 function Unit:beats_remaining(beats)
 	self.text:set_text({
-		{ text = "[bg]" .. self.type.name, font = small_pixul_font },
+		{ text = "[bg]" .. self.type.name,      font = small_pixul_font },
 		{ text = "[bg]" .. tostring(beats + 1), font = pixul_font },
 	})
 end
@@ -107,7 +109,8 @@ function Unit:draw()
 		local border_color = self.border_color
 
 		if self.border > 0 then
-			graphics.rectangle(x, y, self.width - visual_shrink + border_size, self.height - visual_shrink + border_size, 2, 2, border_color)
+			graphics.rectangle(x, y, self.width - visual_shrink + border_size, self.height - visual_shrink + border_size,
+				2, 2, border_color)
 		end
 
 		graphics.rectangle(x, y, self.width - visual_shrink, self.height - visual_shrink, 2, 2, self.color)

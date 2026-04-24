@@ -7,6 +7,7 @@ require("renderer")
 require("attacks.shoot_attack")
 
 -- scenes
+require("scene_settings")
 require("scene_mainmenu")
 require("scene_game")
 require("scene_audio_zoo")
@@ -55,12 +56,12 @@ function init()
 	end
 
 	person = {
-		Mikey = { name = "Mikey G", nickname = "Mikey", url = "https://gusakm.itch.io/", color = "green" }, -- dev
+		Mikey = { name = "Mikey G", nickname = "Mikey", url = "https://gusakm.itch.io/", color = "green" },                               -- dev
 
 		Apezilla = { name = 'David "Apezilla" Browne', nickname = "Apezilla", url = "https://www.youtube.com/@davidbrowne003", color = "red" }, -- music
 		Patrick = { name = "Patrick Montanari", nickname = "Patrick", url = "https://www.succulentsoundstudios.com/", color = "yellow" }, -- jazz improv
-		Tectonic = { name = "TectonicHorizon", nickname = "Tectonic", url = "https://soundcloud.com/reedflow", color = "p_blue1" }, -- art/game design
-		Kai = { name = "KaiaRadio", nickname = "Kai", url = "https://www.youtube.com/@KaiaRadio", color = "blue" }, -- sfx
+		Tectonic = { name = "TectonicHorizon", nickname = "Tectonic", url = "https://soundcloud.com/reedflow", color = "p_blue1" },       -- art/game design
+		Kai = { name = "KaiaRadio", nickname = "Kai", url = "https://www.youtube.com/@KaiaRadio", color = "blue" },                       -- sfx
 	}
 
 	sfx_tag = { tags = { sfx_control } }
@@ -237,14 +238,16 @@ function init()
 
 	-- can comfortably fit 14 scenes atm
 	debug_scenes = {
-		{ id = "intro", destination = Intro },
-		{ id = "main_menu", destination = MainMenu },
-		{ id = "level_select", destination = Level_Select },
+		{ id = "intro",           destination = Intro },
+		{ id = "main_menu",       destination = MainMenu },
+		{ id = "level_select",    destination = Level_Select },
 		{ id = "character_setup", destination = Character_Setup },
-		{ id = "game", destination = Game },
-		{ id = "audio_zoo", destination = AudioZoo }, -- todo: fix
+		{ id = "game",            destination = Game },
+		{ id = "audio_zoo",       destination = AudioZoo }, -- todo: fix
 	}
 
+	main:add(Settings("settings"))
+	main:go_to("settings", {})
 	-- main:add(Intro("intro"))
 	-- main:add(Game("intro"))
 	-- main:add(Level_Select("intro"))
@@ -312,7 +315,7 @@ function collect_into(target, element)
 end
 
 function open_options(self)
-	main.current.in_options = true
+	self.in_options = true
 	input.m1.pressed = false
 	input:set_mouse_visible(true)
 	local ui_layer = ui_interaction_layer.Options
@@ -320,7 +323,7 @@ function open_options(self)
 	self.options_ui_elements = {}
 	main.ui_layer_stack:push({
 		layer = ui_layer,
-		layer_has_music = not main.current.in_pause,
+		layer_has_music = not self.in_pause,
 		music_type = "options",
 		ui_elements = self.options_ui_elements,
 	})
@@ -598,7 +601,8 @@ function open_options(self)
 			action = function(b)
 				state.enemies_only_move_when_player_doesnt = not state.enemies_only_move_when_player_doesnt
 				system.save_state()
-				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or "dont freeze"))
+				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or
+				"dont freeze"))
 
 				if main.current:is(Game) then
 					main.current.enemies_only_move_when_player_doesnt = state.enemies_only_move_when_player_doesnt
@@ -671,14 +675,14 @@ function update_keybind_button_display(self)
 end
 
 function close_keybinding(self)
-	main.current.in_keybinding = false
+	self.in_keybinding = false
 	pop_ui_layer(self)
 end
 
 function set_action_keybind(self, action, key)
 	input.last_key_pressed = nil
 
-	main.current.in_keybinding = true
+	self.in_keybinding = true
 	local ui_layer = ui_interaction_layer.KeyBinding
 	local ui_group = self.keybinding_ui
 	self.key_binding_ui_elements = {}
@@ -765,7 +769,7 @@ function set_action_keybind(self, action, key)
 			fg_color = "bg",
 			bg_color = "green",
 			action = function(b)
-				main.current.in_keybinding = false
+				self.in_keybinding = false
 				if #new_keys > 0 then
 					-- clear any controls that already use new_key
 					for other_action, control in pairs(controls) do
@@ -830,7 +834,7 @@ function set_action_keybind(self, action, key)
 end
 
 function close_options(self)
-	main.current.in_options = false
+	self.in_options = false
 	pop_ui_layer(self)
 
 	system.save_state()
@@ -1026,7 +1030,7 @@ function open_credits(self)
 	main.ui_layer_stack:push({
 		layer = ui_layer,
 		-- music = self.credits_menu_song_instance,
-		layer_has_music = not main.current.in_pause,
+		layer_has_music = not self.in_pause,
 		music_type = "credits",
 		ui_elements = self.credits_ui_elements,
 	})
@@ -1338,11 +1342,7 @@ function scene_transition(self, args)
 			system.save_state()
 			main:add(args.target.scene(args.target.name))
 			main:go_to(args.target.name, args.target.args)
-			if args.target.name ~= "main_menu" then
-				trigger:after(0.3, function()
-					-- random:table(level_appear):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
-				end)
-			end
+			self.transitioning = false
 		end,
 		text = args.display and Text({
 			{

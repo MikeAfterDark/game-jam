@@ -26,10 +26,6 @@ function Game:on_enter(from, args)
 	self.effects = Group()
 	self.ui = Group()
 	self.end_ui = Group():no_camera()
-	self.paused_ui = Group():no_camera()
-	self.options_ui = Group():no_camera()
-	self.keybinding_ui = Group():no_camera()
-	self.credits = Group():no_camera()
 
 	self.main_slow_amount = 1
 	slow_amount = 1
@@ -39,7 +35,6 @@ function Game:on_enter(from, args)
 	self.w, self.h = self.x2 - self.x1, self.y2 - self.y1
 	self.song_info_text = Text({ { text = "", font = pixul_font, alignment = "center" } }, global_text_tags)
 
-	self.in_pause = false
 	self.won = false
 
 	self.game_ui_elements = {}
@@ -93,11 +88,11 @@ function Game:on_enter(from, args)
 	self.timeline = Timeline({
 		group = self.main,
 		x = gw * 0.5,
-		y = gh * 0.94, -- center aligned
+		y = gh * 0.94,    -- center aligned
 		w = gw * 0.9,
-		hit_window = 0.1, -- seconds
+		hit_window = 0.2, -- seconds
 		max_beats = 6,
-		beat_spread = gw * 0.1, -- TODO: look into this VS beat speed
+		beat_spread = gw * 0.3, -- TODO: look into this VS beat speed
 		beats_per_sec = 120 / 60,
 		cell_size = cell_size,
 	})
@@ -183,7 +178,7 @@ function Game:update(dt)
 	end
 	self.song._source:setPitch(self.pitch)
 
-	if not self.in_pause and not self.won then
+	if not main:get("settings").in_pause and not self.won then
 		run_time = run_time + dt
 
 		if self.song and not self.song:isStopped() then
@@ -231,7 +226,8 @@ function Game:update(dt)
 				is_new_beat = new_beat_from_hit or new_beat
 			elseif not self.enemies_act_every_beat then -- non-player turn
 				local beat = nil
-				beats_left, beat, is_new_beat = self.timeline:check_for_new_beat_to_hit(self.song_position, self.enemy_hit_window)
+				beats_left, beat, is_new_beat = self.timeline:check_for_new_beat_to_hit(self.song_position,
+					self.enemy_hit_window)
 				if is_new_beat then
 					-- sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
 					local data = { unit = self.focused_unit, beat = beat }
@@ -257,44 +253,6 @@ function Game:update(dt)
 		end
 	end
 
-	if input.escape.pressed and not self.transitioning and not self.in_credits then
-		if not self.in_pause and not self.died and not self.won then
-			pause_game(self)
-		elseif self.in_options and not self.died and not self.won then
-			if self.in_keybinding then
-				close_keybinding(self)
-			else
-				close_options(self)
-			end
-		else
-			local layer = main.ui_layer_stack:peek()
-
-			scene_transition(self, {
-				x = gw / 2,
-				y = gh / 2,
-				type = "fade",
-				target = {
-					scene = MainMenu,
-					name = "main_menu",
-					args = { clear_music = true },
-				},
-				display = {
-					text = "loading main menu...",
-					font = pixul_font,
-					alignment = "center",
-				},
-			})
-			return
-		end
-	elseif input.escape.pressed and self.in_credits then
-		close_credits(self)
-		self.in_credits = false
-		if self.credits_button then
-			self.credits_button:on_mouse_exit()
-		end
-		self.credits:update(0)
-	end
-
 	self:update_game_object(dt * slow_amount)
 	star_group:update(dt * slow_amount)
 	self.floor:update(dt * slow_amount)
@@ -303,13 +261,6 @@ function Game:update(dt)
 	self.effects:update(dt * slow_amount)
 	self.ui:update(dt * slow_amount)
 	self.end_ui:update(dt * slow_amount)
-	self.paused_ui:update(dt * slow_amount)
-	self.options_ui:update(dt * slow_amount)
-	if self.in_keybinding then
-		update_keybind_button_display(self)
-	end
-	self.keybinding_ui:update(dt * slow_amount)
-	self.credits:update(dt * slow_amount)
 end
 
 function Game:draw()
@@ -331,26 +282,6 @@ function Game:draw()
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 	end
 	self.end_ui:draw()
-
-	if self.in_pause then
-		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
-	end
-	self.paused_ui:draw()
-
-	if self.in_options then
-		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent_2)
-	end
-	self.options_ui:draw()
-
-	if self.in_keybinding then
-		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
-	end
-	self.keybinding_ui:draw()
-
-	if self.in_credits then
-		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent_2)
-	end
-	self.credits:draw()
 end
 
 function Game:on_exit()
@@ -359,19 +290,12 @@ function Game:on_exit()
 	self.effects:destroy()
 	self.ui:destroy()
 	self.end_ui:destroy()
-	self.paused_ui:destroy()
-	self.options_ui:destroy()
-	self.keybinding_ui:destroy()
 
 	self.main = nil
 	self.game_ui = nil
 	self.effects = nil
 	self.ui = nil
 	self.end_ui = nil
-	self.paused_ui = nil
-	self.options_ui = nil
-	self.keybinding_ui = nil
-	self.credits = nil
 	self.flashes = nil
 	self.hfx = nil
 

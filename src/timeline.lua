@@ -186,7 +186,7 @@ function Timeline:draw()
 	graphics.circle(unit.x, unit.y, radius, Color(1, 1, 1, 0.8), thickness * 1.2)
 
 	local tau = 2 * math.pi
-	local speed = 2
+	local speed = 1
 
 	local radians_per_segment = speed * (tau / self.max_beats)
 	local rotation_speed = self.beats_per_sec * radians_per_segment
@@ -240,7 +240,8 @@ function Timeline:draw()
 						draw_thickness * 1.5
 					)
 					graphics.arc("open", unit.x, unit.y, radius, start_angle, end_angle, draw_color, draw_thickness)
-					graphics.arc("open", unit.x, unit.y, radius, tick_start_angle, tick_end_angle, tick_color, draw_thickness / 2)
+					graphics.arc("open", unit.x, unit.y, radius, tick_start_angle, tick_end_angle, tick_color,
+						draw_thickness / 2)
 				end
 			end
 		end
