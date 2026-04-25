@@ -44,12 +44,14 @@ function init()
 		down = { text = "Down", default = { "down", "s" }, input = state.input.down },
 		left = { text = "Left", default = { "left", "a" }, input = state.input.left },
 		right = { text = "Right", default = { "right", "d" }, input = state.input.right },
+		spacebar = { text = "Spacebar", default = { "space" }, input = state.input.spacebar },
 	}
 	options_keys_display_order = {
 		"up",
 		"down",
 		"left",
 		"right",
+		"spacebar",
 	}
 	for action, key in pairs(controls) do
 		input:bind(action, key.input or key.default)
@@ -612,6 +614,15 @@ function open_options(self)
 	)
 	button_offset = button_offset + button_distance
 
+	self.timeline_speed_text = collect_into(
+		self.options_ui_elements,
+		Text2({
+			group = ui_group,
+			x = column_x[column],
+			y = gh / 2 + button_offset - gh * 0.02,
+			lines = { { text = "[fg]Timeline Speed:", font = small_pixul_font } },
+		})
+	)
 	self.timeline_speed_slider = collect_into(
 		self.options_ui_elements,
 		Slider({
@@ -619,7 +630,7 @@ function open_options(self)
 			x = column_x[column],
 			y = gh / 2 + button_offset,
 			length = gw * 0.20,
-			thickness = gw * 0.02,
+			thickness = gw * 0.01,
 			fg_color = "fg",
 			bg_color = "bg",
 			rotation = 0,
@@ -629,6 +640,24 @@ function open_options(self)
 			action = function(b)
 				state.timeline_speed = b.value
 				system.save_state()
+			end,
+		})
+	)
+	button_offset = button_offset + button_distance
+
+	self.spacebar_controls_button = collect_into(
+		self.options_ui_elements,
+		Button({
+			x = column_x[column],
+			y = gh / 2 + button_offset,
+			w = gw * 0.20,
+			button_text = tostring(state.spacebar_controls and "spacebar controls" or "timeline controls"),
+			fg_color = "bg",
+			bg_color = "fg",
+			action = function(b)
+				state.spacebar_controls = not state.spacebar_controls
+				system.save_state()
+				b:set_text(tostring(state.spacebar_controls and "spacebar controls" or "timeline controls"))
 			end,
 		})
 	)

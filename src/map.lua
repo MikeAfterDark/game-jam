@@ -4,7 +4,7 @@ Map:implement(GameObject)
 function Map:init(args)
 	self:init_game_object(args)
 
-	self.grid = {} -- for the tiles that make up the map
+	self.grid = {}  -- for the tiles that make up the map
 	self.units = {} -- for the units that take actions
 	self.entities = {} -- for non-action objects that dont take up a cell and follow a pre-determined set of actions
 
@@ -115,7 +115,8 @@ function Map:react_to_hit(args)
 		--		map acts out the attack
 
 		if args.beat.action == Timings.Beat then -- move
-			local target, range, axis_distance = args.unit:choose_move_target(self:get_all_alive_units(), self:get_all_interactible_entities())
+			local target, range, axis_distance = args.unit:choose_move_target(self:get_all_alive_units(),
+				self:get_all_interactible_entities())
 			-- WARN: Current issue: randomly chooses new target every beat
 
 			-- TODO: include range and stuff
@@ -125,7 +126,8 @@ function Map:react_to_hit(args)
 			local new_x, new_y = self:pathfind(args.unit, args.unit.tile_x, args.unit.tile_y, target_x, target_y)
 			self:move_unit(args.unit, new_x, new_y)
 		elseif args.beat.action == Timings.Hold then -- attack
-			local targets, attack = args.unit:choose_attack_targets(self:get_all_alive_units(), self:get_all_interactible_entities())
+			local targets, attack = args.unit:choose_attack_targets(self:get_all_alive_units(),
+				self:get_all_interactible_entities())
 			-- WARN: Current issue: randomly chooses new target every beat
 			--
 			if targets and #targets > 0 and attack then
@@ -197,7 +199,9 @@ function Map:handle_press(args)
 	args.tile_x = args.unit.tile_x + args.dir.x
 	args.tile_y = args.unit.tile_y + args.dir.y
 
-	local action = Beat_Actions[args.beat.action.id]
+	local action = Beat_Actions
+	[state.spacebar_controls and (input.spacebar.down and Timings.Hold.id or Timings.Beat.id) or args.beat.action.id]
+
 	if action then
 		action(self, args)
 	end
@@ -290,7 +294,7 @@ end
 
 function rects_overlap(a, b) -- unit x unit collision check
 	return not (
-		a.x + a.w <= b.x --
+		a.x + a.w <= b.x     --
 		or b.x + b.w <= a.x
 		or a.y + a.h <= b.y
 		or b.y + b.h <= a.y
@@ -299,11 +303,13 @@ end
 
 function Map:draw()
 	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.y)
-	graphics.rectangle(self.x, self.y, self.cell_size * (self.rows + 4), self.cell_size * (self.cols + 4), 0, 0, self.reaction_color)
+	graphics.rectangle(self.x, self.y, self.cell_size * (self.rows + 4), self.cell_size * (self.cols + 4), 0, 0,
+		self.reaction_color)
 	graphics.pop()
 
 	graphics.push(self.x, self.y, 1 - self.r, self.spring.x, self.spring.y)
-	graphics.rectangle(self.x, self.y, self.cell_size * (self.rows + 2), self.cell_size * (self.cols + 2), 0, 0, self.reaction_color)
+	graphics.rectangle(self.x, self.y, self.cell_size * (self.rows + 2), self.cell_size * (self.cols + 2), 0, 0,
+		self.reaction_color)
 	graphics.pop()
 
 	graphics.push(self.x, self.y, 0)
@@ -319,7 +325,7 @@ function Map:draw()
 					0,
 					0,
 					cell.color
-					-- cell.unit and cell.unit.color or cell.color
+				-- cell.unit and cell.unit.color or cell.color
 				)
 			end
 		end
@@ -351,10 +357,10 @@ function Map:pathfind(unit, x1, y1, x2, y2)
 		end
 
 		local dirs = {
-			{ 1, 0 },
+			{ 1,  0 },
 			{ -1, 0 },
-			{ 0, 1 },
-			{ 0, -1 },
+			{ 0,  1 },
+			{ 0,  -1 },
 		}
 
 		for _, d in ipairs(table.shuffle(dirs)) do -- shuffle to spice up pathfinding

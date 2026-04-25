@@ -186,7 +186,7 @@ function Timeline:draw()
 	graphics.circle(unit.x, unit.y, radius, Color(1, 1, 1, 0.8), thickness * 1.2)
 
 	local tau = 2 * math.pi
-	local speed = state.timeline_speed * 3
+	local speed = state.timeline_speed and (state.timeline_speed * 3) or 1
 
 	local radians_per_segment = speed * (tau / self.max_beats)
 	local rotation_speed = self.beats_per_sec * radians_per_segment
@@ -213,7 +213,8 @@ function Timeline:draw()
 					local end_angle = angle + hit_window_angle - spacing * 0.5
 
 					local draw_thickness = thickness
-					local draw_color = beat.action.color
+					local draw_color = (not state.spacebar_controls or not unit.is_player) and beat.action.color
+						or (input.spacebar.down and Timings.Hold.color or Timings.Beat.color)
 
 					local background_color = Color(0, 0, 0, 1)
 					local background_width = spacing * 0.5
