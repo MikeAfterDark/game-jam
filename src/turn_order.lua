@@ -55,8 +55,8 @@ function Turn_Order:insert(units)
 	for i, unit in ipairs(units) do
 		local include_unit = unit.is_player --
 			or (
-				not main.current.enemies_act_every_beat --
-				and not main.current.enemies_act_at_end_of_round
+				not state.enemies_act_every_beat --
+				and not state.enemies_act_at_end_of_round
 			)
 
 		if include_unit and unit.speed then
@@ -68,7 +68,7 @@ function Turn_Order:insert(units)
 		end
 	end
 
-	if main.current.enemies_act_at_end_of_round and not main.current.enemies_act_every_beat then
+	if state.enemies_act_at_end_of_round and not state.enemies_act_every_beat then
 		for i, unit in ipairs(units) do
 			local include_unit = not unit.is_player
 

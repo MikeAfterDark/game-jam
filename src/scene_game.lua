@@ -58,15 +58,15 @@ function Game:on_enter(from, args)
 	-- game design flags:
 	-- true: enemies act on every beat
 	-- false: enemies have their own turns
-	self.enemies_act_every_beat = state.enemies_act_every_beat
+	-- state.enemies_act_every_beat = state.enemies_act_every_beat
 
 	-- true: all enemies will all go at the end of all turns
 	-- false: enemies will get queued up based on initiative
-	self.enemies_act_at_end_of_round = state.enemies_act_at_end_of_round
+	-- state.enemies_act_at_end_of_round = state.enemies_act_at_end_of_round
 
 	-- true: enemies only move (including projectiles) if the player doesn't hit a beat/has no beat
 	-- false: enemies will move every beat
-	self.enemies_only_move_when_player_doesnt = state.enemies_only_move_when_player_doesnt
+	-- state.enemies_only_move_when_player_doesnt = state.enemies_only_move_when_player_doesnt
 
 	self.enemy_hit_window = 0.05
 	self.song_position = 0
@@ -224,7 +224,7 @@ function Game:update(dt)
 				self.focused_unit:beats_remaining(beats_left)
 
 				is_new_beat = new_beat_from_hit or new_beat
-			elseif not self.enemies_act_every_beat then -- non-player turn
+			elseif not state.enemies_act_every_beat then -- non-player turn
 				local beat = nil
 				beats_left, beat, is_new_beat = self.timeline:check_for_new_beat_to_hit(self.song_position,
 					self.enemy_hit_window)
@@ -236,8 +236,8 @@ function Game:update(dt)
 				end
 			end
 
-			if self.enemies_act_every_beat then
-				if self.enemies_only_move_when_player_doesnt then
+			if state.enemies_act_every_beat then
+				if state.enemies_only_move_when_player_doesnt then
 					is_new_beat = self.timeline:is_new_beat(self.song_position, self.enemy_hit_window)
 				end
 				if is_new_beat then

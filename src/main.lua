@@ -560,10 +560,6 @@ function open_options(self)
 				state.enemies_act_every_beat = not state.enemies_act_every_beat
 				system.save_state()
 				b:set_text(tostring(state.enemies_act_every_beat and "enemies every beat" or "enemies got turns"))
-
-				if main.current:is(Game) then
-					main.current.enemies_act_every_beat = state.enemies_act_every_beat
-				end
 			end,
 		})
 	)
@@ -582,10 +578,6 @@ function open_options(self)
 				state.enemies_act_at_end_of_round = not state.enemies_act_at_end_of_round
 				system.save_state()
 				b:set_text(tostring(state.enemies_act_at_end_of_round and "enemies go last" or "enemies initiative"))
-
-				if main.current:is(Game) then
-					main.current.enemies_act_at_end_of_round = state.enemies_act_at_end_of_round
-				end
 			end,
 		})
 	)
@@ -605,10 +597,6 @@ function open_options(self)
 				system.save_state()
 				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or
 				"dont freeze"))
-
-				if main.current:is(Game) then
-					main.current.enemies_only_move_when_player_doesnt = state.enemies_only_move_when_player_doesnt
-				end
 			end,
 		})
 	)
