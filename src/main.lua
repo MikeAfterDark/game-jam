@@ -260,6 +260,18 @@ function init()
 	state.screen_flashes = state.screen_flashes or true
 	state.tutorial = state.tutorial or true
 	state.dark = state.dark or true
+	state.sfx_volume = state.sfx_volume or 0.3
+	state.music_volume = state.music_volume or 0.3
+	state.fullscreen = state.fullscreen or false
+	state.vsync = state.vsync or false
+
+	state.enemies_act_every_beat = state.enemies_act_every_beat or false
+	state.enemies_act_at_end_of_round = state.enemies_act_at_end_of_round or false
+	state.enemies_only_move_when_player_doesnt = state.enemies_only_move_when_player_doesnt or false
+	state.timeline_speed = state.timeline_speed or 0.3
+	state.spacebar_controls = state.spacebar_controls or false
+
+	state.damage_enabled = state.damage_enabled or true
 end
 
 function update(dt)
@@ -646,6 +658,24 @@ function open_options(self)
 				state.spacebar_controls = not state.spacebar_controls
 				system.save_state()
 				b:set_text(tostring(state.spacebar_controls and "spacebar controls" or "timeline controls"))
+			end,
+		})
+	)
+	button_offset = button_offset + button_distance
+
+	self.damage_enabled_button = collect_into(
+		self.options_ui_elements,
+		Button({
+			x = column_x[column],
+			y = gh / 2 + button_offset,
+			w = gw * 0.20,
+			button_text = tostring(state.damage_enabled and "damage enabled" or "damage disabled"),
+			fg_color = "bg",
+			bg_color = "fg",
+			action = function(b)
+				state.damage_enabled = not state.damage_enabled
+				system.save_state()
+				b:set_text(tostring(state.damage_enabled and "damage enabled" or "damage disabled"))
 			end,
 		})
 	)

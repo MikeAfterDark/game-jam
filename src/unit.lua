@@ -106,7 +106,7 @@ function Unit:draw()
 
 		local visual_shrink = 20
 		local border_size = 10
-		local border_color = self.border_color
+		local border_color = self.is_player and self.border_color or Color(1, 0, 0, 1)
 
 		if self.border > 0 then
 			graphics.rectangle(x, y, self.width - visual_shrink + border_size, self.height - visual_shrink + border_size,
