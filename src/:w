@@ -22,9 +22,7 @@ bugs:
 todo:
 - enemies
 - projectile collisions (keep in mind high self.speed will skip over tiles)
-- HP display 
-- [QoL] Lag Sync-ing + Tutorial (2 in 1)
-- [Idea] beats_per_measure where each turn is a measure
+- HP display a
 - [Idea] Gamemodes with certain game state settings
 - [Mechanic] Bonuses for hitting notes/swapping characters
 - [Idea] maybe player could decide when to swap to which characters (lego rockband on DS) to play (bonuses for switching often)
@@ -36,7 +34,7 @@ far future ideas:
 - multiplayer rhythm game: local machine co-op, all the way up to online multiplayer
 
 
-C** playtesting: [2026-04-23]
+Cae playtesting: [2026-04-23]
 - [BAD] hard to know which unit im going to control next
 - [GOOD] group selection is intuitive
 - [GOOD] player is focused on hitting beats and moving around

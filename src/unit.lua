@@ -45,8 +45,8 @@ function Unit:highlight(on)
 	self.border = on
 	if self.border then
 		self.beats_count = #self.timeline
-		self.border_color = self.border == 1 and Color(0, 1, 0, 1) --
-			or self.border == 2 and Color(0.5, 0, 1, 1)
+		self.border_color = self.border == 1 and Color(0, 1, 0, 0) --
+			or self.border == 2 and Color(0.3, 0, 1, 1)
 			or Color(0, 0, 0, 1)
 		self.text:set_text({
 			{ text = "[bg]" .. self.type.name,             font = small_pixul_font },
@@ -105,7 +105,7 @@ function Unit:draw()
 		local y = self.y --+ (self.tile_y - 1) * self.cell_size + height / 2
 
 		local visual_shrink = 20
-		local border_size = 10
+		local border_size = 15
 		local border_color = self.is_player and self.border_color or Color(1, 0, 0, 1)
 
 		if self.border > 0 then
@@ -113,6 +113,9 @@ function Unit:draw()
 				2, 2, border_color)
 		end
 
+		local black_outline_size = 5
+		graphics.rectangle(x, y, self.width - visual_shrink + black_outline_size,
+			self.height - visual_shrink + black_outline_size, 2, 2, Color(0, 0, 0, 1))
 		graphics.rectangle(x, y, self.width - visual_shrink, self.height - visual_shrink, 2, 2, self.color)
 
 		self.text:draw()
@@ -164,7 +167,16 @@ Enemy_Type = {
 		name = "aap",
 		speed = 2,
 		attacks = { ShootAttack },
-		timeline = { Timings.Beat, Timings.Hold, Timings.Hold },
+		timeline = { --
+			Timings.Beat,
+			Timings.Empty,
+
+			Timings.Hold,
+			Timings.Empty,
+
+			Timings.Hold,
+			Timings.Empty,
+		},
 		color = Color(1, 0, 0, 1),
 		sprites = function()
 			return nil
@@ -175,7 +187,16 @@ Enemy_Type = {
 		name = "bap",
 		speed = 4,
 		attacks = { ShootAttack },
-		timeline = { Timings.Beat, Timings.Beat, Timings.Beat },
+		timeline = { --
+			Timings.Beat,
+			Timings.Empty,
+
+			Timings.Beat,
+			Timings.Empty,
+
+			Timings.Beat,
+			Timings.Empty,
+		},
 		color = Color(1, 1, 0, 1),
 		sprites = function()
 			return nil
@@ -186,7 +207,16 @@ Enemy_Type = {
 		name = "cap",
 		speed = 6,
 		attacks = { ShootAttack },
-		timeline = { Timings.Beat, Timings.Hold, Timings.Beat },
+		timeline = { --
+			Timings.Beat,
+			Timings.Empty,
+
+			Timings.Hold,
+			Timings.Empty,
+
+			Timings.Beat,
+			Timings.Empty,
+		},
 		color = Color(1, 0, 1, 1),
 		sprites = function()
 			return nil

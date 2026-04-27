@@ -23,6 +23,7 @@ function Map:init(args)
 			w = random:int(1, 1),
 			h = random:int(1, 1),
 			type = unit.type,
+			timeline_type = unit.timeline_type,
 			timeline = unit.timeline,
 			cell_size = self.cell_size,
 			visible = false,
@@ -66,7 +67,7 @@ function Map:load_next_room()
 	end
 
 	-- spawn each unit onto the board
-	local num_enemies = 3
+	local num_enemies = 0
 	for i = 1, num_enemies do
 		local new_x = self.cols - i
 		local new_y = self.rows
@@ -80,6 +81,7 @@ function Map:load_next_room()
 			w = random:int(1, 1),
 			h = random:int(1, 1),
 			type = type,
+			timeline_type = type.timeline_type,
 			timeline = type.timeline,
 			cell_size = self.cell_size,
 			visible = false,
@@ -100,6 +102,10 @@ function Map:load_next_room()
 end
 
 function Map:react_to_hit(args)
+	if not args.beat then
+		return
+	end
+
 	args.unit.spring:pull(0.2, 200, 10)
 	self.spring:pull(0.2, 200, 10)
 	self.reaction_color = args.beat.action.color:clone():darken(0.3)

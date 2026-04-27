@@ -188,7 +188,7 @@ function Character_Setup:set_stage(stage)
 				x = gw * 0.5,
 				base_y = gh * 0.55,
 				w = gw * 0.8,
-				max_beats = 6,
+				max_beats = 8,
 				timings = {},
 			})
 		)
@@ -292,13 +292,89 @@ Timings = {
 	Special = { id = "Special", name = "special", color = Color(1, 1, 0, 1) },
 }
 
+-- allowing for eighth notes
 function Character_Setup:load_characters()
 	return {
-		{ type = Unit_Type.A, timeline = { Timings.Beat, Timings.Empty, Timings.Hold, Timings.Beat, Timings.Empty, Timings.Beat } },
-		{ type = Unit_Type.B, timeline = { Timings.Beat, Timings.Beat, Timings.Empty } },
-		{ type = Unit_Type.C, timeline = { Timings.Beat, Timings.Beat, Timings.Beat, Timings.Beat, Timings.Beat } },
-		{ type = Unit_Type.D, timeline = { Timings.Beat, Timings.Hold, Timings.Beat, Timings.Hold, Timings.Beat, Timings.Beat } },
-		{ type = Unit_Type.E, timeline = { Timings.Beat, Timings.Empty, Timings.Beat, Timings.Beat, Timings.Empty, Timings.Beat } },
+		{
+			type = Unit_Type.A,
+			timeline = { --
+				Timings.Empty,
+				Timings.Empty,
+
+				Timings.Beat,
+				Timings.Empty,
+
+				Timings.Empty,
+				Timings.Empty,
+
+				Timings.Hold,
+				Timings.Empty,
+			},
+		},
+		{
+			type = Unit_Type.B,
+			timeline = { --
+				Timings.Beat,
+				Timings.Empty,
+
+				Timings.Beat,
+				Timings.Empty,
+
+				Timings.Hold,
+				Timings.Empty,
+
+				Timings.Beat,
+				Timings.Empty,
+			},
+		},
+		{
+			type = Unit_Type.C,
+			timeline = { --
+				Timings.Empty,
+				Timings.Empty,
+
+				Timings.Beat,
+				Timings.Beat,
+
+				Timings.Empty,
+				Timings.Empty,
+
+				Timings.Beat,
+				Timings.Beat,
+			},
+		},
+		{
+			type = Unit_Type.D,
+			timeline = { --
+				Timings.Empty,
+				Timings.Beat,
+
+				Timings.Beat,
+				Timings.Beat,
+
+				Timings.Empty,
+				Timings.Beat,
+
+				Timings.Beat,
+				Timings.Beat,
+			},
+		},
+		{
+			type = Unit_Type.E,
+			timeline = {
+				Timings.Beat,
+				Timings.Beat,
+
+				Timings.Beat,
+				Timings.Beat,
+
+				Timings.Beat,
+				Timings.Beat,
+
+				Timings.Beat,
+				Timings.Beat,
+			},
+		},
 	}
 end
 

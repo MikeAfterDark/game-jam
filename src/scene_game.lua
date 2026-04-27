@@ -17,8 +17,8 @@ function Game:on_enter(from, args)
 	camera.x, camera.y = gw / 2, gh / 2
 	camera.r = 0
 	camera.follow_style = "lockon_tight"
-	camera.lerp.x = 0.02
-	camera.lerp.y = 0.02
+	camera.lerp.x = 0.06
+	camera.lerp.y = 0.06
 
 	self.floor = Group()
 	self.main = Group()
@@ -55,19 +55,6 @@ function Game:on_enter(from, args)
 		})
 	end
 
-	-- game design flags:
-	-- true: enemies act on every beat
-	-- false: enemies have their own turns
-	-- state.enemies_act_every_beat = state.enemies_act_every_beat
-
-	-- true: all enemies will all go at the end of all turns
-	-- false: enemies will get queued up based on initiative
-	-- state.enemies_act_at_end_of_round = state.enemies_act_at_end_of_round
-
-	-- true: enemies only move (including projectiles) if the player doesn't hit a beat/has no beat
-	-- false: enemies will move every beat
-	-- state.enemies_only_move_when_player_doesnt = state.enemies_only_move_when_player_doesnt
-
 	self.enemy_hit_window = 0.05
 	self.song_position = 0
 
@@ -88,15 +75,15 @@ function Game:on_enter(from, args)
 	self.timeline = Timeline({
 		group = self.ui,
 		x = gw * 0.5,
-		y = gh * 0.94,    -- center aligned
+		y = gh * 0.94,          -- center aligned
 		w = gw * 0.9,
-		hit_window = 0.15, -- seconds
-		max_beats = 6,
+		hit_window = 0.1,       -- seconds
+		max_beats = 8,
 		beat_spread = gw * 0.2, -- TODO: look into this VS beat speed
-		beats_per_sec = 120 / 60,
+		beats_per_sec = 2 * 120 / 60, -- *2 for eighths
 		cell_size = cell_size,
 	})
-	self.beats_per_sec = 120 / 60
+	self.beats_per_sec = 2 * 120 / 60 -- *2 for eighths
 
 	-- controls the upcoming turns, including new spawns and deaths
 	self.turn_order = Turn_Order({
@@ -111,11 +98,6 @@ function Game:on_enter(from, args)
 	self.map:load_next_room() -- spawns player_units and enemies based off self.map.level
 	self.turn_order:insert(self.map:get_all_alive_units())
 	self:next_turn()
-
-	-- self.beat_number = 0
-
-	-- self.hit_window = 0.4 -- seconds
-	-- self.lead_in_beats_count = self.level.lead_in_beats
 
 	-- Load the map,
 	-- load some turns into the turn order
@@ -192,11 +174,12 @@ function Game:update(dt)
 		if self.map.new_room_loaded then
 			local is_new_beat = false
 			local beats_left = 1
+			local valid_hit = nil
 
 			if self.focused_unit.is_player then
 				local new_beat_from_hit = false
 				if input.up.pressed or input.down.pressed or input.left.pressed or input.right.pressed then
-					local valid_hit, hit_time
+					local hit_time
 					valid_hit, hit_time, new_beat_from_hit = self.timeline:beat_hit_at(self.song_position)
 
 					if valid_hit then
@@ -237,10 +220,8 @@ function Game:update(dt)
 			end
 
 			if state.enemies_act_every_beat then
-				if state.enemies_only_move_when_player_doesnt then
-					is_new_beat = self.timeline:is_new_beat(self.song_position, self.enemy_hit_window)
-				end
-				if is_new_beat then
+				local act = is_new_beat and (not state.enemies_only_move_when_player_doesnt or not valid_hit)
+				if act then
 					self.map:all_enemies_act(self.song_position)
 				end
 			end

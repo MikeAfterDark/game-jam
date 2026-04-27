@@ -45,13 +45,15 @@ function Timeline:add(unit, song_time)
 		table.insert(self.tick_colors, color)
 	end
 
+	local prev_unit = self.unit
 	self.unit = unit
-	local time = ((#self.beats + 1) / self.beats_per_sec)
-	if unit.is_player then -- QoL so player has a beat to react to new unit
+	local beats_per_sec = self.beats_per_sec
+	local time = ((#self.beats + 1) / beats_per_sec)
+	if unit.is_player and self.unit ~= prev_unit then -- QoL so player has a beat to react to new unit
 		table.insert(self.beats, Beat({ action = Timings.Empty, unit = unit, time = time }))
 	end
 	for i, action in ipairs(unit.timeline) do
-		time = ((#self.beats + 1) / self.beats_per_sec)
+		time = ((#self.beats + 1) / beats_per_sec)
 		table.insert(self.beats, Beat({ action = action, unit = unit, time = time }))
 	end
 
@@ -126,7 +128,6 @@ function Timeline:beat_tracker(time)
 	return self:beats_left(), missed_beat, is_new_beat
 end
 
--- is_new_beat = self.timeline:check_for_new_beat(self.song_position)
 function Timeline:check_for_new_beat_to_hit(time, window)
 	local action_beat = nil
 	local is_new_beat = false
@@ -149,6 +150,7 @@ end
 
 function Timeline:is_new_beat(time, window)
 	local is_new_beat = false
+	window = window or self.hit_window
 
 	if self.beat_index > self.new_beat_checked then
 		for i = self.beat_index, #self.beats do
