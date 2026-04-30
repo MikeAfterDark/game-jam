@@ -77,11 +77,15 @@ function Game:on_enter(from, args)
 		x = gw * 0.5,
 		y = gh * 0.94,          -- center aligned
 		w = gw * 0.9,
-		hit_window = 0.1,       -- seconds
+		hit_window = 0.08,      -- seconds
 		max_beats = 8,
 		beat_spread = gw * 0.2, -- TODO: look into this VS beat speed
 		beats_per_sec = 2 * 120 / 60, -- *2 for eighths
 		cell_size = cell_size,
+	})
+	self.timeline2 = Timeline2({
+		group = self.ui,
+		bpm = 120,
 	})
 	self.beats_per_sec = 2 * 120 / 60 -- *2 for eighths
 
@@ -97,7 +101,7 @@ function Game:on_enter(from, args)
 
 	self.map:load_next_room() -- spawns player_units and enemies based off self.map.level
 	self.turn_order:insert(self.map:get_all_alive_units())
-	self:next_turn()
+	self:prep_turn()
 
 	-- Load the map,
 	-- load some turns into the turn order
@@ -121,17 +125,41 @@ function Game:on_enter(from, args)
 	--		repeat while until win+next_room/fail
 end
 
+function Game:prep_turn()
+	if self.turn_order:num_turns() <= 1 then -- guarantees at least 2 turns
+		self.turn_order:insert(self.map:get_all_alive_units())
+	end
+
+	local unit1 = self.turn_order:pop()
+	self.timeline:add(unit1, self.song_position)
+	self.timeline2:add(unit1, self.song_position)
+
+	local unit2 = self.turn_order:pop()
+	self.timeline:add(unit2, self.song_position)
+	self.timeline2:add(unit2, self.song_position)
+
+	self.focused_unit = unit1
+	self.focused_unit:highlight(1)
+	camera:follow_object(self.focused_unit)
+
+	local next_unit = self.turn_order:peek()
+	if next_unit then
+		next_unit:highlight(2)
+	end
+end
+
 function Game:next_turn()
 	if self.focused_unit then
 		self.focused_unit:highlight(0)
 	end
 
-	if self.turn_order:num_turns() == 0 then
+	if self.turn_order:num_turns() <= 1 then
 		self.turn_order:insert(self.map:get_all_alive_units())
 	end
 
 	local unit = self.turn_order:pop()
 	self.timeline:add(unit, self.song_position)
+	self.timeline2:add(unit, self.song_position)
 	self.focused_unit = unit
 	self.focused_unit:highlight(1)
 	camera:follow_object(self.focused_unit)
@@ -173,8 +201,12 @@ function Game:update(dt)
 
 		if self.map.new_room_loaded then
 			local is_new_beat = false
-			local beats_left = 1
+			local unit_beats_left = 0
 			local valid_hit = nil
+
+			if self.timeline2:beat_tracker(self.map:get_all_alive_units(), self.song_position) then
+				-- print("new_beat", self.song_position)
+			end
 
 			if self.focused_unit.is_player then
 				local new_beat_from_hit = false
@@ -198,19 +230,20 @@ function Game:update(dt)
 				end
 
 				local missed_beat, new_beat
-				beats_left, missed_beat, new_beat = self.timeline:beat_tracker(self.song_position)
+				unit_beats_left, missed_beat, new_beat = self.timeline:beat_tracker(self.song_position, self
+				.focused_unit)
 				if missed_beat then
 					sfx.tile_mouse_enter:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
 					self.map:react_to_miss({ unit = self.focused_unit, beat = missed_beat })
 					self.timeline:react_to_miss()
 				end
-				self.focused_unit:beats_remaining(beats_left)
+				self.focused_unit:beats_remaining(unit_beats_left)
 
 				is_new_beat = new_beat_from_hit or new_beat
 			elseif not state.enemies_act_every_beat then -- non-player turn
 				local beat = nil
-				beats_left, beat, is_new_beat = self.timeline:check_for_new_beat_to_hit(self.song_position,
-					self.enemy_hit_window)
+				unit_beats_left, beat, is_new_beat = self.timeline:check_for_new_beat_to_hit(self.song_position,
+					self.enemy_hit_window, self.focused_unit)
 				if is_new_beat then
 					-- sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
 					local data = { unit = self.focused_unit, beat = beat }
@@ -228,7 +261,7 @@ function Game:update(dt)
 
 			self.map:beat_tracker(self.song_position, is_new_beat)
 
-			if beats_left < 0 then
+			if unit_beats_left <= 0 then
 				self:next_turn()
 			end
 		end

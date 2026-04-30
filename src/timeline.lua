@@ -40,21 +40,24 @@ function Timeline:update(dt)
 end
 
 function Timeline:add(unit, song_time)
-	for i, tick in ipairs(unit.timeline) do
-		local color = tick.color or Color(0, 0, 0, 1)
-		table.insert(self.tick_colors, color)
-	end
+	-- print("adding:", unit.type.name)
 
 	local prev_unit = self.unit
 	self.unit = unit
 	local beats_per_sec = self.beats_per_sec
+	local beat_id = random:uid()
+	if not self.unit.beat_id then
+		self.unit.beat_id = {}
+	end
+	table.unshift(self.unit.beat_id, beat_id)
 	local time = ((#self.beats + 1) / beats_per_sec)
 	if unit.is_player and self.unit ~= prev_unit then -- QoL so player has a beat to react to new unit
-		table.insert(self.beats, Beat({ action = Timings.Empty, unit = unit, time = time }))
+		table.insert(self.beats, Beat({ action = Timings.Empty, unit = unit, time = time, id = beat_id }))
 	end
 	for i, action in ipairs(unit.timeline) do
 		time = ((#self.beats + 1) / beats_per_sec)
-		table.insert(self.beats, Beat({ action = action, unit = unit, time = time }))
+		table.insert(self.beats, Beat({ action = action, unit = unit, time = time, id = beat_id }))
+		-- print("inserted: ", self.beats[#self.beats].id)
 	end
 
 	self.unit_start_time = song_time
@@ -108,7 +111,7 @@ function Timeline:future(time, window)
 end
 
 -- returns number of beats left, updates beat positions
-function Timeline:beat_tracker(time)
+function Timeline:beat_tracker(time, unit)
 	local missed_beat = nil
 	local is_new_beat = false
 	for i = self.beat_index, #self.beats do
@@ -125,10 +128,10 @@ function Timeline:beat_tracker(time)
 	end
 
 	self.time = time
-	return self:beats_left(), missed_beat, is_new_beat
+	return self:beats_left(unit), missed_beat, is_new_beat
 end
 
-function Timeline:check_for_new_beat_to_hit(time, window)
+function Timeline:check_for_new_beat_to_hit(time, window, unit)
 	local action_beat = nil
 	local is_new_beat = false
 	for i = self.beat_index, #self.beats do
@@ -145,7 +148,7 @@ function Timeline:check_for_new_beat_to_hit(time, window)
 	end
 
 	self.time = time
-	return self:beats_left(), action_beat, is_new_beat
+	return self:beats_left(unit), action_beat, is_new_beat
 end
 
 function Timeline:is_new_beat(time, window)
@@ -167,8 +170,25 @@ function Timeline:is_new_beat(time, window)
 	return is_new_beat
 end
 
-function Timeline:beats_left()
-	return #self.beats - self.beat_index
+function Timeline:beats_left(unit)
+	if not unit then
+		-- print("no unit for beat")
+		return -1
+	end
+	local i = self.beat_index
+	local count = 0
+	-- print(self.beats[i].id, unit.beat_id[#unit.beat_id])
+	while i + count <= #self.beats and self.beats[i + count].id == unit.beat_id[#unit.beat_id] do
+		count = count + 1
+	end
+	if count == 0 then
+		-- print("pop")
+		_, unit.beat_id = table.pop(unit.beat_id)
+	end
+
+	-- print("beats left: ", count)
+	return count
+	-- return #self.beats - self.beat_index
 end
 
 function Timeline:react_to_hit()
@@ -184,6 +204,7 @@ function Timeline:draw()
 	graphics.push(unit.x, unit.y, self.r, unit.spring.x, unit.spring.y)
 
 	local radius = self.cell_size * 0.9
+
 	local thickness = radius * 0.3
 	graphics.circle(unit.x, unit.y, radius, Color(1, 1, 1, 0.8), thickness * 1.2)
 
@@ -268,6 +289,7 @@ Beat = function(args)
 		action = args.action,
 		unit = args.unit,
 		time = args.time,
+		id = args.id,
 		hit = -1,
 	}
 

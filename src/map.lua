@@ -28,6 +28,7 @@ function Map:init(args)
 			cell_size = self.cell_size,
 			visible = false,
 			is_player = true,
+			hit_window = 0.1,
 		})
 
 		table.insert(self.units, new_unit)
@@ -85,6 +86,7 @@ function Map:load_next_room()
 			timeline = type.timeline,
 			cell_size = self.cell_size,
 			visible = false,
+			hit_window = 0.05,
 		})
 
 		table.insert(self.units, new_unit)
@@ -175,7 +177,7 @@ function Map:beat_tracker(time, is_new_beat)
 		end
 	end
 
-	table.reject(self.entities, function(v)
+	_, self.entities = table.reject(self.entities, function(v)
 		return v.dead == true
 	end)
 end

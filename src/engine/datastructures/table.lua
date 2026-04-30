@@ -308,6 +308,20 @@ function table.foreachn(t, f, ...)
 end
 
 
+-- Applies function f to all array elements, modifies array and adds the results to a new array
+function table.foreachmap(t, f, ...)
+  local out = {}
+  for k, v in ipairs(t) do
+    local result, modified = f(v, k, ...)
+    if modified then
+      t[k] = result
+      table.insert(out, result)
+    end
+  end
+  return out
+end
+
+
 -- Applies filter function f which removes all elements that pass the filter and returns them as well as the modified table
 -- t = {1, 2, 3, 4}
 -- table.reject(t, function(v) return v >= 3 end) -> {3, 4}, {1, 2}
@@ -319,8 +333,7 @@ function table.reject(t, f, ...)
       table.insert(out, table.remove(t, i))
     end
   end
-  if #out == 1 then return out[1], t
-  else return table.reverse(out), t end
+   return table.reverse(out), t end
 end
 
 

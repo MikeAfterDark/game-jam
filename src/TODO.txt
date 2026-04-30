@@ -20,6 +20,7 @@ bugs:
 - When the song ends the song_time resets to 0, but beats are at time = song_time + total_song_duration
 
 todo:
+- TIMELINE/TURN REFACTOR - BEAT COUNTER/NEW BEAT CLEANUP
 - enemies
 - projectile collisions (keep in mind high self.speed will skip over tiles)
 - HP display 
@@ -53,3 +54,48 @@ C** playtesting: [2026-04-23]
 - "unit movement could be more snappy, feels like they finish moving out of sync"
 - player could be able to swap which characters (lego rockband on DS)
 - Felt good: single character, enemies got turns, enemies go last
+
+
+
+vision: timeline
+shows current + next turns (can be on same/diff units)
+can handle taps and holds
+- taps, register when pressed.
+- holds, register press, duration, release to trigger.
+beats are aligned to quarter notes
+
+// this version lets multiple units act at same time/with overlaps
+add(unit, current_time)
+	beats[unit] null check
+
+	if its a player and has no beats, insert 'empties' for QoL
+	
+	insert_time = beat_aligned_time(max(current_time, last_beat_time))
+
+	for i, beats in unit.beats
+		if beat.is_tap then insert at insert_time + (i * eighths_duration)
+		else if beat.is_hold then insert start_time, end_time, beat.input_type
+
+press(unit, current_time, hit_window)
+	beats[unit] null check
+
+	find all beats within hit_window, compare input_types
+	if same input_types, take the ones closer to 'on beat'
+	
+	hits = {}
+	if beat.is_tap hasn't been pressed yet add to hits 
+	set all hit beats with beat.pressed = true (record time)
+
+	pop() all the previous tap beats with lower beat_times and hold beats with lower end_times
+
+	return hits
+
+release(unit, current_time, hit_window)
+	check all pressed is_hold beats
+
+	make a list of %'s of the way until end_time for each
+	pop() and return them all (safety check should've happened in press() 
+
+tracker(current_time, units) 
+    get all non-pressed tap beats and pop any that are past their time
+	get all held beats and pop any with end_times too late for each unit's hit_window

@@ -285,14 +285,44 @@ function Character_Setup:set_stage(stage)
 	end
 end
 
-Timings = {
-	Empty = { id = "Empty", name = "empty", color = Color(0, 0, 0, 1) },
-	Beat = { id = "Beat", name = "beat", color = Color(0, 1, 0, 1) },
-	Hold = { id = "Hold", name = "hold", color = Color(1, 0, 0, 1) },
-	Special = { id = "Special", name = "special", color = Color(1, 1, 0, 1) },
+Input_Type = {
+	Direction = 1,
+	Attack = 2,
+	Special = 3,
 }
 
--- allowing for eighth notes
+Timings = {
+	Empty = {
+		id = "Empty",
+		name = "empty",
+		color = Color(0, 0, 0, 1),
+	},
+
+	Beat = {
+		id = "Beat",
+		name = "beat",
+		color = Color(0, 1, 0, 1),
+		input_type = Input_Type.Direction,
+	},
+
+	Hold = {
+		id = "Hold",
+		name = "hold",
+		color = Color(1, 0, 0, 1),
+		input_type = Input_Type.Attack,
+	},
+
+	-- NOTE: duration == num beats at whatever beat_resolution
+	Special = {
+		id = "Special",
+		duration = 4,
+		name = "special",
+		color = Color(1, 1, 0, 1),
+		input_type = Input_Type.Special,
+	},
+}
+
+-- setup for eighth notes
 function Character_Setup:load_characters()
 	return {
 		{
