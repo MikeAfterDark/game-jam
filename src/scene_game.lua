@@ -73,7 +73,7 @@ function Game:on_enter(from, args)
 
 	-- displays times and holds and displays the beats for the current turn
 	self.timeline = Timeline({
-		group = self.ui,
+		-- group = self.ui,
 		x = gw * 0.5,
 		y = gh * 0.94,          -- center aligned
 		w = gw * 0.9,
@@ -83,9 +83,13 @@ function Game:on_enter(from, args)
 		beats_per_sec = 2 * 120 / 60, -- *2 for eighths
 		cell_size = cell_size,
 	})
+
 	self.timeline2 = Timeline2({
 		group = self.ui,
 		bpm = 120,
+		max_beats = 8,
+		beat_spread = gw * 0.2, -- TODO: look into this VS beat speed
+		cell_size = cell_size,
 	})
 	self.beats_per_sec = 2 * 120 / 60 -- *2 for eighths
 
@@ -200,46 +204,70 @@ function Game:update(dt)
 		end
 
 		if self.map.new_room_loaded then
-			local is_new_beat = false
 			local unit_beats_left = 0
 			local valid_hit = nil
 
-			if self.timeline2:beat_tracker(self.map:get_all_alive_units(), self.song_position) then
-				-- print("new_beat", self.song_position)
-			end
+			local is_new_beat = self.timeline2:beat_tracker(self.map:get_all_alive_units(), self.song_position)
 
 			if self.focused_unit.is_player then
-				local new_beat_from_hit = false
+				-- local new_beat_from_hit = false
 				if input.up.pressed or input.down.pressed or input.left.pressed or input.right.pressed then
-					local hit_time
-					valid_hit, hit_time, new_beat_from_hit = self.timeline:beat_hit_at(self.song_position)
+					-- local hit_time
+					-- valid_hit, hit_time, new_beat_from_hit = self.timeline:beat_hit_at(self.song_position)
 
-					if valid_hit then
-						sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
-						local data = { unit = self.focused_unit, beat = valid_hit, time_offset = hit_time }
-						self.map:react_to_hit(data)
-						self.timeline:react_to_hit()
+					local hits = self.timeline2:press(self.focused_unit, self.song_position, Input_Type.Direction)
+					if #hits > 0 then
+						-- any held beat press?
+						if table.any(hits, function(v)
+								return v.end_time
+							end) then
+							print("held beat pressed!")
+						else -- only tap beat pressed
+							-- print("tap beat pressed!", self.song_position, hits[1].id)
+							sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
 
-						for key, dir in pairs(directions) do
-							if input[key].pressed then
-								data.dir = dir
-								self.map:handle_press(data)
+							for i, beat in ipairs(hits) do -- TODO: this loop doesn't make sense
+								--							 trying to avoid overlapping taps?
+								local data = { unit = self.focused_unit, beat = beat }
+								self.map:react_to_hit(data) -- TODO: move outside for-loop
+								-- self.timeline:react_to_hit()
+
+								for key, dir in pairs(directions) do
+									if input[key].pressed then
+										data.dir = dir
+										self.map:handle_press(data)
+									end
+								end
 							end
 						end
 					end
+
+					-- if valid_hit then
+					-- 	sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+					-- 	local data = { unit = self.focused_unit, beat = valid_hit, time_offset = hit_time }
+					-- 	self.map:react_to_hit(data)
+					-- 	self.timeline:react_to_hit()
+					--
+					-- 	for key, dir in pairs(directions) do
+					-- 		if input[key].pressed then
+					-- 			data.dir = dir
+					-- 			self.map:handle_press(data)
+					-- 		end
+					-- 	end
+					-- end
 				end
 
-				local missed_beat, new_beat
-				unit_beats_left, missed_beat, new_beat = self.timeline:beat_tracker(self.song_position, self
-				.focused_unit)
-				if missed_beat then
-					sfx.tile_mouse_enter:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
-					self.map:react_to_miss({ unit = self.focused_unit, beat = missed_beat })
-					self.timeline:react_to_miss()
-				end
-				self.focused_unit:beats_remaining(unit_beats_left)
-
-				is_new_beat = new_beat_from_hit or new_beat
+				-- local missed_beat, new_beat
+				-- unit_beats_left, missed_beat, new_beat = self.timeline:beat_tracker(self.song_position, self
+				-- .focused_unit)
+				-- if missed_beat then
+				-- 	sfx.tile_mouse_enter:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+				-- 	self.map:react_to_miss({ unit = self.focused_unit, beat = missed_beat })
+				-- 	self.timeline:react_to_miss()
+				-- end
+				-- self.focused_unit:beats_remaining(unit_beats_left)
+				--
+				-- is_new_beat = new_beat_from_hit or new_beat
 			elseif not state.enemies_act_every_beat then -- non-player turn
 				local beat = nil
 				unit_beats_left, beat, is_new_beat = self.timeline:check_for_new_beat_to_hit(self.song_position,
@@ -248,7 +276,7 @@ function Game:update(dt)
 					-- sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
 					local data = { unit = self.focused_unit, beat = beat }
 					self.map:react_to_hit(data)
-					self.timeline:react_to_hit()
+					-- self.timeline:react_to_hit()
 				end
 			end
 
@@ -261,7 +289,7 @@ function Game:update(dt)
 
 			self.map:beat_tracker(self.song_position, is_new_beat)
 
-			if unit_beats_left <= 0 then
+			if self.timeline2:is_end_of_turn(self.focused_unit, self.song_position) then
 				self:next_turn()
 			end
 		end
@@ -280,6 +308,8 @@ end
 function Game:draw()
 	self.floor:draw()
 	self.main:draw()
+
+	-- self.timeline2:draw(self.map:get_all_alive_units())
 	self.game_ui:draw()
 	self.effects:draw()
 	self.ui:draw()

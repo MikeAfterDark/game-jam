@@ -333,7 +333,7 @@ function table.reject(t, f, ...)
       table.insert(out, table.remove(t, i))
     end
   end
-   return table.reverse(out), t end
+   return table.reverse(out), t 
 end
 
 

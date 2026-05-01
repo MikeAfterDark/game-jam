@@ -309,7 +309,7 @@ Timings = {
 		id = "Hold",
 		name = "hold",
 		color = Color(1, 0, 0, 1),
-		input_type = Input_Type.Attack,
+		input_type = Input_Type.Direction,
 	},
 
 	-- NOTE: duration == num beats at whatever beat_resolution
@@ -319,6 +319,15 @@ Timings = {
 		name = "special",
 		color = Color(1, 1, 0, 1),
 		input_type = Input_Type.Special,
+	},
+
+	-- NOTE: duration == num beats at whatever beat_resolution
+	Attack = {
+		id = "Attack",
+		duration = 3,
+		name = "attack",
+		color = Color(0, 1, 1, 1),
+		input_type = Input_Type.Attack,
 	},
 }
 
@@ -392,17 +401,17 @@ function Character_Setup:load_characters()
 		{
 			type = Unit_Type.E,
 			timeline = {
-				Timings.Beat,
-				Timings.Beat,
+				{ Timings.Beat },
+				{ Timings.Empty },
 
-				Timings.Beat,
-				Timings.Beat,
+				{ Timings.Beat, Timings.Special },
+				{ Timings.Empty },
 
-				Timings.Beat,
-				Timings.Beat,
+				{ Timings.Beat, Timings.Attack },
+				{ Timings.Empty },
 
-				Timings.Beat,
-				Timings.Beat,
+				{ Timings.Beat },
+				{ Timings.Empty },
 			},
 		},
 	}
