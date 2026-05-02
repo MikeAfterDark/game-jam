@@ -134,22 +134,17 @@ function Game:prep_turn()
 		self.turn_order:insert(self.map:get_all_alive_units())
 	end
 
-	local unit1 = self.turn_order:pop()
-	self.timeline:add(unit1, self.song_position)
-	self.timeline2:add(unit1, self.song_position)
-
-	local unit2 = self.turn_order:pop()
-	self.timeline:add(unit2, self.song_position)
-	self.timeline2:add(unit2, self.song_position)
-
-	self.focused_unit = unit1
+	self.focused_unit = self.turn_order:pop()
+	self.timeline2:add(self.focused_unit, self.song_position)
 	self.focused_unit:highlight(1)
 	camera:follow_object(self.focused_unit)
 
-	local next_unit = self.turn_order:peek()
-	if next_unit then
-		next_unit:highlight(2)
-	end
+	local unit2 = self.turn_order:pop()
+	local next_song_position = self.song_position + self.timeline2:time_left_for(self.focused_unit, self.song_position)
+	self.timeline2:add(unit2, next_song_position)
+
+	self.next_unit = unit2
+	self.next_unit:highlight(2)
 end
 
 function Game:next_turn()
@@ -157,21 +152,20 @@ function Game:next_turn()
 		self.focused_unit:highlight(0)
 	end
 
+	self.focused_unit = self.next_unit
+	self.focused_unit:highlight(1)
+	camera:follow_object(self.focused_unit)
+
 	if self.turn_order:num_turns() <= 1 then
 		self.turn_order:insert(self.map:get_all_alive_units())
 	end
 
-	local unit = self.turn_order:pop()
-	self.timeline:add(unit, self.song_position)
-	self.timeline2:add(unit, self.song_position)
-	self.focused_unit = unit
-	self.focused_unit:highlight(1)
-	camera:follow_object(self.focused_unit)
+	local unit2 = self.turn_order:pop()
+	local next_song_position = self.song_position + self.timeline2:time_left_for(self.focused_unit, self.song_position)
+	self.timeline2:add(unit2, next_song_position)
 
-	local next_unit = self.turn_order:peek()
-	if next_unit then
-		next_unit:highlight(2)
-	end
+	self.next_unit = unit2
+	self.next_unit:highlight(2)
 end
 
 local directions = {
@@ -210,64 +204,64 @@ function Game:update(dt)
 			local is_new_beat = self.timeline2:beat_tracker(self.map:get_all_alive_units(), self.song_position)
 
 			if self.focused_unit.is_player then
-				-- local new_beat_from_hit = false
 				if input.up.pressed or input.down.pressed or input.left.pressed or input.right.pressed then
-					-- local hit_time
-					-- valid_hit, hit_time, new_beat_from_hit = self.timeline:beat_hit_at(self.song_position)
-
 					local hits = self.timeline2:press(self.focused_unit, self.song_position, Input_Type.Direction)
 					if #hits > 0 then
-						-- any held beat press?
-						if table.any(hits, function(v)
-								return v.end_time
-							end) then
-							print("held beat pressed!")
-						else -- only tap beat pressed
-							-- print("tap beat pressed!", self.song_position, hits[1].id)
-							sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+						-- print("tap beat pressed!", self.song_position, hits[1].id)
+						sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+						self.map:react_to_hit({ unit = self.focused_unit, beat = hits[1] }) -- WARN: overlaps get ignored
 
-							for i, beat in ipairs(hits) do -- TODO: this loop doesn't make sense
-								--							 trying to avoid overlapping taps?
-								local data = { unit = self.focused_unit, beat = beat }
-								self.map:react_to_hit(data) -- TODO: move outside for-loop
-								-- self.timeline:react_to_hit()
+						for i, beat in ipairs(hits) do
+							local data = { unit = self.focused_unit, beat = beat }
 
-								for key, dir in pairs(directions) do
-									if input[key].pressed then
-										data.dir = dir
-										self.map:handle_press(data)
-									end
+							for key, dir in pairs(directions) do
+								if input[key].pressed then
+									data.dir = dir
+									self.map:handle_press(data)
 								end
 							end
 						end
 					end
-
-					-- if valid_hit then
-					-- 	sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
-					-- 	local data = { unit = self.focused_unit, beat = valid_hit, time_offset = hit_time }
-					-- 	self.map:react_to_hit(data)
-					-- 	self.timeline:react_to_hit()
-					--
-					-- 	for key, dir in pairs(directions) do
-					-- 		if input[key].pressed then
-					-- 			data.dir = dir
-					-- 			self.map:handle_press(data)
-					-- 		end
-					-- 	end
-					-- end
 				end
 
-				-- local missed_beat, new_beat
-				-- unit_beats_left, missed_beat, new_beat = self.timeline:beat_tracker(self.song_position, self
-				-- .focused_unit)
-				-- if missed_beat then
-				-- 	sfx.tile_mouse_enter:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
-				-- 	self.map:react_to_miss({ unit = self.focused_unit, beat = missed_beat })
-				-- 	self.timeline:react_to_miss()
-				-- end
-				-- self.focused_unit:beats_remaining(unit_beats_left)
-				--
-				-- is_new_beat = new_beat_from_hit or new_beat
+				if input.arix.pressed then
+					local hits = self.timeline2:press(self.focused_unit, self.song_position, Input_Type.Arix)
+					if #hits > 0 then
+						-- print(#hits, "arix pressed", self.song_position)
+					end
+				end
+				if input.arix.released then
+					local releases = self.timeline2:release(self.focused_unit, self.song_position, Input_Type.Arix)
+					if #releases > 0 then
+						sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+						self.map:react_to_hit({ unit = self.focused_unit, beat = releases[1] }) -- WARN: overlaps get ignored
+						for i, beat in ipairs(releases) do
+							-- consume the held beat
+							-- print("Arix released", beat.time, beat.pressed, "and", beat.end_time, beat.released,
+							-- 	beat.percent_complete)
+						end
+					end
+				end
+
+				if input.myon.pressed then
+					local hits = self.timeline2:press(self.focused_unit, self.song_position, Input_Type.Myon)
+					if #hits > 0 then
+						-- print(#hits, "myon pressed", self.song_position)
+					end
+				end
+				if input.myon.released then
+					local releases = self.timeline2:release(self.focused_unit, self.song_position, Input_Type.Myon)
+
+					if #releases > 0 then
+						sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+						self.map:react_to_hit({ unit = self.focused_unit, beat = releases[1] }) -- WARN: overlaps get ignored
+						for i, beat in ipairs(releases) do
+							-- consume the held beat
+							-- print("Myon released", beat.time, beat.pressed, "and", beat.end_time, beat.released,
+							-- beat.percent_complete)
+						end
+					end
+				end
 			elseif not state.enemies_act_every_beat then -- non-player turn
 				local beat = nil
 				unit_beats_left, beat, is_new_beat = self.timeline:check_for_new_beat_to_hit(self.song_position,

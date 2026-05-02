@@ -45,6 +45,8 @@ function init()
 		down = { text = "Down", default = { "down", "s" }, input = state.input.down },
 		left = { text = "Left", default = { "left", "a" }, input = state.input.left },
 		right = { text = "Right", default = { "right", "d" }, input = state.input.right },
+		arix = { text = "Arix", default = { "q" }, input = state.input.arix },
+		myon = { text = "Myon", default = { "e" }, input = state.input.myon },
 		spacebar = { text = "Spacebar", default = { "space" }, input = state.input.spacebar },
 	}
 	options_keys_display_order = {
@@ -52,6 +54,8 @@ function init()
 		"down",
 		"left",
 		"right",
+		"arix",
+		"myon",
 		"spacebar",
 	}
 	for action, key in pairs(controls) do

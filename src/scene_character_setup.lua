@@ -287,8 +287,8 @@ end
 
 Input_Type = {
 	Direction = 1,
-	Attack = 2,
-	Special = 3,
+	Arix = 2,
+	Myon = 3,
 }
 
 Timings = {
@@ -313,89 +313,88 @@ Timings = {
 	},
 
 	-- NOTE: duration == num beats at whatever beat_resolution
-	Special = {
-		id = "Special",
+	Myon = {
+		id = "Myon",
 		duration = 4,
-		name = "special",
+		name = "myon",
 		color = Color(1, 1, 0, 1),
-		input_type = Input_Type.Special,
+		input_type = Input_Type.Myon,
 	},
 
 	-- NOTE: duration == num beats at whatever beat_resolution
-	Attack = {
-		id = "Attack",
+	Arix = {
+		id = "Arix",
 		duration = 3,
-		name = "attack",
+		name = "arix",
 		color = Color(0, 1, 1, 1),
-		input_type = Input_Type.Attack,
+		input_type = Input_Type.Arix,
 	},
 }
 
--- setup for eighth notes
 function Character_Setup:load_characters()
 	return {
 		{
 			type = Unit_Type.A,
-			timeline = { --
-				Timings.Empty,
-				Timings.Empty,
+			timeline = {
+				{ Timings.Empty },
+				{ Timings.Empty },
 
-				Timings.Beat,
-				Timings.Empty,
+				{ Timings.Beat },
+				{ Timings.Empty },
 
-				Timings.Empty,
-				Timings.Empty,
+				{ Timings.Empty },
+				{ Timings.Empty },
 
-				Timings.Hold,
-				Timings.Empty,
+				{ Timings.Hold },
+				{ Timings.Empty },
 			},
 		},
 		{
 			type = Unit_Type.B,
-			timeline = { --
-				Timings.Beat,
-				Timings.Empty,
+			timeline = {
+				{ Timings.Beat },
+				{ Timings.Empty },
 
-				Timings.Beat,
-				Timings.Empty,
+				{ Timings.Beat },
+				{ Timings.Empty },
 
-				Timings.Hold,
-				Timings.Empty,
+				{ Timings.Hold },
+				{ Timings.Empty },
 
-				Timings.Beat,
-				Timings.Empty,
+				{ Timings.Beat },
+				{ Timings.Empty },
 			},
 		},
 		{
 			type = Unit_Type.C,
-			timeline = { --
-				Timings.Empty,
-				Timings.Empty,
+			timeline = {
+				{ Timings.Empty },
+				{ Timings.Empty },
 
-				Timings.Beat,
-				Timings.Beat,
+				{ Timings.Beat },
+				{ Timings.Beat },
 
-				Timings.Empty,
-				Timings.Empty,
+				{ Timings.Empty },
+				{ Timings.Empty },
 
-				Timings.Beat,
-				Timings.Beat,
+				{ Timings.Beat },
+				{ Timings.Beat },
 			},
 		},
 		{
 			type = Unit_Type.D,
-			timeline = { --
-				Timings.Empty,
-				Timings.Beat,
+			timeline = {
+				{ Timings.Empty },
+				{ Timings.Beat },
 
-				Timings.Beat,
-				Timings.Beat,
+				{ Timings.Beat },
+				{ Timings.Beat },
 
-				Timings.Empty,
-				Timings.Beat,
+				{ Timings.Empty },
+				{ Timings.Beat },
 
-				Timings.Beat,
-				Timings.Beat,
+				{ Timings.Beat },
+				{ Timings.Beat },
 			},
 		},
 		{
@@ -404,10 +403,10 @@ function Character_Setup:load_characters()
 				{ Timings.Beat },
 				{ Timings.Empty },
 
-				{ Timings.Beat, Timings.Special },
+				{ Timings.Beat, Timings.Myon },
 				{ Timings.Empty },
 
-				{ Timings.Beat, Timings.Attack },
+				{ Timings.Beat, Timings.Arix },
 				{ Timings.Empty },
 
 				{ Timings.Beat },
