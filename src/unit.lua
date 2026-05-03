@@ -168,14 +168,14 @@ Enemy_Type = {
 		speed = 2,
 		attacks = { ShootAttack },
 		timeline = { --
-			Timings.Beat,
-			Timings.Empty,
+			{ Timings.Beat },
+			{ Timings.Empty },
 
-			Timings.Hold,
-			Timings.Empty,
+			{ Timings.Hold },
+			{ Timings.Empty },
 
-			Timings.Hold,
-			Timings.Empty,
+			{ Timings.Hold },
+			{ Timings.Empty },
 		},
 		color = Color(1, 0, 0, 1),
 		sprites = function()
@@ -188,14 +188,14 @@ Enemy_Type = {
 		speed = 4,
 		attacks = { ShootAttack },
 		timeline = { --
-			Timings.Beat,
-			Timings.Empty,
+			{ Timings.Beat },
+			{ Timings.Empty },
 
-			Timings.Beat,
-			Timings.Empty,
+			{ Timings.Beat },
+			{ Timings.Empty },
 
-			Timings.Beat,
-			Timings.Empty,
+			{ Timings.Beat },
+			{ Timings.Empty },
 		},
 		color = Color(1, 1, 0, 1),
 		sprites = function()
@@ -208,14 +208,14 @@ Enemy_Type = {
 		speed = 6,
 		attacks = { ShootAttack },
 		timeline = { --
-			Timings.Beat,
-			Timings.Empty,
+			{ Timings.Beat },
+			{ Timings.Empty },
 
-			Timings.Hold,
-			Timings.Empty,
+			{ Timings.Hold },
+			{ Timings.Empty },
 
-			Timings.Beat,
-			Timings.Empty,
+			{ Timings.Beat },
+			{ Timings.Empty },
 		},
 		color = Color(1, 0, 1, 1),
 		sprites = function()

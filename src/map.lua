@@ -68,7 +68,7 @@ function Map:load_next_room()
 	end
 
 	-- spawn each unit onto the board
-	local num_enemies = 0
+	local num_enemies = 3
 	for i = 1, num_enemies do
 		local new_x = self.cols - i
 		local new_y = self.rows
@@ -87,6 +87,7 @@ function Map:load_next_room()
 			cell_size = self.cell_size,
 			visible = false,
 			hit_window = 0.05,
+			accuracy = 0.95,
 		})
 
 		table.insert(self.units, new_unit)
@@ -112,44 +113,6 @@ function Map:react_to_hit(args)
 	self.spring:pull(0.2, 200, 10)
 	self.reaction_color = args.beat.action.color:clone():darken(0.3)
 	self.reaction_color_t = 0
-
-	if not args.unit.is_player then -- player actions handled in handle_press()
-		-- enemy AI
-		-- if beat is move then
-		--		where does unit want to go?
-		--		map decides route and moves it
-		--	elseif beat is attack then
-		--		select based off unit's priority target
-		--		map acts out the attack
-
-		if args.beat.action == Timings.Beat then -- move
-			local target, range, axis_distance = args.unit:choose_move_target(self:get_all_alive_units(),
-				self:get_all_interactible_entities())
-			-- WARN: Current issue: randomly chooses new target every beat
-
-			-- TODO: include range and stuff
-
-			local target_x = target.tile_x
-			local target_y = target.tile_y
-			local new_x, new_y = self:pathfind(args.unit, args.unit.tile_x, args.unit.tile_y, target_x, target_y)
-			self:move_unit(args.unit, new_x, new_y)
-		elseif args.beat.action == Timings.Hold then -- attack
-			local targets, attack = args.unit:choose_attack_targets(self:get_all_alive_units(),
-				self:get_all_interactible_entities())
-			-- WARN: Current issue: randomly chooses new target every beat
-			--
-			if targets and #targets > 0 and attack then
-				table.insert(
-					self.entities,
-					attack({
-						source = args.unit,
-						targets = targets,
-						map = self,
-					})
-				)
-			end
-		end
-	end
 end
 
 function Map:all_enemies_act(time)
@@ -212,6 +175,42 @@ function Map:handle_press(args)
 
 	if action then
 		action(self, args)
+	end
+end
+
+function Map:handle_enemy_input(args)
+	-- enemy AI
+	-- if beat is move then
+	--		where does unit want to go?
+	--		map decides route and moves it
+	--	elseif beat is attack then
+	--		select based off unit's priority target
+	--		map acts out the attack
+	if args.beat.action == Timings.Beat then -- move
+		local target, range, axis_distance = args.unit:choose_move_target(self:get_all_alive_units(),
+			self:get_all_interactible_entities())
+		-- WARN: Current issue: randomly chooses new target every beat
+		-- TODO: include range and stuff
+
+		local target_x = target.tile_x
+		local target_y = target.tile_y
+		local new_x, new_y = self:pathfind(args.unit, args.unit.tile_x, args.unit.tile_y, target_x, target_y)
+		self:move_unit(args.unit, new_x, new_y)
+	elseif args.beat.action == Timings.Hold then -- attack
+		local targets, attack = args.unit:choose_attack_targets(self:get_all_alive_units(),
+			self:get_all_interactible_entities())
+		-- WARN: Current issue: randomly chooses new target every beat
+		--
+		if targets and #targets > 0 and attack then
+			table.insert(
+				self.entities,
+				attack({
+					source = args.unit,
+					targets = targets,
+					map = self,
+				})
+			)
+		end
 	end
 end
 

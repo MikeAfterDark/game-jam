@@ -313,22 +313,26 @@ Timings = {
 	},
 
 	-- NOTE: duration == num beats at whatever beat_resolution
-	Myon = {
-		id = "Myon",
-		duration = 4,
-		name = "myon",
-		color = Color(1, 1, 0, 1),
-		input_type = Input_Type.Myon,
-	},
+	Myon = function(duration)
+		return {
+			id = "Myon",
+			duration = duration,
+			name = "myon",
+			color = Color(1, 1, 0, 1),
+			input_type = Input_Type.Myon,
+		}
+	end,
 
 	-- NOTE: duration == num beats at whatever beat_resolution
-	Arix = {
-		id = "Arix",
-		duration = 3,
-		name = "arix",
-		color = Color(0, 1, 1, 1),
-		input_type = Input_Type.Arix,
-	},
+	Arix = function(duration)
+		return {
+			id = "Arix",
+			duration = duration,
+			name = "arix",
+			color = Color(0, 1, 1, 1),
+			input_type = Input_Type.Arix,
+		}
+	end,
 }
 
 function Character_Setup:load_characters()
@@ -403,10 +407,10 @@ function Character_Setup:load_characters()
 				{ Timings.Beat },
 				{ Timings.Empty },
 
-				{ Timings.Beat, Timings.Myon },
+				{ Timings.Beat, Timings.Myon(4) },
 				{ Timings.Empty },
 
-				{ Timings.Beat, Timings.Arix },
+				{ Timings.Beat, Timings.Arix(3) },
 				{ Timings.Empty },
 
 				{ Timings.Beat },

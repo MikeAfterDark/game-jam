@@ -531,3 +531,14 @@ function table.merge(t1, t2)
   for k, v in pairs(t2) do out[k] = v end
   return out
 end
+
+-- Appends the second table to the end of the first
+-- t1 = {1, 2, 3}
+-- t2 = {4, 5, 6}
+-- table.concatenate(t1, t2) -> result is now {1, 2, 3, 4, 5, 6}
+function table.append(t1, t2)
+    for i = 1, #t2 do
+        t1[#t1 + 1] = t2[i]
+    end
+    return t1
+end

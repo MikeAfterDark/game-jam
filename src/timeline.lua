@@ -1,301 +1,315 @@
 Timeline = Object:extend()
 Timeline:implement(GameObject)
 function Timeline:init(args)
-	self:init_game_object(args)
+    self:init_game_object(args)
 
-	self.tick_count = 12
-	self.tick_colors = {}
-	for i = 1, 8 do
-		local color = Color(1, 1, 1, 1) --random:color()
-		table.insert(self.tick_colors, color)
-	end
+    self.crotchet = 60 / self.bpm
+    self.eighth = self.crotchet / 2
+    self.sixteenth = self.eighth / 2
 
-	self.tick_offset = 0
-	self.draw_circle = 0
+    self.new_beat_resolution = self.crotchet -- for notifying player
+    self.beat_resolution = self.eighth    -- for internal logic
 
-	self.beats = {}
-	self.beat_index = 1
-	self.new_beat_checked = 0
-
-	self.unit_start_time = 0
-	self.time = 0
+    self.beat_number = 0                  -- for tracking is_new_beat
+    self.beats = {}
+    self.beats_per_turn = {}
 end
 
 function Timeline:update(dt)
-	self:update_game_object(dt)
-
-	local delta = self.beat_spread * dt * self.beats_per_sec
-	local prev_tick = self.tick_offset
-	self.tick_offset = (self.tick_offset + delta) % self.beat_spread
-
-	if prev_tick > self.tick_offset then -- we looped
-		local consumed_tick
-		if #self.tick_colors > 0 then
-			consumed_tick, self.tick_colors = table.shift(self.tick_colors)
-		end
-
-		self.draw_circle = 20
-		trigger:tween(0.2, self, { draw_circle = 0 }, math.linear)
-	end
+    self:update_game_object(dt)
 end
 
-function Timeline:add(unit, song_time)
-	-- print("adding:", unit.type.name)
+function Timeline:add(unit, current_time)
+    self.beats[unit.id] = self.beats[unit.id] or {}
+    self.beats_per_turn[unit.id] = self.beats_per_turn[unit.id] or {}
 
-	local prev_unit = self.unit
-	self.unit = unit
-	local beats_per_sec = self.beats_per_sec
-	local beat_id = random:uid()
-	if not self.unit.beat_id then
-		self.unit.beat_id = {}
-	end
-	table.unshift(self.unit.beat_id, beat_id)
-	local time = ((#self.beats + 1) / beats_per_sec)
-	if unit.is_player and self.unit ~= prev_unit then -- QoL so player has a beat to react to new unit
-		table.insert(self.beats, Beat({ action = Timings.Empty, unit = unit, time = time, id = beat_id }))
-	end
-	for i, action in ipairs(unit.timeline) do
-		time = ((#self.beats + 1) / beats_per_sec)
-		table.insert(self.beats, Beat({ action = action, unit = unit, time = time, id = beat_id }))
-		-- print("inserted: ", self.beats[#self.beats].id)
-	end
+    local dummy_time = 0
+    if #self.beats[unit.id] == 0 and unit.is_player then
+        -- insert # QoL dummy beats
+        local num_dummy_beats = 4
 
-	self.unit_start_time = song_time
-	self.unit_start_index = self.beat_index
+        for i = 1, num_dummy_beats do
+            local time = i * self.beat_resolution
+            dummy_time = dummy_time + self.beat_resolution
+
+            table.insert(self.beats[unit.id], { id = random:uid(), action = Timings.Empty, time = time })
+        end
+    end
+
+    local earliest_valid_time = dummy_time +
+    (self.beats_per_turn[unit.id][#self.beats_per_turn[unit.id]] or current_time)
+    -- self.beats[unit.id][#self.beats[unit.id]].time + self.beat_resolution
+    local valid_current_time = (current_time > earliest_valid_time - 0.001) and current_time or earliest_valid_time
+    local insert_time = self:beat_aligned_time(math.max(valid_current_time, earliest_valid_time))
+
+    -- NOTE:
+    -- beat.is_hold: bool, absence implies 'is_tap'
+    -- beat.duration: int, no safety checks, make sure its within the timeline
+    local last_time = 0 -- for tracking turns
+    for i, beat_list in ipairs(unit.timeline) do
+        local time = insert_time + (i - 1) * self.beat_resolution
+        for j, beat in ipairs(beat_list) do
+            local end_time = beat.duration and time + beat.duration * self.beat_resolution or nil -- for held beats
+            last_time = math.max(last_time, end_time or time)
+            table.insert(self.beats[unit.id], { id = random:uid(), action = beat, time = time, end_time = end_time })
+        end
+    end
+
+    last_time = last_time + self.beat_resolution
+    table.insert(self.beats_per_turn[unit.id], last_time)
+    -- print("last time for", unit.type.name, last_time)
+    -- print("Inserted", last_beat_time, valid_current_time, insert_time)
+    -- for i, beat in ipairs(self.beats[unit.id]) do
+    --     print(beat.action.name, beat.time, beat.end_time)
+    -- end
 end
 
--- returns true if a valid beat was hit
-function Timeline:beat_hit_at(time)
-	-- get all the beats that get hit at that time within their hit window
-	-- figure out which one is closest to perfect
-	-- 'miss' all the ones before it
-	-- increment beat_index up to its at/ahead of the hit beat
-	local hit_beats = {}
-	for i = self.beat_index, #self.beats do
-		local beat_time = self.beats[i].time
-		if self:beat_can_be_hit_at(beat_time, time) then
-			-- print("including: ", past, time, future)
-			local min_time_offset = math.min(time - self:past(beat_time), self:future(beat_time) - time)
-			table.insert(hit_beats, { beat = self.beats[i], index = i, time_offset = min_time_offset })
-		else
-			break
-		end
-	end
+function Timeline:press(unit, current_time, input_type)
+    if #self.beats[unit.id] == 0 then
+        return {}
+    end
 
-	table.sort(hit_beats, function(a, b)
-		return a.time_offset < b.time_offset
-	end)
-	local closest_hit = hit_beats[1]
+    -- overlaps can happen if:
+    -- > hit_window is big enough [fix: make sure hit_window < self.beat_resolution/2,
+    --                              or beats dont happen that frequently in timeline setup]
+    -- > held beats overlap [fix: be careful in timeline setup]
+    -- If this is an issue, setup 'input_types' for each beat and filter by whichever is
+    -- closer to being perfectly on beat
 
-	if closest_hit then
-		self.beat_index = closest_hit.index + 1
-		local is_new_beat = true
-		return closest_hit.beat, closest_hit.time_offset, is_new_beat
-	else
-		return false
-	end
+    local hits = table.foreachmap(self.beats[unit.id], function(v)
+        local modified = false
+        if
+            not v.pressed --
+            and v.action.input_type == input_type
+            and (
+                v.end_time and (v.time - unit.hit_window < current_time and v.end_time + unit.hit_window > current_time)
+                or math.abs(v.time - current_time) < unit.hit_window
+            )
+        then
+            v.pressed = current_time
+            modified = true
+        end
+        return v, modified
+    end)
+
+    return hits
 end
 
-function Timeline:beat_can_be_hit_at(beat_time, hit_time)
-	return self.beats[self.beat_index].action ~= Timings.Empty --
-		and hit_time >= self:past(beat_time)
-		and hit_time <= self:future(beat_time)
+function Timeline:release(unit, current_time, input_type, min_percent)
+    local releases
+    releases, self.beats[unit.id] = table.reject(self.beats[unit.id], function(v)
+        local is_valid = v.pressed and v.end_time and v.action.input_type == input_type
+        if not is_valid then
+            return false
+        end
+
+        local percent = (current_time - v.pressed) / (v.end_time - v.time)
+
+        if not min_percent or percent > min_percent then
+            v.released = current_time
+            v.percent_complete = percent
+        end
+
+        return true
+    end)
+    return releases
 end
 
-function Timeline:past(time, window)
-	return time - (window or self.hit_window)
+-- for enemy AI to hit the beats
+function Timeline:try_hit_or_release(unit, current_time)
+    local beats = {}
+    for key, type in pairs(Input_Type) do
+        local hits = self:press(unit, current_time, type)
+        _, hits = table.reject(hits, function(v)
+            return v.end_time
+        end)
+        local releases = self:release(unit, current_time, type, unit.accuracy)
+        table.append(beats, hits)
+        table.append(beats, releases)
+    end
+
+    return beats
 end
 
-function Timeline:future(time, window)
-	return time + (window or self.hit_window)
+-- returns the closest time aligned to the beat closest to 'time'
+function Timeline:beat_aligned_time(current_time)
+    local prev_beat = math.floor(current_time / self.beat_resolution)
+    local next_beat = math.ceil(current_time / self.beat_resolution)
+
+    local prev_time = prev_beat * self.beat_resolution
+    local next_time = next_beat * self.beat_resolution
+
+    local prev_diff = math.abs(current_time - prev_time)
+    local next_diff = math.abs(current_time - next_time)
+
+    -- print("Nearest: ", prev_time, time, next_time)
+    return prev_diff < next_diff and prev_time or next_time
 end
 
--- returns number of beats left, updates beat positions
-function Timeline:beat_tracker(time, unit)
-	local missed_beat = nil
-	local is_new_beat = false
-	for i = self.beat_index, #self.beats do
-		local beat = self.beats[i]
-		if time > self:future(beat.time) then
-			self.beat_index = i + 1
-			is_new_beat = true
+function Timeline:beat_tracker(units, current_time)
+    -- tracker(current_time, units)
+    -- > get all non-pressed tap beats and pop any that are past their time
+    -- > get all held beats and pop any with end_time too late for each unit's hit_window
 
-			if beat.action ~= Timings.Empty then
-				missed_beat = beat
-			end
-			break
-		end
-	end
+    for i, unit in ipairs(units) do
+        self.beats[unit.id] = self.beats[unit.id] or {}
 
-	self.time = time
-	return self:beats_left(unit), missed_beat, is_new_beat
+        local hit_window = unit.hit_window
+        local misses
+        misses, self.beats[unit.id] = table.reject(self.beats[unit.id], function(v)
+            local missed_hold = v.end_time and current_time > v.end_time + hit_window
+            local missed_tap = not v.end_time and not v.pressed and current_time > v.time + hit_window
+
+            return missed_hold or missed_tap
+        end)
+
+        if #misses > 0 then
+            -- TODO: miss notification
+            -- maybe unit:miss()?
+
+            -- print("unit: ", unit.type.name, "missed beat at", time, "beat", misses[1].id)
+        end
+
+        -- TODO: cleanup completed pressed beats (future: add to stats)
+        _, self.beats[unit.id] = table.reject(self.beats[unit.id], function(v)
+            local is_tap = not v.end_time
+            local is_pressed = v.pressed ~= nil
+
+            local is_hold = v.end_time ~= nil
+            local is_past_its_time = v.end_time and v.end_time + hit_window < current_time
+
+            return (is_tap and is_pressed) or (is_hold and is_pressed and is_past_its_time)
+        end)
+    end
+
+    -- WARN: janky hacks for drawing
+    self.draw_units = units
+    self.time = current_time
+
+    local beat_num = math.floor(current_time / self.new_beat_resolution)
+    local is_new_beat = beat_num ~= self.beat_number
+    self.beat_number = beat_num
+
+    return is_new_beat
 end
 
-function Timeline:check_for_new_beat_to_hit(time, window, unit)
-	local action_beat = nil
-	local is_new_beat = false
-	for i = self.beat_index, #self.beats do
-		local beat = self.beats[i]
-		if time > self:future(beat.time, window) then
-			self.beat_index = i + 1
-			is_new_beat = true
+function Timeline:is_end_of_turn(unit, current_time)
+    local is_end = self.beats_per_turn[unit.id][1] < current_time
+    if is_end then
+        _, self.beats_per_turn[unit.id] = table.shift(self.beats_per_turn[unit.id])
+    end
 
-			if beat.action ~= Timings.Empty then
-				action_beat = beat
-			end
-			break
-		end
-	end
-
-	self.time = time
-	return self:beats_left(unit), action_beat, is_new_beat
+    return is_end
 end
 
-function Timeline:is_new_beat(time, window)
-	local is_new_beat = false
-	window = window or self.hit_window
-
-	if self.beat_index > self.new_beat_checked then
-		for i = self.beat_index, #self.beats do
-			local beat = self.beats[i]
-			if time > self:future(beat.time, window) then
-				self.new_beat_checked = self.beat_index
-				is_new_beat = true
-				break
-			end
-		end
-	end
-
-	self.time = time
-	return is_new_beat
-end
-
-function Timeline:beats_left(unit)
-	if not unit then
-		-- print("no unit for beat")
-		return -1
-	end
-	local i = self.beat_index
-	local count = 0
-	-- print(self.beats[i].id, unit.beat_id[#unit.beat_id])
-	while i + count <= #self.beats and self.beats[i + count].id == unit.beat_id[#unit.beat_id] do
-		count = count + 1
-	end
-	if count == 0 then
-		-- print("pop")
-		_, unit.beat_id = table.pop(unit.beat_id)
-	end
-
-	-- print("beats left: ", count)
-	return count
-	-- return #self.beats - self.beat_index
-end
-
-function Timeline:react_to_hit()
-	-- self.spring:pull(0.2, 200, 10)
-end
-
-function Timeline:react_to_miss()
-	-- self.spring:pull(0.1, 100, 10)
+function Timeline:time_left_for(unit, current_time)
+    local time_left = self.beats_per_turn[unit.id][#self.beats_per_turn[unit.id]] - current_time
+    return time_left
 end
 
 function Timeline:draw()
-	local unit = self.unit
-	graphics.push(unit.x, unit.y, self.r, unit.spring.x, unit.spring.y)
+    local units = self.draw_units
+    if not units then
+        return
+    end
 
-	local radius = self.cell_size * 0.9
+    local tau = 2 * math.pi
+    local speed = ((state.timeline_speed or 0.3) + 0.1) * 20
 
-	local thickness = radius * 0.3
-	graphics.circle(unit.x, unit.y, radius, Color(1, 1, 1, 0.8), thickness * 1.2)
+    local radius = self.cell_size * 0.9
+    local thickness = radius * 0.3
+    local radians_per_segment = speed * (tau / self.max_beats)
+    local rotation_speed = self.new_beat_resolution * radians_per_segment
+    local visible_angle = math.pi * 3 / 2
 
-	local tau = 2 * math.pi
-	local speed = state.timeline_speed and (state.timeline_speed * 3) or 1
+    for j, unit in ipairs(units) do
+        if #self.beats[unit.id] > 0 then
+            graphics.push(unit.x, unit.y, self.r, unit.spring.x, unit.spring.y)
 
-	local radians_per_segment = speed * (tau / self.max_beats)
-	local rotation_speed = self.beats_per_sec * radians_per_segment
-	local max_visible_time = tau / rotation_speed
+            -- TODO: unit.border doesnt work if it goes multiple times in a row
+            local opacity = unit == main.current.focused_unit and 1 or 0.4
+            graphics.circle(unit.x, unit.y, radius, Color(1, 1, 1, 0.8 * opacity), thickness * 1.2)
 
-	local i = #self.beats
-	while i >= self.beat_index do
-		local beat = self.beats[i]
+            -- 1. draw ticks at the correct angle
+            local hit_window_angle = unit.hit_window * rotation_speed
+            local border_angle = math.pi * 0.01
+            for i, beat in ipairs(self.beats[unit.id]) do
+                local angle = (beat.time - self.time) * rotation_speed
+                local end_angle = ((beat.end_time or beat.time) - self.time) * rotation_speed
 
-		if beat and beat.action ~= Timings.Empty then
-			local dt = beat.time - self.time
+                if
+                    beat.action ~= Timings.Empty and angle < visible_angle --[[ and not beat.end_time ]]
+                then
+                    local tap_can_be_hit = math.abs(beat.time - self.time) < unit.hit_window
+                    local can_be_held = beat.end_time and
+                    (self.time > beat.time - unit.hit_window and self.time < beat.end_time + unit.hit_window)
 
-			if math.abs(dt) <= max_visible_time then
-				local angle = dt * rotation_speed
+                    local border_color = Color(0, 0, 0, opacity)
+                    local color = (not state.spacebar_controls or not unit.is_player) and beat.action.color
+                        or (
+                            (input.spacebar.down and beat.end_time == nil) and Timings.Hold.color
+                            or ((input.spacebar.down and beat.end_time == nil) and Timings.Beat.color or beat.action.color)
+                        )
+                    color = (tap_can_be_hit or can_be_held) and color:clone():lighten(0.4) or color
+                    color = (can_be_held and beat.pressed and not beat.released) and color:clone():darken(0.7) or color
+                    color = color:clone()
+                    color.a = color.a * opacity
 
-				if angle < math.pi * 1.6 and angle > -math.pi * 1.5 then -- visibility range
-					-- angle = (angle + math.pi) % tau - math.pi
+                    local line_thickness = thickness
+                    angle = math.max(0, angle) - math.pi / 2 -- centering it
+                    end_angle = math.min(visible_angle - hit_window_angle, end_angle) - math.pi / 2
 
-					local hit_window_angle = self.hit_window * rotation_speed
-					local spacing = radians_per_segment * 0.1
+                    local start_angle = angle - hit_window_angle
+                    end_angle = end_angle + hit_window_angle
+                    local radius_shift = beat.action.input_type == Input_Type.Myon and thickness
+                        or beat.action.input_type == Input_Type.Arix and thickness * 2
+                        or 0
+                    local draw_radius = radius + radius_shift
 
-					angle = angle - math.pi / 2
-					local start_angle = angle - hit_window_angle + spacing * 0.5
-					local end_angle = angle + hit_window_angle - spacing * 0.5
+                    -- background/border
+                    graphics.arc( --
+                        "open",
+                        unit.x,
+                        unit.y,
+                        draw_radius,
+                        start_angle - border_angle,
+                        end_angle + border_angle,
+                        border_color,
+                        line_thickness
+                    )
 
-					local draw_thickness = thickness
-					local draw_color = (not state.spacebar_controls or not unit.is_player) and beat.action.color
-						or (input.spacebar.down and Timings.Hold.color or Timings.Beat.color)
+                    graphics.arc( -- the hit_window of the tap beat
+                        "open",
+                        unit.x,
+                        unit.y,
+                        draw_radius,
+                        start_angle,
+                        end_angle,
+                        color,
+                        line_thickness
+                    )
 
-					local background_color = Color(0, 0, 0, 1)
-					local background_width = spacing * 0.5
+                    local half_thickness = thickness / 2
 
-					local tick_size = 0.05
-					local tick_start_angle = angle - tick_size
-					local tick_end_angle = angle + tick_size
+                    local ix = unit.x + math.cos(angle) * (draw_radius - half_thickness)
+                    local iy = unit.y + math.sin(angle) * (draw_radius - half_thickness)
+                    local ox = unit.x + math.cos(angle) * (draw_radius + half_thickness)
+                    local oy = unit.y + math.sin(angle) * (draw_radius + half_thickness)
 
-					if self:beat_can_be_hit_at(beat.time, self.time) then
-						draw_thickness = thickness * 1.4
-						draw_color = draw_color:clone():lighten(0.6)
-					end
+                    graphics.line(ix, iy, ox, oy, Color(0, 0, 0, 1), 2)
+                end
+            end
 
-					local tick_color = draw_color:clone():darken(0.3)
+            local indicator_angle = -math.pi / 2
+            local line_length = radius + 20
+            local ix = unit.x + math.cos(indicator_angle) * radius
+            local iy = unit.y + math.sin(indicator_angle) * radius
+            local ox = unit.x + math.cos(indicator_angle) * line_length
+            local oy = unit.y + math.sin(indicator_angle) * line_length
 
-					graphics.arc(
-						"open",
-						unit.x,
-						unit.y,
-						radius,
-						start_angle - background_width,
-						end_angle + background_width,
-						background_color,
-						draw_thickness * 1.5
-					)
-					graphics.arc("open", unit.x, unit.y, radius, start_angle, end_angle, draw_color, draw_thickness)
-					graphics.arc("open", unit.x, unit.y, radius, tick_start_angle, tick_end_angle, tick_color,
-						draw_thickness / 2)
-				end
-			end
-		end
+            graphics.line(ix, iy, ox, oy, Color(0, 0, 0, 1 * opacity), 2)
 
-		i = i - 1
-	end
-	local indicator_angle = -math.pi / 2
-	local line_length = radius + 12
-	local ix = unit.x + math.cos(indicator_angle) * radius
-	local iy = unit.y + math.sin(indicator_angle) * radius
-	local ox = unit.x + math.cos(indicator_angle) * line_length
-	local oy = unit.y + math.sin(indicator_angle) * line_length
-
-	graphics.line(ix, iy, ox, oy, Color(0, 0, 0, 1), 5)
-
-	graphics.pop()
-end
-
-Beat = function(args)
-	local self = {
-		action = args.action,
-		unit = args.unit,
-		time = args.time,
-		id = args.id,
-		hit = -1,
-	}
-
-	-- function self.a()
-	--     return 1
-	-- end
-
-	return self
+            graphics.pop()
+        end
+    end
 end

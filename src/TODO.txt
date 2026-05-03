@@ -24,6 +24,13 @@ todo:
 - enemies
 - projectile collisions (keep in mind high self.speed will skip over tiles)
 - HP display 
+
+
+- new_beat trigger moment relative to user input feels weird (bullets on early hits vs late),
+- character units and enemies need better timelines lists
+
+
+
 - [QoL] Lag Sync-ing + Tutorial (2 in 1)
 - [Idea] beats_per_measure where each turn is a measure
 - [Idea] Gamemodes with certain game state settings
