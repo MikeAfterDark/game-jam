@@ -94,7 +94,7 @@ end
 function Unit:get_next_beat() -- for main.current.enemies_act_every_beat == true
 	self.beat_index = self.beat_index or 0
 	self.beat_index = (self.beat_index % #self.type.timeline) + 1
-	return { action = self.type.timeline[self.beat_index] }
+	return { action = self.type.timeline[self.beat_index][1] }
 end
 
 function Unit:draw()
@@ -155,7 +155,7 @@ Unit_Type = {
 	},
 	E = {
 		name = "e",
-		speed = 1,
+		speed = 8 * 4,
 		sprites = function()
 			return nil
 		end,

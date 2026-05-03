@@ -28,7 +28,7 @@ function Map:init(args)
 			cell_size = self.cell_size,
 			visible = false,
 			is_player = true,
-			hit_window = 0.08,
+			hit_window = 0.1,
 		})
 
 		table.insert(self.units, new_unit)
@@ -68,7 +68,7 @@ function Map:load_next_room()
 	end
 
 	-- spawn each unit onto the board
-	local num_enemies = 3
+	local num_enemies = 2
 	for i = 1, num_enemies do
 		local new_x = self.cols - i
 		local new_y = self.rows
@@ -116,11 +116,12 @@ function Map:react_to_hit(args)
 end
 
 function Map:all_enemies_act(time)
-	for i, unit in ipairs(self.units) do
-		if not unit.is_player then
-			local data = { unit = unit, beat = unit:get_next_beat() }
-			self:react_to_hit(data)
-		end
+	local units = table.select(self.units, function(v)
+		return not v.is_player
+	end)
+
+	for i, unit in ipairs(units) do
+		self:handle_enemy_input({ unit = unit, beat = unit:get_next_beat() })
 	end
 end
 
@@ -186,6 +187,7 @@ function Map:handle_enemy_input(args)
 	--	elseif beat is attack then
 	--		select based off unit's priority target
 	--		map acts out the attack
+	--
 	if args.beat.action == Timings.Beat then -- move
 		local target, range, axis_distance = args.unit:choose_move_target(self:get_all_alive_units(),
 			self:get_all_interactible_entities())

@@ -238,6 +238,9 @@ function Game:update(dt)
 			end
 
 			if state.enemies_act_every_beat then
+				-- TODO: if we choose this option then this needs a rework
+				-- its just 'playing' the beats of each unit, instead of adding
+				-- to the timelines (hint: timeline:is_end_of_turn())
 				local act = is_new_beat and not state.enemies_only_move_when_player_doesnt
 				if act then
 					self.map:all_enemies_act(self.song_position)
