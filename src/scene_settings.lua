@@ -22,8 +22,12 @@ function Settings:on_enter(from, args)
 end
 
 function Settings:update(dt)
+    if main.current:is(MainMenu) then
+        return
+    end
+
     if input.escape.pressed and not self.transitioning and not self.in_credits then
-        if not self.in_pause then
+        if not self.in_pause and not self.in_credits and not self.in_options then
             pause_game(self)
         elseif self.in_options then
             if self.in_keybinding then
@@ -31,30 +35,12 @@ function Settings:update(dt)
             else
                 close_options(self)
             end
-        else
-            self.in_pause = false
-
-            -- TODO: confirmation window to go back to menu, unsaved progress, etc
-            scene_transition(self, {
-                x = gw / 2,
-                y = gh / 2,
-                type = "fade",
-                target = {
-                    scene = MainMenu,
-                    name = "main_menu",
-                    args = { clear_music = true },
-                },
-                display = {
-                    text = "loading main menu...",
-                    font = pixul_font,
-                    alignment = "center",
-                },
-            })
+        elseif self.in_pause then
+            close_pause(self)
             return
         end
     elseif input.escape.pressed and self.in_credits then
         close_credits(self)
-        self.in_credits = false
         if self.credits_button then
             self.credits_button:on_mouse_exit()
         end

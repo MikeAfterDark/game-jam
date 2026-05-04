@@ -62,3 +62,31 @@ C** playtesting: [2026-04-23]
 - "unit movement could be more snappy, feels like they finish moving out of sync"
 - player could be able to swap which characters (lego rockband on DS)
 - Felt good: single character, enemies got turns, enemies go last
+
+Felicia Playtest [2026-05-03]:
+- make sure to add a Calibration step
+- care with Wired keyboards could drop inputs if too many at the same time
+- missing mp3 dll for arch: 'usr/lib/libmp3lame.so'
+- add a 'Reset keybinds to default' button in keybinding menu
+- add a 'back to menu' button in pause menu, esc to continue on pause menu (tap), or back to menu (hold)
+- [idea] map characters to instruments? To tie them to the song more?
+- tie the song to the game more, link them together more, maybe have the map itself change based off song?
+- all src/ files are accessible in 
+
+Daniel playtest [2026-05-03]
+- The character doesnt feel connected to the music
+- restarting the song is super loud
+- very confusing and overwhelmed, needs tutorial
+
+Learnings [2026-05-03]:
+- Make tutorial+calibration step on initial boot (detect if state exists + menu button to recalibrate)
+- figure out missing 'usr/lib/libmp3lame.so' from makelove for AppImage
+- add a 'Reset keybinds to default' button in keybinding menu
+- add beat-specific SFX, make them stand out and maybe tied to specific songs 
+- all src/ files are accessible in download, careful with private info
+
+Issue:
+- the "Map" and "Units" feel disconnected from the song
+    > Make songs and units that work together?
+    > Force units to have a beat that fits the song?
+

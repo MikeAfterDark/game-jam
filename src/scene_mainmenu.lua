@@ -154,28 +154,28 @@ function MainMenu:setup_title_menu()
 		})
 	)
 
-	self.to_stim_screen_button = collect_into(
-		self.main_ui_elements,
-		Button({
-			group = ui_group,
-			x = gw * 0.91,
-			y = gh * 0.5,
-			w = gw * 0.17,
-			button_text = "[wavy_rainbow]Stim Cave :)",
-			fg_color = "fg",
-			bg_color = "black",
-			action = function(b)
-				main.ui_layer_stack:push({
-					layer = ui_interaction_layer.Main,
-					-- music = self.main_menu_song_instance,
-					layer_has_music = true,
-					music_type = "stim_cave",
-					-- ui_elements = self.main_ui_elements,
-				})
-				self:set_ui_to(menu.Stim_Screen)
-			end,
-		})
-	)
+	-- self.to_stim_screen_button = collect_into(
+	-- 	self.main_ui_elements,
+	-- 	Button({
+	-- 		group = ui_group,
+	-- 		x = gw * 0.91,
+	-- 		y = gh * 0.5,
+	-- 		w = gw * 0.17,
+	-- 		button_text = "[wavy_rainbow]Stim Cave :)",
+	-- 		fg_color = "fg",
+	-- 		bg_color = "black",
+	-- 		action = function(b)
+	-- 			main.ui_layer_stack:push({
+	-- 				layer = ui_interaction_layer.Main,
+	-- 				-- music = self.main_menu_song_instance,
+	-- 				layer_has_music = true,
+	-- 				music_type = "stim_cave",
+	-- 				-- ui_elements = self.main_ui_elements,
+	-- 			})
+	-- 			self:set_ui_to(menu.Stim_Screen)
+	-- 		end,
+	-- 	})
+	-- )
 
 	local button_offset = gh * 0.1
 	local button_dist_apart = gh * 0.08

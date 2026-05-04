@@ -248,7 +248,7 @@ function Timeline:draw()
                     local color = (not state.spacebar_controls or not unit.is_player) and beat.action.color
                         or (
                             (input.spacebar.down and beat.end_time == nil) and Timings.Hold.color
-                            or ((input.spacebar.down and beat.end_time == nil) and Timings.Beat.color or beat.action.color)
+                            or ((not input.spacebar.down and beat.end_time == nil) and Timings.Beat.color or beat.action.color)
                         )
                     color = (tap_can_be_hit or can_be_held) and color:clone():lighten(0.4) or color
                     color = (can_be_held and beat.pressed and not beat.released) and color:clone():darken(0.7) or color

@@ -62,12 +62,37 @@ function init()
 	end
 
 	person = {
-		Mikey = { name = "Mikey G", nickname = "Mikey", url = "https://gusakm.itch.io/", color = "green" },                               -- dev
+		Mikey = {
+			name = "Mikey G",
+			nickname = "Mikey",
+			url = "https://gusakm.itch.io/",
+			color = "green",
+		}, -- dev
 
-		Apezilla = { name = 'David "Apezilla" Browne', nickname = "Apezilla", url = "https://www.youtube.com/@davidbrowne003", color = "red" }, -- music
-		Patrick = { name = "Patrick Montanari", nickname = "Patrick", url = "https://www.succulentsoundstudios.com/", color = "yellow" }, -- jazz improv
-		Tectonic = { name = "TectonicHorizon", nickname = "Tectonic", url = "https://soundcloud.com/reedflow", color = "p_blue1" },       -- art/game design
-		Kai = { name = "KaiaRadio", nickname = "Kai", url = "https://www.youtube.com/@KaiaRadio", color = "blue" },                       -- sfx
+		Apezilla = {
+			name = 'David "Apezilla" Browne',
+			nickname = "Apezilla",
+			url = "https://www.youtube.com/@davidbrowne003",
+			color = "red",
+		}, -- music
+		Patrick = {
+			name = "Patrick Montanari",
+			nickname = "Patrick",
+			url = "https://www.succulentsoundstudios.com/",
+			color = "yellow",
+		}, -- jazz improv
+		Tectonic = {
+			name = "TectonicHorizon",
+			nickname = "Tectonic",
+			url = "https://soundcloud.com/reedflow",
+			color = "p_blue1",
+		}, -- art/game design
+		Kai = {
+			name = "KaiaRadio",
+			nickname = "Kai",
+			url = "https://www.youtube.com/@KaiaRadio",
+			color = "blue",
+		}, -- sfx
 	}
 
 	sfx_tag = { tags = { sfx_control } }
@@ -796,11 +821,12 @@ function set_action_keybind(self, action, key)
 
 	local button_y_offset = 20 * global_game_scale
 	local button_x_offset = 50 * global_game_scale
+	local button_x_pos = 30 * global_game_scale
 	self.cancel = collect_into(
 		self.key_binding_ui_elements,
 		Button({
 			group = ui_group,
-			x = gw / 2 - button_x_offset,
+			x = gw / 2 - 2 * button_x_offset + button_x_pos,
 			y = gh / 2 + button_y_offset,
 			button_text = "cancel",
 			fg_color = "bg",
@@ -810,11 +836,37 @@ function set_action_keybind(self, action, key)
 			end,
 		})
 	)
+
+	self.reset = collect_into(
+		self.key_binding_ui_elements,
+		Button({
+			group = ui_group,
+			x = gw / 2 - button_x_offset + button_x_pos,
+			y = gh / 2 + button_y_offset,
+			button_text = "reset",
+			fg_color = "bg",
+			bg_color = "blue",
+			action = function(b)
+				new_keys = {}
+				local defaults = controls[action].default
+				state.input[action] = defaults
+				controls[action].input = defaults
+				input:bind(action, defaults)
+				system.save_state()
+
+				self["input_" .. action]:set_text(string.upper(table.concat(defaults, ", ")))
+				-- self.current_key:set_text({ text = "", font = fat_font })
+
+				close_keybinding(self)
+			end,
+		})
+	)
+
 	self.clear = collect_into(
 		self.key_binding_ui_elements,
 		Button({
 			group = ui_group,
-			x = gw / 2,
+			x = gw / 2 + button_x_pos,
 			y = gh / 2 + button_y_offset,
 			button_text = "clear",
 			fg_color = "bg",
@@ -836,7 +888,7 @@ function set_action_keybind(self, action, key)
 		self.key_binding_ui_elements,
 		Button({
 			group = ui_group,
-			x = gw / 2 + button_x_offset,
+			x = gw / 2 + button_x_offset + button_x_pos,
 			y = gh / 2 + button_y_offset,
 			button_text = "confirm",
 			fg_color = "bg",
@@ -908,6 +960,13 @@ end
 
 function close_options(self)
 	self.in_options = false
+	pop_ui_layer(self)
+
+	system.save_state()
+end
+
+function close_pause(self)
+	self.in_pause = false
 	pop_ui_layer(self)
 
 	system.save_state()
@@ -992,6 +1051,37 @@ function pause_game(self)
 			action = function(b)
 				open_credits(self)
 				b.selected = true
+			end,
+		})
+	)
+
+	self.to_menu_button = collect_into(
+		self.paused_ui_elements,
+		Button({
+			group = ui_group,
+			x = gw / 2,
+			y = gh / 2 + 60 * global_game_scale,
+			force_update = true,
+			button_text = "back to menu",
+			fg_color = "bg",
+			bg_color = "orange",
+			action = function(b)
+				close_pause(self)
+				scene_transition(self, {
+					x = gw / 2,
+					y = gh / 2,
+					type = "fade",
+					target = {
+						scene = MainMenu,
+						name = "main_menu",
+						args = { clear_music = true },
+					},
+					display = {
+						text = "loading main menu...",
+						font = pixul_font,
+						alignment = "center",
+					},
+				})
 			end,
 		})
 	)
