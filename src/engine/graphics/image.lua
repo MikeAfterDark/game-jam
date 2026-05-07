@@ -18,16 +18,29 @@ function Image:draw(x, y, r, sx, sy, ox, oy, color)
 	end
 end
 
+ImageData = Object:extend()
+function ImageData:init(path)
+	self.data = love.image.newImageData(path)
+	self.w = self.data:getWidth()
+	self.h = self.data:getHeight()
+end
+
+function ImageData:get_pixel(x, y)
+	return self.data:getPixel(x, y)
+end
+
 -- The base Quad class. Useful for loading pieces of images as independent Image objects. Every function that takes in an Image also takes in a Quad.
 Quad = Object:extend()
 function Quad:init(image, tile_w, tile_h, tile_coordinates)
 	self.image = image
-	self.quad = love.graphics.newQuad((tile_coordinates[1] - 1) * tile_w, (tile_coordinates[2] - 1) * tile_h, tile_w, tile_h, self.image.w, self.image.h)
+	self.quad = love.graphics.newQuad((tile_coordinates[1] - 1) * tile_w, (tile_coordinates[2] - 1) * tile_h, tile_w,
+		tile_h, self.image.w, self.image.h)
 	self.w, self.h = tile_w, tile_h
 end
 
 function Quad:draw(x, y, r, sx, sy, ox, oy)
-	love.graphics.draw(self.image.image, self.quad, x, y, r or 0, sx or 1, sy or sx or 1, self.w / 2 + (ox or 0), self.h / 2 + (oy or 0))
+	love.graphics.draw(self.image.image, self.quad, x, y, r or 0, sx or 1, sy or sx or 1, self.w / 2 + (ox or 0),
+		self.h / 2 + (oy or 0))
 end
 
 -- A linear gradient image.
@@ -59,6 +72,7 @@ end
 -- Draws the gradient image with size w, h centered on x, y.
 function GradientImage:draw(x, y, w, h, r, sx, sy, ox, oy)
 	graphics.push(x, y, r)
-	love.graphics.draw(self.mesh, x - (sx or 1) * (w + (ox or 0)) / 2, y - (sy or 1) * (h + (oy or 0)) / 2, 0, w * (sx or 1), h * (sy or sx or 1))
+	love.graphics.draw(self.mesh, x - (sx or 1) * (w + (ox or 0)) / 2, y - (sy or 1) * (h + (oy or 0)) / 2, 0,
+		w * (sx or 1), h * (sy or sx or 1))
 	graphics.pop()
 end

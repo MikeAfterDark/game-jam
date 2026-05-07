@@ -146,6 +146,7 @@ function init()
 		credits = { sfx.extra },
 	}
 
+	level_folder = "levels"
 	-- load images:
 	-- wall_arrow_particle = Image("wall_arrow_particle")
 	logo = Image("logo")
@@ -282,7 +283,7 @@ function init()
 	-- main:add(Intro("intro"))
 	-- main:add(Game("intro"))
 	-- main:add(Level_Select("intro"))
-	main:add(Character_Setup("intro"))
+	main:add(Level_Select("intro"))
 	main:go_to("intro", {})
 
 	-- set sane defaults:
@@ -1555,6 +1556,10 @@ function play_music(args)
 	end
 
 	local target_type = top_music_layer.music_type
+	if not target_type then
+		return 5
+	end
+
 	local volume = args.volume or (music_control and music_control.volume or state.music_volume or 0.1)
 	local pitch = args.pitch or 1
 

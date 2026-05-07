@@ -22,8 +22,8 @@ bugs:
 todo:
 - enemies
 - projectile collisions (keep in mind high self.speed will skip over tiles)
-- HP display 
-
+- HP display
+- plan out music/level setup (file structure and playing)
 
 - new_beat trigger moment relative to user input feels weird (bullets on early hits vs late),
 - character units and enemies need better timelines lists
@@ -81,11 +81,10 @@ Daniel playtest [2026-05-03]
 Learnings [2026-05-03]:
 - Make tutorial+calibration step on initial boot (detect if state exists + menu button to recalibrate)
 - figure out missing 'usr/lib/libmp3lame.so' from makelove for AppImage
-- add a 'Reset keybinds to default' button in keybinding menu
 - add beat-specific SFX, make them stand out and maybe tied to specific songs 
 - all src/ files are accessible in download, careful with private info
 
-Issue:
+General Issue:
 - the "Map" and "Units" feel disconnected from the song
     > Make songs and units that work together?
     > Force units to have a beat that fits the song?

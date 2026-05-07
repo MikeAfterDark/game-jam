@@ -13,8 +13,9 @@
 --   }
 -- })
 
-Sound = function(asset_name, options, info)
-	local sound = ripple.newSound(love.audio.newSource("assets/sounds/" .. asset_name, "static"), options)
+Sound = function(asset_name, options, info, is_path)
+	local sound = ripple.newSound(
+	love.audio.newSource(is_path and asset_name or ("assets/sounds/" .. asset_name), "static"), options)
 	sound.data = info
 	return sound
 end

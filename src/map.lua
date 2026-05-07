@@ -16,8 +16,8 @@ function Map:init(args)
 		local new_y = 1
 		local new_unit = Unit({
 			group = self.group,
-			x = self.x + self.cell_size * ((0 - 0.0) - self.rows / 2),
-			y = self.y + self.cell_size * ((0 - 0.0) - self.cols / 2),
+			x = self.x + self.cell_size,
+			y = self.y + self.cell_size,
 			tile_x = new_x, -- top left alinged
 			tile_y = new_y,
 			w = random:int(1, 1),
@@ -50,33 +50,47 @@ function Map:update(dt)
 end
 
 function Map:load_next_room()
-	-- todo:
-	-- make sure self.units only has 'alive' units (should be only player units)
 	for _, entity in pairs(self.entities) do
 		entity.dead = true
 	end
 	self.entities = {}
 
-	-- load the next room from the level data
-	for i = 1, self.rows do
-		self.grid[i] = {}
-		for j = 1, self.cols do
-			local shade = random:float(0.2, 0.4)
-			local color = Color(shade, shade, shade, 1)
-			self.grid[i][j] = random:float() <= 1.9 and { color = color, unit = nil } or nil
+	self.room_index = (self.room_index and self.room_index < #self.level.map_order) and self.room_index + 1 or 1
+	self.room_name = self.level.map_order[self.room_index]
+	self.room = self.level.rooms and self.level.rooms[self.room_name] or { id = "default", enemies = { {}, {}, {} } }
+
+	self.rows, self.cols = self.room.w, self.room.h
+	self.grid = {}
+
+	for x = 0, self.rows - 1 do
+		local row = {}
+		for y = 0, self.cols - 1 do
+			local r, g, b, a = self.room:get_pixel(x, y)
+			row[y + 1] = a > 0 and { color = Color(r, g, b, a), unit = nil } or nil
 		end
+		self.grid[x + 1] = row
 	end
 
+	-- load the next room from the level data
+	-- for i = 1, self.rows do
+	-- 	self.grid[i] = {}
+	-- 	for j = 1, self.cols do
+	-- 		local shade = random:float(0.2, 0.4)
+	-- 		local color = Color(shade, shade, shade, 1)
+	-- 		self.grid[i][j] = random:float() <= 1.9 and { color = color, unit = nil } or nil
+	-- 	end
+	-- end
+
 	-- spawn each unit onto the board
-	local num_enemies = 2
+	local num_enemies = self.room.enemies and #self.room.enemies or 0
 	for i = 1, num_enemies do
 		local new_x = self.cols - i
 		local new_y = self.rows
 		local type = random:table(Enemy_Type)
 		local new_unit = Unit({
 			group = self.group,
-			x = self.x + self.cell_size * ((0 - 0.0) - self.rows / 2),
-			y = self.y + self.cell_size * ((0 - 0.0) - self.cols / 2),
+			x = self.x + self.cell_size,
+			y = self.y + self.cell_size,
 			tile_x = new_x, -- top left alinged
 			tile_y = new_y,
 			w = random:int(1, 1),
@@ -102,6 +116,8 @@ function Map:load_next_room()
 	end
 
 	self.new_room_loaded = true
+
+	return { name = self.room_name }
 end
 
 function Map:react_to_hit(args)
@@ -322,13 +338,13 @@ function Map:draw()
 	graphics.pop()
 
 	graphics.push(self.x, self.y, 0)
-	for i = 1, self.rows do
-		for j = 1, self.cols do
+	for j = 1, self.rows do
+		for i = 1, self.cols do
 			local cell = self.grid[i][j]
 			if cell then
 				graphics.rectangle(
-					self.x + self.cell_size * ((i - 0.5) - self.rows / 2),
-					self.y + self.cell_size * ((j - 0.5) - self.cols / 2),
+					self.x + self.cell_size * i,
+					self.y + self.cell_size * j,
 					self.cell_size,
 					self.cell_size,
 					0,

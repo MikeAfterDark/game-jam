@@ -25,11 +25,9 @@ end
 function Unit:update(dt)
 	self:update_game_object(dt)
 
-	local new_x = self.base_x + (self.tile_x - 1) * self.cell_size + self.width / 2
-	local new_y = self.base_y + (self.tile_y - 1) * self.cell_size + self.height / 2
+	local new_x = self.base_x + (self.tile_x - 1) * self.cell_size --+ self.width / 2
+	local new_y = self.base_y + (self.tile_y - 1) * self.cell_size --+ self.height / 2
 	if not self.moving and (self.x ~= new_x or self.y ~= new_y) then
-		-- self.x = new_x
-		-- self.y = new_y
 		self.moving = true
 		trigger:tween(0.05, self, { x = new_x, y = new_y }, math.cubic_in_out, function()
 			self.moving = false
@@ -45,9 +43,13 @@ function Unit:highlight(on)
 	self.border = on
 	if self.border then
 		self.beats_count = #self.timeline
-		self.border_color = self.border == 1 and Color(0, 1, 0, 0) --
-			or self.border == 2 and Color(0.3, 0, 1, 1)
-			or Color(0, 0, 0, 1)
+		if on == 1 then
+			self.border_color = Color(0, 1, 0, 1)
+		elseif on == 2 then
+			self.border_color = Color(0.3, 0, 1, 1)
+		else
+			self.border_color = Color(0, 0, 0, 1)
+		end
 		self.text:set_text({
 			{ text = "[bg]" .. self.type.name,             font = small_pixul_font },
 			{ text = "[bg]" .. tostring(self.beats_count), font = pixul_font },
@@ -132,6 +134,7 @@ Unit_Type = {
 			return nil
 		end,
 	},
+
 	B = {
 		name = "b",
 		speed = 7,
@@ -139,6 +142,7 @@ Unit_Type = {
 			return nil
 		end,
 	},
+
 	C = {
 		name = "c",
 		speed = 5,
@@ -146,6 +150,7 @@ Unit_Type = {
 			return nil
 		end,
 	},
+
 	D = {
 		name = "d",
 		speed = 3,
@@ -153,9 +158,18 @@ Unit_Type = {
 			return nil
 		end,
 	},
+
 	E = {
 		name = "e",
 		speed = 8 * 4,
+		sprites = function()
+			return nil
+		end,
+	},
+
+	Calibration = {
+		name = "you",
+		speed = 1,
 		sprites = function()
 			return nil
 		end,

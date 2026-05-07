@@ -48,9 +48,9 @@ function Game:on_enter(from, args)
 
 		main.ui_layer_stack:push({
 			layer = ui_interaction_layer.Game,
-			layer_has_music = self.has_music,
+			layer_has_music = args.layer_has_music,
 			-- game = true,
-			music_type = self.music_type,
+			music_type = args.music_type,
 			ui_elements = self.game_ui_elements,
 		})
 	end
@@ -74,11 +74,9 @@ function Game:on_enter(from, args)
 	-- displays times and holds and displays the beats for the current turn
 	self.timeline = Timeline({
 		group = self.ui,
-		bpm = 120,
 		max_beats = 8,
 		cell_size = cell_size,
 	})
-	self.beats_per_sec = 2 * 120 / 60 -- *2 for eighths
 
 	-- controls the upcoming turns, including new spawns and deaths
 	self.turn_order = Turn_Order({
@@ -90,7 +88,9 @@ function Game:on_enter(from, args)
 		section_height = gh * 0.03,
 	})
 
-	self.map:load_next_room() -- spawns player_units and enemies based off self.map.level
+	self.room = self.map:load_next_room() -- spawns player_units and enemies based off self.map.level
+	self.song = self:play_room_song()
+
 	self.turn_order:insert(self.map:get_all_alive_units())
 	self:prep_turn()
 end
@@ -141,8 +141,23 @@ local directions = {
 	right = { x = 1, y = 0 },
 }
 
+function Game:play_room_song()
+	if main:get("settings").is_paused or (self.song and not self.song:isStopped()) then
+		return
+	end
+
+	local viable_songs = table.select(self.level.room_songs, function(v)
+		return table.contains(v.valid_maps, self.room.name)
+	end)
+	local song = table.random(viable_songs)
+	local bpm = song.bpm
+	self.timeline:set_bpm(bpm)
+
+	self.song = self.level.songs[song.song_name]:play({ volume = 0.35 })
+end
+
 function Game:update(dt)
-	self.song = play_music({ return_song = true, pitch = self.pitch })
+	self:play_room_song()
 
 	if input.z.pressed and self.pitch > 0.1 then
 		self.pitch = self.pitch - 0.1

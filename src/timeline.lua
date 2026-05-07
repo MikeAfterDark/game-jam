@@ -3,16 +3,19 @@ Timeline:implement(GameObject)
 function Timeline:init(args)
     self:init_game_object(args)
 
-    self.crotchet = 60 / self.bpm
+    self.beat_number = 0 -- for tracking is_new_beat
+    self.beats = {}
+    self.beats_per_turn = {}
+end
+
+function Timeline:set_bpm(bpm)
+    self.bpm = bpm
+    self.crotchet = 60 / bpm
     self.eighth = self.crotchet / 2
     self.sixteenth = self.eighth / 2
 
     self.new_beat_resolution = self.crotchet -- for notifying player
     self.beat_resolution = self.eighth    -- for internal logic
-
-    self.beat_number = 0                  -- for tracking is_new_beat
-    self.beats = {}
-    self.beats_per_turn = {}
 end
 
 function Timeline:update(dt)

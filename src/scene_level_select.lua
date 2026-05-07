@@ -74,11 +74,108 @@ function Level_Select:on_enter(from, args)
 			})
 		)
 	end
+
+	self.calibration_button = collect_into(
+		self.ui_elements,
+		Button({
+			group = self.main,
+			layer = ui_interaction_layer.Level_Select,
+			x = gw * 0.9,
+			y = gh * 0.84,
+			button_text = "calibrate",
+			fg_color = "bg",
+			bg_color = "fg",
+			action = function(b)
+				b.locked = true
+				scene_transition(self, {
+					x = gw / 2,
+					y = gh / 2,
+					type = "fade",
+					speed = 1,
+					target = {
+						scene = Game,
+						name = "game",
+						args = {
+							clear_music = true,
+							level = self:load_level("calibration"),
+							player_units = {
+								{
+									type = Unit_Type.Calibration,
+									timeline = {
+										{ Timings.Empty },
+										{ Timings.Beat },
+
+										{ Timings.Empty },
+										{ Timings.Beat },
+
+										{ Timings.Empty },
+										{ Timings.Beat },
+
+										{ Timings.Empty },
+										{ Timings.Beat },
+									},
+								},
+							},
+							layer_has_music = true,
+						},
+					},
+					display = {
+						text = "loading calibration",
+						font = pixul_font,
+						alignment = "center",
+					},
+				})
+			end,
+		})
+	)
 end
 
 function Level_Select:update(dt)
 	self:update_game_object(dt * slow_amount)
 	self.main:update(dt)
+end
+
+function Level_Select:load_level(name)
+	local level_path = level_folder .. "/" .. name .. "/"
+
+	local metadata_chunk, err = love.filesystem.load(level_path .. "metadata.lua")
+	if not metadata_chunk then
+		error("Failed to load metadata.lua: " .. err)
+	end
+
+	local metadata = metadata_chunk()
+	if type(metadata) ~= "table" then
+		error("metadata.lua must return a table")
+	end
+
+	-- Load all PNGs in the folder
+	local rooms = {}
+	local songs = {}
+	local files = love.filesystem.getDirectoryItems(level_path)
+	for _, file in ipairs(files) do
+		local file_path = level_path .. file
+		if file:match("%.png$") then
+			local key = file:gsub("%.png$", "")
+			rooms[key] = ImageData(file_path)
+		elseif file:match("%.ogg") then
+			local key = file:gsub("%.ogg$", "")
+			songs[key] = Sound(file_path, music_tag, _, true)
+		end
+	end
+
+	-- calibration = Sound("temp/jim_combs-the-80s-called-they-want-their-synths-back-140535.ogg", music_tag),
+
+	local level = {
+		name = name,
+		rooms = rooms,
+		songs = songs,
+	}
+	for k, v in pairs(metadata) do
+		level[k] = v
+	end
+	-- print(table.tostring(level))
+
+	return level
 end
 
 function Level_Select:load_levels()

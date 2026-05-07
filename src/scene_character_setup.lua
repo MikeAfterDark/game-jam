@@ -262,7 +262,7 @@ function Character_Setup:set_stage(stage)
 								clear_music = true,
 								level = self.level,
 								player_units = self.group,
-								has_music = true,
+								layer_has_music = true,
 								music_type = "main",
 							},
 						},
