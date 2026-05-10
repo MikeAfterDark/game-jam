@@ -6,7 +6,8 @@ function Map:init(args)
 
 	self.grid = {}  -- for the tiles that make up the map
 	self.units = {} -- for the units that take actions
-	self.entities = {} -- for non-action objects that dont take up a cell and follow a pre-determined set of actions
+	self.entities = {} -- for non-action objects that dont
+	-- take up a cell and follow a pre-determined set of actions
 
 	self.rows = 10
 	self.cols = 10
@@ -129,6 +130,18 @@ function Map:react_to_hit(args)
 	self.spring:pull(0.2, 200, 10)
 	self.reaction_color = args.beat.action.color:clone():darken(0.3)
 	self.reaction_color_t = 0
+
+	-- print(table.tostring(args.beat))
+	print("hit accuracy: ", args.beat.press_accuracy)
+
+	Timing_Judgement({
+		group = self.group,
+		x = args.unit.x,
+		y = args.unit.y,
+		accuracy = args.beat.press_accuracy,
+		duration = 0.5,
+		size = self.cell_size,
+	})
 end
 
 function Map:all_enemies_act(time)
@@ -327,14 +340,32 @@ function rects_overlap(a, b) -- unit x unit collision check
 end
 
 function Map:draw()
-	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.y)
-	graphics.rectangle(self.x, self.y, self.cell_size * (self.rows + 4), self.cell_size * (self.cols + 4), 0, 0,
-		self.reaction_color)
+	local visual_center_x = self.cell_size * math.ceil(self.rows / 2)
+	local visual_center_y = self.cell_size * math.ceil(self.cols / 2)
+	local visual_x = self.x + visual_center_x
+	local visual_y = self.y + visual_center_y
+	graphics.push(visual_x, visual_y, self.r, self.spring.x, self.spring.y)
+	graphics.rectangle( --
+		visual_x,
+		visual_y,
+		self.cell_size * (self.rows + 4),
+		self.cell_size * (self.cols + 4),
+		0,
+		0,
+		self.reaction_color
+	)
 	graphics.pop()
 
-	graphics.push(self.x, self.y, 1 - self.r, self.spring.x, self.spring.y)
-	graphics.rectangle(self.x, self.y, self.cell_size * (self.rows + 2), self.cell_size * (self.cols + 2), 0, 0,
-		self.reaction_color)
+	graphics.push(visual_x, visual_y, 1 - self.r, self.spring.x, self.spring.y)
+	graphics.rectangle( --
+		visual_x,
+		visual_y,
+		self.cell_size * (self.rows + 2),
+		self.cell_size * (self.cols + 2),
+		0,
+		0,
+		self.reaction_color
+	)
 	graphics.pop()
 
 	graphics.push(self.x, self.y, 0)
@@ -424,4 +455,76 @@ function Map:pathfind(unit, x1, y1, x2, y2)
 	end
 
 	return x1, y1
+end
+
+--
+--
+--
+--
+--
+-- group = self.group,
+-- x = args.unit.x,
+-- y = args.unit.y,
+-- accuracy = args.beat.press_accuracy,
+-- duration = 0.5,
+-- size = self.cell_size,
+--
+Timing_Judgement = Object:extend()
+Timing_Judgement:implement(GameObject)
+function Timing_Judgement:init(args)
+	self:init_game_object(args)
+	-- self.rs = self.rs or 8
+	-- self.duration = self.duration or 0.05
+	-- self.color = self.color or fg[0]
+	self.opacity = 1
+
+	local text = self.accuracy < -0.8 and "[red]early"
+		or self.accuracy < -0.4 and "[orange]almost"
+		or self.accuracy < -0.2 and "[green]good"
+		or self.accuracy < 0.2 and "[yellow]perfect"
+		or self.accuracy < 0.4 and "[green]good"
+		or self.accuracy < 0.8 and "[orange]delayed"
+		or "[red]late"
+	self.text = Text({ { text = text, font = pixul_font, alignment = "center" } }, global_text_tags)
+	self.t:after(self.duration, function()
+		self.text.dead = true
+		self.text = nil
+
+		self.dead = true
+	end, "die")
+
+	self.t:tween(self.duration, self, { opacity = 0 }, math.cubic_in)
+	self.t:tween(self.duration, self, { y = self.y - self.size }, math.cubic_out)
+	return self
+end
+
+function Timing_Judgement:update(dt)
+	self:update_game_object(dt)
+
+	if self.text then
+		self.text:update(dt)
+	end
+end
+
+function Timing_Judgement:draw()
+	if self.text then
+		self.text:draw(self.x, self.y - self.size, 0, 1, 1, self.opacity)
+	end
+end
+
+function Timing_Judgement:scale_down(duration)
+	duration = duration or 0.2
+	self.t:cancel("die")
+	self.t:tween(self.duration, self, { rs = 0 }, math.cubic_in_out, function()
+		self.dead = true
+	end)
+	return self
+end
+
+function Timing_Judgement:change_color(delay_multiplier, target_color)
+	delay_multiplier = delay_multiplier or 0.5
+	self.t:after(delay_multiplier * self.duration, function()
+		self.color = target_color
+	end)
+	return self
 end

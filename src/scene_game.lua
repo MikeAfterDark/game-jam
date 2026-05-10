@@ -60,6 +60,7 @@ function Game:on_enter(from, args)
 
 	-- controls the unit locations, hp, collisions and fights
 	-- based on user input triggers
+	-- print(table.tostring(self.level))
 	local cell_size = gh * 0.08 * 1
 	self.map = Map({
 		group = self.main,
@@ -88,8 +89,29 @@ function Game:on_enter(from, args)
 		section_height = gh * 0.03,
 	})
 
+	self.is_calibration = self.level.id == "calibration"
+	self.calibration_hits = {}
+	self.audio_offset_text = collect_into(
+		self.game_ui_elements,
+		Text2({
+			group = self.ui,
+			x = gw * 0.5,
+			y = gh * 0.3,
+			lines = { { text = tostring(state.time_offset or "hello1"), font = pixul_font } },
+		})
+	)
+	self.visual_offset_text = collect_into(
+		self.game_ui_elements,
+		Text2({
+			group = self.ui,
+			x = gw * 0.5,
+			y = gh * 0.35,
+			lines = { { text = tostring(state.visual_offset or "hello2"), font = pixul_font } },
+		})
+	)
+
 	self.room = self.map:load_next_room() -- spawns player_units and enemies based off self.map.level
-	self.song = self:play_room_song()
+	self:play_room_song()
 
 	self.turn_order:insert(self.map:get_all_alive_units())
 	self:prep_turn()
@@ -142,7 +164,10 @@ local directions = {
 }
 
 function Game:play_room_song()
-	if main:get("settings").is_paused or (self.song and not self.song:isStopped()) then
+	if
+		main:get("settings").in_pause --
+		or (self.song and not self.song:isStopped())
+	then
 		return
 	end
 
@@ -181,7 +206,7 @@ function Game:update(dt)
 		if self.map.new_room_loaded then
 			local is_new_beat = self.timeline:beat_tracker(self.map:get_all_alive_units(), self.song_position)
 
-			if self.focused_unit.is_player then
+			if self.focused_unit.is_player and not self.is_calibration then
 				if input.up.pressed or input.down.pressed or input.left.pressed or input.right.pressed then
 					local hits = self.timeline:press(self.focused_unit, self.song_position, Input_Type.Direction)
 					if #hits > 0 then
@@ -240,7 +265,7 @@ function Game:update(dt)
 						end
 					end
 				end
-			elseif not state.enemies_act_every_beat then -- non-player turn
+			elseif not self.focused_unit.is_player and not self.is_calibration and not state.enemies_act_every_beat then -- non-player turn
 				local beats = self.timeline:try_hit_or_release(self.focused_unit, self.song_position)
 				if #beats > 0 then
 					-- sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
@@ -266,6 +291,32 @@ function Game:update(dt)
 
 			if self.timeline:is_end_of_turn(self.focused_unit, self.song_position) then
 				self:next_turn()
+			end
+
+			if self.is_calibration then
+				local any_input_pressed = input.up.pressed
+					or input.down.pressed
+					or input.left.pressed
+					or input.right.pressed
+					or input.arix.pressed
+					or input.myon.pressed
+
+				if any_input_pressed then -- care, can be spammed, might use up lots of memory
+					self.map:react_to_hit({ unit = self.focused_unit, beat = { id = random:uid(), action = Timings.Beat, time = self.song_position } })
+					local time_difference = self.timeline:how_on_beat_is(self.song_position)
+					table.insert(self.calibration_hits, { time = self.song_position, offset = time_difference })
+				end
+
+				local sum = table.reduce(self.calibration_hits, function(memo, v)
+					return memo + v.offset
+				end, 0)
+				local average = sum / #self.calibration_hits
+				local average_ms = math.ceil(average * 1000)
+				self.timeline:calibration_offset(average)
+				self.audio_offset_text:set_text({ { text = tostring(average_ms) .. "ms", font = pixul_font } })
+			else
+				self.audio_offset_text:set_text({ { text = tostring(state.time_offset) .. "s", font = pixul_font } })
+				self.visual_offset_text:set_text({ { text = tostring(state.visual_offset) .. "s", font = pixul_font } })
 			end
 		end
 	end

@@ -29,8 +29,11 @@ todo:
 - character units and enemies need better timelines lists
 
 
-
+- Pause/unpause song in scene_game
 - [QoL] Lag Sync-ing + Tutorial (2 in 1)
+    - Visual Latency and Audio Latency
+    - [WIP] can't test calibration cuz song seems to be drifitng from the bpm
+            find another audio file and check bpm, or else its a problem with insertion or calibration
 - [Idea] beats_per_measure where each turn is a measure
 - [Idea] Gamemodes with certain game state settings
 - [Mechanic] Bonuses for hitting notes/swapping characters

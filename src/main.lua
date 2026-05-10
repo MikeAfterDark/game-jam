@@ -137,7 +137,7 @@ function init()
 	-- GAMEPLAY SONGS
 	--
 	music_songs = {
-		main = { music.megalovania },
+		main = { sfx.extra },
 		tutorial = { sfx.extra },
 		stim_cave = { sfx.extra },
 		yellow = { sfx.extra },
@@ -333,6 +333,7 @@ function update(dt)
 end
 
 function draw()
+	-- print(love.timer.getTime())
 	renderer_draw(function()
 		main:draw()
 		-- main:shadow_draw()
@@ -589,6 +590,79 @@ function open_options(self)
 	)
 	button_offset = button_offset + button_distance
 
+	self.time_offset_text = collect_into(
+		self.options_ui_elements,
+		Text2({
+			group = ui_group,
+			x = column_x[column],
+			y = gh / 2 + button_offset - gh * 0.02,
+			lines = { { text = "[fg]Audio Offset: " .. tostring(math.ceil((state.time_offset or 0) * 1000)) .. "ms", font = small_pixul_font } },
+		})
+	)
+	self.time_offset_slider = collect_into(
+		self.options_ui_elements,
+		Slider({
+			group = ui_group,
+			x = column_x[column],
+			y = gh / 2 + button_offset,
+			length = gw * 0.20,
+			thickness = gw * 0.01,
+			fg_color = "fg",
+			bg_color = "bg",
+			rotation = 0,
+			max_sections = 30, -- recommend factors of length that are < length/2
+			spacing = slider_spacing,
+			value = state.time_offset or 0,
+			range_start = -0.15,
+			range_end = 0.15,
+			text = self.time_offset_text,
+			action = function(b, v)
+				state.time_offset = v
+				system.save_state()
+
+				b.text:set_text({ { text = "[fg]Audio Offset: " .. tostring(math.ceil(v * 1000)) .. "ms", font = small_pixul_font } })
+			end,
+		})
+	)
+	button_offset = button_offset + button_distance
+
+	self.visual_offset_text = collect_into(
+		self.options_ui_elements,
+		Text2({
+			group = ui_group,
+			x = column_x[column],
+			y = gh / 2 + button_offset - gh * 0.02,
+			lines = { { text = "[fg]Visual Offset: " .. tostring(math.ceil((state.visual_offset or 0) * 1000)) .. "ms", font = small_pixul_font } },
+		})
+	)
+	self.visual_offset_slider = collect_into(
+		self.options_ui_elements,
+		Slider({
+			group = ui_group,
+			x = column_x[column],
+			y = gh / 2 + button_offset,
+			length = gw * 0.20,
+			thickness = gw * 0.01,
+			fg_color = "fg",
+			bg_color = "bg",
+			rotation = 0,
+			max_sections = 30, -- recommend factors of length that are < length/2
+			spacing = slider_spacing,
+			value = state.visual_offset or 0,
+			range_start = -0.25,
+			range_end = 0.25,
+			text = self.visual_offset_text,
+			action = function(b, v)
+				state.visual_offset = v
+				system.save_state()
+
+				b.text:set_text({
+					{ text = "[fg]Visual Offset: " .. tostring(math.ceil((state.visual_offset or 0) * 1000)) .. "ms", font = small_pixul_font },
+				})
+			end,
+		})
+	)
+	button_offset = button_offset + button_distance
 	self.enemies_act_every_beat_button = collect_into(
 		self.options_ui_elements,
 		Button({
@@ -1500,6 +1574,11 @@ function scene_transition(self, args)
 					break
 				end
 				pop_ui_layer(self)
+			end
+
+			for i, func in ipairs(args.target.load_functions or {}) do
+				-- TODO: run these async and keep loading screen until all are complete
+				args.target.args[func.result_key] = func.action()
 			end
 
 			-- slow_amount = 1

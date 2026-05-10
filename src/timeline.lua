@@ -44,13 +44,14 @@ function Timeline:add(unit, current_time)
     -- self.beats[unit.id][#self.beats[unit.id]].time + self.beat_resolution
     local valid_current_time = (current_time > earliest_valid_time - 0.001) and current_time or earliest_valid_time
     local insert_time = self:beat_aligned_time(math.max(valid_current_time, earliest_valid_time))
+    -- insert_time = self:calibrated_time(insert_time)
 
     -- NOTE:
     -- beat.is_hold: bool, absence implies 'is_tap'
     -- beat.duration: int, no safety checks, make sure its within the timeline
     local last_time = 0 -- for tracking turns
     for i, beat_list in ipairs(unit.timeline) do
-        local time = insert_time + (i - 1) * self.beat_resolution
+        local time = insert_time + ((i - 1) * self.beat_resolution) + state.time_offset
         for j, beat in ipairs(beat_list) do
             local end_time = beat.duration and time + beat.duration * self.beat_resolution or nil -- for held beats
             last_time = math.max(last_time, end_time or time)
@@ -58,7 +59,7 @@ function Timeline:add(unit, current_time)
         end
     end
 
-    last_time = last_time + self.beat_resolution
+    last_time = last_time + self.beat_resolution - state.time_offset
     table.insert(self.beats_per_turn[unit.id], last_time)
     -- print("last time for", unit.type.name, last_time)
     -- print("Inserted", last_beat_time, valid_current_time, insert_time)
@@ -90,6 +91,7 @@ function Timeline:press(unit, current_time, input_type)
             )
         then
             v.pressed = current_time
+            v.press_accuracy = (current_time - v.time) / unit.hit_window
             modified = true
         end
         return v, modified
@@ -132,6 +134,11 @@ function Timeline:try_hit_or_release(unit, current_time)
     end
 
     return beats
+end
+
+function Timeline:how_on_beat_is(time)
+    local beat_time = self:beat_aligned_time(time)
+    return beat_time - time
 end
 
 -- returns the closest time aligned to the beat closest to 'time'
@@ -210,6 +217,15 @@ function Timeline:time_left_for(unit, current_time)
     return time_left
 end
 
+function Timeline:calibration_offset(time)
+    state.time_offset = time
+    system.save_state()
+end
+
+function Timeline:calibrated_time(time)
+    return time + (state.time_offset or 0)
+end
+
 function Timeline:draw()
     local units = self.draw_units
     if not units then
@@ -229,7 +245,6 @@ function Timeline:draw()
         if #self.beats[unit.id] > 0 then
             graphics.push(unit.x, unit.y, self.r, unit.spring.x, unit.spring.y)
 
-            -- TODO: unit.border doesnt work if it goes multiple times in a row
             local opacity = unit == main.current.focused_unit and 1 or 0.4
             graphics.circle(unit.x, unit.y, radius, Color(1, 1, 1, 0.8 * opacity), thickness * 1.2)
 
@@ -237,8 +252,8 @@ function Timeline:draw()
             local hit_window_angle = unit.hit_window * rotation_speed
             local border_angle = math.pi * 0.01
             for i, beat in ipairs(self.beats[unit.id]) do
-                local angle = (beat.time - self.time) * rotation_speed
-                local end_angle = ((beat.end_time or beat.time) - self.time) * rotation_speed
+                local angle = (beat.time - self.time + state.visual_offset) * rotation_speed
+                local end_angle = ((beat.end_time or beat.time) - self.time + state.visual_offset) * rotation_speed
 
                 if
                     beat.action ~= Timings.Empty and angle < visible_angle --[[ and not beat.end_time ]]

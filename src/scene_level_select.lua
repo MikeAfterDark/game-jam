@@ -62,6 +62,15 @@ function Level_Select:on_enter(from, args)
 						target = {
 							scene = Character_Setup,
 							name = "character_setup",
+							load_functions = {
+								{
+									result_key = "level",
+									action = function()
+										return self:load_level(tostring(i))
+									end,
+								},
+							},
+
 							args = { clear_music = true },
 						},
 						display = {
@@ -95,9 +104,16 @@ function Level_Select:on_enter(from, args)
 					target = {
 						scene = Game,
 						name = "game",
+						load_functions = {
+							{
+								result_key = "level",
+								action = function()
+									return self:load_level("calibration")
+								end,
+							},
+						},
 						args = {
 							clear_music = true,
-							level = self:load_level("calibration"),
 							player_units = {
 								{
 									type = Unit_Type.Calibration,
@@ -181,15 +197,15 @@ end
 function Level_Select:load_levels()
 	return {
 		{ name = "1" },
-		{ name = "2" },
-		{ name = "3" },
-		{ name = "4" },
-		{ name = "5" },
-		{ name = "6" },
-		{ name = "7" },
-		{ name = "8" },
-		{ name = "9" },
-		{ name = "10" },
+		-- { name = "2" },
+		-- { name = "3" },
+		-- { name = "4" },
+		-- { name = "5" },
+		-- { name = "6" },
+		-- { name = "7" },
+		-- { name = "8" },
+		-- { name = "9" },
+		-- { name = "10" },
 	}
 end
 

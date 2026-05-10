@@ -32,7 +32,7 @@ function Character_Setup:on_enter(from, args)
 		Character_Editing = 2,
 	}
 	self.stage = self.Stages.Group_Selection
-	self.level = self.level or { name = "default level", lead_in_beats = 4 }
+	self.level = args.level or { name = "default level", lead_in_beats = 4 }
 
 	self.group = {}
 	self.characters = self:load_characters()
@@ -263,7 +263,6 @@ function Character_Setup:set_stage(stage)
 								level = self.level,
 								player_units = self.group,
 								layer_has_music = true,
-								music_type = "main",
 							},
 						},
 						display = {

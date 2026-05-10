@@ -18,8 +18,11 @@ function Slider:init(args)
 	self.shape = Rectangle(self.x, self.y, args.length, args.thickness, args.rotation)
 
 	self.max_sections = args.max_sections
-	self.value = args.value
 	self.spacing = args.spacing
+	self.range_start = args.range_start or 0
+	self.range_end = args.range_end or 1
+	local range_diff = math.abs(self.range_start - self.range_end)
+	self.value = (args.value - self.range_start) / range_diff
 
 	self.interact_with_mouse = true
 	self.selected = false
@@ -77,7 +80,8 @@ function Slider:update(dt)
 			end
 
 			if self.action then
-				self:action(self.value)
+				local range_diff = math.abs(self.range_end - self.range_start)
+				self:action(self.range_start + range_diff * self.value)
 			end
 		end
 	end
