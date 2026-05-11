@@ -164,21 +164,21 @@ local directions = {
 }
 
 function Game:play_room_song()
-	if
-		main:get("settings").in_pause --
-		or (self.song and not self.song:isStopped())
-	then
-		return
+	if main:get("settings").in_pause and self.song then
+		self.song:pause()
+	elseif self.song then
+		self.song:resume()
+	elseif not self.song then
+		-- TODO: countdown here
+		local viable_songs = table.select(self.level.room_songs, function(v)
+			return table.contains(v.valid_maps, self.room.name)
+		end)
+		local song = table.random(viable_songs)
+		local bpm = song.bpm
+		self.timeline:set_bpm(bpm)
+
+		self.song = self.level.songs[song.song_name]:play({ volume = 0.35 })
 	end
-
-	local viable_songs = table.select(self.level.room_songs, function(v)
-		return table.contains(v.valid_maps, self.room.name)
-	end)
-	local song = table.random(viable_songs)
-	local bpm = song.bpm
-	self.timeline:set_bpm(bpm)
-
-	self.song = self.level.songs[song.song_name]:play({ volume = 0.35 })
 end
 
 function Game:update(dt)

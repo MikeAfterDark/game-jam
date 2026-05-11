@@ -140,7 +140,7 @@ end
 
 function Timeline:how_on_beat_is(time)
     local beat_time = self:beat_aligned_time(time)
-    return beat_time - time
+    return time - beat_time
 end
 
 -- returns the closest time aligned to the beat closest to 'time'
