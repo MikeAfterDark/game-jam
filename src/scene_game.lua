@@ -184,11 +184,11 @@ end
 function Game:update(dt)
 	self:play_room_song()
 
-	if input.z.pressed and self.pitch > 0.1 then
-		self.pitch = self.pitch - 0.1
+	if input.z.pressed then
+		self.pitch = self.pitch / 2
 	end
-	if input.x.pressed then
-		self.pitch = self.pitch + 0.1
+	if input.x.pressed and self.pitch < 10 then
+		self.pitch = self.pitch * 2
 	end
 	self.song._source:setPitch(self.pitch)
 
@@ -204,14 +204,21 @@ function Game:update(dt)
 		end
 
 		if self.map.new_room_loaded then
-			local is_new_beat = self.timeline:beat_tracker(self.map:get_all_alive_units(), self.song_position)
+			local is_new_beat, missed = self.timeline:beat_tracker(self.map:get_all_alive_units(), self.song_position)
+			-- if is_new_beat then
+			-- 	self.map:react_to_beat()
+			-- end
+			--
+			-- if missed then
+			-- 	self.map:react_to_miss({ unit = self.focused_unit })
+			-- end
 
 			if self.focused_unit.is_player and not self.is_calibration then
 				if input.up.pressed or input.down.pressed or input.left.pressed or input.right.pressed then
 					local hits = self.timeline:press(self.focused_unit, self.song_position, Input_Type.Direction)
 					if #hits > 0 then
 						-- print("tap beat pressed!", self.song_position, hits[1].id)
-						sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+						-- sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
 						self.map:react_to_hit({ unit = self.focused_unit, beat = hits[1] }) -- WARN: overlaps get ignored
 
 						for i, beat in ipairs(hits) do
@@ -236,7 +243,7 @@ function Game:update(dt)
 				if input.arix.released then
 					local releases = self.timeline:release(self.focused_unit, self.song_position, Input_Type.Arix)
 					if #releases > 0 then
-						sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+						-- sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
 						self.map:react_to_hit({ unit = self.focused_unit, beat = releases[1] }) -- WARN: overlaps get ignored
 						for i, beat in ipairs(releases) do
 							-- consume the held beat
@@ -256,7 +263,7 @@ function Game:update(dt)
 					local releases = self.timeline:release(self.focused_unit, self.song_position, Input_Type.Myon)
 
 					if #releases > 0 then
-						sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
+						-- sfx.metronome:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
 						self.map:react_to_hit({ unit = self.focused_unit, beat = releases[1] }) -- WARN: overlaps get ignored
 						for i, beat in ipairs(releases) do
 							-- consume the held beat
@@ -302,7 +309,7 @@ function Game:update(dt)
 					or input.myon.pressed
 
 				if any_input_pressed then -- care, can be spammed, might use up lots of memory
-					self.map:react_to_hit({ unit = self.focused_unit, beat = { id = random:uid(), action = Timings.Beat, time = self.song_position } })
+					-- self.map:react_to_hit({ unit = self.focused_unit, beat = { id = random:uid(), action = Timings.Beat, time = self.song_position } })
 					local time_difference = self.timeline:how_on_beat_is(self.song_position)
 					table.insert(self.calibration_hits, { time = self.song_position, offset = time_difference })
 				end

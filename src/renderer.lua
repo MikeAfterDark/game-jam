@@ -140,6 +140,11 @@ end
 
 local invisible = Color(1, 1, 1, 0)
 global_text_tags = {
+	green1 = TextTag({
+		draw = function(c, i, text)
+			graphics.set_color(green1[0])
+		end,
+	}),
 	p_blue1 = TextTag({
 		draw = function(c, i, text)
 			graphics.set_color(p_blue1[0])

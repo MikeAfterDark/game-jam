@@ -52,9 +52,11 @@ function Timeline:add(unit, current_time)
     local last_time = 0 -- for tracking turns
     for i, beat_list in ipairs(unit.timeline) do
         local time = insert_time + ((i - 1) * self.beat_resolution) + state.time_offset
+        local color = random:color()
         for j, beat in ipairs(beat_list) do
             local end_time = beat.duration and time + beat.duration * self.beat_resolution or nil -- for held beats
             last_time = math.max(last_time, end_time or time)
+
             table.insert(self.beats[unit.id], { id = random:uid(), action = beat, time = time, end_time = end_time })
         end
     end
@@ -161,6 +163,7 @@ function Timeline:beat_tracker(units, current_time)
     -- > get all non-pressed tap beats and pop any that are past their time
     -- > get all held beats and pop any with end_time too late for each unit's hit_window
 
+    local miss = false
     for i, unit in ipairs(units) do
         self.beats[unit.id] = self.beats[unit.id] or {}
 
@@ -169,13 +172,16 @@ function Timeline:beat_tracker(units, current_time)
         misses, self.beats[unit.id] = table.reject(self.beats[unit.id], function(v)
             local missed_hold = v.end_time and current_time > v.end_time + hit_window
             local missed_tap = not v.end_time and not v.pressed and current_time > v.time + hit_window
+            local empty = v.action.id == "Empty"
 
-            return missed_hold or missed_tap
+            return not empty and (missed_hold or missed_tap)
         end)
 
         if #misses > 0 then
             -- TODO: miss notification
             -- maybe unit:miss()?
+            -- print(table.tostring(misses))
+            miss = true
 
             -- print("unit: ", unit.type.name, "missed beat at", time, "beat", misses[1].id)
         end
@@ -200,7 +206,7 @@ function Timeline:beat_tracker(units, current_time)
     local is_new_beat = beat_num ~= self.beat_number
     self.beat_number = beat_num
 
-    return is_new_beat
+    return is_new_beat, miss
 end
 
 function Timeline:is_end_of_turn(unit, current_time)
@@ -252,8 +258,8 @@ function Timeline:draw()
             local hit_window_angle = unit.hit_window * rotation_speed
             local border_angle = math.pi * 0.01
             for i, beat in ipairs(self.beats[unit.id]) do
-                local angle = (beat.time - self.time + state.visual_offset) * rotation_speed
-                local end_angle = ((beat.end_time or beat.time) - self.time + state.visual_offset) * rotation_speed
+                local angle = (beat.time - self.time) * rotation_speed
+                local end_angle = ((beat.end_time or beat.time) - self.time) * rotation_speed
 
                 if
                     beat.action ~= Timings.Empty and angle < visible_angle --[[ and not beat.end_time ]]

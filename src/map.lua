@@ -29,7 +29,7 @@ function Map:init(args)
 			cell_size = self.cell_size,
 			visible = false,
 			is_player = true,
-			hit_window = 0.1,
+			hit_window = 0.2,
 		})
 
 		table.insert(self.units, new_unit)
@@ -132,7 +132,8 @@ function Map:react_to_hit(args)
 	self.reaction_color_t = 0
 
 	-- print(table.tostring(args.beat))
-	print("hit accuracy: ", args.beat.press_accuracy)
+	self.counter = (self.counter or 0) + 1
+	print(self.counter .. ", " .. args.beat.press_accuracy)
 
 	Timing_Judgement({
 		group = self.group,
@@ -142,6 +143,17 @@ function Map:react_to_hit(args)
 		duration = 0.5,
 		size = self.cell_size,
 	})
+end
+
+function Map:react_to_beat()
+	-- if not args.beat then
+	-- 	return
+	-- end
+
+	-- args.unit.spring:pull(0.2, 200, 10)
+	self.spring:pull(0.2, 200, 10)
+	self.reaction_color = Color(0.3, 0.9, 0.2, 1)
+	self.reaction_color_t = 0
 end
 
 function Map:all_enemies_act(time)
@@ -157,6 +169,7 @@ end
 function Map:react_to_miss(args)
 	args.unit.spring:pull(0.1, 100, 10)
 	self.spring:pull(0.1, 100, 10)
+	self.counter = (self.counter or 0) + 1
 end
 
 function Map:beat_tracker(time, is_new_beat)
@@ -480,9 +493,9 @@ function Timing_Judgement:init(args)
 
 	local text = self.accuracy < -0.8 and "[red]early"
 		or self.accuracy < -0.4 and "[orange]almost"
-		or self.accuracy < -0.2 and "[green]good"
+		or self.accuracy < -0.2 and "[green1]good"
 		or self.accuracy < 0.2 and "[yellow]perfect"
-		or self.accuracy < 0.4 and "[green]good"
+		or self.accuracy < 0.4 and "[green1]good"
 		or self.accuracy < 0.8 and "[orange]delayed"
 		or "[red]late"
 	self.text = Text({ { text = text, font = pixul_font, alignment = "center" } }, global_text_tags)

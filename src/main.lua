@@ -295,6 +295,9 @@ function init()
 	state.fullscreen = state.fullscreen or false
 	state.vsync = state.vsync or false
 
+	state.time_offset = state.time_offset or 0
+	state.visual_offset = state.visual_offset or 0
+
 	state.enemies_act_every_beat = state.enemies_act_every_beat or false
 	state.enemies_act_at_end_of_round = state.enemies_act_at_end_of_round or false
 	state.enemies_only_move_when_player_doesnt = state.enemies_only_move_when_player_doesnt or false
@@ -610,11 +613,11 @@ function open_options(self)
 			fg_color = "fg",
 			bg_color = "bg",
 			rotation = 0,
-			max_sections = 30, -- recommend factors of length that are < length/2
-			spacing = slider_spacing,
+			max_sections = 50, -- recommend factors of length that are < length/2
+			spacing = slider_spacing - 6,
 			value = state.time_offset or 0,
-			range_start = -0.15,
-			range_end = 0.15,
+			range_start = -0.25,
+			range_end = 0.25,
 			text = self.time_offset_text,
 			action = function(b, v)
 				state.time_offset = v
@@ -646,8 +649,8 @@ function open_options(self)
 			fg_color = "fg",
 			bg_color = "bg",
 			rotation = 0,
-			max_sections = 30, -- recommend factors of length that are < length/2
-			spacing = slider_spacing,
+			max_sections = 50, -- recommend factors of length that are < length/2
+			spacing = slider_spacing - 6,
 			value = state.visual_offset or 0,
 			range_start = -0.25,
 			range_end = 0.25,
