@@ -1045,6 +1045,7 @@ end
 
 function close_pause(self)
 	self.in_pause = false
+	slow_amount = 1
 	pop_ui_layer(self)
 
 	system.save_state()
@@ -1064,7 +1065,6 @@ function pause_game(self)
 		ui_elements = self.paused_ui_elements,
 	})
 
-	-- trigger:tween(0.0, _G, { slow_amount = 0 }, math.linear, function()
 	slow_amount = 0
 
 	self.paused_menu_title_text = collect_into(

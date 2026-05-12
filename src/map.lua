@@ -29,7 +29,7 @@ function Map:init(args)
 			cell_size = self.cell_size,
 			visible = false,
 			is_player = true,
-			hit_window = 0.2,
+			hit_window = 0.1,
 		})
 
 		table.insert(self.units, new_unit)

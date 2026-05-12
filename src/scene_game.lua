@@ -164,38 +164,81 @@ local directions = {
 }
 
 function Game:play_room_song()
-	if main:get("settings").in_pause and self.song then
-		self.song:pause()
-	elseif self.song then
-		self.song:resume()
-	elseif not self.song then
-		-- TODO: countdown here
+	if self.in_countdown then
+		return
+	end
+
+	if main:get("settings").in_pause then
+		if self.song and not self.song:isStopped() then
+			self.song:pause()
+		end
+		return
+	end
+
+	if self.song and self.song._source:isPlaying() then
+		return
+	end
+
+	self.in_countdown = true
+	local song = nil
+	if not self.song then
 		local viable_songs = table.select(self.level.room_songs, function(v)
 			return table.contains(v.valid_maps, self.room.name)
 		end)
-		local song = table.random(viable_songs)
+		song = table.random(viable_songs)
 		local bpm = song.bpm
 		self.timeline:set_bpm(bpm)
-
-		self.song = self.level.songs[song.song_name]:play({ volume = 0.35 })
 	end
+
+	local next_song_beat = self.timeline:get_next_beat_time(self.song_position)
+	local beat_duration = self.timeline:get_beat_duration()
+
+	local countdown_beats = 3
+	for i = 0, countdown_beats do
+		local beat_time = next_song_beat + (i * beat_duration)
+		local delay = beat_time - self.song_position
+
+		trigger:after(delay, function()
+			sfx.metronome:play({
+				pitch = random:float(0.95, 1.05),
+				volume = 0.35,
+			})
+		end)
+	end
+
+	-- Start song exactly after countdown
+	local song_start_time = next_song_beat + (countdown_beats * beat_duration)
+	local start_delay = song_start_time - self.song_position
+
+	trigger:after(start_delay, function()
+		self.in_countdown = false
+
+		if self.song then
+			self.song:resume()
+		else
+			self.song = self.level.songs[song.song_name]:play({
+				volume = 0.35,
+			})
+		end
+	end)
 end
 
 function Game:update(dt)
 	self:play_room_song()
 
-	if input.z.pressed then
-		self.pitch = self.pitch / 2
+	if input.z.pressed and self.pitch > 0.1 then
+		self.pitch = self.pitch - 0.1
 	end
 	if input.x.pressed and self.pitch < 10 then
-		self.pitch = self.pitch * 2
+		self.pitch = self.pitch + 0.1
 	end
-	self.song._source:setPitch(self.pitch)
 
 	if not main:get("settings").in_pause and not self.won then
 		run_time = run_time + dt
 
 		if self.song and not self.song:isStopped() then
+			self.song._source:setPitch(self.pitch)
+
 			local song_time = self.song._source:tell()
 			local delta = song_time - (self.last_song_time or song_time)
 			self.last_song_time = song_time

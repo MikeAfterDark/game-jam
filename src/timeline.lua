@@ -143,6 +143,10 @@ function Timeline:how_on_beat_is(time)
     return time - beat_time
 end
 
+function Timeline:get_beat_duration()
+    return self.new_beat_resolution
+end
+
 -- returns the closest time aligned to the beat closest to 'time'
 function Timeline:beat_aligned_time(current_time)
     local prev_beat = math.floor(current_time / self.beat_resolution)
@@ -156,6 +160,12 @@ function Timeline:beat_aligned_time(current_time)
 
     -- print("Nearest: ", prev_time, time, next_time)
     return prev_diff < next_diff and prev_time or next_time
+end
+
+function Timeline:get_next_beat_time(current_time)
+    local next_beat = math.ceil(current_time / self.beat_resolution)
+    local next_time = next_beat * self.beat_resolution
+    return next_time
 end
 
 function Timeline:beat_tracker(units, current_time)
