@@ -164,7 +164,7 @@ local directions = {
 }
 
 function Game:play_room_song()
-	if self.in_countdown then
+	if self.in_countdown or main:get("settings").transitioning then
 		return
 	end
 

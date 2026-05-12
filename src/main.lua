@@ -1144,7 +1144,6 @@ function pause_game(self)
 			fg_color = "bg",
 			bg_color = "orange",
 			action = function(b)
-				close_pause(self)
 				scene_transition(self, {
 					x = gw / 2,
 					y = gh / 2,
@@ -1160,6 +1159,7 @@ function pause_game(self)
 						alignment = "center",
 					},
 				})
+				close_pause(self)
 			end,
 		})
 	)
