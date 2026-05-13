@@ -60,9 +60,11 @@ function Map:load_next_room()
 	self.room_name = self.level.map_order[self.room_index]
 	self.room = self.level.rooms and self.level.rooms[self.room_name] or { id = "default", enemies = { {}, {}, {} } }
 
-	self.rows, self.cols = self.room.w, self.room.h
+	-- level limitation: sprite must be square, layers must be added to the right in a spritesheet
+	self.rows, self.cols = self.room.h, self.room.h
 	self.grid = {}
 
+	-- setup the base layer
 	for x = 0, self.rows - 1 do
 		local row = {}
 		for y = 0, self.cols - 1 do
@@ -71,6 +73,8 @@ function Map:load_next_room()
 		end
 		self.grid[x + 1] = row
 	end
+
+	-- setup entity/unit layer
 
 	-- load the next room from the level data
 	-- for i = 1, self.rows do
