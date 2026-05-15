@@ -14,7 +14,6 @@ function table.copy(t)
   return copy
 end
 
-
 -- Copies the table shallowly, meaning that tables inside the table will not be created anew, and only be referenced in the copy
 function table.shallow_copy(t)
   local copy = {}
@@ -23,7 +22,6 @@ function table.shallow_copy(t)
   end
   return copy
 end
-
 
 -- t = {}
 -- table.array(t, 5) -> {1, 2, 3, 4, 5}
@@ -44,12 +42,11 @@ function table.get(t, i, j)
   if j < 0 then j = #t + j + 1 end
   if i == j then return t[i] end
   local out = {}
-  for k = i, j, math.sign(j-i) do
+  for k = i, j, math.sign(j - i) do
     table.push(out, t[k])
   end
   return out
 end
-
 
 -- t = {"a", "b", "c", "d"}
 -- table.set(t, 1, 1) -> {1, "b", "c", "d"}
@@ -57,15 +54,18 @@ end
 -- table.set(t, 2, -1, 3) -> {"a", 3, 3, 3}
 function table.set(t, i, j, v)
   if i < 0 then i = #t + i + 1 end
-  if not v then t[i] = j; return t end
+  if not v then
+    t[i] = j; return t
+  end
   if j < 0 then j = #t + j + 1 end
-  if i == j then t[i] = v; return t end
-  for k = i, j, math.sign(j-i) do
+  if i == j then
+    t[i] = v; return t
+  end
+  for k = i, j, math.sign(j - i) do
     t[k] = v
   end
   return t
 end
-
 
 -- Returns the index of the first instance of value v
 -- t = {4, 3, 2, 4, "a", 1, "a"}
@@ -79,14 +79,12 @@ function table.index(t, v)
   end
 end
 
-
 -- Returns the last value of the table
 -- t = {1, 2, 3, 4}
 -- table.back(t) -> 4
 function table.back(t)
   return t[#t]
 end
-
 
 -- Returns the first n values
 -- t = {4, 3, 2, 1}
@@ -98,13 +96,16 @@ function table.head(t, n)
   for i = 1, (n or 1) do
     table.push(out, t[i])
   end
-  if n then return out
+  if n then
+    return out
   else
-    if #out == 1 then return out[1]
-    else return out end
+    if #out == 1 then
+      return out[1]
+    else
+      return out
+    end
   end
 end
-
 
 -- Returns the last n values
 -- t = {5, 4, 3, 2, 1}
@@ -113,16 +114,19 @@ end
 -- If n is defined then it always returns a table, even with only 1 value.
 function table.tail(t, n)
   local out = {}
-  for i = #t-(n or #t-1)+1, #t do
+  for i = #t - (n or #t - 1) + 1, #t do
     table.push(out, t[i])
   end
-  if n then return out
+  if n then
+    return out
   else
-    if #out == 1 then return out[1]
-    else return out end
+    if #out == 1 then
+      return out[1]
+    else
+      return out
+    end
   end
 end
-
 
 -- Inserts value at the end of the table
 -- t = {1, 2}
@@ -131,7 +135,6 @@ function table.push(t, v)
   table.insert(t, v)
   return t
 end
-
 
 -- Removes the first n values and returns them as well as the modified table
 -- t = {4, 3, 2, 1}
@@ -142,17 +145,19 @@ function table.shift(t, n)
   for i = 1, (n or 1) do
     table.insert(out, table.remove(t, 1))
   end
-  if #out == 1 then return out[1], t
-  else return out, t end
+  if #out == 1 then
+    return out[1], t
+  else
+    return out, t
+  end
 end
-
 
 -- Inserts values at the start of the table
 -- t = {3, 4}
 -- table.unshift(t, 1, 2) -> {1, 2, 3, 4}
 function table.unshift(t, ...)
-  for j, v in ipairs({...}) do
-    table.insert(t, 1+j-1, v)
+  for j, v in ipairs({ ... }) do
+    table.insert(t, 1 + j - 1, v)
   end
   return t
 end
@@ -168,16 +173,15 @@ end
 -- t = {1, 2, 3, 4}
 -- table.pop(t, 3) -> {1, 2, 4}
 function table.pop_item(t, v)
-    for i = 1, #t do
-        if t[i] == v then
-            local removed = t[i]
-            table.remove(t, i)
-            return removed
-        end
+  for i = 1, #t do
+    if t[i] == v then
+      local removed = t[i]
+      table.remove(t, i)
+      return removed
     end
-    return nil
+  end
+  return nil
 end
-
 
 -- Deletes all instances of value v
 -- t = {1, 1, 2, 3, 2, 3, 4, 4}
@@ -201,7 +205,6 @@ function table.delete(t, v)
   return t
 end
 
-
 -- Deletes the elements in the given range and returns them as well as the modified table
 -- t = {1, 2, 3}
 -- table.slice(t, 1) -> 1, {2, 3}
@@ -212,13 +215,15 @@ function table.slice(t, i, j)
   if j < 0 then j = #t + j + 1 end
   if i == j then return t[i] end
   local out = {}
-  for k = j, i, -math.sign(j-i) do
+  for k = j, i, -math.sign(j - i) do
     table.insert(out, table.remove(t, k))
   end
-  if #out == 1 then return out[1], t
-  else return table.reverse(out), t end
+  if #out == 1 then
+    return out[1], t
+  else
+    return table.reverse(out), t
+  end
 end
-
 
 -- Removes duplicates
 -- t = {1, 1, 2, 2, 3, 3}
@@ -238,7 +243,6 @@ function table.unify(t, f)
   return t
 end
 
-
 -- Counts the number of elements in the table
 -- t = {1, 1, 5, 5, 4, 1, 3, 2, 0, 9, 8, 5, 1, 5, 5, 4, 6}
 -- table.count(t, 1) -> 4
@@ -255,7 +259,6 @@ function table.count(t, v)
   return n
 end
 
-
 -- Applies function f to all table elements and replaces each element for the value returned by f
 function table.map(t, f, ...)
   for k, v in ipairs(t) do
@@ -263,7 +266,6 @@ function table.map(t, f, ...)
   end
   return t
 end
-
 
 -- Applies function f to all table elements resulting in a single output value
 -- t = {1, 2, 3}
@@ -288,7 +290,6 @@ function table.reduce(t, f, dv, ...)
   return memo
 end
 
-
 -- Applies function f to all array elements without changing the array
 function table.foreach(t, f, ...)
   for k, v in ipairs(t) do
@@ -296,7 +297,6 @@ function table.foreach(t, f, ...)
   end
   return t
 end
-
 
 -- Applies function f to all array elements and adds the results to a new array
 function table.foreachn(t, f, ...)
@@ -306,7 +306,6 @@ function table.foreachn(t, f, ...)
   end
   return out
 end
-
 
 -- Applies function f to all array elements, modifies array and adds the results to a new array
 function table.foreachmap(t, f, ...)
@@ -321,7 +320,6 @@ function table.foreachmap(t, f, ...)
   return out
 end
 
-
 -- Applies filter function f which removes all elements that pass the filter and returns them as well as the modified table
 -- t = {1, 2, 3, 4}
 -- table.reject(t, function(v) return v >= 3 end) -> {3, 4}, {1, 2}
@@ -333,9 +331,8 @@ function table.reject(t, f, ...)
       table.insert(out, table.remove(t, i))
     end
   end
-   return table.reverse(out), t 
+  return table.reverse(out), t
 end
-
 
 -- Applies filter function f which collects all elements that pass the filter and returns them; the original table is not modified
 -- t = {1, 2, 3, 4}
@@ -351,7 +348,6 @@ function table.select(t, f, ...)
   return out
 end
 
-
 -- Returns true if any values in the table pass the test
 function table.any(t, f, ...)
   for i, v in ipairs(t) do
@@ -360,7 +356,6 @@ function table.any(t, f, ...)
     end
   end
 end
-
 
 -- Returns true if all values in the table pass the test
 function table.all(t, f, ...)
@@ -371,7 +366,6 @@ function table.all(t, f, ...)
   end
   return true
 end
-
 
 -- Check if table contains value v and return its index
 -- If value v is a function instead then it checks according to the check performed by that function
@@ -390,7 +384,6 @@ function table.contains(t, v)
     end
   end
 end
-
 
 -- t = {{1, 2}, {3, {4, 5}}, {6, 7}, 8}
 -- table.flatten(t) -> {1, 2, 3, 4, 5, 6, 7, 8}
@@ -411,7 +404,6 @@ function table.flatten(t, shallow)
   return out
 end
 
-
 -- t = {1, 2, 3, 4}
 -- table.tostring(t) -> '{[1] = 1, [2] = 2, [3] = 3, [4] = 4}'
 function table.tostring(t)
@@ -421,13 +413,17 @@ function table.tostring(t)
       if type(k) ~= "number" then k = '"' .. k .. '"' end
       str = str .. "[" .. k .. "] = " .. table.tostring(v) .. ", "
     end
-    if str ~= "{" then return str:sub(1, -3) .. "}"
-    else return str .. "}" end
+    if str ~= "{" then
+      return str:sub(1, -3) .. "}"
+    else
+      return str .. "}"
+    end
   elseif type(t) == "string" then
     return '"' .. tostring(t) .. '"'
-  else return tostring(t) end
+  else
+    return tostring(t)
+  end
 end
-
 
 -- Returns the first n values, same as head
 -- t = {4, 3, 2, 1}
@@ -439,20 +435,21 @@ function table.first(t, n)
   for i = 1, (n or 1) do
     table.push(out, t[i])
   end
-  if #out == 1 then return out[1]
-  else return out end
+  if #out == 1 then
+    return out[1]
+  else
+    return out
+  end
 end
 
-
 function table.first2(t, n)
-  if n == 1 then return {t[1]} end
+  if n == 1 then return { t[1] } end
   local out = {}
   for i = 1, (n or 1) do
     table.push(out, t[i])
   end
   return out
 end
-
 
 -- Returns the last n values, same as tail
 -- t = {4, 3, 2, 1}
@@ -461,13 +458,15 @@ end
 function table.last(t, n)
   if n == 1 then return t[#t] end
   local out = {}
-  for i = #t-n+1, #t do
+  for i = #t - n + 1, #t do
     table.push(out, t[i])
   end
-  if #out == 1 then return out[1]
-  else return out end
+  if #out == 1 then
+    return out[1]
+  else
+    return out
+  end
 end
-
 
 -- t = {"a", "b", "c", "d"}
 -- table.reverse(t) -> {"d", "c", "b", "a"}
@@ -479,12 +478,11 @@ function table.reverse(t, i, j)
   if not j then j = #t end
   if j < 0 then j = #t + j + 1 end
   if i == j then return t end
-  for k = 0, (j-i+1)/2-1, math.sign(j-i) do
-    t[i+k], t[j-k] = t[j-k], t[i+k]
+  for k = 0, (j - i + 1) / 2 - 1, math.sign(j - i) do
+    t[i + k], t[j - k] = t[j - k], t[i + k]
   end
   return t
 end
-
 
 -- Shifts the table to the right n times, the last value is warped over to become the first value
 -- t = {1, 2, 3, 4}
@@ -494,11 +492,10 @@ function table.rotate(t, n)
   if not n then n = 1 end
   if n < 0 then n = #t + n end
   t = table.reverse(t, 1, #t)
-  t = table.reverse(t, 1, #t-n)
-  t = table.reverse(t, #t-n+1, #t)
+  t = table.reverse(t, 1, #t - n)
+  t = table.reverse(t, #t - n + 1, #t)
   return t
 end
-
 
 -- Returns a random value from the table
 -- t = {1, 2, 3}
@@ -507,6 +504,12 @@ function table.random(t)
   return t[love.math.random(1, #t)]
 end
 
+-- Returns a removed random value from the table
+-- t = {1, 2, 3}
+-- table.random(t) -> 1 or 2 or 3 randomly
+function table.pop_random(t)
+  return table.remove(t, love.math.random(1, #t))
+end
 
 -- t = {1, 2, 3, 4, 5}
 -- table.shuffle(t) -> {3, 4, 1, 2, 5}
@@ -519,7 +522,6 @@ function table.shuffle(t)
   end
   return t
 end
-
 
 -- Merges both tables based on their indexes, if the second table has values in the same indexes as the first table then those will overwrite the first values.
 -- t1 = {1, 2, ['a'] = 3, ['b'] = function() end}
@@ -537,8 +539,8 @@ end
 -- t2 = {4, 5, 6}
 -- table.concatenate(t1, t2) -> result is now {1, 2, 3, 4, 5, 6}
 function table.append(t1, t2)
-    for i = 1, #t2 do
-        t1[#t1 + 1] = t2[i]
-    end
-    return t1
+  for i = 1, #t2 do
+    t1[#t1 + 1] = t2[i]
+  end
+  return t1
 end

@@ -2,6 +2,7 @@ Unit = Object:extend()
 Unit:implement(GameObject)
 function Unit:init(args)
 	self:init_game_object(args)
+	self.hfx:add("hit", 1, 1, 200, 20)
 
 	self.hp = self.type.hp or random:int(2, 6)
 	self.speed = self.type.speed or random:int(1, 3)
@@ -51,7 +52,7 @@ function Unit:highlight(on)
 			self.border_color = Color(0, 0, 0, 1)
 		end
 		self.text:set_text({
-			{ text = "[bg]" .. self.type.name,             font = small_pixul_font },
+			{ text = "[bg]" .. self.type.name, font = small_pixul_font },
 			{ text = "[bg]" .. tostring(self.beats_count), font = pixul_font },
 		})
 	end
@@ -59,7 +60,7 @@ end
 
 function Unit:beats_remaining(beats)
 	self.text:set_text({
-		{ text = "[bg]" .. self.type.name,      font = small_pixul_font },
+		{ text = "[bg]" .. self.type.name, font = small_pixul_font },
 		{ text = "[bg]" .. tostring(beats + 1), font = pixul_font },
 	})
 end
@@ -100,7 +101,8 @@ function Unit:get_next_beat() -- for main.current.enemies_act_every_beat == true
 end
 
 function Unit:draw()
-	graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
+	-- graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
+	graphics.push(self.x, self.y, 0, self.hfx.hit.x, self.hfx.hit.x)
 
 	if self.visible then
 		local x = self.x --+ (self.tile_x - 1) * self.cell_size + width / 2
@@ -111,19 +113,18 @@ function Unit:draw()
 		local border_color = self.is_player and self.border_color or Color(1, 0, 0, 1)
 
 		if self.border > 0 then
-			graphics.rectangle(x, y, self.width - visual_shrink + border_size, self.height - visual_shrink + border_size,
-				2, 2, border_color)
+			graphics.rectangle(x, y, self.width - visual_shrink + border_size, self.height - visual_shrink + border_size, 2, 2, border_color)
 		end
 
 		local black_outline_size = 5
-		graphics.rectangle(x, y, self.width - visual_shrink + black_outline_size,
-			self.height - visual_shrink + black_outline_size, 2, 2, Color(0, 0, 0, 1))
+		graphics.rectangle(x, y, self.width - visual_shrink + black_outline_size, self.height - visual_shrink + black_outline_size, 2, 2, Color(0, 0, 0, 1))
 		graphics.rectangle(x, y, self.width - visual_shrink, self.height - visual_shrink, 2, 2, self.color)
 
 		self.text:draw()
 	end
 
 	graphics.pop()
+	-- graphics.pop()
 end
 
 Unit_Type = {

@@ -4,10 +4,13 @@ Map:implement(GameObject)
 function Map:init(args)
 	self:init_game_object(args)
 
-	self.grid = {}  -- for the tiles that make up the map
-	self.units = {} -- for the units that take actions
-	self.entities = {} -- for non-action objects that dont
+	-- for the tiles that make up the map
+	self.grid = {}
+	-- for the units that take actions
+	self.units = {}
+	-- for non-action objects that dont
 	-- take up a cell and follow a pre-determined set of actions
+	self.entities = {}
 
 	self.rows = 10
 	self.cols = 10
@@ -43,11 +46,34 @@ end
 function Map:update(dt)
 	self:update_game_object(dt)
 
-	local speed = 0.1
+	local color_shift_rate = 0.1
 	if self.reaction_color_t < 1 then
-		self.reaction_color_t = self.reaction_color_t + dt * speed
+		self.reaction_color_t = self.reaction_color_t + dt * color_shift_rate
 	end
 	self.reaction_color = self.reaction_color:lerp(self.base_reaction_color, math.linear, self.reaction_color_t)
+
+	for _, entity in pairs(self.entities) do
+		if entity:is(Projectile) then
+			local x = math.floor(entity.tile_x)
+			local y = math.floor(entity.tile_y)
+			if x > 0 and y > 0 and x < self.cols and y < self.rows then
+				local cell = self.grid[x][y]
+				if cell and cell.unit then
+					if entity.source.is_player ~= cell.unit.is_player then
+						cell.unit.hfx:use("hit", 0.2)
+						entity.dead = true
+					end
+					-- possible behaviours for hitting a unit:
+					-- > ignore and pass through
+					-- > collide and dissapear
+					--		> can affect the unit
+					--		> doesn't affect the unit
+				end
+			end
+		end
+	end
+
+	-- todo: clear all dead entities from self.entities
 end
 
 function Map:load_next_room()
@@ -62,6 +88,7 @@ function Map:load_next_room()
 
 	-- level limitation: sprite must be square, layers must be added to the right in a spritesheet
 	self.rows, self.cols = self.room.h, self.room.h
+	local layers = self.room.w / self.cols
 	self.grid = {}
 
 	-- setup the base layer
@@ -75,29 +102,47 @@ function Map:load_next_room()
 	end
 
 	-- setup entity/unit layer
+	local enemy_spawn_points = {}
+	local player_spawn_points = {}
+	if layers > 1 then
+		local offset = self.rows
 
-	-- load the next room from the level data
-	-- for i = 1, self.rows do
-	-- 	self.grid[i] = {}
-	-- 	for j = 1, self.cols do
-	-- 		local shade = random:float(0.2, 0.4)
-	-- 		local color = Color(shade, shade, shade, 1)
-	-- 		self.grid[i][j] = random:float() <= 1.9 and { color = color, unit = nil } or nil
-	-- 	end
-	-- end
+		for x = 0, self.rows - 1 do
+			for y = 0, self.cols - 1 do
+				local r, g, b, a = self.room:get_pixel(x + offset, y)
+				if a > 0 and self.grid[x + 1][y + 1] then
+					local point = { x = x + 1, y = y + 1 }
 
-	-- spawn each unit onto the board
-	local num_enemies = self.room.enemies and #self.room.enemies or 0
-	for i = 1, num_enemies do
-		local new_x = self.cols - i
-		local new_y = self.rows
+					if g == 1 then
+						table.insert(player_spawn_points, point)
+					elseif r == 1 then
+						table.insert(enemy_spawn_points, point)
+					end
+					-- self.grid[x + 1][y + 1].color = Color(r, g, b, a)
+				end
+			end
+		end
+	end
+
+	for i, player in ipairs(self.units) do
+		if player.is_player then
+			local random_point = table.pop_random(player_spawn_points)
+
+			if random_point then
+				player.tile_x = random_point.x
+				player.tile_y = random_point.y
+			end
+		end
+	end
+
+	for i, point in ipairs(enemy_spawn_points) do
 		local type = random:table(Enemy_Type)
 		local new_unit = Unit({
 			group = self.group,
 			x = self.x + self.cell_size,
 			y = self.y + self.cell_size,
-			tile_x = new_x, -- top left alinged
-			tile_y = new_y,
+			tile_x = point.x, -- top left alinged
+			tile_y = point.y,
 			w = random:int(1, 1),
 			h = random:int(1, 1),
 			type = type,
@@ -111,6 +156,32 @@ function Map:load_next_room()
 
 		table.insert(self.units, new_unit)
 	end
+
+	-- spawn each unit onto the board
+	-- local num_enemies = self.room.enemies and #self.room.enemies or 0
+	-- for i = 1, num_enemies do
+	-- 	local new_x = self.cols - i
+	-- 	local new_y = self.rows
+	-- 	local type = random:table(Enemy_Type)
+	-- 	local new_unit = Unit({
+	-- 		group = self.group,
+	-- 		x = self.x + self.cell_size,
+	-- 		y = self.y + self.cell_size,
+	-- 		tile_x = new_x, -- top left alinged
+	-- 		tile_y = new_y,
+	-- 		w = random:int(1, 1),
+	-- 		h = random:int(1, 1),
+	-- 		type = type,
+	-- 		timeline_type = type.timeline_type,
+	-- 		timeline = type.timeline,
+	-- 		cell_size = self.cell_size,
+	-- 		visible = false,
+	-- 		hit_window = 0.05,
+	-- 		accuracy = 0.95,
+	-- 	})
+	--
+	-- 	table.insert(self.units, new_unit)
+	-- end
 
 	-- init each unit for this specific level
 	for _, unit in ipairs(self:get_all_alive_units()) do
@@ -174,6 +245,15 @@ function Map:react_to_miss(args)
 	args.unit.spring:pull(0.1, 100, 10)
 	self.spring:pull(0.1, 100, 10)
 	self.counter = (self.counter or 0) + 1
+
+	Timing_Judgement({
+		group = self.group,
+		x = args.unit.x,
+		y = args.unit.y,
+		accuracy = 2,
+		duration = 0.3,
+		size = self.cell_size,
+	})
 end
 
 function Map:beat_tracker(time, is_new_beat)
@@ -217,8 +297,7 @@ function Map:handle_press(args)
 	args.tile_x = args.unit.tile_x + args.dir.x
 	args.tile_y = args.unit.tile_y + args.dir.y
 
-	local action = Beat_Actions
-	[state.spacebar_controls and (input.spacebar.down and Timings.Hold.id or Timings.Beat.id) or args.beat.action.id]
+	local action = Beat_Actions[state.spacebar_controls and (input.spacebar.down and Timings.Hold.id or Timings.Beat.id) or args.beat.action.id]
 
 	if action then
 		action(self, args)
@@ -235,8 +314,7 @@ function Map:handle_enemy_input(args)
 	--		map acts out the attack
 	--
 	if args.beat.action == Timings.Beat then -- move
-		local target, range, axis_distance = args.unit:choose_move_target(self:get_all_alive_units(),
-			self:get_all_interactible_entities())
+		local target, range, axis_distance = args.unit:choose_move_target(self:get_all_alive_units(), self:get_all_interactible_entities())
 		-- WARN: Current issue: randomly chooses new target every beat
 		-- TODO: include range and stuff
 
@@ -245,8 +323,7 @@ function Map:handle_enemy_input(args)
 		local new_x, new_y = self:pathfind(args.unit, args.unit.tile_x, args.unit.tile_y, target_x, target_y)
 		self:move_unit(args.unit, new_x, new_y)
 	elseif args.beat.action == Timings.Hold then -- attack
-		local targets, attack = args.unit:choose_attack_targets(self:get_all_alive_units(),
-			self:get_all_interactible_entities())
+		local targets, attack = args.unit:choose_attack_targets(self:get_all_alive_units(), self:get_all_interactible_entities())
 		-- WARN: Current issue: randomly chooses new target every beat
 		--
 		if targets and #targets > 0 and attack then
@@ -292,6 +369,7 @@ function Map:shoot(args)
 		dir_x = args.dir.x,
 		dir_y = args.dir.y,
 		cell_size = self.cell_size,
+		source = args.unit,
 		type = projectile_type,
 	})
 
@@ -349,7 +427,7 @@ end
 
 function rects_overlap(a, b) -- unit x unit collision check
 	return not (
-		a.x + a.w <= b.x     --
+		a.x + a.w <= b.x --
 		or b.x + b.w <= a.x
 		or a.y + a.h <= b.y
 		or b.y + b.h <= a.y
@@ -398,7 +476,7 @@ function Map:draw()
 					0,
 					0,
 					cell.color
-				-- cell.unit and cell.unit.color or cell.color
+					-- cell.unit and cell.unit.color or cell.color
 				)
 			end
 		end
@@ -430,10 +508,10 @@ function Map:pathfind(unit, x1, y1, x2, y2)
 		end
 
 		local dirs = {
-			{ 1,  0 },
+			{ 1, 0 },
 			{ -1, 0 },
-			{ 0,  1 },
-			{ 0,  -1 },
+			{ 0, 1 },
+			{ 0, -1 },
 		}
 
 		for _, d in ipairs(table.shuffle(dirs)) do -- shuffle to spice up pathfinding
@@ -501,7 +579,8 @@ function Timing_Judgement:init(args)
 		or self.accuracy < 0.2 and "[yellow]perfect"
 		or self.accuracy < 0.4 and "[green1]good"
 		or self.accuracy < 0.8 and "[orange]delayed"
-		or "[red]late"
+		or self.accuracy < 1 and "[red]late"
+		or "[p_blue1]miss"
 	self.text = Text({ { text = text, font = pixul_font, alignment = "center" } }, global_text_tags)
 	self.t:after(self.duration, function()
 		self.text.dead = true
@@ -527,21 +606,4 @@ function Timing_Judgement:draw()
 	if self.text then
 		self.text:draw(self.x, self.y - self.size, 0, 1, 1, self.opacity)
 	end
-end
-
-function Timing_Judgement:scale_down(duration)
-	duration = duration or 0.2
-	self.t:cancel("die")
-	self.t:tween(self.duration, self, { rs = 0 }, math.cubic_in_out, function()
-		self.dead = true
-	end)
-	return self
-end
-
-function Timing_Judgement:change_color(delay_multiplier, target_color)
-	delay_multiplier = delay_multiplier or 0.5
-	self.t:after(delay_multiplier * self.duration, function()
-		self.color = target_color
-	end)
-	return self
 end

@@ -140,6 +140,11 @@ end
 
 local invisible = Color(1, 1, 1, 0)
 global_text_tags = {
+	blue1 = TextTag({
+		draw = function(c, i, text)
+			graphics.set_color(blue1[0])
+		end,
+	}),
 	green1 = TextTag({
 		draw = function(c, i, text)
 			graphics.set_color(green1[0])
@@ -782,6 +787,9 @@ function Text2:update(dt)
 end
 
 function Text2:draw()
+	if self.visible == false then
+		return
+	end
 	graphics.push(self.x, self.y, 0, 1, 1)
 
 	if self.textbox_x and self.textbox_y then

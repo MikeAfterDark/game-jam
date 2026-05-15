@@ -98,6 +98,7 @@ function Game:on_enter(from, args)
 			x = gw * 0.5,
 			y = gh * 0.3,
 			lines = { { text = tostring(state.time_offset or "hello1"), font = pixul_font } },
+			visible = self.is_calibration,
 		})
 	)
 	self.visual_offset_text = collect_into(
@@ -107,6 +108,7 @@ function Game:on_enter(from, args)
 			x = gw * 0.5,
 			y = gh * 0.35,
 			lines = { { text = tostring(state.visual_offset or "hello2"), font = pixul_font } },
+			visible = false,
 		})
 	)
 
@@ -199,6 +201,10 @@ function Game:play_room_song()
 		local delay = beat_time - self.song_position
 
 		trigger:after(delay, function()
+			if main:get("settings").transitioning or main:get("settings").in_pause then
+				self.in_countdown = false
+				return
+			end
 			sfx.metronome:play({
 				pitch = random:float(0.95, 1.05),
 				volume = 0.35,
@@ -211,6 +217,9 @@ function Game:play_room_song()
 	local start_delay = song_start_time - self.song_position
 
 	trigger:after(start_delay, function()
+		if main:get("settings").transitioning or main:get("settings").in_pause then
+			return
+		end
 		self.in_countdown = false
 
 		if self.song then
@@ -248,13 +257,10 @@ function Game:update(dt)
 
 		if self.map.new_room_loaded then
 			local is_new_beat, missed = self.timeline:beat_tracker(self.map:get_all_alive_units(), self.song_position)
-			-- if is_new_beat then
-			-- 	self.map:react_to_beat()
-			-- end
-			--
-			-- if missed then
-			-- 	self.map:react_to_miss({ unit = self.focused_unit })
-			-- end
+
+			if missed and not self.is_calibration then
+				self.map:react_to_miss({ unit = self.focused_unit })
+			end
 
 			if self.focused_unit.is_player and not self.is_calibration then
 				if input.up.pressed or input.down.pressed or input.left.pressed or input.right.pressed then

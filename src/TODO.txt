@@ -1,52 +1,49 @@
-Options/Credits Scene (load it first, keep it loaded, care for settings that are diff during gameplay)
-
-
-Main Menu
-Level Selection
-Group Formation
-    - Character Selection
-    - Character Editing
-[PLAY]
-
-(
-    countdown 3,2,1
-    start/resume song
-)
-Turn order: queue of units in play
-Action track is built offscreen based off turn order
-Map: Room system like hades/binding of isaac (defeat all enemies in room to progress?)
-
 bugs: 
 - When the song ends the song_time resets to 0, but beats are at time = song_time + total_song_duration
+    > also countdown restarts
 
 todo:
-- enemies
+
+WIP
+[x] spawn units based on second layer info
+
+- 'damage' to unit in cell
 - projectile collisions (keep in mind high self.speed will skip over tiles)
-- HP display
-- plan out music/level setup (file structure and playing)
+- melee/specific grid cell attacks
+- HP display + dmg taken
+- unit 'death'
+- progression to next room when all enemies dead or some condition met
+- "Boss" unit in last room + spawning enemies to test turn_order
+- Win when boss+spawns dead
+- Results screen
 
-- new_beat trigger moment relative to user input feels weird (bullets on early hits vs late),
-- character units and enemies need better timelines lists
+NOTES:
+- for enemies we're sending a ShootAttack
+- for players we're just sending a Projectile.
+- player should use ShootAttack
+- aka, cleanup: <leader>fw Projectile\(
 
+- [Feel] new_beat trigger moment relative to user input feels weird (bullets on early hits vs late),
+- [Design] character units and enemies need better timelines lists
 
-- Pause/unpause song in scene_game
-- [QoL] Lag Sync-ing + Tutorial (2 in 1)
-    - Visual Latency and Audio Latency
-    - [WIP] can't test calibration cuz song seems to be drifitng from the bpm
-            find another audio file and check bpm, or else its a problem with insertion or calibration
-- [Idea] beats_per_measure where each turn is a measure
+- [Idea] beats_per_measure where each turn is a measure - thats sorta built into the unit timelines
 - [Idea] Gamemodes with certain game state settings
 - [Mechanic] Bonuses for hitting notes/swapping characters
 - [Idea] maybe player could decide when to swap to which characters (lego rockband on DS) to play (bonuses for switching often)
+    Maybe as you 'use' the character they get tired and less effective, shrinking the hit window
+    with enough misses within some window of beats they lose a turn (like exhaustion points from dnd)
 - [Idea] keep the timeline to always be in teh same spot on the screen
-- [QoL] countdown 3-2-1-GO at the start and after pause (make sure its in sync with beat) - note: countdown at start of audiofile? seek and seek back
-- [QoL] tutorial mode for playtesters (slower song/bpm)nd projectile HP dmg
+- smarter enemies AI
 
 far future ideas:
 - multiplayer rhythm game: local machine co-op, all the way up to online multiplayer
 
 final release checklist:
 - Try the game with no state (remove the state.txt)
+
+//============================================//
+//========== Playtesting Notes ===============//
+//============================================//
 
 C** playtesting: [2026-04-23]
 - [BAD] hard to know which unit im going to control next
@@ -86,7 +83,6 @@ Learnings [2026-05-03]:
 - figure out missing 'usr/lib/libmp3lame.so' from makelove for AppImage
 - add beat-specific SFX, make them stand out and maybe tied to specific songs 
 - all src/ files are accessible in download, careful with private info
-
 General Issue:
 - the "Map" and "Units" feel disconnected from the song
     > Make songs and units that work together?
