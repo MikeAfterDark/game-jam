@@ -60,8 +60,15 @@ function Map:update(dt)
 				local cell = self.grid[x][y]
 				if cell and cell.unit then
 					if entity.source.is_player ~= cell.unit.is_player then
-						cell.unit.hfx:use("hit", 0.2)
-						entity.dead = true
+						local consume_source = cell.unit:take_damage(entity.damage)
+						if consume_source then
+							entity.dead = true
+						end
+
+						if cell.unit.dead then
+							table.delete(self.units, cell.unit)
+							cell.unit = nil
+						end
 					end
 					-- possible behaviours for hitting a unit:
 					-- > ignore and pass through

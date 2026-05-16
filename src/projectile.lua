@@ -3,7 +3,8 @@ Projectile:implement(GameObject)
 function Projectile:init(args)
 	self:init_game_object(args)
 
-	self.speed = random:int(1, 4) --self.type.speed or random:int(1, 3)
+	self.speed = random:int(1, 2) --self.type.speed or random:int(1, 3)
+	self.damage = 1
 	-- self.sprites = self.type.sprites()
 	self.color = self.type.color
 

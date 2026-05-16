@@ -7,14 +7,11 @@ function Game:init(name)
 end
 
 function Game:on_enter(from, args)
-	self.hfx:add("condition1", 1)
-	self.hfx:add("condition2", 1)
-
 	self.level = args.level
 	self.player_units = args.player_units
 	self.pitch = args.pitch or 1
 
-	camera.x, camera.y = gw / 2, gh / 2
+	camera.x, camera.y = gw * 0.5, gh * 0.5
 	camera.r = 0
 	camera.follow_style = "lockon_tight"
 	camera.lerp.x = 0.06
@@ -235,12 +232,22 @@ end
 function Game:update(dt)
 	self:play_room_song()
 
+	-- temp debug controls
 	if input.z.pressed and self.pitch > 0.1 then
 		self.pitch = self.pitch - 0.1
 	end
 	if input.x.pressed and self.pitch < 10 then
 		self.pitch = self.pitch + 0.1
 	end
+
+	local zoom_percent = 1.1
+	if (input.wheel_up.down or input.wheel_up.pressed) and camera.sx < 4 then
+		camera.sx, camera.sy = camera.sx * zoom_percent, camera.sy * zoom_percent
+	end
+	if (input.wheel_down.down or input.wheel_down.pressed) and camera.sx > 0.5 then
+		camera.sx, camera.sy = camera.sx / zoom_percent, camera.sy / zoom_percent
+	end
+	---------------------
 
 	if not main:get("settings").in_pause and not self.won then
 		run_time = run_time + dt
@@ -256,6 +263,11 @@ function Game:update(dt)
 		end
 
 		if self.map.new_room_loaded then
+			if not self.focused_unit or self.focused_unit.dead then
+				print("focused unit died/DNE")
+				self:next_turn()
+			end
+
 			local is_new_beat, missed = self.timeline:beat_tracker(self.map:get_all_alive_units(), self.song_position)
 
 			if missed and not self.is_calibration then
@@ -424,6 +436,7 @@ function Game:on_exit()
 	self.hfx = nil
 
 	camera.x, camera.y = gw / 2, gh / 2
+	camera.sx, camera.sy = 1, 1
 	camera.r = 0
 	camera:follow_object(nil)
 end

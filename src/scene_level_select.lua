@@ -7,9 +7,6 @@ function Level_Select:init(name)
 end
 
 function Level_Select:on_enter(from, args)
-	self.hfx:add("condition1", 1)
-	self.hfx:add("condition2", 1)
-
 	camera.x, camera.y = gw / 2, gh / 2
 	camera.r = 0
 

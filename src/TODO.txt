@@ -6,9 +6,9 @@ todo:
 
 WIP
 [x] spawn units based on second layer info
+[x] projectile collisions (keep in mind high self.speed will skip over tiles)
 
 - 'damage' to unit in cell
-- projectile collisions (keep in mind high self.speed will skip over tiles)
 - melee/specific grid cell attacks
 - HP display + dmg taken
 - unit 'death'
