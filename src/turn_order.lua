@@ -15,8 +15,16 @@ function Turn_Order:init(args)
 	})
 end
 
+function Turn_Order:reset()
+	self.turns = {}
+end
+
 function Turn_Order:update(dt)
 	self:update_game_object(dt)
+
+	_, self.turns = table.reject(self.turns, function(v)
+		return v.dead
+	end)
 
 	local units = {
 		{ text = "Turn:", font = pixul_font },

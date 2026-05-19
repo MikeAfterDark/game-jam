@@ -6,7 +6,7 @@ function Unit:init(args)
 	self.hp_bar = HPBar({ group = main.current.effects, parent = self })
 	self.effect_bar = EffectBar({ group = main.current.effects, parent = self })
 
-	self.max_hp = self.type.hp or random:int(2, 6)
+	self.max_hp = self.type.hp or random:int(2, 4)
 	self.hp = self.max_hp
 
 	self.speed = self.type.speed or random:int(1, 3)
@@ -238,7 +238,8 @@ Unit_Type = {
 
 	E = {
 		name = "e",
-		speed = 8 * 4,
+		speed = 8 * 2,
+		hp = 50,
 		sprites = function()
 			return nil
 		end,

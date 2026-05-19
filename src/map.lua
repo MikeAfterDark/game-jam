@@ -12,6 +12,8 @@ function Map:init(args)
 	-- take up a cell and follow a pre-determined set of actions
 	self.entities = {}
 
+	self.room_index = 0
+
 	self.rows = 10
 	self.cols = 10
 
@@ -53,11 +55,17 @@ function Map:update(dt)
 	self.reaction_color = self.reaction_color:lerp(self.base_reaction_color, math.linear, self.reaction_color_t)
 
 	for _, entity in pairs(self.entities) do
+		-- possible behaviours for hitting a unit:
+		-- > ignore and pass through
+		-- > collide and dissapear
+		--		> can affect the unit
+		--		> doesn't affect the unit
 		if entity:is(Projectile) then
-			local x = math.floor(entity.tile_x)
-			local y = math.floor(entity.tile_y)
-			if x > 0 and y > 0 and x < self.cols and y < self.rows then
+			local x = math.round(entity.tile_x, 0)
+			local y = math.round(entity.tile_y, 0)
+			if x > 0 and y > 0 and x <= self.cols and y <= self.rows then
 				local cell = self.grid[x][y]
+
 				if cell and cell.unit then
 					if entity.source.is_player ~= cell.unit.is_player then
 						local consume_source = cell.unit:take_damage(entity.damage)
@@ -65,22 +73,47 @@ function Map:update(dt)
 							entity.dead = true
 						end
 
-						if cell.unit.dead then
-							table.delete(self.units, cell.unit)
+						if cell.unit.hp <= 0 then
 							cell.unit = nil
 						end
 					end
-					-- possible behaviours for hitting a unit:
-					-- > ignore and pass through
-					-- > collide and dissapear
-					--		> can affect the unit
-					--		> doesn't affect the unit
 				end
 			end
 		end
 	end
 
 	-- todo: clear all dead entities from self.entities
+	_, self.entities = table.reject(self.entities, function(v)
+		return v.dead
+	end)
+	_, self.units = table.reject(self.units, function(v)
+		return v.dead
+	end)
+
+	-- for i = 1, self.rows do
+	-- 	self.grid[i] = table.map(self.grid[i], function(v)
+	-- 		if v.unit and v.unit.dead then
+	-- 			v.unit = nil
+	-- 		end
+	--
+	-- 		return v
+	-- 	end)
+	-- 	-- local cell = self.grid[x][y]
+	-- 	-- if cell.unit.dead then
+	-- 	-- 	table.delete(self.units, cell.unit)
+	-- 	-- 	cell.unit = nil
+	-- 	-- end
+	-- end
+end
+
+function Map:room_completed()
+	-- todo: make each room decide its win condition
+	local kill_all = table.contains(self.room_data.win, "kill all") --
+		and not table.any(self.units, function(v)
+			return not v.is_player
+		end)
+
+	return kill_all
 end
 
 function Map:load_next_room()
@@ -89,9 +122,15 @@ function Map:load_next_room()
 	end
 	self.entities = {}
 
-	self.room_index = (self.room_index and self.room_index < #self.level.map_order) and self.room_index + 1 or 1
-	self.room_name = self.level.map_order[self.room_index]
-	self.room = self.level.rooms and self.level.rooms[self.room_name] or { id = "default", enemies = { {}, {}, {} } }
+	if self.room_index == #self.level.map_order then
+		print("no more rooms")
+		return
+	end
+
+	self.room_index = self.room_index + 1
+	self.room_data = self.level.map_order[self.room_index]
+	self.room = self.level.rooms and self.level.rooms[self.room_data.filename] or
+	{ id = "default", enemies = { {}, {}, {} } }
 
 	-- level limitation: sprite must be square, layers must be added to the right in a spritesheet
 	self.rows, self.cols = self.room.h, self.room.h
@@ -164,32 +203,6 @@ function Map:load_next_room()
 		table.insert(self.units, new_unit)
 	end
 
-	-- spawn each unit onto the board
-	-- local num_enemies = self.room.enemies and #self.room.enemies or 0
-	-- for i = 1, num_enemies do
-	-- 	local new_x = self.cols - i
-	-- 	local new_y = self.rows
-	-- 	local type = random:table(Enemy_Type)
-	-- 	local new_unit = Unit({
-	-- 		group = self.group,
-	-- 		x = self.x + self.cell_size,
-	-- 		y = self.y + self.cell_size,
-	-- 		tile_x = new_x, -- top left alinged
-	-- 		tile_y = new_y,
-	-- 		w = random:int(1, 1),
-	-- 		h = random:int(1, 1),
-	-- 		type = type,
-	-- 		timeline_type = type.timeline_type,
-	-- 		timeline = type.timeline,
-	-- 		cell_size = self.cell_size,
-	-- 		visible = false,
-	-- 		hit_window = 0.05,
-	-- 		accuracy = 0.95,
-	-- 	})
-	--
-	-- 	table.insert(self.units, new_unit)
-	-- end
-
 	-- init each unit for this specific level
 	for _, unit in ipairs(self:get_all_alive_units()) do
 		if unit.tile_x and unit.tile_y then -- WARN: temp init until levels/room decide where to spawn
@@ -200,7 +213,7 @@ function Map:load_next_room()
 
 	self.new_room_loaded = true
 
-	return { name = self.room_name }
+	return { name = self.room_data.filename }
 end
 
 function Map:react_to_hit(args)
@@ -215,7 +228,7 @@ function Map:react_to_hit(args)
 
 	-- print(table.tostring(args.beat))
 	self.counter = (self.counter or 0) + 1
-	print(self.counter .. ", " .. args.beat.press_accuracy)
+	-- print(self.counter .. ", " .. args.beat.press_accuracy)
 
 	Timing_Judgement({
 		group = self.group,
@@ -304,7 +317,8 @@ function Map:handle_press(args)
 	args.tile_x = args.unit.tile_x + args.dir.x
 	args.tile_y = args.unit.tile_y + args.dir.y
 
-	local action = Beat_Actions[state.spacebar_controls and (input.spacebar.down and Timings.Hold.id or Timings.Beat.id) or args.beat.action.id]
+	local action = Beat_Actions
+	[state.spacebar_controls and (input.spacebar.down and Timings.Hold.id or Timings.Beat.id) or args.beat.action.id]
 
 	if action then
 		action(self, args)
@@ -321,7 +335,8 @@ function Map:handle_enemy_input(args)
 	--		map acts out the attack
 	--
 	if args.beat.action == Timings.Beat then -- move
-		local target, range, axis_distance = args.unit:choose_move_target(self:get_all_alive_units(), self:get_all_interactible_entities())
+		local target, range, axis_distance = args.unit:choose_move_target(self:get_all_alive_units(),
+			self:get_all_interactible_entities())
 		-- WARN: Current issue: randomly chooses new target every beat
 		-- TODO: include range and stuff
 
@@ -330,7 +345,8 @@ function Map:handle_enemy_input(args)
 		local new_x, new_y = self:pathfind(args.unit, args.unit.tile_x, args.unit.tile_y, target_x, target_y)
 		self:move_unit(args.unit, new_x, new_y)
 	elseif args.beat.action == Timings.Hold then -- attack
-		local targets, attack = args.unit:choose_attack_targets(self:get_all_alive_units(), self:get_all_interactible_entities())
+		local targets, attack = args.unit:choose_attack_targets(self:get_all_alive_units(),
+			self:get_all_interactible_entities())
 		-- WARN: Current issue: randomly chooses new target every beat
 		--
 		if targets and #targets > 0 and attack then
@@ -397,12 +413,16 @@ function Map:can_place(unit, x, y)
 	for i = x, x + unit.w - 1 do
 		for j = y, y + unit.h - 1 do
 			if not self.grid[i] or not self.grid[i][j] then
-				-- print("bounds", i, j)
+				if unit.is_player then
+					-- print("bounds", i, j)
+				end
 				return false -- out of bounds
 			end
 
 			if self.grid[i][j].unit and self.grid[i][j].unit.id ~= unit.id then
-				-- print("occupied by ", self.grid[i][j].unit.type.name, i, j)
+				if unit.is_player then
+					-- print("occupied by ", self.grid[i][j].unit.type.name, i, j)
+				end
 				return false -- occupied
 			end
 		end
@@ -434,7 +454,7 @@ end
 
 function rects_overlap(a, b) -- unit x unit collision check
 	return not (
-		a.x + a.w <= b.x --
+		a.x + a.w <= b.x     --
 		or b.x + b.w <= a.x
 		or a.y + a.h <= b.y
 		or b.y + b.h <= a.y
@@ -446,7 +466,7 @@ function Map:draw()
 	local visual_center_y = self.cell_size * math.ceil(self.cols / 2)
 	local visual_x = self.x + visual_center_x
 	local visual_y = self.y + visual_center_y
-	graphics.push(visual_x, visual_y, self.r, self.spring.x, self.spring.y)
+	graphics.push(visual_x, visual_y, self.r, self.spring.x, self.spring.x)
 	graphics.rectangle( --
 		visual_x,
 		visual_y,
@@ -458,7 +478,7 @@ function Map:draw()
 	)
 	graphics.pop()
 
-	graphics.push(visual_x, visual_y, 1 - self.r, self.spring.x, self.spring.y)
+	graphics.push(visual_x, visual_y, 1 - self.r, self.spring.x, self.spring.x)
 	graphics.rectangle( --
 		visual_x,
 		visual_y,
@@ -483,7 +503,7 @@ function Map:draw()
 					0,
 					0,
 					cell.color
-					-- cell.unit and cell.unit.color or cell.color
+				-- cell.unit and cell.unit.color or cell.color
 				)
 			end
 		end
@@ -515,10 +535,10 @@ function Map:pathfind(unit, x1, y1, x2, y2)
 		end
 
 		local dirs = {
-			{ 1, 0 },
+			{ 1,  0 },
 			{ -1, 0 },
-			{ 0, 1 },
-			{ 0, -1 },
+			{ 0,  1 },
+			{ 0,  -1 },
 		}
 
 		for _, d in ipairs(table.shuffle(dirs)) do -- shuffle to spice up pathfinding

@@ -270,12 +270,12 @@ function init()
 
 	-- can comfortably fit 14 scenes atm
 	debug_scenes = {
-		{ id = "intro", destination = Intro },
-		{ id = "main_menu", destination = MainMenu },
-		{ id = "level_select", destination = Level_Select },
+		{ id = "intro",           destination = Intro },
+		{ id = "main_menu",       destination = MainMenu },
+		{ id = "level_select",    destination = Level_Select },
 		{ id = "character_setup", destination = Character_Setup },
-		{ id = "game", destination = Game },
-		{ id = "audio_zoo", destination = AudioZoo }, -- todo: fix
+		{ id = "game",            destination = Game },
+		{ id = "audio_zoo",       destination = AudioZoo }, -- todo: fix
 	}
 
 	main:add(Settings("settings"))
@@ -628,44 +628,45 @@ function open_options(self)
 		})
 	)
 	button_offset = button_offset + button_distance
+	--
+	-- self.visual_offset_text = collect_into(
+	-- 	self.options_ui_elements,
+	-- 	Text2({
+	-- 		group = ui_group,
+	-- 		x = column_x[column],
+	-- 		y = gh / 2 + button_offset - gh * 0.02,
+	-- 		lines = { { text = "[fg]Visual Offset: " .. tostring(math.ceil((state.visual_offset or 0) * 1000)) .. "ms", font = small_pixul_font } },
+	-- 	})
+	-- )
+	-- self.visual_offset_slider = collect_into(
+	-- 	self.options_ui_elements,
+	-- 	Slider({
+	-- 		group = ui_group,
+	-- 		x = column_x[column],
+	-- 		y = gh / 2 + button_offset,
+	-- 		length = gw * 0.20,
+	-- 		thickness = gw * 0.01,
+	-- 		fg_color = "fg",
+	-- 		bg_color = "bg",
+	-- 		rotation = 0,
+	-- 		max_sections = 50, -- recommend factors of length that are < length/2
+	-- 		spacing = slider_spacing - 6,
+	-- 		value = state.visual_offset or 0,
+	-- 		range_start = -0.25,
+	-- 		range_end = 0.25,
+	-- 		text = self.visual_offset_text,
+	-- 		action = function(b, v)
+	-- 			state.visual_offset = v
+	-- 			system.save_state()
+	--
+	-- 			b.text:set_text({
+	-- 				{ text = "[fg]Visual Offset: " .. tostring(math.ceil((state.visual_offset or 0) * 1000)) .. "ms", font = small_pixul_font },
+	-- 			})
+	-- 		end,
+	-- 	})
+	-- )
+	-- button_offset = button_offset + button_distance
 
-	self.visual_offset_text = collect_into(
-		self.options_ui_elements,
-		Text2({
-			group = ui_group,
-			x = column_x[column],
-			y = gh / 2 + button_offset - gh * 0.02,
-			lines = { { text = "[fg]Visual Offset: " .. tostring(math.ceil((state.visual_offset or 0) * 1000)) .. "ms", font = small_pixul_font } },
-		})
-	)
-	self.visual_offset_slider = collect_into(
-		self.options_ui_elements,
-		Slider({
-			group = ui_group,
-			x = column_x[column],
-			y = gh / 2 + button_offset,
-			length = gw * 0.20,
-			thickness = gw * 0.01,
-			fg_color = "fg",
-			bg_color = "bg",
-			rotation = 0,
-			max_sections = 50, -- recommend factors of length that are < length/2
-			spacing = slider_spacing - 6,
-			value = state.visual_offset or 0,
-			range_start = -0.25,
-			range_end = 0.25,
-			text = self.visual_offset_text,
-			action = function(b, v)
-				state.visual_offset = v
-				system.save_state()
-
-				b.text:set_text({
-					{ text = "[fg]Visual Offset: " .. tostring(math.ceil((state.visual_offset or 0) * 1000)) .. "ms", font = small_pixul_font },
-				})
-			end,
-		})
-	)
-	button_offset = button_offset + button_distance
 	self.enemies_act_every_beat_button = collect_into(
 		self.options_ui_elements,
 		Button({
@@ -714,7 +715,8 @@ function open_options(self)
 			action = function(b)
 				state.enemies_only_move_when_player_doesnt = not state.enemies_only_move_when_player_doesnt
 				system.save_state()
-				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or "dont freeze"))
+				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or
+				"dont freeze"))
 			end,
 		})
 	)

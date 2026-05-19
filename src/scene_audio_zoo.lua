@@ -14,7 +14,7 @@ function AudioZoo:on_enter(from, args)
 		sfx.intro_jingle,
 	}
 
-	local button_sounds = {     -- setup for a max of 24
+	local button_sounds = { -- setup for a max of 24
 		{ "lizard", sfx.earthquake }, -- assets/sounds/sound1.mp3
 		{ "lizard", sfx.earthquake }, -- assets/sounds/sound1.mp3
 		{ "lizard", sfx.earthquake }, -- assets/sounds/sound1.mp3
@@ -203,19 +203,6 @@ function AudioZoo:draw()
 	-- self.post_main:draw()
 	-- self.effects:draw()
 	self.ui:draw()
-
-	-- graphics.draw_with_mask(function()
-	-- 	star_canvas:draw(0, 0, 0, 1, 1)
-	-- end, function()
-	-- 	camera:attach()
-	-- 	graphics.rectangle(gw / 2, gh / 2, self.w, self.h, nil, nil, fg[0])
-	-- 	camera:detach()
-	-- end, true)
-
-	-- if self.win or self.died then
-	-- 	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
-	-- end
-	-- self.end_ui:draw()
 
 	if self.in_pause then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)

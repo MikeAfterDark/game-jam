@@ -33,6 +33,7 @@ function Game:on_enter(from, args)
 	self.song_info_text = Text({ { text = "", font = pixul_font, alignment = "center" } }, global_text_tags)
 
 	self.won = false
+	self.lost = false
 
 	self.game_ui_elements = {}
 
@@ -72,7 +73,7 @@ function Game:on_enter(from, args)
 	-- displays times and holds and displays the beats for the current turn
 	self.timeline = Timeline({
 		group = self.ui,
-		max_beats = 8,
+		max_beats = args.max_beats,
 		cell_size = cell_size,
 	})
 
@@ -139,20 +140,27 @@ function Game:next_turn()
 		self.focused_unit:highlight(0)
 	end
 
-	self.focused_unit = self.next_unit
-	self.focused_unit:highlight(1)
-	camera:follow_object(self.focused_unit)
+	if self.next_unit then
+		self.focused_unit = self.next_unit
+		self.focused_unit:highlight(1)
+		camera:follow_object(self.focused_unit)
 
-	if self.turn_order:num_turns() <= 1 then
-		self.turn_order:insert(self.map:get_all_alive_units())
+		if self.turn_order:num_turns() <= 1 then
+			self.turn_order:insert(self.map:get_all_alive_units())
+		end
+
+		local unit2 = self.turn_order:pop()
+		local next_song_position = self.song_position +
+		self.timeline:time_left_for(self.focused_unit, self.song_position)
+		self.timeline:add(unit2, next_song_position)
+
+		self.next_unit = unit2
+		if self.next_unit then
+			self.next_unit:highlight(2)
+		end
+	else
+		self:loss()
 	end
-
-	local unit2 = self.turn_order:pop()
-	local next_song_position = self.song_position + self.timeline:time_left_for(self.focused_unit, self.song_position)
-	self.timeline:add(unit2, next_song_position)
-
-	self.next_unit = unit2
-	self.next_unit:highlight(2)
 end
 
 local directions = {
@@ -163,7 +171,7 @@ local directions = {
 }
 
 function Game:play_room_song()
-	if self.in_countdown or main:get("settings").transitioning then
+	if self.in_countdown or main:get("settings").transitioning or self.won or self.lost then
 		return
 	end
 
@@ -249,7 +257,9 @@ function Game:update(dt)
 	end
 	---------------------
 
-	if not main:get("settings").in_pause and not self.won then
+	local paused = main:get("settings").in_pause
+	local game_over = self.won or self.lost
+	if not paused and not game_over then
 		run_time = run_time + dt
 
 		if self.song and not self.song:isStopped() then
@@ -263,9 +273,21 @@ function Game:update(dt)
 		end
 
 		if self.map.new_room_loaded then
-			if not self.focused_unit or self.focused_unit.dead then
+			while (not self.focused_unit or self.focused_unit.dead) and not self.lost do
 				print("focused unit died/DNE")
 				self:next_turn()
+			end
+
+			if self.map:room_completed() then
+				self.map.new_room_loaded = false
+				self.timeline:reset()
+				self.turn_order:reset()
+				self.room = self.map:load_next_room()
+				if not self.room then
+					self:win()
+				end
+
+				return
 			end
 
 			local is_new_beat, missed = self.timeline:beat_tracker(self.map:get_all_alive_units(), self.song_position)
@@ -399,6 +421,56 @@ function Game:update(dt)
 	self.end_ui:update(dt * slow_amount)
 end
 
+function Game:win()
+	self.won = true
+	print("gj, you won")
+
+	if self.song then
+		self.song:stop()
+	end
+
+	scene_transition(self, {
+		x = gw / 2,
+		y = gh / 2,
+		type = "circle",
+		target = {
+			scene = Level_Select,
+			name = "level_select",
+			args = { clear_music = true },
+		},
+		display = {
+			text = "gg wp! loading...",
+			font = pixul_font,
+			alignment = "center",
+		},
+	})
+end
+
+function Game:loss()
+	self.lost = true
+	print("booo, you lost")
+
+	if self.song then
+		self.song:stop()
+	end
+
+	scene_transition(self, {
+		x = gw / 2,
+		y = gh / 2,
+		type = "circle",
+		target = {
+			scene = Level_Select,
+			name = "level_select",
+			args = { clear_music = true },
+		},
+		display = {
+			text = "ripperonis, you lost. loading...",
+			font = pixul_font,
+			alignment = "center",
+		},
+	})
+end
+
 function Game:draw()
 	self.floor:draw()
 	self.main:draw()
@@ -414,7 +486,7 @@ function Game:draw()
 		camera:detach()
 	end, true)
 
-	if self.win or self.died then
+	if self.won or self.died then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 	end
 	self.end_ui:draw()

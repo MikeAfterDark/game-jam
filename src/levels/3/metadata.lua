@@ -1,6 +1,6 @@
 return {
-	id = "2",
-	map_order = { "entrance_map" },
+	id = "3",
+	map_order = { { filename = "entrance_map" } },
 	room_songs = {
 		{ song_name = "METRONOME 60 BPM _ (5 minutes metronome)", bpm = 60, valid_maps = { "entrance_map" } },
 	},

@@ -35,11 +35,25 @@ function Character_Setup:on_enter(from, args)
 	self.characters = self:load_characters()
 
 	self.edit_tab = { x = 0, y = gh * 1 }
+	self.bpm = 120
+	self.max_beats = 8
+
+	self.timeline = collect_into(
+		self.ui_elements,
+		Timeline({
+			group = self.main,
+			x = gw * 0.5,
+			y = gh * 0.5,
+			max_beats = self.max_beats,
+			cell_size = gh * 0.08,
+		})
+	)
+	self.timeline:set_bpm(self.bpm)
 
 	local cols = 4
 
 	local scale = gw * 0.08
-	local spacing = scale * 1.4
+	local spacing = scale * 1.6
 	local x_center = gw / 2
 	local y_start = scale
 
@@ -49,15 +63,15 @@ function Character_Setup:on_enter(from, args)
 
 		local total_width = (cols - 1) * spacing
 
-		collect_into(
+		local button = collect_into(
 			self.ui_elements,
 			RectangleButton({
 				group = self.main,
 				layer = ui_interaction_layer.Character_Setup,
 				x = x_center - total_width / 2 + col * spacing,
 				y = y_start + row * spacing,
-				w = scale,
-				h = scale,
+				w = scale * 0.4,
+				h = scale * 0.4,
 				force_update = true,
 				no_image = true,
 				color = Color:random(),
@@ -74,7 +88,16 @@ function Character_Setup:on_enter(from, args)
 				end,
 			})
 		)
+
+		character.x = button.x
+		character.y = button.y
+		character.button = button
+
+		self.timeline:add(character, 0)
+		self.timeline:add(character, 0)
 	end
+	self.timeline.draw_units = self.characters
+	self.timeline.time = 0
 
 	self.group_text = collect_into(
 		self.ui_elements,
@@ -115,6 +138,39 @@ function Character_Setup:update(dt)
 	self.main:update(dt)
 	self.edit:update(dt)
 
+	local scale = 2
+	local mod = 4 * 60 / self.bpm
+
+	-- bpm: 60/60
+	-- 0.5, 4
+	-- 1, 4
+	-- 2, 4
+	--
+	-- bpm: 120/60
+	-- 0.5, 2
+	-- 1, 2
+	-- 2, 2
+	--
+	if self.timeline then
+		self.timeline.time = (love.timer.getTime() / scale) % mod
+	end
+
+	if self.timeline2 then
+		self.timeline2.draw_units = { self.loaded_character }
+		self.timeline2.time = (love.timer.getTime() / scale) % mod
+	end
+
+	for _, character in ipairs(self.characters) do
+		character.sprung = character.sprung or 0
+		if character.sprung + 0.2 < love.timer.getTime() then
+			if self.timeline:is_beat_for(character, 0.04, (love.timer.getTime() / scale) % mod) then
+				-- print(character.sprung)
+				character.button.spring:pull(0.2, 600, 50)
+				character.sprung = love.timer.getTime()
+			end
+		end
+	end
+
 	for _, v in pairs(self.ui_elements) do
 		if v.update_action then
 			v:update_action()
@@ -124,6 +180,7 @@ function Character_Setup:update(dt)
 	for _, v in pairs(self.edit_ui_elements) do
 		local y = v.base_y + self.edit_tab.y
 		v.y = y
+
 		if v.shape then
 			v.shape:move_to(v.x, y)
 		end
@@ -162,43 +219,37 @@ function Character_Setup:set_stage(stage)
 			layer_has_music = false,
 			ui_elements = self.edit_ui_elements,
 		})
+
 		-- get/setup timelines/actions of characters,
 		-- setup in order of group selection (temp to avoid implementing reordering)
 		-- 'go' button
 
-		collect_into(
+		self.timeline2 = collect_into(
 			self.edit_ui_elements,
-			RectangleCover({
+			Timeline({
 				group = self.edit,
 				x = gw * 0.5,
-				base_y = gh * 0.5,
-				w = gw,
-				h = gh,
-				color = Color(0.1, 0.1, 0.1, 0.96),
+				base_y = gh * 0.4,
+				max_beats = self.max_beats,
+				cell_size = gh * 0.3,
 			})
 		)
+		self.timeline2.draw_in_place = true
 
-		self.timing_line = collect_into(
-			self.edit_ui_elements,
-			Timing_Line({
-				group = self.edit,
-				x = gw * 0.5,
-				base_y = gh * 0.55,
-				w = gw * 0.8,
-				max_beats = 8,
-				timings = {},
-			})
-		)
+		self.timeline2:set_bpm(self.bpm)
 
 		local x_offset = gw / (#self.group + 1)
 		for i, character in ipairs(self.group) do
+			self.timeline2:add(character, 0)
+			self.timeline2:add(character, 0)
+
 			collect_into(
 				self.edit_ui_elements,
 				Button({
 					group = self.edit,
 					layer = ui_interaction_layer.Group_Selection,
 					x = i * x_offset,
-					base_y = gh * 0.8,
+					base_y = gh * 0.85,
 					w = gw * 0.05,
 					button_text = character.type.name,
 					fg_color = "bg",
@@ -260,6 +311,7 @@ function Character_Setup:set_stage(stage)
 								level = self.level,
 								player_units = self.group,
 								layer_has_music = true,
+								max_beats = self.max_beats,
 							},
 						},
 						display = {
@@ -334,6 +386,7 @@ Timings = {
 function Character_Setup:load_characters()
 	return {
 		{
+			id = random:uid(),
 			type = Unit_Type.A,
 			timeline = {
 				{ Timings.Empty },
@@ -350,6 +403,7 @@ function Character_Setup:load_characters()
 			},
 		},
 		{
+			id = random:uid(),
 			type = Unit_Type.B,
 			timeline = {
 				{ Timings.Beat },
@@ -366,6 +420,7 @@ function Character_Setup:load_characters()
 			},
 		},
 		{
+			id = random:uid(),
 			type = Unit_Type.C,
 			timeline = {
 				{ Timings.Empty },
@@ -382,6 +437,7 @@ function Character_Setup:load_characters()
 			},
 		},
 		{
+			id = random:uid(),
 			type = Unit_Type.D,
 			timeline = {
 				{ Timings.Empty },
@@ -398,6 +454,7 @@ function Character_Setup:load_characters()
 			},
 		},
 		{
+			id = random:uid(),
 			type = Unit_Type.E,
 			timeline = {
 				{ Timings.Beat },
@@ -422,11 +479,12 @@ end
 
 function Character_Setup:load_character_timings(character)
 	self.loaded_character = character
-	self.timing_line.timings = character.timeline
 end
 
 function Character_Setup:draw()
 	self.main:draw()
+
+	graphics.rectangle(gw * 0.5, gh * 0.5 + self.edit_tab.y, gw, gh, nil, nil, modal_transparent_2)
 	self.edit:draw()
 end
 

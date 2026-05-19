@@ -406,12 +406,15 @@ end
 
 -- t = {1, 2, 3, 4}
 -- table.tostring(t) -> '{[1] = 1, [2] = 2, [3] = 3, [4] = 4}'
-function table.tostring(t)
+function table.tostring(t, depth)
+  depth = depth or 6
   if type(t) == "table" then
     local str = "{"
     for k, v in pairs(t) do
-      if type(k) ~= "number" then k = '"' .. k .. '"' end
-      str = str .. "[" .. k .. "] = " .. table.tostring(v) .. ", "
+      if depth > 0 then
+        if type(k) ~= "number" then k = '"' .. tostring(k) .. '"' end
+        str = str .. "[" .. k .. "] = " .. table.tostring(v, depth-1) .. ", "
+      end
     end
     if str ~= "{" then
       return str:sub(1, -3) .. "}"

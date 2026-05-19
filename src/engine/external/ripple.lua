@@ -500,7 +500,9 @@ function Sound:resume(fadeDuration)
 end
 
 function Sound:stop(fadeDuration)
+	print("trying to stop")
 	for _, instance in ipairs(self._instances) do
+		print("stopping...")
 		instance:stop(fadeDuration)
 	end
 end

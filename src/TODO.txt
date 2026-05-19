@@ -1,6 +1,8 @@
 bugs: 
 - When the song ends the song_time resets to 0, but beats are at time = song_time + total_song_duration
     > also countdown restarts
+- When a unit with its time already in timeline dies, its timeline still waits for its turn
+    > need to change each beat's time + last_beat_time for that unit
 
 todo:
 
