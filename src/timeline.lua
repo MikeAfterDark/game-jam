@@ -6,6 +6,16 @@ function Timeline:init(args)
 	self.beat_number = 0 -- for tracking is_new_beat
 	self.beats = {}
 	self.beats_per_turn = {}
+
+	self.circle_bg = GradientImage("arc", {
+		radius = 1,
+		thickness = 0.3,
+		segments = 32,
+		gap_start = math.pi * 2 / 2 - math.pi / 16,
+		gap_end = math.pi * 3 / 2,
+		fade_size = math.pi / 16,
+		color = { r = 1, g = 1, b = 1, a = 0.8 },
+	})
 end
 
 function Timeline:set_bpm(bpm)
@@ -14,8 +24,11 @@ function Timeline:set_bpm(bpm)
 	self.eighth = self.crotchet / 2
 	self.sixteenth = self.eighth / 2
 
-	self.new_beat_resolution = self.crotchet -- for notifying player
-	self.beat_resolution = self.eighth    -- for internal logic
+	-- for notifying player
+	self.new_beat_resolution = self.crotchet
+
+	-- for internal logic
+	self.beat_resolution = self.eighth
 end
 
 function Timeline:update(dt)
@@ -53,8 +66,8 @@ function Timeline:add(unit, current_time)
 		end
 	end
 
-	local earliest_valid_time = dummy_time +
-	(self.beats_per_turn[unit.id][#self.beats_per_turn[unit.id]] or current_time)
+	local earliest_time = (self.beats_per_turn[unit.id][#self.beats_per_turn[unit.id]] or current_time)
+	local earliest_valid_time = dummy_time + earliest_time
 	-- self.beats[unit.id][#self.beats[unit.id]].time + self.beat_resolution
 	local valid_current_time = (current_time > earliest_valid_time - 0.001) and current_time or earliest_valid_time
 	local insert_time = self:beat_aligned_time(math.max(valid_current_time, earliest_valid_time))
@@ -291,9 +304,9 @@ function Timeline:draw()
 			graphics.push(x, y, self.r, unit.spring and unit.spring.x or 1, unit.spring and unit.spring.x or 1)
 
 			local opacity = (unit == main.current.focused_unit or not unit.hit_window) and 1 or 0.4
-			graphics.circle(x, y, radius, Color(1, 1, 1, 0.8 * opacity), thickness * 1.2)
+			-- graphics.circle(x, y, radius, Color(1, 1, 1, 0.8 * opacity), thickness * 1.2)
+			self.circle_bg:draw(x, y, radius * 2, radius * 2)
 
-			-- 1. draw ticks at the correct angle
 			local hit_window_angle = (unit.hit_window or 0.05) * rotation_speed
 			local border_angle = math.pi * 0.01
 			for i, beat in ipairs(self.beats[unit.id]) do
@@ -302,9 +315,10 @@ function Timeline:draw()
 
 				if
 					beat.action ~= Timings.Empty
-					and angle < visible_angle
+					and angle < visible_angle + math.pi / 8
 					and angle > -hit_window_angle --[[ and not beat.end_time ]]
 				then
+					opacity = math.min(opacity, 3 * (visible_angle - angle))
 					local tap_can_be_hit = math.abs(beat.time - self.time) < (unit.hit_window or 0.05)
 					local can_be_held = beat.end_time
 						and (self.time > beat.time - (unit.hit_window or 0.05) and self.time < beat.end_time + (unit.hit_window or 0.05))
@@ -363,7 +377,7 @@ function Timeline:draw()
 					local ox = x + math.cos(angle) * (draw_radius + half_thickness)
 					local oy = y + math.sin(angle) * (draw_radius + half_thickness)
 
-					graphics.line(ix, iy, ox, oy, Color(0, 0, 0, 1), 2)
+					graphics.line(ix, iy, ox, oy, Color(0, 0, 0, opacity), 2)
 				end
 			end
 

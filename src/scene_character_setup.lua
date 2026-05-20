@@ -461,12 +461,14 @@ function Character_Setup:load_characters()
 				{ Timings.Empty },
 
 				{
-					Timings.Beat, --[[  Timings.Myon(4) ]]
+					Timings.Beat,
+					-- Timings.Myon(4),
 				},
 				{ Timings.Empty },
 
 				{
-					Timings.Beat, --[[ Timings.Arix(3) ]]
+					Timings.Beat,
+					-- Timings.Arix(3),
 				},
 				{ Timings.Empty },
 
