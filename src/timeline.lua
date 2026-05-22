@@ -11,9 +11,9 @@ function Timeline:init(args)
 		radius = 1,
 		thickness = 0.3,
 		segments = 32,
-		gap_start = math.pi * 2 / 2 - math.pi / 16,
-		gap_end = math.pi * 3 / 2,
-		fade_size = math.pi / 16,
+		gap_start = math.pi * 2 / 2 - math.pi / 8,
+		gap_end = math.pi * 3 / 2 + math.pi / 16,
+		fade_size = math.pi / 8,
 		color = { r = 1, g = 1, b = 1, a = 0.8 },
 	})
 end
@@ -115,7 +115,8 @@ function Timeline:press(unit, current_time, input_type)
 			not v.pressed --
 			and v.action.input_type == input_type
 			and (
-				v.end_time and (v.time - unit.hit_window < current_time and v.end_time + unit.hit_window > current_time)
+				v.end_time
+					and (v.time - unit.hit_window < current_time and v.end_time + unit.hit_window > current_time)
 				or math.abs(v.time - current_time) < unit.hit_window
 			)
 		then
@@ -321,13 +322,19 @@ function Timeline:draw()
 					opacity = math.min(opacity, 3 * (visible_angle - angle))
 					local tap_can_be_hit = math.abs(beat.time - self.time) < (unit.hit_window or 0.05)
 					local can_be_held = beat.end_time
-						and (self.time > beat.time - (unit.hit_window or 0.05) and self.time < beat.end_time + (unit.hit_window or 0.05))
+						and (
+							self.time > beat.time - (unit.hit_window or 0.05)
+							and self.time < beat.end_time + (unit.hit_window or 0.05)
+						)
 
 					local border_color = Color(0, 0, 0, opacity)
 					local color = (not state.spacebar_controls or not unit.is_player) and beat.action.color
 						or (
 							(input.spacebar.down and beat.end_time == nil) and Timings.Hold.color
-							or ((not input.spacebar.down and beat.end_time == nil) and Timings.Beat.color or beat.action.color)
+							or (
+								(not input.spacebar.down and beat.end_time == nil) and Timings.Beat.color
+								or beat.action.color
+							)
 						)
 					color = (tap_can_be_hit or can_be_held) and color:clone():lighten(0.4) or color
 					color = (can_be_held and beat.pressed and not beat.released) and color:clone():darken(0.7) or color
