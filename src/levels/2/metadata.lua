@@ -7,7 +7,7 @@ return {
 		},
 		{
 			filename = "entrance_map",
-			win = { "survive" },
+			win = { "kill all" },
 		},
 	},
 	room_songs = {

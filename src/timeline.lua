@@ -16,6 +16,8 @@ function Timeline:init(args)
 		fade_size = math.pi / 8,
 		color = { r = 1, g = 1, b = 1, a = 0.8 },
 	})
+
+	self.draw_misses = {}
 end
 
 function Timeline:set_bpm(bpm)
@@ -115,8 +117,7 @@ function Timeline:press(unit, current_time, input_type)
 			not v.pressed --
 			and v.action.input_type == input_type
 			and (
-				v.end_time
-					and (v.time - unit.hit_window < current_time and v.end_time + unit.hit_window > current_time)
+				v.end_time and (v.time - unit.hit_window < current_time and v.end_time + unit.hit_window > current_time)
 				or math.abs(v.time - current_time) < unit.hit_window
 			)
 		then
@@ -230,6 +231,8 @@ function Timeline:beat_tracker(units, current_time)
 			-- print(table.tostring(misses))
 			miss = true
 
+			table.insert(self.draw_misses, unit.id)
+
 			-- print("unit: ", unit.type.name, "missed beat at", time, "beat", misses[1].id)
 		end
 
@@ -297,15 +300,11 @@ function Timeline:draw()
 	for j, unit in ipairs(units) do
 		local x = self.draw_in_place and self.x or unit.x
 		local y = self.draw_in_place and self.y or unit.y
-		-- if self.draw_in_place then
-		-- 	print("drawing at", x, y, gw, gh)
-		-- end
 
 		if self.beats[unit.id] and #self.beats[unit.id] > 0 then
 			graphics.push(x, y, self.r, unit.spring and unit.spring.x or 1, unit.spring and unit.spring.x or 1)
 
 			local opacity = (unit == main.current.focused_unit or not unit.hit_window) and 1 or 0.4
-			-- graphics.circle(x, y, radius, Color(1, 1, 1, 0.8 * opacity), thickness * 1.2)
 			self.circle_bg:draw(x, y, radius * 2, radius * 2)
 
 			local hit_window_angle = (unit.hit_window or 0.05) * rotation_speed
@@ -313,6 +312,9 @@ function Timeline:draw()
 			for i, beat in ipairs(self.beats[unit.id]) do
 				local angle = (beat.time - self.time) * rotation_speed
 				local end_angle = ((beat.end_time or beat.time) - self.time) * rotation_speed
+				if beat.end_time then
+					print(beat.end_time)
+				end
 
 				if
 					beat.action ~= Timings.Empty
@@ -320,21 +322,16 @@ function Timeline:draw()
 					and angle > -hit_window_angle --[[ and not beat.end_time ]]
 				then
 					opacity = math.min(opacity, 3 * (visible_angle - angle))
+
 					local tap_can_be_hit = math.abs(beat.time - self.time) < (unit.hit_window or 0.05)
 					local can_be_held = beat.end_time
-						and (
-							self.time > beat.time - (unit.hit_window or 0.05)
-							and self.time < beat.end_time + (unit.hit_window or 0.05)
-						)
+						and (self.time > beat.time - (unit.hit_window or 0.05) and self.time < beat.end_time + (unit.hit_window or 0.05))
 
 					local border_color = Color(0, 0, 0, opacity)
 					local color = (not state.spacebar_controls or not unit.is_player) and beat.action.color
 						or (
 							(input.spacebar.down and beat.end_time == nil) and Timings.Hold.color
-							or (
-								(not input.spacebar.down and beat.end_time == nil) and Timings.Beat.color
-								or beat.action.color
-							)
+							or ((not input.spacebar.down and beat.end_time == nil) and Timings.Beat.color or beat.action.color)
 						)
 					color = (tap_can_be_hit or can_be_held) and color:clone():lighten(0.4) or color
 					color = (can_be_held and beat.pressed and not beat.released) and color:clone():darken(0.7) or color
@@ -395,9 +392,22 @@ function Timeline:draw()
 			local ox = (unit.x or self.x) + math.cos(indicator_angle) * line_length
 			local oy = (unit.y or self.y) + math.sin(indicator_angle) * line_length
 
-			graphics.line(ix, iy, ox, oy, Color(0, 0, 0, 1 * opacity), 2)
+			graphics.line(ix, iy, ox, oy, Color(0, 0, 0, 1), 2)
 
 			graphics.pop()
+		end
+
+		if table.pop_item(self.draw_misses, unit.id) then
+			local miss_effect = HitCircle({ --
+				group = self.group,
+				x = unit.x,
+				y = unit.y - radius,
+				rs = self.cell_size * 0.3,
+				duration = self.beat_resolution / 1,
+				color = p_blue1[0],
+			})
+
+			miss_effect:scale_down(self.beat_resolution / 2)
 		end
 	end
 end
