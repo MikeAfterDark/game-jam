@@ -4,19 +4,56 @@ bugs:
 - When a unit with its time already in timeline dies, its timeline still waits for its turn
     > need to change each beat's time + last_beat_time for that unit
 
-todo:
+Winnitron todo:
+- Solidify winnitron-demo gameplay (state variables)
+- clean up options menu
+- Calibration music + calibration ending + stats display
+
+- Winnitron controls and UI navigation
+- Multiple focused units (center camera on the average position)
+- Multiple players acting at the same time (turn order/next_turn())
+- "Next Unit" highlighting changing over time to be more pronounced as it gets closer, also lerp camera positioning between it and focused
+
+- no copyright/fair use music
+- 6+ levels and better UI to show what levels/music in a level
+- More maps and more distinct enemies
+- More win conditions (ideas: survive (aka, survive till end of song), collect, reach goal)
+
+- Sprites + animations for units
+- Sprites for projectile
+
+- SFX for eeeeveryyything
+
+- TUTORIAL + tutorial text (best case, dont need text)
+
+- Color accessibility
+- Rhythm Assistance (longer hit window/input buffer)
+
+
+Songs and credits:
+- Music by <a href="https://pixabay.com/users/lightbeatsmusic-53332028/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=513936">Ruslan Yemelianov</a> from <a href="https://pixabay.com/music//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=513936">Pixabay</a>
+- Music by <a href="https://pixabay.com/users/mfcc-28627740/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=297305">Mykola Sosin</a> from <a href="https://pixabay.com/music//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=297305">Pixabay</a>
+- Music by <a href="https://pixabay.com/users/djartmusic-46653586/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=301292">Krzysztof Szymanski</a> from <a href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=301292">Pixabay</a>
+
+- Thinking:
+So about multiple units moving at the same time:
+     > If spot to be moved into is empty, go there
+     > else, queue up 'move attempt'
+        > once beat is done or all possible units gave their inputs... try move again... recursively?
+1. make all the test cases
+2. make sure whatever algo can handle all of them, or handle the edge cases
 
 WIP
 [x] spawn units based on second layer info
 [x] projectile collisions (keep in mind high self.speed will skip over tiles)
 
-- 'damage' to unit in cell
+[x] 'damage' to unit in cell
 - melee/specific grid cell attacks
-- HP display + dmg taken
-- unit 'death'
-- progression to next room when all enemies dead or some condition met
+[x] HP display + dmg taken
+[x] unit 'death'
+[x] progression to next room when all enemies dead or some condition met
 - "Boss" unit in last room + spawning enemies to test turn_order
-- Win when boss+spawns dead
+[x] Win when boss+spawns dead
 - Results screen
 
 NOTES:
@@ -88,5 +125,11 @@ Learnings [2026-05-03]:
 General Issue:
 - the "Map" and "Units" feel disconnected from the song
     > Make songs and units that work together?
-    > Force units to have a beat that fits the song?
+et sane defaults (enemies) Force units to have a beat that fits the song?
 
+Felicia Playtest [2026-05-22]:
+- [Idea] right click goes back in menu
+- in options, 'back to menu' should instead go back to the previous logical menu
+- spacebar control as 'toggle' option
+- bugfix: calibration map metadata
+- bugfix: unit dying timeline

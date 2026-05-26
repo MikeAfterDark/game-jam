@@ -1,8 +1,13 @@
 return {
 	id = "calibration",
-	map_order = { "calibration_map" },
+	map_order = {
+		{
+			filename = "calibration_map",
+			win = { "survive" },
+		},
+	},
 	room_songs = {
-		{ song_name = "calibration", bpm = 90, valid_maps = { "calibration_map" } },
+		{ song_name = "calibration", bpm = 120, valid_maps = { "calibration_map" } },
 	},
 	play_songs_in_order = true,
 }

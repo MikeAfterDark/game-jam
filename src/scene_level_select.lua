@@ -130,6 +130,7 @@ function Level_Select:on_enter(from, args)
 								},
 							},
 							layer_has_music = true,
+							max_beats = 8,
 						},
 					},
 					display = {

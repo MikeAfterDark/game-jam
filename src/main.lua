@@ -102,7 +102,7 @@ function init()
 	sfx = {
 		metronome = Sound("temp/metronome.wav", sfx_tag),
 
-		earthquake = Sound("temp/earthquake-end.mp3", sfx_tag),
+		-- earthquake = Sound("temp/earthquake-end.mp3", sfx_tag),
 		building_mouse_enter = Sound(sfx_folder .. "building mouse enter.flac", sfx_tag),
 		extra = Sound(sfx_folder .. "extra.flac", sfx_tag),
 		extra2 = Sound(sfx_folder .. "extra 2.flac", sfx_tag),

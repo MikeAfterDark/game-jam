@@ -35,7 +35,8 @@ function Character_Setup:on_enter(from, args)
 	self.characters = self:load_characters()
 
 	self.edit_tab = { x = 0, y = gh * 1 }
-	self.bpm = 120
+	self.bpm = self.level.room_songs[1].bpm or 120
+	print(self.bpm)
 	self.max_beats = 8
 
 	self.timeline = collect_into(
@@ -235,7 +236,6 @@ function Character_Setup:set_stage(stage)
 			})
 		)
 		self.timeline2.draw_in_place = true
-
 		self.timeline2:set_bpm(self.bpm)
 
 		local x_offset = gw / (#self.group + 1)

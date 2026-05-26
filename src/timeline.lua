@@ -397,7 +397,7 @@ function Timeline:draw()
 			graphics.pop()
 		end
 
-		if table.pop_item(self.draw_misses, unit.id) then
+		if (not main.current:is(Game) and main.current.is_calibration) and table.pop_item(self.draw_misses, unit.id) then
 			local miss_effect = HitCircle({ --
 				group = self.group,
 				x = unit.x,

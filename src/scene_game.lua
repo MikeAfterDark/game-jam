@@ -150,8 +150,7 @@ function Game:next_turn()
 		end
 
 		local unit2 = self.turn_order:pop()
-		local next_song_position = self.song_position +
-		self.timeline:time_left_for(self.focused_unit, self.song_position)
+		local next_song_position = self.song_position + self.timeline:time_left_for(self.focused_unit, self.song_position)
 		self.timeline:add(unit2, next_song_position)
 
 		self.next_unit = unit2
@@ -183,6 +182,10 @@ function Game:play_room_song()
 	end
 
 	if self.song and self.song._source:isPlaying() then
+		return
+	end
+
+	if not self.map:can_play_next_song() then
 		return
 	end
 
@@ -233,6 +236,7 @@ function Game:play_room_song()
 			self.song = self.level.songs[song.song_name]:play({
 				volume = 0.35,
 			})
+			self.map:set_song_info({ duration = self.song._source:getDuration() })
 		end
 	end)
 end
