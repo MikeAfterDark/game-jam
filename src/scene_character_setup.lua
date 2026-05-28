@@ -36,7 +36,6 @@ function Character_Setup:on_enter(from, args)
 
 	self.edit_tab = { x = 0, y = gh * 1 }
 	self.bpm = self.level.room_songs[1].bpm or 120
-	print(self.bpm)
 	self.max_beats = 8
 
 	self.timeline = collect_into(

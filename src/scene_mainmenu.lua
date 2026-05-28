@@ -180,40 +180,41 @@ function MainMenu:setup_title_menu()
 	local button_offset = gh * 0.1
 	local button_dist_apart = gh * 0.08
 	local core_ui_x_pos = gw * 0.5
-	self.play_button1 = collect_into(
-		self.main_ui_elements,
-		Button({
-			group = ui_group,
-			x = core_ui_x_pos,
-			y = gh * 0.4 + button_offset,
-			button_text = "Play",
-			fg_color = "bg",
-			bg_color = "green",
-			action = function(b)
-				scene_transition(self, {
-					x = gw / 2,
-					y = gh / 2,
-					type = "circle",
-					target = {
-						scene = Level_Select,
-						name = "level_select",
-						args = { clear_music = true },
-					},
-					display = {
-						text = "loading...",
-						font = pixul_font,
-						alignment = "center",
-					},
-				})
 
-				-- local pack = self:get_pack_from_path("dev_maps/levels/")
-				-- if not self.levels_setup then
-				-- 	self:setup_level_menu(pack)
-				-- end
-				-- self:set_ui_to(menu.Levels)
-			end,
-		})
-	)
+	local num_players = state.winnitron_mode and 4 or 1
+	local play_spread = gw * 0.14
+	local x_center = play_spread * (num_players - 1) / 2
+	for i = 1, num_players do
+		local x_offset = (i - 1) * play_spread - x_center
+		collect_into(
+			self.main_ui_elements,
+			Button({
+				group = ui_group,
+				x = core_ui_x_pos + x_offset,
+				y = gh * 0.4 + button_offset,
+				button_text = i .. " Player" .. (i > 1 and "s" or ""),
+				fg_color = "bg",
+				bg_color = "green",
+				action = function(b)
+					scene_transition(self, {
+						x = gw / 2,
+						y = gh / 2,
+						type = "circle",
+						target = {
+							scene = Level_Select,
+							name = "level_select",
+							args = { clear_music = true, num_players = i },
+						},
+						display = {
+							text = "loading...",
+							font = pixul_font,
+							alignment = "center",
+						},
+					})
+				end,
+			})
+		)
+	end
 	button_offset = button_offset + button_dist_apart
 
 	self.options_button = collect_into(

@@ -7,7 +7,7 @@ return {
 		},
 	},
 	room_songs = {
-		{ song_name = "djartmusic-the-return-of-the-8-bit-era-301292", bpm = 174 / 2, valid_maps = { "tutorial_map" } },
+		{ song_name = "djartmusic-the-return-of-the-8-bit-era-301292", bpm = 174 / 2, pitch = 0.6, valid_maps = { "tutorial_map" } },
 		-- todo: add song effects, like a lower pitch for this tutorial level
 	},
 	play_songs_in_order = true,

@@ -110,28 +110,29 @@ function Map:set_song_info(args)
 	self.duration = args.duration or -1
 end
 
-function Map:room_completed()
+function Map:room_completed(current_time)
 	-- todo: make each room decide its win condition
 	local kill_all = table.contains(self.room_data.win, "kill all") --
 		and not table.any(self.units, function(v)
 			return not v.is_player
 		end)
 
-	local survive = self.song_finished and table.contains(self.room_data.win, "survive")
+	local survive = (self.duration and current_time > self.duration - 0.1 or false) and
+	table.contains(self.room_data.win, "survive")
 
 	return kill_all or survive
 end
 
-function Map:can_play_next_song()
-	self.song_played = self.song_played or false
-	if not self.song_played then
-		self.song_played = true
-		return true
-	else
-		self.song_finished = true
-		return not table.contains(self.room_data.win, "survive")
-	end
-end
+-- function Map:can_play_next_song()
+-- 	self.song_played = self.song_played or false
+-- 	if not self.song_played then
+-- 		self.song_played = true
+-- 		return true
+-- 	else
+-- 		self.song_finished = true
+-- 		return not table.contains(self.room_data.win, "survive")
+-- 	end
+-- end
 
 function Map:load_next_room()
 	for _, entity in pairs(self.entities) do
@@ -229,7 +230,7 @@ function Map:load_next_room()
 
 	self.new_room_loaded = true
 
-	return { name = self.room_data.filename }
+	return { name = self.room_data.filename, offset_beats = self.room_data.offset_beats }
 end
 
 function Map:react_to_hit(args)
@@ -334,7 +335,10 @@ function Map:handle_press(args)
 	args.tile_x = args.unit.tile_x + args.dir.x
 	args.tile_y = args.unit.tile_y + args.dir.y
 
-	local action = Beat_Actions[state.spacebar_controls and (input.spacebar.down and Timings.Hold.id or Timings.Beat.id) or args.beat.action.id]
+	local id = state.spacebar_controls --
+		and (input.spacebar.down and Timings.Hold.id or Timings.Beat.id)
+		or args.beat.action.id
+	local action = Beat_Actions[id]
 
 	if action then
 		action(self, args)
@@ -351,7 +355,8 @@ function Map:handle_enemy_input(args)
 	--		map acts out the attack
 	--
 	if args.beat.action == Timings.Beat then -- move
-		local target, range, axis_distance = args.unit:choose_move_target(self:get_all_alive_units(), self:get_all_interactible_entities())
+		local target, range, axis_distance = args.unit:choose_move_target(self:get_all_alive_units(),
+			self:get_all_interactible_entities())
 		-- WARN: Current issue: randomly chooses new target every beat
 		-- TODO: include range and stuff
 
@@ -360,7 +365,8 @@ function Map:handle_enemy_input(args)
 		local new_x, new_y = self:pathfind(args.unit, args.unit.tile_x, args.unit.tile_y, target_x, target_y)
 		self:move_unit(args.unit, new_x, new_y)
 	elseif args.beat.action == Timings.Hold then -- attack
-		local targets, attack = args.unit:choose_attack_targets(self:get_all_alive_units(), self:get_all_interactible_entities())
+		local targets, attack = args.unit:choose_attack_targets(self:get_all_alive_units(),
+			self:get_all_interactible_entities())
 		-- WARN: Current issue: randomly chooses new target every beat
 		--
 		if targets and #targets > 0 and attack then
@@ -468,7 +474,7 @@ end
 
 function rects_overlap(a, b) -- unit x unit collision check
 	return not (
-		a.x + a.w <= b.x --
+		a.x + a.w <= b.x     --
 		or b.x + b.w <= a.x
 		or a.y + a.h <= b.y
 		or b.y + b.h <= a.y
@@ -478,14 +484,14 @@ end
 function Map:draw()
 	local visual_center_x = self.cell_size * math.ceil(self.rows / 2)
 	local visual_center_y = self.cell_size * math.ceil(self.cols / 2)
-	local visual_x = self.x + visual_center_x
-	local visual_y = self.y + visual_center_y
+	local visual_x = camera.x -- self.x + visual_center_x
+	local visual_y = camera.y -- self.y + visual_center_y
 	graphics.push(visual_x, visual_y, self.r, self.spring.x, self.spring.x)
-	graphics.rectangle( --
+	graphics.rectangle(    --
 		visual_x,
 		visual_y,
-		self.cell_size * (self.rows + 4),
-		self.cell_size * (self.cols + 4),
+		self.cell_size * 10, --(self.rows + 4),
+		self.cell_size * 10, --(self.cols + 4),
 		0,
 		0,
 		self.reaction_color
@@ -496,8 +502,8 @@ function Map:draw()
 	graphics.rectangle( --
 		visual_x,
 		visual_y,
-		self.cell_size * (self.rows + 2),
-		self.cell_size * (self.cols + 2),
+		self.cell_size * 8, --(self.rows + 2),
+		self.cell_size * 8, --(self.cols + 2),
 		0,
 		0,
 		self.reaction_color
@@ -513,7 +519,7 @@ function Map:draw()
 		"open",
 		visual_x,
 		visual_y,
-		self.cell_size * (self.rows + 1),
+		self.cell_size * 6, --(self.rows + 1),
 		angle,
 		angle + 2 * math.pi * (self.duration and ((self.duration - self.time) / self.duration) or 1),
 		time_color,
@@ -534,7 +540,7 @@ function Map:draw()
 					0,
 					0,
 					cell.color
-					-- cell.unit and cell.unit.color or cell.color
+				-- cell.unit and cell.unit.color or cell.color
 				)
 			end
 		end
@@ -566,10 +572,10 @@ function Map:pathfind(unit, x1, y1, x2, y2)
 		end
 
 		local dirs = {
-			{ 1, 0 },
+			{ 1,  0 },
 			{ -1, 0 },
-			{ 0, 1 },
-			{ 0, -1 },
+			{ 0,  1 },
+			{ 0,  -1 },
 		}
 
 		for _, d in ipairs(table.shuffle(dirs)) do -- shuffle to spice up pathfinding

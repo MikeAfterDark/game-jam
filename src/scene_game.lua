@@ -150,7 +150,8 @@ function Game:next_turn()
 		end
 
 		local unit2 = self.turn_order:pop()
-		local next_song_position = self.song_position + self.timeline:time_left_for(self.focused_unit, self.song_position)
+		local next_song_position = self.song_position --
+			+ self.timeline:time_left_for(self.focused_unit, self.song_position)
 		self.timeline:add(unit2, next_song_position)
 
 		self.next_unit = unit2
@@ -185,20 +186,17 @@ function Game:play_room_song()
 		return
 	end
 
-	if not self.map:can_play_next_song() then
-		return
-	end
-
 	self.in_countdown = true
-	local song = nil
 	if not self.song then
 		local viable_songs = table.select(self.level.room_songs, function(v)
 			return table.contains(v.valid_maps, self.room.name)
 		end)
-		song = table.random(viable_songs)
-		local bpm = song.bpm
+		self.song_data = table.random(viable_songs)
+		local bpm = self.song_data.bpm
 		self.timeline:set_bpm(bpm)
 	end
+
+	-- self.timeline:setup_all_timelines(self.song_data)
 
 	local next_song_beat = self.timeline:get_next_beat_time(self.song_position)
 	local beat_duration = self.timeline:get_beat_duration()
@@ -233,9 +231,12 @@ function Game:play_room_song()
 		if self.song then
 			self.song:resume()
 		else
-			self.song = self.level.songs[song.song_name]:play({
+			self.pitch = self.song_data.pitch or 1
+			self.song = self.level.songs[self.song_data.song_name]:play({
 				volume = 0.35,
+				pitch = self.pitch,
 			})
+
 			self.map:set_song_info({ duration = self.song._source:getDuration() })
 		end
 	end)
@@ -243,6 +244,10 @@ end
 
 function Game:update(dt)
 	self:play_room_song()
+
+	-- if self.song then
+	-- 	self.song:update(dt)
+	-- end
 
 	-- temp debug controls
 	if input.z.pressed and self.pitch > 0.1 then
@@ -270,7 +275,7 @@ function Game:update(dt)
 			self.song._source:setPitch(self.pitch)
 
 			local song_time = self.song._source:tell()
-			local delta = song_time - (self.last_song_time or song_time)
+			local delta = math.max(0, song_time - (self.last_song_time or song_time))
 			self.last_song_time = song_time
 
 			self.song_position = self.song_position + delta
@@ -282,7 +287,7 @@ function Game:update(dt)
 				self:next_turn()
 			end
 
-			if self.map:room_completed() then
+			if self.map:room_completed(self.song_position) then
 				self.map.new_room_loaded = false
 				self.timeline:reset()
 				self.turn_order:reset()

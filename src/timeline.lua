@@ -41,8 +41,26 @@ function Timeline:reset()
 	self.beats = {}
 end
 
--- TODO: clean up self.beats on every room load
-function Timeline:add(unit, current_time)
+-- function Timeline:setup_all_timelines(data)
+-- 	local offset = data.offset_beats * self.beat_resolution
+-- 	print("boop")
+-- 	for id, timeline in pairs(self.beats) do
+-- 		if self.beats_per_turn[id] and #self.beats_per_turn[id] > 0 then
+-- 			self.beats_per_turn[id] = self.beats_per_turn[id][#self.beats_per_turn[id]] + offset
+-- 		end
+--
+-- 		print("beep", love.timer.getTime())
+-- 		for _, beat in ipairs(timeline) do
+-- 			print("time: ", beat.time, beat.time + offset)
+-- 			beat.time = beat.time + offset
+-- 			if beat.end_time then
+-- 				beat.end_time = beat.end_time + offset
+-- 			end
+-- 		end
+-- 	end
+-- end
+
+function Timeline:add(unit, current_time, add_dummy)
 	if not unit then
 		return
 	end
@@ -51,13 +69,13 @@ function Timeline:add(unit, current_time)
 	self.beats_per_turn[unit.id] = self.beats_per_turn[unit.id] or {}
 
 	local dummy_time = 0
-	local num_dummy_beats = 2
+	local num_dummy_beats = 2 + (main.current.song_data and main.current.song_data.offset_beats or 0) -- WARN: jank
 
 	local had_beats = #self.beats_per_turn[unit.id] > 0
 	local previous_time = had_beats and self.beats_per_turn[unit.id][#self.beats_per_turn[unit.id]] or 0
-	local enough_time_passed = previous_time + num_dummy_beats * self.beat_resolution < current_time
+	local enough_time_passed = (previous_time + num_dummy_beats * self.beat_resolution) < current_time
 
-	if unit.is_player and enough_time_passed then
+	if unit.is_player and (add_dummy or (enough_time_passed or not had_beats)) then
 		-- insert # QoL dummy beats
 
 		for i = 1, num_dummy_beats do
@@ -312,9 +330,6 @@ function Timeline:draw()
 			for i, beat in ipairs(self.beats[unit.id]) do
 				local angle = (beat.time - self.time) * rotation_speed
 				local end_angle = ((beat.end_time or beat.time) - self.time) * rotation_speed
-				if beat.end_time then
-					print(beat.end_time)
-				end
 
 				if
 					beat.action ~= Timings.Empty
@@ -339,9 +354,13 @@ function Timeline:draw()
 					color.a = color.a * opacity
 
 					local line_thickness = thickness
-					angle = math.max(0, angle) - math.pi / 2 -- centering it
+					angle = --[[ math.max(0,  ]]
+						angle --[[ ) ]]
+						- math.pi / 2 -- centering it
 					-- end_angle = math.min(visible_angle - hit_window_angle, end_angle) - math.pi / 2
-					end_angle = math.max(0, math.min(visible_angle - hit_window_angle, end_angle)) - math.pi / 2
+					end_angle = --[[ math.max(0, ]]
+						math.min(visible_angle - hit_window_angle, end_angle) --[[ ) ]]
+						- math.pi / 2
 
 					local start_angle = angle - hit_window_angle
 					end_angle = end_angle + hit_window_angle
@@ -397,7 +416,7 @@ function Timeline:draw()
 			graphics.pop()
 		end
 
-		if (not main.current:is(Game) and main.current.is_calibration) and table.pop_item(self.draw_misses, unit.id) then
+		if main.current:is(Game) and not main.current.is_calibration and table.pop_item(self.draw_misses, unit.id) then
 			local miss_effect = HitCircle({ --
 				group = self.group,
 				x = unit.x,

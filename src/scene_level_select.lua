@@ -23,6 +23,7 @@ function Level_Select:on_enter(from, args)
 	})
 
 	self.levels = self:load_levels()
+	self.num_players = args.num_players
 
 	local cols = 3
 
@@ -63,7 +64,7 @@ function Level_Select:on_enter(from, args)
 								{
 									result_key = "level",
 									action = function()
-										return self:load_level(tostring(i))
+										return self:load_level(level.name)
 									end,
 								},
 							},
@@ -79,6 +80,15 @@ function Level_Select:on_enter(from, args)
 				end,
 			})
 		)
+	end
+
+	for i, button in ipairs(self.ui_elements) do
+
+		local col = (i - 1) % cols
+		local row = math.floor((i - 1) / cols)
+
+
+		button.up = 
 	end
 
 	self.calibration_button = collect_into(
@@ -142,11 +152,27 @@ function Level_Select:on_enter(from, args)
 			end,
 		})
 	)
+
+	if state.winnitron_mode then
+		self.selected_level = self.ui_elements[1] -- TODO: select next level that hasn't been beaten yet
+		self.selected_level:toggle_outline()
+	end
 end
 
 function Level_Select:update(dt)
 	self:update_game_object(dt * slow_amount)
 	self.main:update(dt)
+
+	if state.winnitron_mode then
+		for _, dir in ipairs({ "up", "down", "left", "right" }) do
+			if input[dir].pressed then
+				self.selected_level:toggle_outline()
+				self.selected_level = self.selected_level[dir]
+				self.selected_level:toggle_outline()
+				break
+			end
+		end
+	end
 end
 
 function Level_Select:load_level(name)
@@ -177,8 +203,6 @@ function Level_Select:load_level(name)
 		end
 	end
 
-	-- calibration = Sound("temp/jim_combs-the-80s-called-they-want-their-synths-back-140535.ogg", music_tag),
-
 	local level = {
 		name = name,
 		rooms = rooms,
@@ -192,12 +216,13 @@ function Level_Select:load_level(name)
 	return level
 end
 
+-- TODO: this should determine level order, by folder name
 function Level_Select:load_levels()
 	return {
 		{ name = "1" },
-		{ name = "2" },
 		{ name = "3" },
-		-- { name = "4" },
+		{ name = "2" },
+		{ name = "4" },
 		-- { name = "5" },
 		-- { name = "6" },
 		-- { name = "7" },

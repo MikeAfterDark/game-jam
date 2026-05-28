@@ -35,18 +35,58 @@ function init()
 	-- state.info_display_on_right_side = false -- TEMP
 	renderer_init()
 
+	state.winnitron_mode = true
+
 	new_keys = {} -- init for rebinding options
 	if not state.input then
 		state.input = {}
 	end
+	winnitron_controls = {
+		up,
+	}
 	controls = {
-		up = { text = "Up", default = { "up", "w" }, input = state.input.up },
-		down = { text = "Down", default = { "down", "s" }, input = state.input.down },
-		left = { text = "Left", default = { "left", "a" }, input = state.input.left },
-		right = { text = "Right", default = { "right", "d" }, input = state.input.right },
-		arix = { text = "Arix", default = { "q" }, input = state.input.arix },
-		myon = { text = "Myon", default = { "e" }, input = state.input.myon },
-		spacebar = { text = "Spacebar", default = { "space" }, input = state.input.spacebar },
+		up = {
+			text = "Up",
+			default = { "up", "w" },
+			winnitron = { "up", "w", "i", "kp8" },
+			input = state.input.up,
+		},
+		down = {
+			text = "Down",
+			default = { "down", "s" },
+			winnitron = { "down", "s", "k", "kp5" },
+			input = state.input.down,
+		},
+		left = {
+			text = "Left",
+			default = { "left", "a" },
+			winnitron = { "left", "a", "j", "kp4" },
+			input = state.input.left,
+		},
+		right = {
+			text = "Right",
+			default = { "right", "d" },
+			winnitron = { "right", "d", "l", "kp6" },
+			input = state.input.right,
+		},
+		arix = {
+			text = "Arix",
+			default = { "q" },
+			winnitron = {},
+			input = state.input.arix,
+		},
+		myon = {
+			text = "Myon",
+			default = { "e" },
+			winnitron = {},
+			input = state.input.myon,
+		},
+		spacebar = {
+			text = "Spacebar",
+			default = { "space" },
+			winnitron = { ".", "`", "g", "kp1" },
+			input = state.input.spacebar,
+		},
 	}
 	options_keys_display_order = {
 		"up",
@@ -57,8 +97,16 @@ function init()
 		"myon",
 		"spacebar",
 	}
-	for action, key in pairs(controls) do
-		input:bind(action, key.input or key.default)
+	if state.winnitron_mode then
+		for action, data in pairs(controls) do
+			for i, key in ipairs(data.winnitron) do
+				input:bind(action, "p" .. i .. "_" .. key)
+			end
+		end
+	else
+		for action, key in pairs(controls) do
+			input:bind(action, key.input or key.default)
+		end
 	end
 
 	person = {
@@ -268,7 +316,7 @@ function init()
 	main.current_music_type = "silence"
 	-- play_music({ type = "main", volume = 0.3 })
 
-	-- can comfortably fit 14 scenes atm
+	-- can comfortably fit 14 scenes atm on main menu
 	debug_scenes = {
 		{ id = "intro",           destination = Intro },
 		{ id = "main_menu",       destination = MainMenu },
@@ -283,7 +331,7 @@ function init()
 	-- main:add(Intro("intro"))
 	-- main:add(Game("intro"))
 	-- main:add(Level_Select("intro"))
-	main:add(Level_Select("intro"))
+	main:add(MainMenu("intro"))
 	main:go_to("intro", {})
 
 	-- set sane defaults:
@@ -292,19 +340,18 @@ function init()
 	state.dark = state.dark or true
 	state.sfx_volume = state.sfx_volume or 0.3
 	state.music_volume = state.music_volume or 0.3
-	state.fullscreen = state.fullscreen or false
+	state.fullscreen = state.fullscreen or true
 	state.vsync = state.vsync or false
 
 	state.time_offset = state.time_offset or 0
 	state.visual_offset = state.visual_offset or 0
 
-	state.enemies_act_every_beat = state.enemies_act_every_beat or false
+	state.enemies_act_every_beat = state.enemies_act_every_beat or true
 	state.enemies_act_at_end_of_round = state.enemies_act_at_end_of_round or false
 	state.enemies_only_move_when_player_doesnt = state.enemies_only_move_when_player_doesnt or false
-	state.timeline_speed = state.timeline_speed or 0.3
-	state.spacebar_controls = state.spacebar_controls or false
 
-	state.damage_enabled = state.damage_enabled or true
+	state.timeline_speed = state.timeline_speed or 0.3
+	state.spacebar_controls = state.spacebar_controls or true
 end
 
 function update(dt)
@@ -532,47 +579,49 @@ function open_options(self)
 	--
 	-- next column: Controls
 	--
-	column = 2
-	button_offset = -gh * 0.2
-	button_distance = gh * 0.06
+	if not state.winnitron_mode then
+		column = 2
+		button_offset = -gh * 0.2
+		button_distance = gh * 0.06
 
-	self.controls_text = collect_into(
-		self.options_ui_elements,
-		Text2({
-			group = ui_group,
-			x = column_x[column],
-			y = gh / 2 + button_offset,
-			lines = { { text = "[fg]Controls:", font = pixul_font } },
-		})
-	)
-	button_offset = button_offset + button_distance
-
-	for _, action in ipairs(options_keys_display_order) do
-		local key = controls[action]
-		-- for action, key in pairs(controls) do
-		local keys = key.input or key.default
-		local keys_string = table.concat(keys, ", ")
-
-		self["input_" .. action] = collect_into(
+		self.controls_text = collect_into(
 			self.options_ui_elements,
-			InputButton({
+			Text2({
+				group = ui_group,
 				x = column_x[column],
 				y = gh / 2 + button_offset,
-				w = 85 * global_game_scale,
-				separator_length = 50 * global_game_scale,
-				description_text = key.text,
-				button_text = string.upper(keys_string),
-				fg_color = "fg",
-				bg_color = "bg",
-				action = function(b)
-					set_action_keybind(self, action, key)
-					local updated_keys = controls[action].input or key.default
-					b:set_text(string.upper(table.concat(updated_keys, ", ")))
-				end,
+				lines = { { text = "[fg]Controls:", font = pixul_font } },
 			})
 		)
-		button_offset = button_offset + button_distance - 3
-		--for some reason this is needed for the last button to work (for 4 controls)
+		button_offset = button_offset + button_distance
+
+		for _, action in ipairs(options_keys_display_order) do
+			local key = controls[action]
+			-- for action, key in pairs(controls) do
+			local keys = key.input or key.default
+			local keys_string = table.concat(keys, ", ")
+
+			self["input_" .. action] = collect_into(
+				self.options_ui_elements,
+				InputButton({
+					x = column_x[column],
+					y = gh / 2 + button_offset,
+					w = 85 * global_game_scale,
+					separator_length = 50 * global_game_scale,
+					description_text = key.text,
+					button_text = string.upper(keys_string),
+					fg_color = "fg",
+					bg_color = "bg",
+					action = function(b)
+						set_action_keybind(self, action, key)
+						local updated_keys = controls[action].input or key.default
+						b:set_text(string.upper(table.concat(updated_keys, ", ")))
+					end,
+				})
+			)
+			button_offset = button_offset + button_distance - 3
+			--for some reason this is needed for the last button to work (for 4 controls)
+		end
 	end
 
 	--
@@ -766,24 +815,6 @@ function open_options(self)
 				state.spacebar_controls = not state.spacebar_controls
 				system.save_state()
 				b:set_text(tostring(state.spacebar_controls and "spacebar controls" or "timeline controls"))
-			end,
-		})
-	)
-	button_offset = button_offset + button_distance
-
-	self.damage_enabled_button = collect_into(
-		self.options_ui_elements,
-		Button({
-			x = column_x[column],
-			y = gh / 2 + button_offset,
-			w = gw * 0.20,
-			button_text = tostring(state.damage_enabled and "damage enabled" or "damage disabled"),
-			fg_color = "bg",
-			bg_color = "fg",
-			action = function(b)
-				state.damage_enabled = not state.damage_enabled
-				system.save_state()
-				b:set_text(tostring(state.damage_enabled and "damage enabled" or "damage disabled"))
 			end,
 		})
 	)
