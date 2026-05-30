@@ -67,6 +67,44 @@ function MainMenu:update(dt)
 		self.song_info_text:update(dt)
 	end
 
+	local any_button_hovered = false
+	for i, button in ipairs(self.main_ui_elements) do
+		if button.selected and button.colliding_with_mouse then
+			if button ~= self.selected_button then
+				self.selected_button:toggle_outline()
+				self.selected_button = button
+				self.selected_button:toggle_outline()
+			end
+			any_button_hovered = true
+			break -- WARN: assumes no buttons overlap
+		end
+	end
+
+	-- TODO: move this up and down the UI layers
+	if not any_button_hovered then
+		for i = 1, self.num_players do
+			for _, dir in ipairs({ "up", "down", "left", "right" }) do
+				if input[i .. dir].pressed then
+					self.selected_button:toggle_outline()
+					self.selected_button = self.selected_button[dir]
+					self.selected_button:toggle_outline()
+
+					if self.selected_button ~= self.options_button and self.selected_button ~= self.credits_button then
+						self.options_button.up = self.selected_button
+						self.credits_button.down = self.selected_button
+					end
+					break
+				end
+			end
+		end
+	end
+
+	for i = 1, self.num_players do
+		if input[i .. "spacebar"].pressed then
+			self.selected_button:action()
+		end
+	end
+
 	if input.escape.pressed then
 		if self.in_options then
 			if self.in_keybinding then
@@ -181,40 +219,45 @@ function MainMenu:setup_title_menu()
 	local button_dist_apart = gh * 0.08
 	local core_ui_x_pos = gw * 0.5
 
-	local num_players = state.winnitron_mode and 4 or 1
+	self.num_players = state.winnitron_mode and 4 or 1
 	local play_spread = gw * 0.14
-	local x_center = play_spread * (num_players - 1) / 2
-	for i = 1, num_players do
+	local x_center = play_spread * (self.num_players - 1) / 2
+	local buttons = {}
+	for i = 1, self.num_players do
 		local x_offset = (i - 1) * play_spread - x_center
 		collect_into(
-			self.main_ui_elements,
-			Button({
-				group = ui_group,
-				x = core_ui_x_pos + x_offset,
-				y = gh * 0.4 + button_offset,
-				button_text = i .. " Player" .. (i > 1 and "s" or ""),
-				fg_color = "bg",
-				bg_color = "green",
-				action = function(b)
-					scene_transition(self, {
-						x = gw / 2,
-						y = gh / 2,
-						type = "circle",
-						target = {
-							scene = Level_Select,
-							name = "level_select",
-							args = { clear_music = true, num_players = i },
-						},
-						display = {
-							text = "loading...",
-							font = pixul_font,
-							alignment = "center",
-						},
-					})
-				end,
-			})
+			buttons,
+			collect_into(
+				self.main_ui_elements,
+				Button({
+					group = ui_group,
+					x = core_ui_x_pos + x_offset,
+					y = gh * 0.4 + button_offset,
+					button_text = i .. " Player" .. (i > 1 and "s" or ""),
+					fg_color = "bg",
+					bg_color = "green",
+					action = function(b)
+						scene_transition(self, {
+							x = gw / 2,
+							y = gh / 2,
+							type = "circle",
+							target = {
+								scene = Level_Select,
+								name = "level_select",
+								args = { clear_music = true, num_players = i },
+							},
+							display = {
+								text = "loading...",
+								font = pixul_font,
+								alignment = "center",
+							},
+						})
+					end,
+				})
+			)
 		)
 	end
+
 	button_offset = button_offset + button_dist_apart
 
 	self.options_button = collect_into(
@@ -227,15 +270,14 @@ function MainMenu:setup_title_menu()
 			fg_color = "bg",
 			bg_color = "fg",
 			action = function(b)
-				if not self.in_pause then
+				if not self.in_options then
 					open_options(self)
 					b.selected = true
-				else
-					close_options(self)
 				end
 			end,
 		})
 	)
+
 	self.credits_button = collect_into(
 		self.main_ui_elements,
 		Button({
@@ -246,11 +288,32 @@ function MainMenu:setup_title_menu()
 			fg_color = "bg",
 			bg_color = "fg",
 			action = function(b)
-				open_credits(self)
-				b.selected = true
+				if not self.in_credits then
+					open_credits(self)
+					b.selected = true
+				end
 			end,
 		})
 	)
+
+	self.options_button.left = self.options_button
+	self.options_button.right = self.options_button
+	self.options_button.down = self.credits_button
+	self.options_button.up = buttons[1]
+
+	self.credits_button.left = self.credits_button
+	self.credits_button.right = self.credits_button
+	self.credits_button.down = buttons[1]
+	self.credits_button.up = self.options_button
+
+	for i = 1, self.num_players do
+		buttons[i].left = buttons[(i + self.num_players - 2) % self.num_players + 1]
+		buttons[i].right = buttons[(i % self.num_players) + 1]
+		buttons[i].down = self.options_button
+		buttons[i].up = self.credits_button
+	end
+	self.selected_button = buttons[1]
+	self.selected_button:toggle_outline()
 
 	local debug_ui_x_pos = gw * 0.1
 	local debug_ui_y_pos = gh * 0.1

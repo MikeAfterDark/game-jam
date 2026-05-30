@@ -72,13 +72,13 @@ function init()
 		arix = {
 			text = "Arix",
 			default = { "q" },
-			winnitron = {},
+			winnitron = { "booop" },
 			input = state.input.arix,
 		},
 		myon = {
 			text = "Myon",
 			default = { "e" },
-			winnitron = {},
+			winnitron = { "booop" },
 			input = state.input.myon,
 		},
 		spacebar = {
@@ -97,17 +97,14 @@ function init()
 		"myon",
 		"spacebar",
 	}
-	if state.winnitron_mode then
-		for action, data in pairs(controls) do
-			for i, key in ipairs(data.winnitron) do
-				input:bind(action, "p" .. i .. "_" .. key)
-			end
-		end
-	else
-		for action, key in pairs(controls) do
-			input:bind(action, key.input or key.default)
+	for action, data in pairs(controls) do
+		for i, key in ipairs(data.winnitron) do
+			input:bind(i .. action, key)
 		end
 	end
+	-- for action, key in pairs(controls) do
+	-- 	input:bind(action, key.input or key.default)
+	-- end
 
 	person = {
 		Mikey = {
@@ -318,12 +315,12 @@ function init()
 
 	-- can comfortably fit 14 scenes atm on main menu
 	debug_scenes = {
-		{ id = "intro",           destination = Intro },
-		{ id = "main_menu",       destination = MainMenu },
-		{ id = "level_select",    destination = Level_Select },
+		{ id = "intro", destination = Intro },
+		{ id = "main_menu", destination = MainMenu },
+		{ id = "level_select", destination = Level_Select },
 		{ id = "character_setup", destination = Character_Setup },
-		{ id = "game",            destination = Game },
-		{ id = "audio_zoo",       destination = AudioZoo }, -- todo: fix
+		{ id = "game", destination = Game },
+		{ id = "audio_zoo", destination = AudioZoo }, -- todo: fix
 	}
 
 	main:add(Settings("settings"))
@@ -764,8 +761,7 @@ function open_options(self)
 			action = function(b)
 				state.enemies_only_move_when_player_doesnt = not state.enemies_only_move_when_player_doesnt
 				system.save_state()
-				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or
-				"dont freeze"))
+				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or "dont freeze"))
 			end,
 		})
 	)

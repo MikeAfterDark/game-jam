@@ -25,70 +25,85 @@ function Level_Select:on_enter(from, args)
 	self.levels = self:load_levels()
 	self.num_players = args.num_players
 
-	local cols = 3
+	local cols = 4
 
 	local scale = gw * 0.08
 	local spacing = scale * 1.1
 	local x_center = gw / 2
 	local y_start = scale
 
+	local level_buttons = {}
 	for i, level in ipairs(self.levels) do
 		local col = (i - 1) % cols
 		local row = math.floor((i - 1) / cols)
 
 		local total_width = (cols - 1) * spacing
 
-		collect_into(
-			self.ui_elements,
-			RectangleButton({
-				group = self.main,
-				layer = ui_interaction_layer.Level_Select,
-				x = x_center - total_width / 2 + col * spacing,
-				y = y_start + row * spacing,
-				w = scale,
-				h = scale,
-				force_update = true,
-				no_image = true,
-				color = Color(1, 1, 0, 1),
-				title_text = level.name,
-				fg_color = "bg",
-				action = function(b)
-					scene_transition(self, {
-						x = gw / 2,
-						y = gh / 2,
-						type = "circle",
-						target = {
-							scene = Character_Setup,
-							name = "character_setup",
-							load_functions = {
-								{
-									result_key = "level",
-									action = function()
-										return self:load_level(level.name)
-									end,
+		table.insert(
+			level_buttons,
+			collect_into(
+				self.ui_elements,
+				RectangleButton({
+					group = self.main,
+					layer = ui_interaction_layer.Level_Select,
+					x = x_center - total_width / 2 + col * spacing,
+					y = y_start + row * spacing,
+					w = scale,
+					h = scale,
+					force_update = true,
+					no_image = true,
+					color = Color(1, 1, 0, 1),
+					title_text = level.name,
+					fg_color = "bg",
+					action = function(b)
+						scene_transition(self, {
+							x = gw / 2,
+							y = gh / 2,
+							type = "circle",
+							target = {
+								scene = Character_Setup,
+								name = "character_setup",
+								load_functions = {
+									{
+										result_key = "level",
+										action = function()
+											return self:load_level(level.filename)
+										end,
+									},
 								},
-							},
 
-							args = { clear_music = true },
-						},
-						display = {
-							text = "loading level " .. level.name,
-							font = pixul_font,
-							alignment = "center",
-						},
-					})
-				end,
-			})
+								args = { clear_music = true },
+							},
+							display = {
+								text = "loading level " .. level.name,
+								font = pixul_font,
+								alignment = "center",
+							},
+						})
+					end,
+				})
+			)
 		)
 	end
 
-	for i, button in ipairs(self.ui_elements) do
-
+	for i, button in ipairs(level_buttons) do
+		local cols = cols
+		local n = #level_buttons
 		local col = (i - 1) % cols
-		local row = math.floor((i - 1) / cols)
 
+		-- horizontal wrap (same row)
+		local row_start = i - col
+		local left = row_start + (col - 1) % cols
+		local right = row_start + (col + 1) % cols
 
-		button.up = 
+		-- vertical step
+		local up = (i > cols) and (i - cols) or (n - ((n - 1 - col) % cols))
+		local down = (i + cols <= n) and (i + cols) or (col + 1)
+
+		button.left = level_buttons[left] or level_buttons[#level_buttons]
+		button.right = level_buttons[right] or level_buttons[row_start]
+		button.up = level_buttons[up] -- or button
+		button.down = level_buttons[down] -- or button
 	end
 
 	self.calibration_button = collect_into(
@@ -96,8 +111,9 @@ function Level_Select:on_enter(from, args)
 		Button({
 			group = self.main,
 			layer = ui_interaction_layer.Level_Select,
-			x = gw * 0.9,
-			y = gh * 0.84,
+			x = level_buttons[1].x - gw * 0.13,
+			y = level_buttons[1].y,
+			h = gh * 0.1,
 			button_text = "calibrate",
 			fg_color = "bg",
 			bg_color = "fg",
@@ -153,9 +169,12 @@ function Level_Select:on_enter(from, args)
 		})
 	)
 
+	level_buttons[1].left = self.calibration_button
+	self.calibration_button.right = level_buttons[1]
+
 	if state.winnitron_mode then
-		self.selected_level = self.ui_elements[1] -- TODO: select next level that hasn't been beaten yet
-		self.selected_level:toggle_outline()
+		self.selected_button = self.ui_elements[1] -- TODO: select next level that hasn't been beaten yet
+		self.selected_button:toggle_outline()
 	end
 end
 
@@ -163,14 +182,36 @@ function Level_Select:update(dt)
 	self:update_game_object(dt * slow_amount)
 	self.main:update(dt)
 
-	if state.winnitron_mode then
-		for _, dir in ipairs({ "up", "down", "left", "right" }) do
-			if input[dir].pressed then
-				self.selected_level:toggle_outline()
-				self.selected_level = self.selected_level[dir]
-				self.selected_level:toggle_outline()
-				break
+	local any_button_hovered = false
+	for i, button in ipairs(self.ui_elements) do
+		if button.selected and button.colliding_with_mouse then
+			if button ~= self.selected_button then
+				self.selected_button:toggle_outline()
+				self.selected_button = button
+				self.selected_button:toggle_outline()
 			end
+			any_button_hovered = true
+			break -- WARN: assumes no buttons overlap
+		end
+	end
+
+	-- TODO: move this up and down the UI layers
+	if not any_button_hovered then
+		for i = 1, self.num_players do
+			for _, dir in ipairs({ "up", "down", "left", "right" }) do
+				if input[i .. dir].pressed and self.selected_button[dir] then
+					self.selected_button:toggle_outline()
+					self.selected_button = self.selected_button[dir]
+					self.selected_button:toggle_outline()
+					break
+				end
+			end
+		end
+	end
+
+	for i = 1, self.num_players do
+		if input[i .. "spacebar"].pressed then
+			self.selected_button:action()
 		end
 	end
 end
@@ -219,10 +260,10 @@ end
 -- TODO: this should determine level order, by folder name
 function Level_Select:load_levels()
 	return {
-		{ name = "1" },
-		{ name = "3" },
-		{ name = "2" },
-		{ name = "4" },
+		{ name = "1", filename = "1" },
+		{ name = "2", filename = "2" },
+		{ name = "3", filename = "3" },
+		{ name = "4", filename = "4" },
 		-- { name = "5" },
 		-- { name = "6" },
 		-- { name = "7" },
