@@ -72,13 +72,13 @@ function init()
 		arix = {
 			text = "Arix",
 			default = { "q" },
-			winnitron = { "booop" },
+			winnitron = { "f18", "f18", "f18", "f18" }, -- temp
 			input = state.input.arix,
 		},
 		myon = {
 			text = "Myon",
 			default = { "e" },
-			winnitron = { "booop" },
+			winnitron = { "f18", "f18", "f18", "f18" }, -- temp
 			input = state.input.myon,
 		},
 		spacebar = {
@@ -315,12 +315,12 @@ function init()
 
 	-- can comfortably fit 14 scenes atm on main menu
 	debug_scenes = {
-		{ id = "intro", destination = Intro },
-		{ id = "main_menu", destination = MainMenu },
-		{ id = "level_select", destination = Level_Select },
+		{ id = "intro",           destination = Intro },
+		{ id = "main_menu",       destination = MainMenu },
+		{ id = "level_select",    destination = Level_Select },
 		{ id = "character_setup", destination = Character_Setup },
-		{ id = "game", destination = Game },
-		{ id = "audio_zoo", destination = AudioZoo }, -- todo: fix
+		{ id = "game",            destination = Game },
+		{ id = "audio_zoo",       destination = AudioZoo }, -- todo: fix
 	}
 
 	main:add(Settings("settings"))
@@ -761,7 +761,8 @@ function open_options(self)
 			action = function(b)
 				state.enemies_only_move_when_player_doesnt = not state.enemies_only_move_when_player_doesnt
 				system.save_state()
-				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or "dont freeze"))
+				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or
+				"dont freeze"))
 			end,
 		})
 	)

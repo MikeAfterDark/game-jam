@@ -153,7 +153,7 @@ function Unit:show_heal(n)
 end
 
 function Unit:draw()
-	-- graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
+	graphics.push(self.x, self.y, 0, self.spring.x, self.spring.y)
 	graphics.push(self.x, self.y, 0, self.hfx.hit.x, self.hfx.hit.y)
 
 	if self.visible then
@@ -200,7 +200,7 @@ function Unit:draw()
 	end
 
 	graphics.pop()
-	-- graphics.pop()
+	graphics.pop()
 end
 
 Unit_Type = {

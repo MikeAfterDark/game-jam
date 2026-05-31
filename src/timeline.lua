@@ -343,9 +343,10 @@ function Timeline:draw()
 						and (self.time > beat.time - (unit.hit_window or 0.05) and self.time < beat.end_time + (unit.hit_window or 0.05))
 
 					local border_color = Color(0, 0, 0, opacity)
+					local spacebar_down = unit.is_player and input[unit.player_id .. "spacebar"].down
 					local color = (not state.spacebar_controls or not unit.is_player) and beat.action.color
 						or (
-							(input.spacebar.down and beat.end_time == nil) and Timings.Hold.color
+							(spacebar_down and beat.end_time == nil) and Timings.Hold.color
 							or ((not input.spacebar.down and beat.end_time == nil) and Timings.Beat.color or beat.action.color)
 						)
 					color = (tap_can_be_hit or can_be_held) and color:clone():lighten(0.4) or color

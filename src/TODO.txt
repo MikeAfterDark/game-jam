@@ -5,6 +5,9 @@ bugs:
     > need to change each beat's time + last_beat_time for that unit
 
 Winnitron todo:
+- pause menu for controller
+
+
 - Solidify winnitron-demo gameplay (state variables)
 - clean up options menu
 - Calibration music + calibration ending + stats display

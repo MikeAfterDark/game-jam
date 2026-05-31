@@ -34,6 +34,7 @@ function Map:init(args)
 			cell_size = self.cell_size,
 			visible = false,
 			is_player = true,
+			player_id = unit.player_id,
 			hit_window = 0.1,
 		})
 

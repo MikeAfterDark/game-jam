@@ -10,6 +10,7 @@ function Game:on_enter(from, args)
 	self.level = args.level
 	self.player_units = args.player_units
 	self.pitch = args.pitch or 1
+	self.num_players = args.num_players or 1
 
 	camera.x, camera.y = gw * 0.5, gh * 0.5
 	camera.r = 0
@@ -393,26 +394,28 @@ function Game:update(dt)
 			end
 
 			if self.is_calibration then
-				local any_input_pressed = input.up.pressed
-					or input.down.pressed
-					or input.left.pressed
-					or input.right.pressed
-					or input.arix.pressed
-					or input.myon.pressed
+				for i = 1, self.num_players do
+					local any_input_pressed = input[i .. "up"].pressed
+						or input[i .. "down"].pressed
+						or input[i .. "left"].pressed
+						or input[i .. "right"].pressed
+						or input[i .. "arix"].pressed
+						or input[i .. "myon"].pressed
 
-				if any_input_pressed then -- care, can be spammed, might use up lots of memory
-					-- self.map:react_to_hit({ unit = self.focused_unit, beat = { id = random:uid(), action = Timings.Beat, time = self.song_position } })
-					local time_difference = self.timeline:how_on_beat_is(self.song_position)
-					table.insert(self.calibration_hits, { time = self.song_position, offset = time_difference })
+					if any_input_pressed then -- care, can be spammed, might use up lots of memory
+						self.focused_unit.spring:pull(0.2, 200, 10)
+						local time_difference = self.timeline:how_on_beat_is(self.song_position)
+						table.insert(self.calibration_hits, { time = self.song_position, offset = time_difference })
+					end
+
+					local sum = table.reduce(self.calibration_hits, function(memo, v)
+						return memo + v.offset
+					end, 0)
+					local average = sum / #self.calibration_hits
+					local average_ms = math.ceil(average * 1000)
+					self.timeline:calibration_offset(average)
+					self.audio_offset_text:set_text({ { text = tostring(average_ms) .. "ms", font = pixul_font } })
 				end
-
-				local sum = table.reduce(self.calibration_hits, function(memo, v)
-					return memo + v.offset
-				end, 0)
-				local average = sum / #self.calibration_hits
-				local average_ms = math.ceil(average * 1000)
-				self.timeline:calibration_offset(average)
-				self.audio_offset_text:set_text({ { text = tostring(average_ms) .. "ms", font = pixul_font } })
 			else
 				self.audio_offset_text:set_text({ { text = tostring(state.time_offset) .. "s", font = pixul_font } })
 				self.visual_offset_text:set_text({ { text = tostring(state.visual_offset) .. "s", font = pixul_font } })
@@ -445,7 +448,10 @@ function Game:win()
 		target = {
 			scene = Level_Select,
 			name = "level_select",
-			args = { clear_music = true },
+			args = {
+				num_players = self.num_players,
+				clear_music = true,
+			},
 		},
 		display = {
 			text = "gg wp! loading...",
@@ -470,7 +476,10 @@ function Game:loss()
 		target = {
 			scene = Level_Select,
 			name = "level_select",
-			args = { clear_music = true },
+			args = {
+				num_players = self.num_players,
+				clear_music = true,
+			},
 		},
 		display = {
 			text = "ripperonis, you lost. loading...",
