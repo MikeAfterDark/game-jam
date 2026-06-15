@@ -15,38 +15,19 @@ function Intro:on_enter(from, args)
 	self.main_slow_amount = 1
 	slow_amount = 1
 
-	-- TODO: clean up (note the tweens that the logo relies on: self.text.y)
-	self.text = Text2({
-		group = self.main,
-		x = gw / 2,
-		y = gh * 0.6,
-
-		lines = {
-			-- {
-			-- 	text = "[wavy_rainbow]Electroacoustic",
-			-- 	font = fat_title_font,
-			-- 	alignment = "center",
-			-- },
-			-- {
-			-- 	text = "[wavy_title, blue]Invaders",
-			-- 	font = mystery_font,
-			-- 	alignment = "center",
-			-- },
-		},
-	})
-
 	-- play the intro
 	self.opacity = 1
 	self.intro_song_volume = 1
 	self.intro_song_volume_uid = random:uid()
 
-	intro_song:play({ volume = 0.2 })
+	self.song = music.intro:play({ volume = 0.2 })
 
-	trigger:tween(1.2, self.text, { y = gh / 2 }, math.cubic_in_out) -- positioning title text to center at the start
+	self.logo = { x = gw * 0.5, y = gh * 0.6 }
+	trigger:tween(1.2, self.logo, { y = gh / 2 }, math.cubic_in_out)     -- positioning title text to center at the start
 	trigger:after(0.1, function()
 		trigger:tween(0.4, self, { opacity = 0 }, math.quad_in_out, function() -- lowering foreground opactiy
 			trigger:after(1, function()
-				trigger:tween(2, self.text, { y = -gh }, math.cubic_in_out) -- moving title text up at the end
+				trigger:tween(2, self.logo, { y = -gh }, math.cubic_in_out) -- moving title text up at the end
 			end)
 		end)
 		if not self.transitioning then
@@ -70,7 +51,7 @@ function Intro:update(dt)
 
 	if (self.intro_complete or input.escape.pressed) and not self.transitioning then
 		trigger:tween(0.5, self, { intro_song_volume = 0 }, math.quad_out, function()
-			intro_song:stop()
+			self.song:stop()
 		end, self.intro_song_volume_uid) -- fading/stopping the audio
 
 		scene_transition(self, {
@@ -92,7 +73,7 @@ end
 function Intro:draw()
 	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, Color(0, 0, 0, 1)) -- black background
 	self.main:draw()
-	logo:draw(gw / 2, self.text.y, 0, 3, 3, 0, 0, Color(1, 1, 1, 1))
+	sprite.logo:draw(self.logo.x, self.logo.y, 0, 3, 3, 0, 0, Color(1, 1, 1, 1))
 	-- function Image:draw(x, y, r, sx, sy, ox, oy, color)
 	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, Color(0, 0, 0, self.opacity)) -- fade foreground
 end

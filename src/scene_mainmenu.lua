@@ -67,44 +67,6 @@ function MainMenu:update(dt)
 		self.song_info_text:update(dt)
 	end
 
-	local any_button_hovered = false
-	for i, button in ipairs(self.main_ui_elements) do
-		if button.selected and button.colliding_with_mouse then
-			if button ~= self.selected_button then
-				self.selected_button:toggle_outline()
-				self.selected_button = button
-				self.selected_button:toggle_outline()
-			end
-			any_button_hovered = true
-			break -- WARN: assumes no buttons overlap
-		end
-	end
-
-	-- TODO: move this up and down the UI layers
-	if not any_button_hovered then
-		for i = 1, self.num_players do
-			for _, dir in ipairs({ "up", "down", "left", "right" }) do
-				if input[i .. dir].pressed then
-					self.selected_button:toggle_outline()
-					self.selected_button = self.selected_button[dir]
-					self.selected_button:toggle_outline()
-
-					if self.selected_button ~= self.options_button and self.selected_button ~= self.credits_button then
-						self.options_button.up = self.selected_button
-						self.credits_button.down = self.selected_button
-					end
-					break
-				end
-			end
-		end
-	end
-
-	for i = 1, self.num_players do
-		if input[i .. "spacebar"].pressed then
-			self.selected_button:action()
-		end
-	end
-
 	if input.escape.pressed then
 		if self.in_options then
 			if self.in_keybinding then
@@ -219,44 +181,34 @@ function MainMenu:setup_title_menu()
 	local button_dist_apart = gh * 0.08
 	local core_ui_x_pos = gw * 0.5
 
-	self.num_players = state.winnitron_mode and 4 or 1
-	local play_spread = gw * 0.14
-	local x_center = play_spread * (self.num_players - 1) / 2
-	local buttons = {}
-	for i = 1, self.num_players do
-		local x_offset = (i - 1) * play_spread - x_center
-		collect_into(
-			buttons,
-			collect_into(
-				self.main_ui_elements,
-				Button({
-					group = ui_group,
-					x = core_ui_x_pos + x_offset,
-					y = gh * 0.4 + button_offset,
-					button_text = i .. " Player" .. (i > 1 and "s" or ""),
-					fg_color = "bg",
-					bg_color = "green",
-					action = function(b)
-						scene_transition(self, {
-							x = gw / 2,
-							y = gh / 2,
-							type = "circle",
-							target = {
-								scene = Level_Select,
-								name = "level_select",
-								args = { clear_music = true, num_players = i },
-							},
-							display = {
-								text = "loading...",
-								font = pixul_font,
-								alignment = "center",
-							},
-						})
-					end,
+	collect_into(
+		self.main_ui_elements,
+		Button({
+			group = ui_group,
+			x = core_ui_x_pos,
+			y = gh * 0.4 + button_offset,
+			button_text = "Play",
+			fg_color = "bg",
+			bg_color = "green",
+			action = function(b)
+				scene_transition(self, {
+					x = gw / 2,
+					y = gh / 2,
+					type = "circle",
+					target = {
+						scene = Game,
+						name = "game",
+						args = { clear_music = true },
+					},
+					display = {
+						text = "loading...",
+						font = pixul_font,
+						alignment = "center",
+					},
 				})
-			)
-		)
-	end
+			end,
+		})
+	)
 
 	button_offset = button_offset + button_dist_apart
 
@@ -296,25 +248,6 @@ function MainMenu:setup_title_menu()
 		})
 	)
 
-	self.options_button.left = self.options_button
-	self.options_button.right = self.options_button
-	self.options_button.down = self.credits_button
-	self.options_button.up = buttons[1]
-
-	self.credits_button.left = self.credits_button
-	self.credits_button.right = self.credits_button
-	self.credits_button.down = buttons[1]
-	self.credits_button.up = self.options_button
-
-	for i = 1, self.num_players do
-		buttons[i].left = buttons[(i + self.num_players - 2) % self.num_players + 1]
-		buttons[i].right = buttons[(i % self.num_players) + 1]
-		buttons[i].down = self.options_button
-		buttons[i].up = self.credits_button
-	end
-	self.selected_button = buttons[1]
-	self.selected_button:toggle_outline()
-
 	local debug_ui_x_pos = gw * 0.1
 	local debug_ui_y_pos = gh * 0.1
 	local debug_ui_y_offset = gh * 0.06
@@ -348,104 +281,6 @@ function MainMenu:setup_title_menu()
 			})
 		)
 	end
-
-	for _, v in pairs(self.main_ui_elements) do
-		-- v.group = ui_group
-		-- ui_group:add(v)
-
-		v.layer = ui_layer
-		v.force_update = true
-	end
-end
-
-function MainMenu:setup_stim_screen()
-	local ui_layer = ui_interaction_layer.Main
-	local ui_group = self.main_menu_ui
-	local x_offset = self.camera_positions.Levels.x + gw / 2
-	local ui_elements = self.main_ui_elements
-
-	local scale = gw * 0.03
-	local spacing = scale * 1.1
-	local x_start = x_offset + scale * 2
-	local y_start = scale
-
-	local num_rows = ((gh - y_start) / scale) - 3
-	local num_columns = (gw / scale) - 6
-	local function hsv_to_rgb(h, s, v)
-		local r, g, b
-
-		local i = math.floor(h * 6)
-		local f = h * 6 - i
-		local p = v * (1 - s)
-		local q = v * (1 - f * s)
-		local t = v * (1 - (1 - f) * s)
-
-		i = i % 6
-		if i == 0 then
-			r, g, b = v, t, p
-		elseif i == 1 then
-			r, g, b = q, v, p
-		elseif i == 2 then
-			r, g, b = p, v, t
-		elseif i == 3 then
-			r, g, b = p, q, v
-		elseif i == 4 then
-			r, g, b = t, p, v
-		elseif i == 5 then
-			r, g, b = v, p, q
-		end
-
-		return r, g, b
-	end
-	for i = 1, num_columns do
-		for j = 1, num_rows do
-			local u = (i - 1) / (num_columns - 1)
-			local v = (j - 1) / (num_rows - 1)
-
-			local hue = (u + v * 0.5 + 0.25 * math.sin(i * 0.1) + 0.25 * math.cos(j * 0.6)) % 1.0
-			local sat = math.min(1, 0.7 + 0.3 * math.sin((i + j * 1.5) / 2))
-			local val = math.min(1, 0.8 + 0.4 * math.sin((i * 0.8 - j * 1.2) / 3 + 1))
-
-			local r, g, b = hsv_to_rgb(hue, sat, val)
-
-			collect_into(
-				ui_elements,
-				RectangleButton({
-					group = ui_group,
-					x = x_start + i * spacing,
-					y = y_start + j * spacing,
-					w = scale,
-					h = scale,
-					force_update = true,
-					no_image = true,
-					color = Color(r, g, b, 1),
-					enter_sfx = stim_cave_sfx,
-					action = function(b)
-						b.spring:pull(0.2, 200, 10)
-						-- buttonBoop:play({ pitch = random:float(0.75, 3.05), volume = 0.5 })
-					end,
-				})
-			)
-		end
-	end
-
-	self.to_title_from_stim_button = collect_into(
-		ui_elements,
-		Button({
-			group = ui_group,
-			x = x_offset + gw * 0.04,
-			y = gh / 2,
-			w = gw * 0.058,
-			force_update = true,
-			button_text = "back",
-			fg_color = "bg",
-			bg_color = "fg",
-			action = function()
-				pop_ui_layer(self)
-				self:set_ui_to(menu.Title)
-			end,
-		})
-	)
 
 	for _, v in pairs(self.main_ui_elements) do
 		-- v.group = ui_group

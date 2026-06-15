@@ -4,7 +4,7 @@ require("renderer")
 -- NOTE: loading order matters... cuz its still C all the way down
 
 -- game data
-require("attacks.shoot_attack")
+-- require("attacks.shoot_attack")
 
 -- scenes
 require("scene_settings")
@@ -13,16 +13,16 @@ require("scene_game")
 require("scene_audio_zoo")
 require("scene_intro")
 
-require("scene_level_select")
-require("scene_character_setup")
+-- require("scene_level_select")
+-- require("scene_character_setup")
 
 -- game objects
-require("timing_line")
-require("map")
-require("timeline")
-require("turn_order")
-require("unit")
-require("projectile")
+-- require("timing_line")
+-- require("map")
+-- require("timeline")
+-- require("turn_order")
+-- require("unit")
+-- require("projectile")
 
 -- ui
 -- require("circle_menu")
@@ -34,57 +34,45 @@ require("projectile")
 function init()
 	-- state.info_display_on_right_side = false -- TEMP
 	renderer_init()
-
-	state.winnitron_mode = true
-
 	new_keys = {} -- init for rebinding options
 	if not state.input then
 		state.input = {}
 	end
-	winnitron_controls = {
-		up,
-	}
+
 	controls = {
 		up = {
 			text = "Up",
 			default = { "up", "w" },
-			winnitron = { "up", "w", "i", "kp8" },
 			input = state.input.up,
 		},
 		down = {
 			text = "Down",
 			default = { "down", "s" },
-			winnitron = { "down", "s", "k", "kp5" },
 			input = state.input.down,
 		},
 		left = {
 			text = "Left",
 			default = { "left", "a" },
-			winnitron = { "left", "a", "j", "kp4" },
 			input = state.input.left,
 		},
 		right = {
 			text = "Right",
 			default = { "right", "d" },
-			winnitron = { "right", "d", "l", "kp6" },
 			input = state.input.right,
 		},
 		arix = {
 			text = "Arix",
 			default = { "q" },
-			winnitron = { "f18", "f18", "f18", "f18" }, -- temp
 			input = state.input.arix,
 		},
 		myon = {
 			text = "Myon",
 			default = { "e" },
-			winnitron = { "f18", "f18", "f18", "f18" }, -- temp
 			input = state.input.myon,
 		},
 		spacebar = {
 			text = "Spacebar",
 			default = { "space" },
-			winnitron = { ".", "`", "g", "kp1" },
 			input = state.input.spacebar,
 		},
 	}
@@ -97,14 +85,9 @@ function init()
 		"myon",
 		"spacebar",
 	}
-	for action, data in pairs(controls) do
-		for i, key in ipairs(data.winnitron) do
-			input:bind(i .. action, key)
-		end
+	for action, key in pairs(controls) do
+		input:bind(action, key.input or key.default)
 	end
-	-- for action, key in pairs(controls) do
-	-- 	input:bind(action, key.input or key.default)
-	-- end
 
 	person = {
 		Mikey = {
@@ -140,20 +123,28 @@ function init()
 		}, -- sfx
 	}
 
+	credits = {
+		devs = {
+			person.Mikey,
+		},
+		music = {
+			person.Apezilla,
+			person.Patrick,
+		},
+		art = {
+			person.Kai,
+			person.Tectonic,
+			person.Mikey,
+		},
+	}
+
 	sfx_tag = { tags = { sfx_control } }
 	local sfx_folder = "sfx/"
 	stim_cave_sfx = nil --Sound("sans-voice.mp3", sfx_tag)
 
 	sfx = {
-		metronome = Sound("temp/metronome.wav", sfx_tag),
-
 		-- earthquake = Sound("temp/earthquake-end.mp3", sfx_tag),
-		building_mouse_enter = Sound(sfx_folder .. "building mouse enter.flac", sfx_tag),
-		extra = Sound(sfx_folder .. "extra.flac", sfx_tag),
-		extra2 = Sound(sfx_folder .. "extra 2.flac", sfx_tag),
-		intro_jingle = Sound(sfx_folder .. "Intro Jingle.flac", sfx_tag),
-		shop_reroll = Sound(sfx_folder .. "Shop reroll.flac", sfx_tag),
-		tile_mouse_enter = Sound(sfx_folder .. "Tile mouse enter.flac", sfx_tag),
+		-- tile_mouse_enter = Sound(sfx_folder .. "Tile mouse enter.flac", sfx_tag),
 	}
 
 	--
@@ -163,13 +154,12 @@ function init()
 	music_fade = 0
 	music_tag = { tags = { music_control } } -- for volume control
 
-	song = Sound("A Dark Displacement (Loop)[Jam Final 2-22].flac", music_tag)
 	song_playing = false
 
-	intro_song = Sound(sfx_folder .. "Intro Jingle.flac", { tags = { intro } })
+	-- intro_song = Sound(sfx_folder .. "Intro Jingle.flac", { tags = { intro } })
 
 	music = {
-		megalovania = Sound("temp/megalovania.ogg", music_tag),
+		-- megalovania = Sound("temp/megalovania.ogg", music_tag),
 		intro = Sound(sfx_folder .. "Intro Jingle.flac", { tags = { intro } }),
 	}
 	-- song_stim_cave = Sound(
@@ -194,7 +184,9 @@ function init()
 	level_folder = "levels"
 	-- load images:
 	-- wall_arrow_particle = Image("wall_arrow_particle")
-	logo = Image("logo")
+	sprite = {
+		logo = Image("logo"),
+	}
 
 	-- local tiles_folder = "tiles/"
 	-- tile_sprites = {
@@ -315,11 +307,9 @@ function init()
 
 	-- can comfortably fit 14 scenes atm on main menu
 	debug_scenes = {
-		{ id = "intro", destination = Intro },
+		{ id = "intro",     destination = Intro },
 		{ id = "main_menu", destination = MainMenu },
-		{ id = "level_select", destination = Level_Select },
-		{ id = "character_setup", destination = Character_Setup },
-		{ id = "game", destination = Game },
+		{ id = "game",      destination = Game },
 		{ id = "audio_zoo", destination = AudioZoo }, -- todo: fix
 	}
 
@@ -337,11 +327,16 @@ function init()
 	state.screen_flashes = state.screen_flashes or true
 	state.tutorial = state.tutorial or true
 	state.dark = state.dark or true
-	state.sfx_volume = state.sfx_volume or 0.3
-	state.music_volume = state.music_volume or 0.3
 	state.fullscreen = state.fullscreen or true
 	state.vsync = state.vsync or false
 
+	state.sfx_volume = state.sfx_volume or 0.5
+	sfx_control.volume = state.sfx_volume
+
+	state.music_volume = state.music_volume or 0.5
+	music_control.volume = state.music_volume
+
+	-- Game settings
 	state.global_time_offset = state.global_time_offset or 0
 	state.visual_offset = state.visual_offset or 0
 
@@ -578,49 +573,47 @@ function open_options(self)
 	--
 	-- next column: Controls
 	--
-	if not state.winnitron_mode then
-		column = 2
-		button_offset = -gh * 0.2
-		button_distance = gh * 0.06
+	column = 2
+	button_offset = -gh * 0.2
+	button_distance = gh * 0.06
 
-		self.controls_text = collect_into(
+	self.controls_text = collect_into(
+		self.options_ui_elements,
+		Text2({
+			group = ui_group,
+			x = column_x[column],
+			y = gh / 2 + button_offset,
+			lines = { { text = "[fg]Controls:", font = pixul_font } },
+		})
+	)
+	button_offset = button_offset + button_distance
+
+	for _, action in ipairs(options_keys_display_order) do
+		local key = controls[action]
+		-- for action, key in pairs(controls) do
+		local keys = key.input or key.default
+		local keys_string = table.concat(keys, ", ")
+
+		self["input_" .. action] = collect_into(
 			self.options_ui_elements,
-			Text2({
-				group = ui_group,
+			InputButton({
 				x = column_x[column],
 				y = gh / 2 + button_offset,
-				lines = { { text = "[fg]Controls:", font = pixul_font } },
+				w = 85 * global_game_scale,
+				separator_length = 50 * global_game_scale,
+				description_text = key.text,
+				button_text = string.upper(keys_string),
+				fg_color = "fg",
+				bg_color = "bg",
+				action = function(b)
+					set_action_keybind(self, action, key)
+					local updated_keys = controls[action].input or key.default
+					b:set_text(string.upper(table.concat(updated_keys, ", ")))
+				end,
 			})
 		)
-		button_offset = button_offset + button_distance
-
-		for _, action in ipairs(options_keys_display_order) do
-			local key = controls[action]
-			-- for action, key in pairs(controls) do
-			local keys = key.input or key.default
-			local keys_string = table.concat(keys, ", ")
-
-			self["input_" .. action] = collect_into(
-				self.options_ui_elements,
-				InputButton({
-					x = column_x[column],
-					y = gh / 2 + button_offset,
-					w = 85 * global_game_scale,
-					separator_length = 50 * global_game_scale,
-					description_text = key.text,
-					button_text = string.upper(keys_string),
-					fg_color = "fg",
-					bg_color = "bg",
-					action = function(b)
-						set_action_keybind(self, action, key)
-						local updated_keys = controls[action].input or key.default
-						b:set_text(string.upper(table.concat(updated_keys, ", ")))
-					end,
-				})
-			)
-			button_offset = button_offset + button_distance - 3
-			--for some reason this is needed for the last button to work (for 4 controls)
-		end
+		button_offset = button_offset + button_distance - 3
+		--for some reason this is needed for the last button to work (for 4 controls)
 	end
 
 	--
@@ -763,7 +756,8 @@ function open_options(self)
 			action = function(b)
 				state.enemies_only_move_when_player_doesnt = not state.enemies_only_move_when_player_doesnt
 				system.save_state()
-				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or "dont freeze"))
+				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or
+				"dont freeze"))
 			end,
 		})
 	)
@@ -1318,120 +1312,133 @@ function open_credits(self)
 	local yOffset = gh * 0.3
 	local y_dist = gh * 0.08
 	local columns = { gw * 0.2, gw * 0.6 }
-	self.dev_section = collect_into(
-		self.credits_ui_elements,
-		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[fg]dev: ", font = pixul_font } } })
-	)
-	self.dev_button = collect_into(
-		self.credits_ui_elements,
-		Button({
-			group = ui_group,
-			x = columns[2],
-			y = yOffset,
-			button_text = "Mikey",
-			fg_color = "bg",
-			bg_color = "fg",
-			credits_button = true,
-			action = function(b)
-				open_url(b, "https://gusakm.itch.io/")
-			end,
-		})
-	)
-	yOffset = yOffset + y_dist
 
-	self.music_section = collect_into(
-		self.credits_ui_elements,
-		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[green]composer and producer:", font = pixul_font } } })
-	)
-	collect_into(
-		self.credits_ui_elements,
-		Button({
-			group = ui_group,
-			x = columns[2],
-			y = yOffset,
-			button_text = person.Apezilla.name,
-			fg_color = person.Apezilla.color,
-			bg_color = "black",
-			credits_button = true,
-			action = function(b)
-				open_url(b, person.Apezilla.url)
-			end,
-		})
-	)
-	yOffset = yOffset + y_dist
+	for key, value in pairs(credits) do
+		collect_into(
+			self.credits_ui_elements,
+			Text2({
+				group = ui_group,
+				x = columns[1],
+				y = yOffset,
+				lines = { { text = value.section_color .. key .. ": ", font = pixul_font } },
+			})
+		)
+	end
 
-	self.sound_section = collect_into(
-		self.credits_ui_elements,
-		Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[yellow]SFX:", font = pixul_font } } })
-	)
-	collect_into(
-		self.credits_ui_elements,
-		Button({
-			group = ui_group,
-			x = columns[2],
-			y = yOffset,
-			button_text = person.Kai.name,
-			fg_color = person.Kai.color,
-			bg_color = "black",
-			credits_button = true,
-			action = function(b)
-				open_url(b, person.Kai.url)
-			end,
-		})
-	)
-	yOffset = yOffset + y_dist
-
-	self.artist_section = collect_into(
-		self.credits_ui_elements,
-		Text2({
-			group = ui_group,
-			x = columns[1],
-			y = yOffset,
-			lines = { { text = "[fg]art: ", font = pixul_font } },
-		})
-	)
-	collect_into(
-		self.credits_ui_elements,
-		Button({
-			group = ui_group,
-			x = columns[2],
-			y = yOffset,
-			button_text = person.Tectonic.name,
-			fg_color = person.Tectonic.color,
-			bg_color = "black",
-			credits_button = true,
-			action = function(b)
-				open_url(b, person.Tectonic.url)
-			end,
-		})
-	)
-	yOffset = yOffset + y_dist
-
-	self.sax_section = collect_into(
-		self.credits_ui_elements,
-		Text2({
-			group = ui_group,
-			x = columns[1],
-			y = yOffset,
-			lines = { { text = "[purple]saxophone: ", font = pixul_font } },
-		})
-	)
-	collect_into(
-		self.credits_ui_elements,
-		Button({
-			group = ui_group,
-			x = columns[2],
-			y = yOffset,
-			button_text = person.Patrick.name,
-			fg_color = person.Patrick.color,
-			bg_color = "black",
-			credits_button = true,
-			action = function(b)
-				open_url(b, person.Patrick.url)
-			end,
-		})
-	)
-	yOffset = yOffset + y_dist
+	-- self.dev_section = collect_into(
+	-- 	self.credits_ui_elements,
+	-- 	Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[fg]dev: ", font = pixul_font } } })
+	-- )
+	-- self.dev_button = collect_into(
+	-- 	self.credits_ui_elements,
+	-- 	Button({
+	-- 		group = ui_group,
+	-- 		x = columns[2],
+	-- 		y = yOffset,
+	-- 		button_text = "Mikey",
+	-- 		fg_color = "bg",
+	-- 		bg_color = "fg",
+	-- 		credits_button = true,
+	-- 		action = function(b)
+	-- 			open_url(b, "https://gusakm.itch.io/")
+	-- 		end,
+	-- 	})
+	-- )
+	-- yOffset = yOffset + y_dist
+	--
+	-- self.music_section = collect_into(
+	-- 	self.credits_ui_elements,
+	-- 	Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[green]composer and producer:", font = pixul_font } } })
+	-- )
+	-- collect_into(
+	-- 	self.credits_ui_elements,
+	-- 	Button({
+	-- 		group = ui_group,
+	-- 		x = columns[2],
+	-- 		y = yOffset,
+	-- 		button_text = person.Apezilla.name,
+	-- 		fg_color = person.Apezilla.color,
+	-- 		bg_color = "black",
+	-- 		credits_button = true,
+	-- 		action = function(b)
+	-- 			open_url(b, person.Apezilla.url)
+	-- 		end,
+	-- 	})
+	-- )
+	-- yOffset = yOffset + y_dist
+	--
+	-- self.sound_section = collect_into(
+	-- 	self.credits_ui_elements,
+	-- 	Text2({ group = ui_group, x = columns[1], y = yOffset, lines = { { text = "[yellow]SFX:", font = pixul_font } } })
+	-- )
+	-- collect_into(
+	-- 	self.credits_ui_elements,
+	-- 	Button({
+	-- 		group = ui_group,
+	-- 		x = columns[2],
+	-- 		y = yOffset,
+	-- 		button_text = person.Kai.name,
+	-- 		fg_color = person.Kai.color,
+	-- 		bg_color = "black",
+	-- 		credits_button = true,
+	-- 		action = function(b)
+	-- 			open_url(b, person.Kai.url)
+	-- 		end,
+	-- 	})
+	-- )
+	-- yOffset = yOffset + y_dist
+	--
+	-- self.artist_section = collect_into(
+	-- 	self.credits_ui_elements,
+	-- 	Text2({
+	-- 		group = ui_group,
+	-- 		x = columns[1],
+	-- 		y = yOffset,
+	-- 		lines = { { text = "[fg]art: ", font = pixul_font } },
+	-- 	})
+	-- )
+	-- collect_into(
+	-- 	self.credits_ui_elements,
+	-- 	Button({
+	-- 		group = ui_group,
+	-- 		x = columns[2],
+	-- 		y = yOffset,
+	-- 		button_text = person.Tectonic.name,
+	-- 		fg_color = person.Tectonic.color,
+	-- 		bg_color = "black",
+	-- 		credits_button = true,
+	-- 		action = function(b)
+	-- 			open_url(b, person.Tectonic.url)
+	-- 		end,
+	-- 	})
+	-- )
+	-- yOffset = yOffset + y_dist
+	--
+	-- self.sax_section = collect_into(
+	-- 	self.credits_ui_elements,
+	-- 	Text2({
+	-- 		group = ui_group,
+	-- 		x = columns[1],
+	-- 		y = yOffset,
+	-- 		lines = { { text = "[purple]saxophone: ", font = pixul_font } },
+	-- 	})
+	-- )
+	-- collect_into(
+	-- 	self.credits_ui_elements,
+	-- 	Button({
+	-- 		group = ui_group,
+	-- 		x = columns[2],
+	-- 		y = yOffset,
+	-- 		button_text = person.Patrick.name,
+	-- 		fg_color = person.Patrick.color,
+	-- 		bg_color = "black",
+	-- 		credits_button = true,
+	-- 		action = function(b)
+	-- 			open_url(b, person.Patrick.url)
+	-- 		end,
+	-- 	})
+	-- )
+	-- yOffset = yOffset + y_dist
 
 	self.code_basis_section = collect_into(
 		self.credits_ui_elements,
