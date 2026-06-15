@@ -91,14 +91,13 @@ function Timeline:add(unit, current_time, add_dummy)
 	-- self.beats[unit.id][#self.beats[unit.id]].time + self.beat_resolution
 	local valid_current_time = (current_time > earliest_valid_time - 0.001) and current_time or earliest_valid_time
 	local insert_time = self:beat_aligned_time(math.max(valid_current_time, earliest_valid_time))
-	-- insert_time = self:calibrated_time(insert_time)
 
 	-- NOTE:
 	-- beat.is_hold: bool, absence implies 'is_tap'
 	-- beat.duration: int, no safety checks, make sure its within the timeline
 	local last_time = 0 -- for tracking turns
 	for i, beat_list in ipairs(unit.timeline) do
-		local time = insert_time + ((i - 1) * self.beat_resolution) + state.time_offset
+		local time = insert_time + ((i - 1) * self.beat_resolution) + state.global_time_offset
 		local color = random:color()
 		for j, beat in ipairs(beat_list) do
 			local end_time = beat.duration and time + beat.duration * self.beat_resolution or nil -- for held beats
@@ -108,7 +107,7 @@ function Timeline:add(unit, current_time, add_dummy)
 		end
 	end
 
-	last_time = last_time + self.beat_resolution - state.time_offset
+	last_time = last_time + self.beat_resolution - state.global_time_offset
 	table.insert(self.beats_per_turn[unit.id], last_time)
 	-- print("last time for", unit.type.name, last_time)
 	-- print("Inserted", last_beat_time, valid_current_time, insert_time)
@@ -291,13 +290,11 @@ function Timeline:time_left_for(unit, current_time)
 	return time_left
 end
 
-function Timeline:calibration_offset(time)
-	state.time_offset = time
-	system.save_state()
-end
+function Timeline:calibration_offset(player_id, time)
+	state.player_time_offset[player_id] = time
+	print(table.tostring(state.player_time_offset))
 
-function Timeline:calibrated_time(time)
-	return time + (state.time_offset or 0)
+	system.save_state()
 end
 
 function Timeline:draw()

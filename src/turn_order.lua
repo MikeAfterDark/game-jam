@@ -46,6 +46,10 @@ function Turn_Order:num_turns()
 	return #self.turns
 end
 
+function Turn_Order:get_units()
+	return { self.turns[1] }
+end
+
 function Turn_Order:insert(units)
 	-- insert units based on 'speed' order, higher is inserted into the front first
 	table.sort(units, function(a, b)

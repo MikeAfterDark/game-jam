@@ -138,15 +138,13 @@ function Level_Select:on_enter(from, args)
 						args = {
 							clear_music = true,
 							num_players = self.num_players,
-							player_units = {
-								{
+							player_units = table.map(table.array({}, self.num_players), function(v)
+								return {
 									type = Unit_Type.Calibration,
-									player_id = 1,
-									timeline = {
-										{ Timings.Empty },
-									},
-								},
-							},
+									player_id = v,
+									timeline = { { Timings.Empty } },
+								}
+							end),
 							layer_has_music = true,
 							max_beats = 8,
 						},

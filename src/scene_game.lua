@@ -17,6 +17,8 @@ function Game:on_enter(from, args)
 	camera.follow_style = "lockon_tight"
 	camera.lerp.x = 0.06
 	camera.lerp.y = 0.06
+	self.camera_tracker = { x = gw / 2, y = gh / 2 }
+	camera:follow_object(self.camera_tracker)
 
 	self.floor = Group()
 	self.main = Group()
@@ -96,7 +98,7 @@ function Game:on_enter(from, args)
 			group = self.ui,
 			x = gw * 0.5,
 			y = gh * 0.3,
-			lines = { { text = tostring(state.time_offset or "hello1"), font = pixul_font } },
+			lines = { { text = tostring(state.global_time_offset or "hello1"), font = pixul_font } },
 			visible = self.is_calibration,
 		})
 	)
@@ -114,19 +116,25 @@ function Game:on_enter(from, args)
 	self.room = self.map:load_next_room() -- spawns player_units and enemies based off self.map.level
 	self:play_room_song()
 
-	self.turn_order:insert(self.map:get_all_alive_units())
 	self:prep_turn()
 end
 
 function Game:prep_turn()
+	self.turn_order:insert(self.map:get_all_alive_units())
+
 	if self.turn_order:num_turns() <= 1 then -- guarantees at least 2 turns
 		self.turn_order:insert(self.map:get_all_alive_units())
 	end
 
+	self.active_units = self.turn_order:get_units()
+	table.foreach(self.active_units, function(unit)
+		self.timeline:add(unit, self.song_position)
+		unit:highlight(1)
+	end)
+
 	self.focused_unit = self.turn_order:pop()
 	self.timeline:add(self.focused_unit, self.song_position)
 	self.focused_unit:highlight(1)
-	camera:follow_object(self.focused_unit)
 
 	local unit2 = self.turn_order:pop()
 	local next_song_position = self.song_position + self.timeline:time_left_for(self.focused_unit, self.song_position)
@@ -144,7 +152,6 @@ function Game:next_turn()
 	if self.next_unit then
 		self.focused_unit = self.next_unit
 		self.focused_unit:highlight(1)
-		camera:follow_object(self.focused_unit)
 
 		if self.turn_order:num_turns() <= 1 then
 			self.turn_order:insert(self.map:get_all_alive_units())
@@ -266,6 +273,18 @@ function Game:update(dt)
 		camera.sx, camera.sy = camera.sx / zoom_percent, camera.sy / zoom_percent
 	end
 	---------------------
+
+	local default_pos = { x = gw / 2, y = gh / 2 }
+	local average_pos = { x = 0, y = 0 }
+	table.foreach(self.active_units, function(unit)
+		local x = unit.x * (unit.camera_weight or 1) / #self.active_units
+		local y = unit.y * (unit.camera_weight or 1) / #self.active_units
+		average_pos.x = average_pos.x + x
+		average_pos.y = average_pos.y + y
+	end)
+	self.camera_tracker = #self.active_units > 10 and average_pos or default_pos
+	camera:follow_object(self.camera_tracker)
+	-- print(table.tostring(average_pos), self.active_units[1].x, self.active_units[1].y)
 
 	local paused = main:get("settings").in_pause
 	local game_over = self.won or self.lost
@@ -406,18 +425,18 @@ function Game:update(dt)
 						self.focused_unit.spring:pull(0.2, 200, 10)
 						local time_difference = self.timeline:how_on_beat_is(self.song_position)
 						table.insert(self.calibration_hits, { time = self.song_position, offset = time_difference })
-					end
 
-					local sum = table.reduce(self.calibration_hits, function(memo, v)
-						return memo + v.offset
-					end, 0)
-					local average = sum / #self.calibration_hits
-					local average_ms = math.ceil(average * 1000)
-					self.timeline:calibration_offset(average)
-					self.audio_offset_text:set_text({ { text = tostring(average_ms) .. "ms", font = pixul_font } })
+						local sum = table.reduce(self.calibration_hits, function(memo, v)
+							return memo + v.offset
+						end, 0)
+						local average = sum / #self.calibration_hits
+						local average_ms = math.ceil(average * 1000)
+						self.timeline:calibration_offset(i, average)
+						self.audio_offset_text:set_text({ { text = tostring(average_ms) .. "ms", font = pixul_font } })
+					end
 				end
 			else
-				self.audio_offset_text:set_text({ { text = tostring(state.time_offset) .. "s", font = pixul_font } })
+				self.audio_offset_text:set_text({ { text = tostring(state.global_time_offset) .. "s", font = pixul_font } })
 				self.visual_offset_text:set_text({ { text = tostring(state.visual_offset) .. "s", font = pixul_font } })
 			end
 		end

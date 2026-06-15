@@ -315,12 +315,12 @@ function init()
 
 	-- can comfortably fit 14 scenes atm on main menu
 	debug_scenes = {
-		{ id = "intro",           destination = Intro },
-		{ id = "main_menu",       destination = MainMenu },
-		{ id = "level_select",    destination = Level_Select },
+		{ id = "intro", destination = Intro },
+		{ id = "main_menu", destination = MainMenu },
+		{ id = "level_select", destination = Level_Select },
 		{ id = "character_setup", destination = Character_Setup },
-		{ id = "game",            destination = Game },
-		{ id = "audio_zoo",       destination = AudioZoo }, -- todo: fix
+		{ id = "game", destination = Game },
+		{ id = "audio_zoo", destination = AudioZoo }, -- todo: fix
 	}
 
 	main:add(Settings("settings"))
@@ -331,6 +331,8 @@ function init()
 	main:add(MainMenu("intro"))
 	main:go_to("intro", {})
 
+	state.player_time_offset = state.player_time_offset or {}
+
 	-- set sane defaults:
 	state.screen_flashes = state.screen_flashes or true
 	state.tutorial = state.tutorial or true
@@ -340,7 +342,7 @@ function init()
 	state.fullscreen = state.fullscreen or true
 	state.vsync = state.vsync or false
 
-	state.time_offset = state.time_offset or 0
+	state.global_time_offset = state.global_time_offset or 0
 	state.visual_offset = state.visual_offset or 0
 
 	state.enemies_act_every_beat = state.enemies_act_every_beat or true
@@ -645,7 +647,7 @@ function open_options(self)
 			group = ui_group,
 			x = column_x[column],
 			y = gh / 2 + button_offset - gh * 0.02,
-			lines = { { text = "[fg]Audio Offset: " .. tostring(math.ceil((state.time_offset or 0) * 1000)) .. "ms", font = small_pixul_font } },
+			lines = { { text = "[fg]Audio Offset: " .. tostring(math.ceil((state.global_time_offset or 0) * 1000)) .. "ms", font = small_pixul_font } },
 		})
 	)
 	self.time_offset_slider = collect_into(
@@ -661,12 +663,12 @@ function open_options(self)
 			rotation = 0,
 			max_sections = 50, -- recommend factors of length that are < length/2
 			spacing = slider_spacing - 6,
-			value = state.time_offset or 0,
+			value = state.global_time_offset or 0,
 			range_start = -0.25,
 			range_end = 0.25,
 			text = self.time_offset_text,
 			action = function(b, v)
-				state.time_offset = v
+				state.global_time_offset = v
 				system.save_state()
 
 				b.text:set_text({ { text = "[fg]Audio Offset: " .. tostring(math.ceil(v * 1000)) .. "ms", font = small_pixul_font } })
@@ -761,8 +763,7 @@ function open_options(self)
 			action = function(b)
 				state.enemies_only_move_when_player_doesnt = not state.enemies_only_move_when_player_doesnt
 				system.save_state()
-				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or
-				"dont freeze"))
+				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or "dont freeze"))
 			end,
 		})
 	)
