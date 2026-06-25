@@ -50,6 +50,25 @@ function Game:on_enter(from, args)
 			ui_elements = self.game_ui_elements,
 		})
 	end
+
+	local num_pockets = 37
+	local pockets = {}
+	for i = 1, num_pockets do
+		table.insert(
+			pockets,
+			Pocket({
+				color = i % 2 == 0 and red[0] or black[0],
+				type = 
+			})
+		)
+	end
+
+	self.wheel = Wheel({
+		group = group.main,
+		x = gw * 0.5,
+		y = gh * 0.5,
+		pockets = pockets,
+	})
 end
 
 function Game:update(dt)
@@ -87,7 +106,6 @@ function Game:win()
 			scene = Level_Select,
 			name = "level_select",
 			args = {
-				num_players = self.num_players,
 				clear_music = true,
 			},
 		},
@@ -112,10 +130,9 @@ function Game:loss()
 		y = gh / 2,
 		type = "circle",
 		target = {
-			scene = Level_Select,
-			name = "level_select",
+			scene = MainMenu,
+			name = "mainmenu",
 			args = {
-				num_players = self.num_players,
 				clear_music = true,
 			},
 		},

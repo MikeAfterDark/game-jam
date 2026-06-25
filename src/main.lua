@@ -124,17 +124,25 @@ function init()
 	}
 
 	credits = {
-		devs = {
-			person.Mikey,
+		{
+			name = "[fg]devs",
+			items = {
+				person.Mikey,
+			},
 		},
-		music = {
-			person.Apezilla,
-			person.Patrick,
+		{
+			name = "[green]music",
+			items = {
+				person.Mikey,
+			},
 		},
-		art = {
-			person.Kai,
-			person.Tectonic,
-			person.Mikey,
+		{
+			name = "[blue]art",
+			items = {
+				person.Mikey,
+				person.Apezilla,
+				person.Patrick,
+			},
 		},
 	}
 
@@ -387,7 +395,7 @@ end
 function love.run()
 	web = love.system.getOS() == "Web"
 
-	global_game_scale = 4
+	global_game_scale = 2
 	global_game_width = 480 * global_game_scale
 	global_game_height = 270 * global_game_scale
 
@@ -1313,16 +1321,38 @@ function open_credits(self)
 	local y_dist = gh * 0.08
 	local columns = { gw * 0.2, gw * 0.6 }
 
-	for key, value in pairs(credits) do
+	for i, section in ipairs(credits) do
 		collect_into(
 			self.credits_ui_elements,
 			Text2({
 				group = ui_group,
 				x = columns[1],
 				y = yOffset,
-				lines = { { text = value.section_color .. key .. ": ", font = pixul_font } },
+				lines = { { text = section.name .. ": ", font = pixul_font } },
 			})
 		)
+
+		for j, item in ipairs(section.items) do
+			local width = gw * 0.1
+			local offset = (#section.items - 1) * (width / 2)
+
+			collect_into(
+				self.credits_ui_elements,
+				Button({
+					group = ui_group,
+					x = columns[2] - offset + width * (j - 1),
+					y = yOffset,
+					button_text = item.nickname,
+					fg_color = item.color,
+					bg_color = "fg",
+					credits_button = true,
+					action = function(b)
+						open_url(b, item.url)
+					end,
+				})
+			)
+		end
+		yOffset = yOffset + y_dist
 	end
 
 	-- self.dev_section = collect_into(
