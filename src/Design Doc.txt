@@ -1,0 +1,78 @@
+Pocket Traits:
+- Color: Red, Black, Both, Neither (start at alternating red, black and 1 void)
+- Number: 0-100 (start at 0-n)
+- Effect: 
+    Basic,      initial state
+    Void,       consumes any ball that stops on it, grows per-consumption
+    Jackpot     All balls this round are counted as player's balls, all pockets count as one pocket for money
+
+Pocket Upgrades:
+    Change Color (Once per pocket)
+    Add to number (rolls another smaller wheel)
+    Merge Left
+    Merge Right
+        Merging rules: 
+            - Color is set to the pocket being upgraded
+            - change color tracked
+            - new_num = larger - smaller
+
+Shop:
+Common:     Buy Mah Balls
+Uncommmon:  Buy Mah Unusual Balls
+Rare:       Buy Mah Shiny Balls
+Legendary:  Buy Mah Steel Balls
+Unique:     Buy Mah Divine Balls
+
+
+Ball Ideas:
+- Type: Rarity (for shop/cost)
+- Size, momentum, and base-friction
+- Deals # Damage, Grants # Armour or Heals for #, rarety increases #
+
+Balls:
+- Damage Stone - deals damage
+- Armour Stone - gives armour
+- Heal Stone - gets consumed, heals (max hp cap)
+- Number Ball: +X to number it lands on
+- Snowball (Armour): leaves an icy trail behind it for 0.2ms
+- Slimeball (Poison DoT): leaves a slime trail behind it for 0.1ms
+- Splitter Ball (Damage): splits after X collisions, each half is 50% effective
+- Fireball (Damage): triggers the pocket twice by exploding
+- Unstoppa-Ball (2x Damage): cant be knocked aside, phases through other Unstoppa-Balls
+
+Money/Placing Bets:
+    Player gets to place their bet first, and alternate with the enemy, who will
+    put bets on the most likely outcomes. "Winning" bets bonus payout money, otherwise
+    money = ball rarity * X * (1+num balls that were already counted in that pocket)
+
+Bets:
+    Even
+    Odd
+    Red
+    Black
+
+Full Game Loop:
+- Player starts with 2 balls, 3 slots, 9 max slots, can buy slots anytime outside of spinning, costs exponential
+- Spinning sends the balls, physics and collisions happen
+    - Once all balls stop, process one ball at a time (speed option in settings)
+    - Start with jackpot, then go per pocket in direction of spin until get to a pocket with balls
+    - Balls from pocket selected randomly to trigger
+    - consumptions delete the ball without triggering
+    - bets apply bonuses to ball trigger if pocket is right
+    - money and damage are summed up as the scoring progresses, adding to the totals at the end
+    - at the end, reset the balls to pre-spin except for consumptions, board to pre-jackpot
+- After a spin, user can:
+    - sell a ball (hovering over their list), or buying a ball slot    
+    - buy a ball by 'rolling' the ball shop via opening the drawer
+        - each 'roll' is given some rarity, and the balls generated are based off that
+        - rerolls by left-right motion on the handle (or closing then opening)
+        - bought balls are added to the end of the queue
+    - Set/Change their bet
+    - FORCED AFTER EACH SPIN: Modify the table, per pocket, with the options to:
+        - Merge with the pocket to the left or right, new_num = larger - smaller, colour stays the same
+        - Change colour 
+        - Add to the number
+[REPEAT]
+- If player dies then show end screen
+- If enemy dies then give the player money bonus and send out the next enemy
+    - after all the enemies die, the player wins the game

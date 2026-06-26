@@ -17,12 +17,8 @@ require("scene_intro")
 -- require("scene_character_setup")
 
 -- game objects
--- require("timing_line")
--- require("map")
--- require("timeline")
--- require("turn_order")
--- require("unit")
--- require("projectile")
+require("wheel")
+require("ball")
 
 -- ui
 -- require("circle_menu")
@@ -315,9 +311,9 @@ function init()
 
 	-- can comfortably fit 14 scenes atm on main menu
 	debug_scenes = {
-		{ id = "intro",     destination = Intro },
+		{ id = "intro", destination = Intro },
 		{ id = "main_menu", destination = MainMenu },
-		{ id = "game",      destination = Game },
+		{ id = "game", destination = Game },
 		{ id = "audio_zoo", destination = AudioZoo }, -- todo: fix
 	}
 
@@ -326,7 +322,7 @@ function init()
 	-- main:add(Intro("intro"))
 	-- main:add(Game("intro"))
 	-- main:add(Level_Select("intro"))
-	main:add(MainMenu("intro"))
+	main:add(Game("intro"))
 	main:go_to("intro", {})
 
 	state.player_time_offset = state.player_time_offset or {}
@@ -764,8 +760,7 @@ function open_options(self)
 			action = function(b)
 				state.enemies_only_move_when_player_doesnt = not state.enemies_only_move_when_player_doesnt
 				system.save_state()
-				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or
-				"dont freeze"))
+				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or "dont freeze"))
 			end,
 		})
 	)

@@ -1,0 +1,215 @@
+Coding Outline:
+
+Rarity {
+    Starter { value = 0, name = "" },
+    Common { value = 1, name = "" },
+    Uncommmon { value = 2, name = "Unusual"}, 
+    Rare { value = 3, name = "Shiny"}, 
+    Legendary { value = 4, name = "Steel"}, 
+    Unique { value = 5, name = "Divine"}, 
+}
+
+Ball_Type {
+    Starter Damage Ball = {
+        id = "Starter Ball"
+        name = "Rock",
+        description = "starter rock, deals # damage"
+        rarity = Rarity.Starter,
+        size = 1,
+        uses = 10,
+        sprite
+    }
+    Damage Stone = {
+        id = "Damage Stone
+        name = "Stone",
+        description = "damage stone, deals # damage"
+        rarity = Rarity.Common,
+        size = 1,
+        uses = 3,
+        cost_mult = 1.3
+        sell_mult = 0.5
+        sprite
+    }
+
+}
+
+
+OBJECT Ball {
+    Ball_Type
+
+    Update()
+        hovered = mouse hovered
+
+}
+
+OBJECT Shop {
+    num_balls = 4
+    Balls {}
+    
+    Update()
+        foreach Ball in Balls{}
+            if any are hovered
+                freeze their x and y
+                open the purchase popup
+                purchase button enabled = player ball holder has room and player can afford it
+        
+        if purchase popup open
+            keep track of mouse and close it if purchased or mouse leaves area
+    
+        if mouse down on handle and not in wheel round
+            move horizontally until [#,#] limits 
+        // if in wheel round and opened then, | assuming its possible to start a round
+        //    close the shop                  | with the shop open lol
+
+        if x pos > #
+            opened = true
+        else if x pos < # and opened
+            Refresh()
+            opened = false
+
+    Refresh()
+        clears previous Balls{}
+        spawns num_balls into Balls{} (set Ball_Location for each)
+    
+    Ball Hovered(ball)
+        throw up the purchase popup
+}
+
+Player/Enemy {
+    Money
+    Hp, Max Hp
+    Balls {}
+    Num Unlocked Slots
+}
+
+OBJECT Ball Holder {
+    Max Slots
+    is_player_holder
+    
+    Setup Round()
+        gets a list of balls and num unlocked slots
+
+    Next Ball()
+        return the next ball in queue, nil if no balls left
+
+    Update()
+        if not in wheel round
+            foreach Ball in Balls{}
+                if any are hovered 
+                    open the sell popup
+                    purchase button enabled = player ball holder has room and player can afford it
+        
+        if purchase popup open
+            keep track of mouse and close it if sold or mouse leaves area or if start wheel round
+    
+    Draw()
+        renders the unlocked slots
+        renders the balls 
+        renders the locked slots
+}
+
+
+Pocket Type {
+    Normal,
+    Void,
+    Jackpot
+}
+
+OBJECT Pocket {
+    Pocket Type
+    Number
+    Colour
+    Size, default = 1
+
+    
+}
+
+OBJECT Wheel {
+    Pockets {}
+    Base Spin Friction
+    Base Surface Friction
+    Angle
+    
+    Spin(Speed)
+        in wheel round = true
+        set spin-speed = speed
+        spin friction = 0
+
+    Queue Results()
+        results = {}
+        foreach Pocket in Pockets{}
+            foreach Ball in Pocket
+                results.enqueue(ball)
+}
+
+
+
+Init {
+
+// Objects
+Shop
+Wheel
+Player
+Player Ball Holder
+Enemy Ball Holder
+
+// Init state
+Starter Player Balls
+Enemy
+
+}
+
+Game {
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

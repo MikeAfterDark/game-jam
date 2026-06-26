@@ -9,14 +9,11 @@ end
 function Game:on_enter(from, args)
 	camera.x, camera.y = gw * 0.5, gh * 0.5
 	camera.r = 0
-	camera.follow_style = "lockon_tight"
-	camera.lerp.x = 0.06
-	camera.lerp.y = 0.06
-	self.camera_tracker = { x = gw / 2, y = gh / 2 }
-	camera:follow_object(self.camera_tracker)
 
 	self.floor = Group()
-	self.main = Group()
+	-- self.main = Group()
+	self.main = Group():set_as_physics_world(32, 0, 0, { "wheel", "ball" })
+	self.shop_group = Group():set_as_physics_world(32, 0, 0, { "drawer", "ball" })
 	self.game_ui = Group():no_camera()
 	self.effects = Group()
 	self.ui = Group()
@@ -51,24 +48,49 @@ function Game:on_enter(from, args)
 		})
 	end
 
-	local num_pockets = 37
+	local num_pockets = 36
 	local pockets = {}
+
+	local c1 = red[0]:clone()
+	c1.a = 0.4
+
+	local c2 = green[0]:clone()
+	c2.a = 0.4
 	for i = 1, num_pockets do
+		table.insert(pockets, {
+			color = i % 2 == 0 and c1:clone() or c2:clone(),
+			type = i == 1 and Pocket_Type.Jackpot or i == math.floor(num_pockets / 2) and Pocket_Type.Void or Pocket_Type.Normal,
+			value = i - 1,
+			size = 1,
+		})
+	end
+
+	local balls = {}
+	for i = 1, 10 do
 		table.insert(
-			pockets,
-			Pocket({
-				color = i % 2 == 0 and red[0] or black[0],
-				type = 
+			balls,
+			Ball({
+				group = self.main,
+				x = gw * 0.5,
+				y = gh * 0.5,
+				r = gh * 0.009,
 			})
 		)
 	end
 
 	self.wheel = Wheel({
-		group = group.main,
+		group = self.main,
 		x = gw * 0.5,
 		y = gh * 0.5,
+		rs = gh * 0.4,
 		pockets = pockets,
+		balls = balls,
 	})
+
+	self.wheel:spin(5)
+	trigger:after(3, function()
+		self.wheel:stop()
+	end)
 end
 
 function Game:update(dt)
@@ -78,6 +100,25 @@ function Game:update(dt)
 	local game_over = self.won or self.lost
 	if not paused and not game_over then
 		run_time = run_time + dt
+	end
+
+	if input.space.pressed then
+		self.results = self.wheel:results()
+
+		local time = 0.2
+		for i, ball in ipairs(self.results) do
+			trigger:after(time * i, function()
+				ball.spring:pull(0.2, 500, 10)
+
+				if ball.pocket then
+					local prev_color = ball.pocket.color
+					ball.pocket.color = blue[0]
+					trigger:after(time * 0.9, function()
+						ball.pocket.color = prev_color
+					end)
+				end
+			end)
+		end
 	end
 
 	self:update_game_object(dt * slow_amount)
