@@ -19,6 +19,8 @@ require("scene_intro")
 -- game objects
 require("wheel")
 require("ball")
+require("holder")
+require("character")
 
 -- ui
 -- require("circle_menu")
@@ -149,6 +151,8 @@ function init()
 	sfx = {
 		-- earthquake = Sound("temp/earthquake-end.mp3", sfx_tag),
 		-- tile_mouse_enter = Sound(sfx_folder .. "Tile mouse enter.flac", sfx_tag),
+		--
+		boop = Sound(sfx_folder .. "floraphonic-bloop-1-184019.ogg", sfx_tag),
 	}
 
 	--
@@ -311,9 +315,9 @@ function init()
 
 	-- can comfortably fit 14 scenes atm on main menu
 	debug_scenes = {
-		{ id = "intro", destination = Intro },
+		{ id = "intro",     destination = Intro },
 		{ id = "main_menu", destination = MainMenu },
-		{ id = "game", destination = Game },
+		{ id = "game",      destination = Game },
 		{ id = "audio_zoo", destination = AudioZoo }, -- todo: fix
 	}
 
@@ -760,7 +764,8 @@ function open_options(self)
 			action = function(b)
 				state.enemies_only_move_when_player_doesnt = not state.enemies_only_move_when_player_doesnt
 				system.save_state()
-				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or "dont freeze"))
+				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or
+				"dont freeze"))
 			end,
 		})
 	)

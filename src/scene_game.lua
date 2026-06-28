@@ -25,7 +25,7 @@ function Game:on_enter(from, args)
 	self.x1, self.y1 = 0, 0
 	self.x2, self.y2 = gw, gh
 	self.w, self.h = self.x2 - self.x1, self.y2 - self.y1
-	self.song_info_text = Text({ { text = "", font = pixul_font, alignment = "center" } }, global_text_tags)
+	-- self.song_info_text = Text({ { text = "", font = pixul_font, alignment = "center" } }, global_text_tags)
 
 	self.won = false
 	self.lost = false
@@ -59,21 +59,25 @@ function Game:on_enter(from, args)
 	for i = 1, num_pockets do
 		table.insert(pockets, {
 			color = i % 2 == 0 and c1:clone() or c2:clone(),
-			type = i == 1 and Pocket_Type.Jackpot or i == math.floor(num_pockets / 2) and Pocket_Type.Void or Pocket_Type.Normal,
+			type = i == 1 --
+				and Pocket_Type.Jackpot
+				or i == math.floor(num_pockets / 2) and Pocket_Type.Void
+				or Pocket_Type.Normal,
 			value = i - 1,
 			size = 1,
 		})
 	end
 
 	local balls = {}
-	for i = 1, 10 do
+	local ball_radius = gh * 0.02
+	for i = 1, 0 do
 		table.insert(
 			balls,
 			Ball({
 				group = self.main,
 				x = gw * 0.5,
 				y = gh * 0.5,
-				r = gh * 0.009,
+				r = ball_radius,
 			})
 		)
 	end
@@ -86,11 +90,89 @@ function Game:on_enter(from, args)
 		pockets = pockets,
 		balls = balls,
 	})
+	self.results = {}
 
-	self.wheel:spin(5)
-	trigger:after(3, function()
-		self.wheel:stop()
-	end)
+	self.player_holder = Holder({
+		group = self.main,
+		x = gw * 0.5,
+		y = gh * 0.96,
+		w = 0,
+		h = gh * 0.05,
+		slot_size = gh * 0.04,
+		color = blue[0],
+	})
+
+	self.enemy_holder = Holder({
+		group = self.main,
+		is_enemy = true,
+		x = gw * 0.5,
+		y = gh * 0.04,
+		w = 0,
+		h = gh * 0.05,
+		slot_size = gh * 0.04,
+		color = red[0],
+	})
+
+	self.player_holder:setup(9, 4, {
+		Ball({
+			group = self.main,
+			x = gw * 0.5,
+			y = gh * 0.5,
+			r = ball_radius,
+		}),
+		Ball({
+			group = self.main,
+			x = gw * 0.5,
+			y = gh * 0.5,
+			r = ball_radius,
+		}),
+		Ball({
+			group = self.main,
+			x = gw * 0.5,
+			y = gh * 0.5,
+			r = ball_radius,
+		}),
+		Ball({
+			group = self.main,
+			x = gw * 0.5,
+			y = gh * 0.5,
+			r = ball_radius,
+		}),
+	})
+	self.enemy_holder:setup(3, 2, {
+		Ball({
+			group = self.main,
+			x = gw * 0.5,
+			y = gh * 0.5,
+			r = ball_radius,
+		}),
+		Ball({
+			group = self.main,
+			x = gw * 0.5,
+			y = gh * 0.5,
+			r = ball_radius,
+		}),
+	})
+
+	self.enemy = Character({
+		group = self.main,
+		x = gw * 0.8,
+		y = gh * 0.2,
+		money = 10,
+		max_hp = 10,
+		hp_text = Text({ { text = "hallo", font = pixul_font, alignment = "center" } }, global_text_tags),
+		money_text = Text({ { text = "its me", font = pixul_font, alignment = "center" } }, global_text_tags),
+	})
+
+	self.player = Character({
+		group = self.main,
+		x = gw * 0.8,
+		y = gh * 0.8,
+		money = 100000000,
+		max_hp = 10,
+		hp_text = Text({ { text = "hallo", font = pixul_font, alignment = "center" } }, global_text_tags),
+		money_text = Text({ { text = "its me", font = pixul_font, alignment = "center" } }, global_text_tags),
+	})
 end
 
 function Game:update(dt)
@@ -102,23 +184,102 @@ function Game:update(dt)
 		run_time = run_time + dt
 	end
 
-	if input.space.pressed then
+	if
+		self.try_get_results --
+		and self.wheel:all_balls_stopped()
+		and #self.results == 0
+	then
+		self.try_get_results = false
 		self.results = self.wheel:results()
+		self.results_time = 0.4
+	end
 
-		local time = 0.2
-		for i, ball in ipairs(self.results) do
-			trigger:after(time * i, function()
-				ball.spring:pull(0.2, 500, 10)
+	if input.z.pressed then
+		self.wheel:spin(5)
+	end
 
-				if ball.pocket then
-					local prev_color = ball.pocket.color
-					ball.pocket.color = blue[0]
-					trigger:after(time * 0.9, function()
-						ball.pocket.color = prev_color
-					end)
-				end
+	if self.wheel.is_spun_up then
+		self.wheel.is_spun_up = false
+		self.send_balls_to_wheel = true
+		self.results_time = 0.1
+	end
+
+	if self.send_balls_to_wheel and not self.loading_ball then
+		self.loading_ball = true
+
+		if self.results_time > 0.1 then
+			self.results_time = self.results_time * 0.9
+		end
+
+		local ball = self.player_holder:next_ball()
+		if ball then
+			self.wheel:new_ball(ball)
+		else
+			ball = self.enemy_holder:next_ball()
+			if ball then
+				self.wheel:new_ball(ball, true)
+			else
+				self.send_balls_to_wheel = false
+			end
+		end
+
+		local t = self.results_time / 0.5
+		if ball then
+			sfx.boop:play({ pitch = 1.3 - (0.7 * t), volume = 0.35 })
+
+			trigger:after(self.results_time, function()
+				self.loading_ball = false
+			end)
+		else
+			self.loading_ball = false
+			trigger:after(2, function()
+				self.wheel:stop()
+				self.try_get_results = true
 			end)
 		end
+	end
+
+	-- Processing results after wheel:results()
+	if #self.results > 0 and not self.processing_result and not self.waiting_on_ball then
+		self.processing_result = true
+
+		if self.results_time > 0.1 then
+			self.results_time = self.results_time * 0.9
+		end
+		local ball = table.shift(self.results)
+
+		ball.spring:pull(0.2, 500, 10)
+
+		local t = self.results_time / 0.5
+		sfx.boop:play({ pitch = 1.3 - (0.7 * t), volume = 0.35 })
+
+		self.prev_pocket_color = ball.pocket.color
+		ball.pocket.color = ball.pocket.color:clone():lighten(0.3)
+
+		ball:trigger(Ball_Event.Scoring)
+		self.waiting_on_ball = ball
+	end
+
+	if self.waiting_on_ball and self.waiting_on_ball:is_done() then
+		self.waiting_on_ball.pocket.color = self.prev_pocket_color
+		self.processing_result = false
+
+		if #self.results == 0 then
+			-- just proceesed the last ball, return the balls to their respective holders
+			trigger:after(0.5, function()
+				sfx.boop:play({ pitch = 1.3, volume = 0.35 })
+				for _, ball in ipairs(self.wheel.balls) do
+					if ball.is_enemy then
+						self.enemy_holder:insert(ball)
+					else
+						self.player_holder:insert(ball)
+					end
+				end
+
+				self.wheel.balls = {}
+			end)
+		end
+		self.waiting_on_ball = nil
 	end
 
 	self:update_game_object(dt * slow_amount)
