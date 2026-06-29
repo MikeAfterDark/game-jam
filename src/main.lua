@@ -189,11 +189,15 @@ function init()
 		credits = { sfx.extra },
 	}
 
-	level_folder = "levels"
+	sprite_folder = "sprites"
+
 	-- load images:
 	-- wall_arrow_particle = Image("wall_arrow_particle")
 	sprite = {
 		logo = Image("logo"),
+
+		starter_rock = Image(sprite_folder .. "/starter_rock"),
+		damage_stone = Image(sprite_folder .. "/damage_stone"),
 	}
 
 	-- local tiles_folder = "tiles/"

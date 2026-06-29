@@ -140,6 +140,11 @@ end
 
 local invisible = Color(1, 1, 1, 0)
 global_text_tags = {
+	black = TextTag({
+		draw = function(c, i, text)
+			graphics.set_color(black[0])
+		end,
+	}),
 	blue1 = TextTag({
 		draw = function(c, i, text)
 			graphics.set_color(blue1[0])
@@ -675,74 +680,9 @@ end
 --
 --
 --
--- Animation = Object:extend()
--- Animation:implement(GameObject)
--- function Animation:init(args)
--- 	self:init_game_object(args)
 --
--- 	-- self.type = args.type
--- 	self.sprite_sheet = args.sheet.sprite_sheets[self.type]
 --
--- 	self.frame_width = args.sheet.frame_width
--- 	self.frame_height = args.sheet.frame_height
--- 	self.animation_speed = args.sheet.animation_speed or 0.1
 --
--- 	self.center_x = args.sheet.hitbox_center_x or 0
--- 	self.center_y = args.sheet.hitbox_center_y or 0
---
--- 	self.frame_time = 0
--- 	self.frame_counter = 1
---
--- 	local image_w, image_h = self.sprite_sheet.w, self.sprite_sheet.h
--- 	self.frames = {}
---
--- 	for y = 0, image_h - self.frame_height, self.frame_height do
--- 		for x = 0, image_w - self.frame_width, self.frame_width do
--- 			local quad = love.graphics.newQuad(x, y, self.frame_width, self.frame_height, image_w, image_h)
--- 			table.insert(self.frames, quad)
--- 		end
--- 	end
---
--- 	self.num_frames = #self.frames
--- end
---
--- function Animation:update(dt)
--- 	self.frame_time = self.frame_time + dt
--- 	if self.frame_time > self.animation_speed then
--- 		self.frame_time = self.frame_time % self.animation_speed
--- 		self.frame_counter = self.frame_counter + 1
--- 		if self.frame_counter > self.num_frames then
--- 			if self.stop_on_finish then
--- 				self.frame_counter = self.num_frames
--- 			else
--- 				self.frame_counter = 1
--- 			end
--- 		end
--- 	end
--- end
---
--- function Animation:draw(x, y, r, sx, sy, ox, oy, color)
--- 	local frame = self.frames[self.frame_counter]
--- 	local _r, g, b, a
--- 	if color then
--- 		_r, g, b, a = love.graphics.getColor()
--- 		graphics.set_color(color)
--- 	end
--- 	love.graphics.draw(
--- 		self.sprite_sheet.image,
--- 		frame,
--- 		x - self.center_x * sx,
--- 		y - self.center_y * sy,
--- 		r or 0,
--- 		sx or 1,
--- 		sy or sx or 1,
--- 		self.frame_width / 2 + (ox or 0),
--- 		self.frame_height / 2 + (oy or 0)
--- 	)
--- 	if color then
--- 		love.graphics.setColor(_r, g, b, a)
--- 	end
--- end
 
 Text2 = Object:extend()
 Text2:implement(GameObject)

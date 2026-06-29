@@ -103,6 +103,7 @@ OBJECT Ball Holder {
             keep track of mouse and close it if sold or mouse leaves area or if start wheel round
     
     Draw()
+
         renders the unlocked slots
         renders the balls 
         renders the locked slots
@@ -213,3 +214,8 @@ Game {
 
 
 
+TODO:
+figure out how to procc each ball more than just once, for all the different kinds of procs
+
+idea: do them all in ball:trigger(), pass the results back,
+then have scene_game deal with it and the timings/animations for each non-zero result

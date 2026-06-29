@@ -78,6 +78,7 @@ function Game:on_enter(from, args)
 				x = gw * 0.5,
 				y = gh * 0.5,
 				r = ball_radius,
+				type = random:table(Ball_Type),
 			})
 		)
 	end
@@ -119,24 +120,28 @@ function Game:on_enter(from, args)
 			x = gw * 0.5,
 			y = gh * 0.5,
 			r = ball_radius,
+			type = random:table(Ball_Type),
 		}),
 		Ball({
 			group = self.main,
 			x = gw * 0.5,
 			y = gh * 0.5,
 			r = ball_radius,
+			type = random:table(Ball_Type),
 		}),
 		Ball({
 			group = self.main,
 			x = gw * 0.5,
 			y = gh * 0.5,
 			r = ball_radius,
+			type = random:table(Ball_Type),
 		}),
 		Ball({
 			group = self.main,
 			x = gw * 0.5,
 			y = gh * 0.5,
 			r = ball_radius,
+			type = random:table(Ball_Type),
 		}),
 	})
 	self.enemy_holder:setup(3, 2, {
@@ -145,12 +150,14 @@ function Game:on_enter(from, args)
 			x = gw * 0.5,
 			y = gh * 0.5,
 			r = ball_radius,
+			type = random:table(Ball_Type),
 		}),
 		Ball({
 			group = self.main,
 			x = gw * 0.5,
 			y = gh * 0.5,
 			r = ball_radius,
+			type = random:table(Ball_Type),
 		}),
 	})
 
@@ -158,20 +165,18 @@ function Game:on_enter(from, args)
 		group = self.main,
 		x = gw * 0.8,
 		y = gh * 0.2,
-		money = 10,
-		max_hp = 10,
-		hp_text = Text({ { text = "hallo", font = pixul_font, alignment = "center" } }, global_text_tags),
-		money_text = Text({ { text = "its me", font = pixul_font, alignment = "center" } }, global_text_tags),
+		money = 2,
+		damage = 0,
+		max_hp = 4,
 	})
 
 	self.player = Character({
 		group = self.main,
 		x = gw * 0.8,
 		y = gh * 0.8,
-		money = 100000000,
+		money = 5,
+		damage = 0,
 		max_hp = 10,
-		hp_text = Text({ { text = "hallo", font = pixul_font, alignment = "center" } }, global_text_tags),
-		money_text = Text({ { text = "its me", font = pixul_font, alignment = "center" } }, global_text_tags),
 	})
 end
 
@@ -240,7 +245,9 @@ function Game:update(dt)
 	end
 
 	-- Processing results after wheel:results()
-	if #self.results > 0 and not self.processing_result and not self.waiting_on_ball then
+	if
+		#self.results > 0 and not self.processing_result --[[ and not self.waiting_on_ball ]]
+	then
 		self.processing_result = true
 
 		if self.results_time > 0.1 then
@@ -248,39 +255,93 @@ function Game:update(dt)
 		end
 		local ball = table.shift(self.results)
 
-		ball.spring:pull(0.2, 500, 10)
+		-- ball.spring:pull(0.2, 500, 10)
 
 		local t = self.results_time / 0.5
-		sfx.boop:play({ pitch = 1.3 - (0.7 * t), volume = 0.35 })
+		-- sfx.boop:play({ pitch = 1.3 - (0.7 * t), volume = 0.35 })
 
 		self.prev_pocket_color = ball.pocket.color
-		ball.pocket.color = ball.pocket.color:clone():lighten(0.3)
+		-- ball.pocket.color = ball.pocket.color:clone():lighten(0.3)
 
-		ball:trigger(Ball_Event.Scoring)
-		self.waiting_on_ball = ball
-	end
+		local ball_results = ball:trigger()
 
-	if self.waiting_on_ball and self.waiting_on_ball:is_done() then
-		self.waiting_on_ball.pocket.color = self.prev_pocket_color
-		self.processing_result = false
+		local time_per_result = 0.2
+		local result_counter = 0
+		local elapsed_time = 0
+		for i, result in ipairs(ball_results) do
+			if result.value ~= 0 then
+				trigger:after(elapsed_time, function()
+					ball.spring:pull(0.2, 500, 10)
+					sfx.boop:play({ pitch = 1.3 - (0.7 * t), volume = 0.35 })
 
-		if #self.results == 0 then
-			-- just proceesed the last ball, return the balls to their respective holders
-			trigger:after(0.5, function()
-				sfx.boop:play({ pitch = 1.3, volume = 0.35 })
-				for _, ball in ipairs(self.wheel.balls) do
-					if ball.is_enemy then
-						self.enemy_holder:insert(ball)
-					else
-						self.player_holder:insert(ball)
-					end
-				end
+					ball.pocket.color = ball.pocket.color:clone():lighten(0.3)
+					trigger:after(time_per_result * 0.7, function()
+						ball.pocket.color = self.prev_pocket_color
+					end)
 
-				self.wheel.balls = {}
-			end)
+					local animation_duration = 1.4
+					self:play_animation(result, ball, animation_duration) -- animation unrelated to the 'logic'
+					trigger:after(animation_duration * 0.9, function()
+						local target = ball.is_enemy and self.enemy or self.player
+						if result.event == "on_score" then
+							target.money = target.money + result.value
+						elseif result.event == "on_damage" then
+							target.damage = target.damage + result.value
+						elseif result.event == "on_health" then
+							target.hp = target.hp + result.value
+						elseif result.event == "on_armour" then
+							target.armour = target.armour + result.value
+						end
+					end)
+				end)
+				result_counter = result_counter + 1
+				elapsed_time = elapsed_time + time_per_result + (result.duration or 0)
+			end
 		end
-		self.waiting_on_ball = nil
+
+		trigger:after(result_counter * time_per_result, function()
+			self.processing_result = false
+
+			if #self.results == 0 then
+				-- just proceesed the last ball, return the balls to their respective holders
+				trigger:after(0.5, function()
+					sfx.boop:play({ pitch = 1.3, volume = 0.35 })
+					for _, ball in ipairs(self.wheel.balls) do
+						if ball.is_enemy then
+							self.enemy_holder:insert(ball)
+						else
+							self.player_holder:insert(ball)
+						end
+					end
+
+					self.wheel.balls = {}
+				end)
+			end
+		end)
+		-- self.waiting_on_ball = ball
 	end
+
+	-- if self.waiting_on_ball and self.waiting_on_ball:is_done() then
+	-- 	self.waiting_on_ball.pocket.color = self.prev_pocket_color
+	-- 	self.processing_result = false
+	--
+	-- 	if #self.results == 0 then
+	-- 		-- just proceesed the last ball, return the balls to their respective holders
+	-- 		trigger:after(0.5, function()
+	-- 			sfx.boop:play({ pitch = 1.3, volume = 0.35 })
+	-- 			for _, ball in ipairs(self.wheel.balls) do
+	-- 				if ball.is_enemy then
+	-- 					self.enemy_holder:insert(ball)
+	-- 				else
+	-- 					self.player_holder:insert(ball)
+	-- 				end
+	-- 			end
+	--
+	-- 			self.wheel.balls = {}
+	-- 		end)
+	-- 	end
+	-- 	self.waiting_on_ball = nil
+	-- end
 
 	self:update_game_object(dt * slow_amount)
 	star_group:update(dt * slow_amount)
@@ -290,6 +351,17 @@ function Game:update(dt)
 	self.effects:update(dt * slow_amount)
 	self.ui:update(dt * slow_amount)
 	self.end_ui:update(dt * slow_amount)
+end
+
+function Game:play_animation(ball_result, ball, duration)
+	Text_Bubble({
+		group = self.ui,
+		x = ball.x,
+		y = ball.y,
+		target = ball.is_enemy and self.enemy or self.player,
+		result = ball_result,
+		duration = duration,
+	})
 end
 
 function Game:win()
