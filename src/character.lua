@@ -1,57 +1,113 @@
 Character = Object:extend()
 Character:implement(GameObject)
 function Character:init(args)
-    self:init_game_object(args)
+	self:init_game_object(args)
 
-    self.armour = 3
-    self.hp = self.max_hp
-    self.color = random:color()
+	self.armour = 3
+	self.hp = self.max_hp
+	self.damage = 0
+	self.color = random:color()
 
-    self.hp_text = Text({ { text = "hallo", font = pixul_font, alignment = "center" } }, global_text_tags)
-    self.money_text = Text({ { text = "its me", font = pixul_font, alignment = "center" } }, global_text_tags)
-    self.damage_text = Text({ { text = "its me", font = pixul_font, alignment = "center" } }, global_text_tags)
+	self.hp_text = Text({ { text = "hallo", font = pixul_font, alignment = "center" } }, global_text_tags)
+	self.money_text = Text({ { text = "its me", font = pixul_font, alignment = "center" } }, global_text_tags)
+	self.damage_text = Text({ { text = "its me", font = pixul_font, alignment = "center" } }, global_text_tags)
+
+	if self.portrait then
+		self.name_text = Text({ { text = self.portrait.name, font = pixul_font, alignment = "center" } }, global_text_tags)
+	end
+end
+
+function Character:get_damage()
+	local damage = self.damage
+	self.damage = 0
+	return damage
+end
+
+function Character:take_damage(damage)
+	local post_armour = self.armour - damage
+	self.armour = math.max(0, post_armour)
+
+	if post_armour < 0 then
+		self.hp = math.max(0, self.hp + post_armour)
+
+		if self.hp == 0 then
+			self:die()
+		end
+	end
+end
+
+function Character:armour_up(armour)
+	self.armour = self.armour + armour
+end
+
+function Character:heal_up(health)
+	self.hp = math.min(self.max_hp, self.hp + health)
+end
+
+function Character:die()
+	print("im ded")
 end
 
 function Character:update(dt)
-    self:update_game_object(dt)
+	self:update_game_object(dt)
 
-    local armour_text = self.armour > 0 and "[blue]+" .. tostring(self.armour) .. " " or ""
-    self.hp_text:set_text({
-        {
-            text = armour_text .. "[green]" .. tostring(self.hp) .. "/" .. tostring(self.max_hp),
-            font = pixul_font,
-            alignment = "center",
-        },
-    })
+	local armour_text = self.armour > 0 and "[blue]+" .. tostring(self.armour) .. " " or ""
+	self.hp_text:set_text({
+		{
+			text = armour_text .. "[green]" .. tostring(self.hp) .. "/" .. tostring(self.max_hp),
+			font = pixul_font,
+			alignment = "center",
+		},
+	})
 
-    self.money_text:set_text({
-        {
-            text = "[yellow]" .. "$" .. tostring(self.money),
-            font = pixul_font,
-            alignment = "center",
-        },
-    })
+	self.money_text:set_text({
+		{
+			text = "[yellow]" .. "$" .. tostring(self.money),
+			font = pixul_font,
+			alignment = "center",
+		},
+	})
 
-    self.damage_text:set_text({
-        {
-            text = "[red]" .. tostring(self.damage),
-            font = pixul_font,
-            alignment = "center",
-        },
-    })
+	self.damage_text:set_text({
+		{
+			text = "[red]" .. tostring(self.damage),
+			font = pixul_font,
+			alignment = "center",
+		},
+	})
+
+	if self.portrait then
+		self.portrait.animation:update(dt)
+	end
 end
 
 function Character:draw()
-    graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.x)
+	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.x)
 
-    local separation = gh * 0.05
-    local box_width = math.max(math.max(self.hp_text.w, self.money_text.w), self.damage_text.w) + 10
-    local box_height = 2.3 * self.hp_text.h + separation
-    graphics.rectangle(self.x, self.y - separation / 7, box_width + 3, box_height + 3, 3, 3, white[0])
-    graphics.rectangle(self.x, self.y - separation / 7, box_width, box_height, 3, 3, black[0])
+	if self.portrait then
+		local width = gw * 0.2
+		local height = gh * 0.4 + 15
+		graphics.rectangle(self.portrait.x, self.portrait.y, width, height, 3, 3, white[0])
+		graphics.rectangle(self.portrait.x, self.portrait.y, width - 6, height - 6, 3, 3, self.portrait.background.color)
 
-    self.hp_text:draw(self.x, self.y - separation, self.r, 1, 1)
-    self.money_text:draw(self.x, self.y, self.r, 1, 1)
-    self.damage_text:draw(self.x, self.y + separation, self.r, 1, 1)
-    graphics.pop()
+		self.portrait.animation:draw( --
+			self.portrait.x,
+			self.portrait.y,
+			self.r,
+			self.portrait.draw_size,
+			self.portrait.draw_size
+		)
+		self.name_text:draw(self.portrait.x, self.portrait.y + gh * 0.24, self.r, 1, 1)
+	end
+
+	local separation = gh * 0.05
+	local box_width = math.max(math.max(self.hp_text.w, self.money_text.w), self.damage_text.w) + 10
+	local box_height = 2.3 * self.hp_text.h + separation
+	graphics.rectangle(self.x, self.y - separation / 7, box_width + 5, box_height + 5, 3, 3, white[0])
+	graphics.rectangle(self.x, self.y - separation / 7, box_width, box_height, 3, 3, black[0])
+
+	self.hp_text:draw(self.x, self.y - separation, self.r, 1, 1)
+	self.money_text:draw(self.x, self.y, self.r, 1, 1)
+	self.damage_text:draw(self.x, self.y + separation, self.r, 1, 1)
+	graphics.pop()
 end

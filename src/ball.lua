@@ -16,11 +16,16 @@ function Ball:init(args)
 	self:set_mass(1)
 
 	self.color = random:color()
+	self.animation = self.type.animation and self.type.animation() or nil
 end
 
 function Ball:update(dt)
 	self:update_game_object(dt)
 	self:update_physics(dt)
+
+	if self.animation then
+		self.animation:update(dt)
+	end
 end
 
 function Ball:trigger(...)
@@ -45,6 +50,10 @@ function Ball:draw()
 	-- self.shape:draw()
 	graphics.circle(self.x, self.y, self.r, self.is_enemy and red[0] or black[0])
 	graphics.circle(self.x, self.y, self.r * 0.70, self.color)
+
+	if self.animation then
+		self.animation:draw(self.x, self.y, self.r, 1, 1, 0, 0)
+	end
 	graphics.pop()
 end
 
@@ -63,8 +72,12 @@ function Text_Bubble:init(args)
 		{ text = text, font = small_pixul_font, alignment = "center" },
 	}, global_text_tags)
 
-	trigger:tween(self.duration * 0.3, self, { y = self.y - gh * 0.03 }, math.cubic_out, function()
-		trigger:tween(self.duration * 0.6, self, { x = self.target.x, y = self.target.y }, math.cubic_in, function()
+	local angle = (self.iteration * 2 * math.pi / 5) + (2 * math.pi / 5)
+	local initial_pop_distance = gh * 0.04
+	local x = self.x + math.sin(angle) * initial_pop_distance
+	local y = self.y + math.cos(angle) * initial_pop_distance
+	trigger:tween(self.duration * 0.3, self, { x = x, y = y }, math.cubic_out, function()
+		trigger:tween(self.duration * 0.6, self, { x = self.target.x, y = self.target.y, r = 4 * math.pi }, math.cubic_in, function()
 			self.text.dead = true
 			self.text = nil
 
@@ -122,7 +135,14 @@ Ball_Type = {
 		on_damage = function(self)
 			return 1
 		end,
-		sprite = function() end,
+		animation = function()
+			return Animation(
+				random:float(0.2, 0.4), --
+				AnimationFrames(sprite.starter_rock, 16, 16, { { 1, 1 }, { 2, 1 } }),
+				"loop",
+				{}
+			)
+		end,
 	},
 
 	damage_stone = {

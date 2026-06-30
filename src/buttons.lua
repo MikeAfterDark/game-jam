@@ -283,21 +283,6 @@ function RectangleButton:init(args)
 	if not self.no_image and self.image_path then
 		self.image = love.filesystem.getInfo(self.image_path) and Image(self.image_path, true) or nil
 	end
-
-	if self.level then
-		self.level_name = self.level.name
-		if not state[self.level_name] then
-			state[self.level_name] = -1
-		end
-
-		self.pb_text = Text({
-			{
-				text = "[yellow]" .. ((state[self.level_name] > 0) and string.format("%.2f", state[self.level_name]) or ""),
-				font = pixul_font,
-				alignment = "center",
-			},
-		}, global_text_tags)
-	end
 end
 
 function RectangleButton:update(dt)
@@ -305,16 +290,6 @@ function RectangleButton:update(dt)
 
 	if self.text then
 		self.text:update(dt)
-	end
-
-	if self.pb_text then
-		self.pb_text:set_text({
-			{
-				text = "[yellow]" .. ((state[self.level_name] > 0) and string.format("%.2f", state[self.level_name]) or ""),
-				font = pixul_font,
-				alignment = "center",
-			},
-		})
 	end
 end
 
@@ -365,9 +340,6 @@ function RectangleButton:draw()
 
 	if self.text then
 		self.text:draw(self.x, self.y + 5, 0, 1, 1)
-	end
-	if self.pb_text then
-		self.pb_text:draw(self.x + self.w * 0.4, self.y - self.h * 0.4, math.pi / 4, self.spring.x, self.spring.y)
 	end
 	graphics.pop()
 end

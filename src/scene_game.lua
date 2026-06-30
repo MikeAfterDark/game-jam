@@ -14,7 +14,7 @@ function Game:on_enter(from, args)
 	-- self.main = Group()
 	self.main = Group():set_as_physics_world(32, 0, 0, { "wheel", "ball" })
 	self.shop_group = Group():set_as_physics_world(32, 0, 0, { "drawer", "ball" })
-	self.game_ui = Group():no_camera()
+	self.game_ui = Group()
 	self.effects = Group()
 	self.ui = Group()
 	self.end_ui = Group():no_camera()
@@ -32,22 +32,6 @@ function Game:on_enter(from, args)
 
 	self.game_ui_elements = {}
 
-	-- if layer underneath this one has layer_type == "game" and the same music type then dont push
-	local layer = main.ui_layer_stack:peek()
-	if layer and layer.music_type ~= self.music_type then
-		if layer.game then
-			pop_ui_layer(self)
-		end
-
-		main.ui_layer_stack:push({
-			layer = ui_interaction_layer.Game,
-			layer_has_music = args.layer_has_music,
-			-- game = true,
-			music_type = args.music_type,
-			ui_elements = self.game_ui_elements,
-		})
-	end
-
 	local num_pockets = 36
 	local pockets = {}
 
@@ -60,7 +44,7 @@ function Game:on_enter(from, args)
 		table.insert(pockets, {
 			color = i % 2 == 0 and c1:clone() or c2:clone(),
 			type = i == 1 --
-				and Pocket_Type.Jackpot
+					and Pocket_Type.Jackpot
 				or i == math.floor(num_pockets / 2) and Pocket_Type.Void
 				or Pocket_Type.Normal,
 			value = i - 1,
@@ -163,20 +147,125 @@ function Game:on_enter(from, args)
 
 	self.enemy = Character({
 		group = self.main,
-		x = gw * 0.8,
+		x = gw * 0.75,
 		y = gh * 0.2,
 		money = 2,
 		damage = 0,
 		max_hp = 4,
+		portrait = {
+			name = "[red]Angry [p_blue1]Bob",
+			background = {
+				color = Color("#063000"),
+			},
+			animation = Animation(
+				0.4, --
+				AnimationFrames(sprite.alien1, 16, 32, { { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 }, { 6, 1 } }),
+				"loop",
+				{}
+			),
+			x = gw * 0.87,
+			y = gh * 0.2,
+			draw_size = 7,
+		},
 	})
 
 	self.player = Character({
 		group = self.main,
-		x = gw * 0.8,
-		y = gh * 0.8,
+		x = gw * 0.85,
+		y = gh * 0.9,
 		money = 5,
 		damage = 0,
 		max_hp = 10,
+	})
+
+	local y = self.player.y
+	local x_offset = gw * 0.08
+	local size = gh * 0.13
+	local w = size
+	local h = size * 0.4
+	self.attack_button = collect_into(
+		self.game_ui_elements,
+		RectangleButton({
+			group = self.game_ui,
+			x = self.player.x - x_offset,
+			y = self.player.y - gh * 0.13,
+			w = w,
+			h = h,
+			fg_color = "black",
+			bg_color = "red",
+			title_text = "ATK",
+			action = function(b)
+				b.spring:pull(0.2, 200, 10)
+				local damage = self.player:get_damage()
+				self.enemy:take_damage(damage)
+			end,
+		})
+	)
+
+	self.armour_button = collect_into(
+		self.game_ui_elements,
+		RectangleButton({
+			group = self.game_ui,
+			x = self.player.x,
+			y = self.player.y - gh * 0.13,
+			w = w,
+			h = h,
+			fg_color = "black",
+			bg_color = "blue",
+			title_text = "ARMR",
+			action = function(b)
+				b.spring:pull(0.2, 200, 10)
+
+				local armour = 1
+				self.player:armour_up(armour)
+			end,
+		})
+	)
+	self.heal_button = collect_into(
+		self.game_ui_elements,
+		RectangleButton({
+			group = self.game_ui,
+			x = self.player.x + x_offset,
+			y = self.player.y - gh * 0.13,
+			w = w,
+			h = h,
+			fg_color = "black",
+			bg_color = "green",
+			title_text = "HEAL",
+			action = function(b)
+				b.spring:pull(0.2, 200, 10)
+
+				local health = 1
+				self.player:heal_up(health)
+			end,
+		})
+	)
+
+	-- self.armour_button = collect_into(self.game_ui_elements, Button({}))
+	-- self.heal_button = collect_into(self.game_ui_elements, Button({}))
+
+	for _, v in pairs(self.game_ui_elements) do
+		-- v.group = ui_group
+		-- ui_group:add(v)
+
+		v.layer = ui_interaction_layer.Game
+		v.force_update = true
+	end
+
+	-- if layer underneath this one has layer_type == "game" and the same music type then dont push
+	local layer = main.ui_layer_stack:peek()
+	if layer and (layer.music_type ~= self.music_type) then
+		if layer.game then
+			pop_ui_layer(self)
+		end
+	end
+
+	main.ui_layer_stack:push({
+		layer = ui_interaction_layer.Game,
+		layer_has_music = args.layer_has_music,
+		-- game = true,
+		music_type = args.music_type,
+		ui_elements = self.game_ui_elements,
 	})
 end
 
@@ -280,7 +369,7 @@ function Game:update(dt)
 					end)
 
 					local animation_duration = 1.4
-					self:play_animation(result, ball, animation_duration) -- animation unrelated to the 'logic'
+					self:play_animation(result, ball, animation_duration, i) -- animation unrelated to the 'logic'
 					trigger:after(animation_duration * 0.9, function()
 						local target = ball.is_enemy and self.enemy or self.player
 						if result.event == "on_score" then
@@ -353,7 +442,7 @@ function Game:update(dt)
 	self.end_ui:update(dt * slow_amount)
 end
 
-function Game:play_animation(ball_result, ball, duration)
+function Game:play_animation(ball_result, ball, duration, iteration)
 	Text_Bubble({
 		group = self.ui,
 		x = ball.x,
@@ -361,6 +450,7 @@ function Game:play_animation(ball_result, ball, duration)
 		target = ball.is_enemy and self.enemy or self.player,
 		result = ball_result,
 		duration = duration,
+		iteration = iteration,
 	})
 end
 

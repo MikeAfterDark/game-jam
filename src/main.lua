@@ -197,7 +197,8 @@ function init()
 		logo = Image("logo"),
 
 		starter_rock = Image(sprite_folder .. "/starter_rock"),
-		damage_stone = Image(sprite_folder .. "/damage_stone"),
+		alien1 = Image(sprite_folder .. "/alien1"),
+		-- damage_stone = Image(sprite_folder .. "/damage_stone"),
 	}
 
 	-- local tiles_folder = "tiles/"
@@ -319,9 +320,9 @@ function init()
 
 	-- can comfortably fit 14 scenes atm on main menu
 	debug_scenes = {
-		{ id = "intro",     destination = Intro },
+		{ id = "intro", destination = Intro },
 		{ id = "main_menu", destination = MainMenu },
-		{ id = "game",      destination = Game },
+		{ id = "game", destination = Game },
 		{ id = "audio_zoo", destination = AudioZoo }, -- todo: fix
 	}
 
@@ -330,8 +331,10 @@ function init()
 	-- main:add(Intro("intro"))
 	-- main:add(Game("intro"))
 	-- main:add(Level_Select("intro"))
-	main:add(Game("intro"))
-	main:go_to("intro", {})
+	-- main:add(MainMenu("intro"))
+	-- main:go_to("intro")
+	main:add(Game("game"))
+	main:go_to("game", { clear_music = true })
 
 	state.player_time_offset = state.player_time_offset or {}
 
@@ -768,8 +771,7 @@ function open_options(self)
 			action = function(b)
 				state.enemies_only_move_when_player_doesnt = not state.enemies_only_move_when_player_doesnt
 				system.save_state()
-				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or
-				"dont freeze"))
+				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or "dont freeze"))
 			end,
 		})
 	)
