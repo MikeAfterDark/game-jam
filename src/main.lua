@@ -153,6 +153,7 @@ function init()
 		-- tile_mouse_enter = Sound(sfx_folder .. "Tile mouse enter.flac", sfx_tag),
 		--
 		boop = Sound(sfx_folder .. "floraphonic-bloop-1-184019.ogg", sfx_tag),
+		tick = Sound(sfx_folder .. "u_a4gfvwagf1-tick-sound-effect-1-336779.ogg", sfx_tag),
 	}
 
 	--
@@ -189,15 +190,15 @@ function init()
 		credits = { sfx.extra },
 	}
 
-	sprite_folder = "sprites"
+	sprite_folder = "sprites/"
 
 	-- load images:
 	-- wall_arrow_particle = Image("wall_arrow_particle")
 	sprite = {
 		logo = Image("logo"),
 
-		starter_rock = Image(sprite_folder .. "/starter_rock"),
-		alien1 = Image(sprite_folder .. "/alien1"),
+		starter_rock = Image(sprite_folder .. "starter_rock"),
+		alien1 = Image(sprite_folder .. "alien1"),
 		-- damage_stone = Image(sprite_folder .. "/damage_stone"),
 	}
 

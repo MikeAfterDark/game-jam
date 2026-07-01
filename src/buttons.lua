@@ -97,7 +97,9 @@ Button = ButtonBase:extend()
 function Button:init(args)
 	ButtonBase.init(self, args)
 	self.shape = Rectangle(self.x, self.y, args.w or (pixul_font:get_text_width(self.button_text) + 8), pixul_font.h + 4)
-	self.text = Text({ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } }, global_text_tags)
+	self.text = Text({ --
+		{ text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" },
+	}, global_text_tags)
 end
 
 function Button:update(dt)
@@ -141,8 +143,16 @@ function Button:draw()
 		graphics.set_line_width(1)
 	end
 
-	graphics.rectangle(self.x, self.y, self.shape.w, self.shape.h, 4, 4, self.locked and _G[self.fg_color][-8] or _G[self.bg_color][0])
-	self.text:draw(self.x, self.y + 5, 0, 1, 1)
+	graphics.rectangle(
+		self.x,
+		self.y,
+		self.shape.w,
+		self.shape.h,
+		4,
+		4, --
+		self.locked and _G[self.fg_color][-8] or _G[self.bg_color][0]
+	)
+	self.text:draw(self.x, self.y + 3, 0, 1, 1)
 	graphics.pop()
 end
 

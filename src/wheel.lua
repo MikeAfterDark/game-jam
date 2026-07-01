@@ -53,6 +53,10 @@ function Wheel:init(args)
 
 	self.spinrate = 0
 	self.ball_dampening = 0.4
+
+	self.sfx_distance = 0
+	self.last_tick_sfx = 0
+	self.tick_sfx_interval = 0.2
 end
 
 function Wheel:update(dt)
@@ -92,6 +96,12 @@ function Wheel:update(dt)
 			},
 		})
 	end
+
+	self.sfx_distance = self.sfx_distance + dt * self.spinrate
+	if self.sfx_distance > self.last_tick_sfx + self.tick_sfx_interval then
+		self.last_tick_sfx = self.sfx_distance
+		sfx.tick:play({ pitch = 0.9 + 0.2 * (self.spinrate / self.spin_max_speed), volume = 0.3 })
+	end
 end
 
 function Wheel:new_ball(ball, left_side_entrance)
@@ -116,6 +126,9 @@ end
 
 function Wheel:spin(speed)
 	self.spinning = true
+	self.last_tick_sfx = self.last_tick_sfx - self.sfx_distance
+	self.sfx_distance = 0
+	self.spin_max_speed = speed
 	self.ball_dampening = 0.4
 	trigger:tween(2, self, { spinrate = speed }, math.cubic_in, function()
 		self.is_spun_up = true
