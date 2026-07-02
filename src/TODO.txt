@@ -137,3 +137,40 @@ Felicia Playtest [2026-05-22]:
 - spacebar control as 'toggle' option
 - bugfix: calibration map metadata
 - bugfix: unit dying timeline
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Serious Jam Game:
+- Shop + ball info+buy popups
+- Player-holder ball info+sell popups (and changing the balls order?)
+- storing 'armour' and 'healing' + figure out what the (ATK/ARMR/HEAL)buttons do so its not just the same boring order everytime
+- wheel: jackpot and ball consuming

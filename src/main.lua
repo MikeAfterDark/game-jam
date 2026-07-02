@@ -321,9 +321,9 @@ function init()
 
 	-- can comfortably fit 14 scenes atm on main menu
 	debug_scenes = {
-		{ id = "intro", destination = Intro },
+		{ id = "intro",     destination = Intro },
 		{ id = "main_menu", destination = MainMenu },
-		{ id = "game", destination = Game },
+		{ id = "game",      destination = Game },
 		{ id = "audio_zoo", destination = AudioZoo }, -- todo: fix
 	}
 
@@ -772,7 +772,8 @@ function open_options(self)
 			action = function(b)
 				state.enemies_only_move_when_player_doesnt = not state.enemies_only_move_when_player_doesnt
 				system.save_state()
-				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or "dont freeze"))
+				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or
+				"dont freeze"))
 			end,
 		})
 	)
@@ -1104,7 +1105,7 @@ function pause_game(self)
 		ui_elements = self.paused_ui_elements,
 	})
 
-	slow_amount = 0
+	-- slow_amount = 0
 
 	self.paused_menu_title_text = collect_into(
 		self.paused_ui_elements,
@@ -1340,7 +1341,7 @@ function open_credits(self)
 		)
 
 		for j, item in ipairs(section.items) do
-			local width = gw * 0.1
+			local width = gw * 0.11
 			local offset = (#section.items - 1) * (width / 2)
 
 			collect_into(
@@ -1351,7 +1352,7 @@ function open_credits(self)
 					y = yOffset,
 					button_text = item.nickname,
 					fg_color = item.color,
-					bg_color = "fg",
+					bg_color = "bg",
 					credits_button = true,
 					action = function(b)
 						open_url(b, item.url)

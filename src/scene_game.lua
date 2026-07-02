@@ -44,7 +44,7 @@ function Game:on_enter(from, args)
 		table.insert(pockets, {
 			color = i % 2 == 0 and c1:clone() or c2:clone(),
 			type = i == 1 --
-					and Pocket_Type.Jackpot
+				and Pocket_Type.Jackpot
 				or i == math.floor(num_pockets / 2) and Pocket_Type.Void
 				or Pocket_Type.Normal,
 			value = i - 1,
@@ -274,9 +274,9 @@ function Game:update(dt)
 
 	local paused = main:get("settings").in_pause
 	local game_over = self.won or self.lost
-	if not paused and not game_over then
-		run_time = run_time + dt
-	end
+	-- if not paused and not game_over then
+	run_time = run_time + dt
+	-- end
 
 	if
 		self.try_get_results --
