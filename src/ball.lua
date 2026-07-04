@@ -6,7 +6,7 @@ function Ball:init(args)
 
 	self.uses = self.type.uses
 
-	self:set_as_circle(self.r, "dynamic", "ball")
+	self:set_as_circle(self.rs, "dynamic", "ball")
 	self:set_velocity(random:float() * 100, random:float() * 100)
 
 	self:set_restitution(1)
@@ -26,6 +26,40 @@ function Ball:update(dt)
 	if self.animation then
 		self.animation:update(dt)
 	end
+
+	if self.selected and input.select.pressed then
+		self.order = self.activation_source:selected_ball(self)
+	end
+end
+
+Ball_Interaction_Mode = {
+	Wheel_Selection = 1,
+}
+
+function Ball:activate_mouse(source, mode)
+	self.mode = mode
+	self.activation_source = source
+	self.interact_with_mouse = true
+	self.selected = false
+end
+
+function Ball:deactivate_mouse()
+	self.mode = nil
+	self.activation_source = nil
+	self.order = nil
+	self.interact_with_mouse = false
+	self.selected = false
+end
+
+function Ball:on_mouse_enter()
+	self.spring:pull(0.2, 500, 10)
+	sfx.boop:play({ pitch = random:float(0.94, 1.14), volume = 0.5 })
+	self.selected = true
+end
+
+function Ball:on_mouse_exit()
+	sfx.tick:play({ pitch = random:float(0.94, 1.14), volume = 0.5 })
+	self.selected = false
 end
 
 function Ball:trigger(...)
@@ -48,8 +82,24 @@ end
 function Ball:draw()
 	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.x)
 	-- self.shape:draw()
-	graphics.circle(self.x, self.y, self.r, self.is_enemy and red[0] or black[0])
-	graphics.circle(self.x, self.y, self.r * 0.70, self.color)
+
+	if self.selected or self.order then
+		local sections = self.order or 5
+		local spacing = sections > 1 and math.rad(15) or 0 -- gap between arcs in radians
+
+		local arc_size = (2 * math.pi - sections * spacing) / sections
+		local radius = self.rs + gh * 0.02
+		local line_width = 6
+
+		for i = 0, sections - 1 do
+			local start_angle = i * (arc_size + spacing) + math.sin(love.timer.getTime())
+			local end_angle = start_angle + arc_size
+
+			graphics.arc("open", self.x, self.y, radius, start_angle, end_angle, red[0], line_width)
+		end
+	end
+	graphics.circle(self.x, self.y, self.rs, self.is_enemy and red[0] or black[0])
+	graphics.circle(self.x, self.y, self.rs * 0.70, self.color)
 
 	if self.animation then
 		self.animation:draw(self.x, self.y, self.r, 1, 1, 0, 0)
@@ -57,6 +107,12 @@ function Ball:draw()
 	graphics.pop()
 end
 
+--
+--
+--
+--
+--
+--
 Text_Bubble = Object:extend()
 Text_Bubble:implement(GameObject)
 function Text_Bubble:init(args)
@@ -77,7 +133,8 @@ function Text_Bubble:init(args)
 	local x = self.x + math.sin(angle) * initial_pop_distance
 	local y = self.y + math.cos(angle) * initial_pop_distance
 	trigger:tween(self.duration * 0.3, self, { x = x, y = y }, math.cubic_out, function()
-		trigger:tween(self.duration * 0.6, self, { x = self.target.x, y = self.target.y, r = 4 * math.pi }, math.cubic_in, function()
+		trigger:tween(self.duration * 0.6, self, { x = self.target.x, y = self.target.y, r = 4 * math.pi }, math
+		.cubic_in, function()
 			self.text.dead = true
 			self.text = nil
 

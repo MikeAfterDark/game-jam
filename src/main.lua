@@ -38,6 +38,11 @@ function init()
 	end
 
 	controls = {
+		select = {
+			text = "Select",
+			default = { "m1", "m2" },
+			input = state.input.select,
+		},
 		up = {
 			text = "Up",
 			default = { "up", "w" },

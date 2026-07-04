@@ -172,5 +172,9 @@ Felicia Playtest [2026-05-22]:
 Serious Jam Game:
 - Shop + ball info+buy popups
 - Player-holder ball info+sell popups (and changing the balls order?)
-- storing 'armour' and 'healing' + figure out what the (ATK/ARMR/HEAL)buttons do so its not just the same boring order everytime
-- wheel: jackpot and ball consuming
+- new gameplay: Roll all balls, enemy has X balls, player chooses X player balls to trigger after stop, and in what order, then player balls trigger, then enemy balls
+- wheel: jackpot, ball consuming, and other pocket types
+
+
+-- trigger enemy balls, trigger selected balls in selected order
+

@@ -61,7 +61,7 @@ function Game:on_enter(from, args)
 				group = self.main,
 				x = gw * 0.5,
 				y = gh * 0.5,
-				r = ball_radius,
+				rs = ball_radius,
 				type = random:table(Ball_Type),
 			})
 		)
@@ -103,28 +103,28 @@ function Game:on_enter(from, args)
 			group = self.main,
 			x = gw * 0.5,
 			y = gh * 0.5,
-			r = ball_radius,
+			rs = ball_radius,
 			type = random:table(Ball_Type),
 		}),
 		Ball({
 			group = self.main,
 			x = gw * 0.5,
 			y = gh * 0.5,
-			r = ball_radius,
+			rs = ball_radius,
 			type = random:table(Ball_Type),
 		}),
 		Ball({
 			group = self.main,
 			x = gw * 0.5,
 			y = gh * 0.5,
-			r = ball_radius,
+			rs = ball_radius,
 			type = random:table(Ball_Type),
 		}),
 		Ball({
 			group = self.main,
 			x = gw * 0.5,
 			y = gh * 0.5,
-			r = ball_radius,
+			rs = ball_radius,
 			type = random:table(Ball_Type),
 		}),
 	})
@@ -133,14 +133,14 @@ function Game:on_enter(from, args)
 			group = self.main,
 			x = gw * 0.5,
 			y = gh * 0.5,
-			r = ball_radius,
+			rs = ball_radius,
 			type = random:table(Ball_Type),
 		}),
 		Ball({
 			group = self.main,
 			x = gw * 0.5,
 			y = gh * 0.5,
-			r = ball_radius,
+			rs = ball_radius,
 			type = random:table(Ball_Type),
 		}),
 	})
@@ -178,72 +178,96 @@ function Game:on_enter(from, args)
 		max_hp = 10,
 	})
 
-	local y = self.player.y
-	local x_offset = gw * 0.08
-	local size = gh * 0.13
-	local w = size
-	local h = size * 0.4
-	self.attack_button = collect_into(
-		self.game_ui_elements,
-		RectangleButton({
-			group = self.game_ui,
-			x = self.player.x - x_offset,
-			y = self.player.y - gh * 0.13,
-			w = w,
-			h = h,
-			fg_color = "black",
-			bg_color = "red",
-			title_text = "ATK",
-			action = function(b)
-				b.spring:pull(0.2, 200, 10)
-				local damage = self.player:get_damage()
-				self.enemy:take_damage(damage)
-			end,
-		})
-	)
+	-- local y = self.player.y
+	-- local x_offset = gw * 0.08
+	-- local size = gh * 0.13
+	-- local w = size
+	-- local h = size * 0.4
+	-- self.attack_button = collect_into(
+	-- 	self.game_ui_elements,
+	-- 	RectangleButton({
+	-- 		group = self.game_ui,
+	-- 		x = self.player.x - x_offset,
+	-- 		y = self.player.y - gh * 0.13,
+	-- 		w = w,
+	-- 		h = h,
+	-- 		fg_color = "black",
+	-- 		bg_color = "red",
+	-- 		title_text = "ATK",
+	-- 		action = function(b)
+	-- 			b.spring:pull(0.2, 200, 10)
+	-- 			local damage = self.player:get_damage()
+	-- 			self.enemy:take_damage(damage)
+	-- 		end,
+	-- 	})
+	-- )
+	--
+	-- self.armour_button = collect_into(
+	-- 	self.game_ui_elements,
+	-- 	RectangleButton({
+	-- 		group = self.game_ui,
+	-- 		x = self.player.x,
+	-- 		y = self.player.y - gh * 0.13,
+	-- 		w = w,
+	-- 		h = h,
+	-- 		fg_color = "black",
+	-- 		bg_color = "blue",
+	-- 		title_text = "ARMR",
+	-- 		action = function(b)
+	-- 			b.spring:pull(0.2, 200, 10)
+	--
+	-- 			local armour = 1
+	-- 			self.player:armour_up(armour)
+	-- 		end,
+	-- 	})
+	-- )
 
-	self.armour_button = collect_into(
+	local y_dist = gh * 0.03
+	self.spin_button = collect_into(
 		self.game_ui_elements,
-		RectangleButton({
+		Button({
 			group = self.game_ui,
-			x = self.player.x,
-			y = self.player.y - gh * 0.13,
-			w = w,
-			h = h,
-			fg_color = "black",
-			bg_color = "blue",
-			title_text = "ARMR",
-			action = function(b)
-				b.spring:pull(0.2, 200, 10)
-
-				local armour = 1
-				self.player:armour_up(armour)
-			end,
-		})
-	)
-	self.heal_button = collect_into(
-		self.game_ui_elements,
-		RectangleButton({
-			group = self.game_ui,
-			x = self.player.x + x_offset,
-			y = self.player.y - gh * 0.13,
-			w = w,
-			h = h,
+			x = self.wheel.x,
+			y = self.wheel.y - y_dist,
 			fg_color = "black",
 			bg_color = "green",
-			title_text = "HEAL",
+			button_text = "Spin",
 			action = function(b)
 				b.spring:pull(0.2, 200, 10)
-
-				local health = 1
-				self.player:heal_up(health)
+				self.wheel:spin(5)
+				-- b.locked = true
 			end,
 		})
 	)
 
-	-- self.armour_button = collect_into(self.game_ui_elements, Button({}))
-	-- self.heal_button = collect_into(self.game_ui_elements, Button({}))
+	self.select_button = collect_into(
+		self.game_ui_elements,
+		Button({
+			group = self.game_ui,
+			x = self.wheel.x,
+			y = self.wheel.y + y_dist,
+			fg_color = "black",
+			bg_color = "green",
+			button_text = "Select",
+			action = function(b)
+				b.spring:pull(0.2, 200, 10)
 
+				if
+					self.try_get_results --
+					and self.wheel:all_balls_stopped()
+					and self.wheel:all_balls_selected()
+					and #self.results == 0
+				then
+					self.try_get_results = false
+					self.results = self.wheel:results()
+					self.results_time = 0.4
+					-- b.locked = true
+				else
+					sfx.boop:play({ pitch = 0.6, volume = 0.35 })
+				end
+			end,
+		})
+	)
 	for _, v in pairs(self.game_ui_elements) do
 		-- v.group = ui_group
 		-- ui_group:add(v)
@@ -267,6 +291,8 @@ function Game:on_enter(from, args)
 		music_type = args.music_type,
 		ui_elements = self.game_ui_elements,
 	})
+
+	self.num_balls_per_selection = 3
 end
 
 function Game:update(dt)
@@ -278,16 +304,6 @@ function Game:update(dt)
 	run_time = run_time + dt
 	-- end
 
-	if
-		self.try_get_results --
-		and self.wheel:all_balls_stopped()
-		and #self.results == 0
-	then
-		self.try_get_results = false
-		self.results = self.wheel:results()
-		self.results_time = 0.4
-	end
-
 	if input.z.pressed then
 		self.wheel:spin(5)
 	end
@@ -296,6 +312,11 @@ function Game:update(dt)
 		self.wheel.is_spun_up = false
 		self.send_balls_to_wheel = true
 		self.results_time = 0.1
+	end
+
+	if self.try_get_results and self.wheel:all_balls_stopped() and not self.balls_enabled then
+		self.wheel:enable_ball_selection(self.num_balls_per_selection)
+		self.balls_enabled = true
 	end
 
 	if self.send_balls_to_wheel and not self.loading_ball then
@@ -323,6 +344,7 @@ function Game:update(dt)
 
 			trigger:after(self.results_time, function()
 				self.loading_ball = false
+				self.balls_enabled = false
 			end)
 		else
 			self.loading_ball = false

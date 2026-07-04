@@ -124,8 +124,60 @@ function Wheel:all_balls_stopped()
 	return ready
 end
 
+function Wheel:selected_ball(ball)
+	local function reorder_selected()
+		for i, selected_ball in ipairs(self.selected_balls) do
+			selected_ball.spring:pull(0.2, 500, 10)
+			selected_ball.order = i
+		end
+	end
+
+	if table.contains(self.selected_balls, ball) then
+		self.selected_balls = table.delete(self.selected_balls, ball)
+		reorder_selected()
+		return
+	end
+
+	if #self.selected_balls == self.max_num_selected_balls then
+		local old_ball = table.shift(self.selected_balls)
+		old_ball.order = nil
+		old_ball.spring:pull(0.2, 500, 10)
+
+		reorder_selected()
+	end
+
+	if #self.selected_balls < self.max_num_selected_balls then
+		table.insert(self.selected_balls, ball)
+		return #self.selected_balls
+	end
+end
+
+function Wheel:enable_ball_selection(num_balls)
+	self.max_num_selected_balls = num_balls
+	self.selected_balls = {}
+	sfx.boop:play({ pitch = 0.6, volume = 0.35 })
+	for i, ball in ipairs(self.balls) do
+		if not ball.is_enemy then
+			ball.spring:pull(0.2, 500, 10)
+			ball:activate_mouse(self, Ball_Interaction_Mode.Wheel_Selection)
+		end
+	end
+end
+
+function Wheel:all_balls_selected()
+	if #self.selected_balls == self.max_num_selected_balls then
+		for i, ball in ipairs(self.balls) do
+			if not ball.is_enemy then
+				ball:deactivate_mouse()
+			end
+		end
+		return true
+	end
+end
+
 function Wheel:spin(speed)
 	self.spinning = true
+	self.first_time_balls_stopped = false
 	self.last_tick_sfx = self.last_tick_sfx - self.sfx_distance
 	self.sfx_distance = 0
 	self.spin_max_speed = speed
@@ -143,6 +195,9 @@ function Wheel:stop()
 end
 
 function Wheel:results()
+	-- play the selected_balls in their selection order then
+	-- play the enemy balls based on angle, from low to high
+
 	self.balls = table.map(self.balls, function(ball)
 		local angle = Vector(ball.x, ball.y):angle_to(self)
 		ball.angle = (angle - math.pi - self.r) % (2 * math.pi)
@@ -153,7 +208,7 @@ function Wheel:results()
 		return a.angle < b.angle
 	end)
 
-	local results = table.foreachmap(self.balls, function(ball)
+	for i, ball in ipairs(self.balls) do
 		ball.pocket = nil
 
 		for _, pocket in ipairs(self.pockets) do
@@ -166,10 +221,14 @@ function Wheel:results()
 		if not ball.pocket then
 			print("no pocket for ball at", ball.angle)
 		end
+	end
 
-		return ball, true
-	end)
-
+	local results = table.append(
+		self.selected_balls,
+		table.select(self.balls, function(ball)
+			return ball.is_enemy
+		end)
+	)
 	return results
 end
 
