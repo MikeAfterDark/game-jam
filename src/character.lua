@@ -5,23 +5,24 @@ function Character:init(args)
 
 	self.armour = 3
 	self.hp = self.max_hp
-	self.damage = 0
 	self.color = random:color()
 
 	self.hp_text = Text({ { text = "hallo", font = pixul_font, alignment = "center" } }, global_text_tags)
 	self.money_text = Text({ { text = "its me", font = pixul_font, alignment = "center" } }, global_text_tags)
-	self.damage_text = Text({ { text = "its me", font = pixul_font, alignment = "center" } }, global_text_tags)
+	-- self.damage_text = Text({ { text = "its me", font = pixul_font, alignment = "center" } }, global_text_tags)
 
 	if self.portrait then
-		self.name_text = Text({ { text = self.portrait.name, font = pixul_font, alignment = "center" } }, global_text_tags)
+		self.name_text = Text({ --
+			{ text = self.portrait.name, font = pixul_font, alignment = "center" },
+		}, global_text_tags)
 	end
 end
 
-function Character:get_damage()
-	local damage = self.damage
-	self.damage = 0
-	return damage
-end
+-- function Character:get_damage()
+-- 	local damage = self.damage
+-- 	self.damage = 0
+-- 	return damage
+-- end
 
 function Character:take_damage(damage)
 	local post_armour = self.armour - damage
@@ -40,11 +41,12 @@ function Character:armour_up(armour)
 	self.armour = self.armour + armour
 end
 
-function Character:heal_up(health)
+function Character:heal(health)
 	self.hp = math.min(self.max_hp, self.hp + health)
 end
 
 function Character:die()
+	self.has_died = true
 	print("im ded")
 end
 
@@ -68,16 +70,16 @@ function Character:update(dt)
 		},
 	})
 
-	self.damage_text:set_text({
-		{
-			text = "[red]" .. tostring(self.damage),
-			font = pixul_font,
-			alignment = "center",
-		},
-	})
+	-- self.damage_text:set_text({
+	-- 	{
+	-- 		text = "[red]" .. tostring(self.damage),
+	-- 		font = pixul_font,
+	-- 		alignment = "center",
+	-- 	},
+	-- })
 
-	if self.portrait then
-		self.portrait.animation:update(dt)
+	if self.animation then
+		self.animation:update(dt)
 	end
 end
 
@@ -90,24 +92,90 @@ function Character:draw()
 		graphics.rectangle(self.portrait.x, self.portrait.y, width, height, 3, 3, white[0])
 		graphics.rectangle(self.portrait.x, self.portrait.y, width - 6, height - 6, 3, 3, self.portrait.background.color)
 
-		self.portrait.animation:draw( --
-			self.portrait.x,
-			self.portrait.y,
-			self.r,
-			self.portrait.draw_size,
-			self.portrait.draw_size
-		)
+		if self.animation then
+			self.animation:draw( --
+				self.portrait.x,
+				self.portrait.y,
+				self.r,
+				self.portrait.draw_size,
+				self.portrait.draw_size
+			)
+		end
 		self.name_text:draw(self.portrait.x, self.portrait.y + gh * 0.24, self.r, 1, 1)
 	end
 
 	local separation = gh * 0.05
-	local box_width = math.max(math.max(self.hp_text.w, self.money_text.w), self.damage_text.w) + 10
-	local box_height = 2.3 * self.hp_text.h + separation
+	local box_width = math.max(self.hp_text.w, self.money_text.w) + 10
+	local box_height = 1.3 * self.hp_text.h + separation
 	graphics.rectangle(self.x, self.y - separation / 7, box_width + 5, box_height + 5, 3, 3, white[0])
 	graphics.rectangle(self.x, self.y - separation / 7, box_width, box_height, 3, 3, black[0])
 
-	self.hp_text:draw(self.x, self.y - separation, self.r, 1, 1)
-	self.money_text:draw(self.x, self.y, self.r, 1, 1)
-	self.damage_text:draw(self.x, self.y + separation, self.r, 1, 1)
+	self.hp_text:draw(self.x, self.y - separation / 2, self.r, 1, 1)
+	self.money_text:draw(self.x, self.y + separation / 2, self.r, 1, 1)
+	-- self.damage_text:draw(self.x, self.y + separation, self.r, 1, 1)
 	graphics.pop()
 end
+
+function Character:load_next_enemy()
+	self.enemy_index = self.enemy_index and (self.enemy_index + 1) or 1
+
+	local enemy = Enemies[self.enemy_index]
+	if enemy then
+		self.portrait = enemy.portrait
+		self.portrait.x = gw * 0.87
+		self.portrait.y = gh * 0.2
+		self.portrait.draw_size = 7
+
+		self.animation = enemy.portrait.animation()
+		self.max_hp = enemy.max_hp
+		self.hp = enemy.max_hp
+		self.armour = enemy.armour or 0
+
+		-- setup balls from ball types
+		local balls = {}
+		for i, ball_type in ipairs(enemy.balls) do
+			table.insert(
+				balls,
+				Ball({
+					group = self.group,
+					type = ball_type,
+				})
+			)
+		end
+		self.holder:setup(#balls, #balls, balls)
+		self.spring:pull(0.2, 500, 10)
+	end
+
+	return enemy ~= nil
+end
+
+Enemies = {
+	{
+		money = 1,
+		max_hp = 10,
+		armour = 1,
+		balls = {
+			Ball_Type.starter_damage_ball,
+			Ball_Type.starter_damage_ball,
+			Ball_Type.starter_damage_ball,
+			Ball_Type.starter_damage_ball,
+			Ball_Type.starter_damage_ball,
+			Ball_Type.starter_damage_ball,
+			Ball_Type.starter_damage_ball,
+		},
+		portrait = {
+			name = "[red]Angry [p_blue1]Bob",
+			background = {
+				color = Color("#063000"),
+			},
+			animation = function()
+				return Animation(
+					0.4, --
+					AnimationFrames(sprite.alien1, 16, 32, { { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 }, { 6, 1 } }),
+					"loop",
+					{}
+				)
+			end,
+		},
+	},
+}

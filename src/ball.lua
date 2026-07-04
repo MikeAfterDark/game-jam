@@ -6,6 +6,9 @@ function Ball:init(args)
 
 	self.uses = self.type.uses
 
+	local radius = gh * 0.02
+	self.rs = self.rs or self.type.size * radius
+
 	self:set_as_circle(self.rs, "dynamic", "ball")
 	self:set_velocity(random:float() * 100, random:float() * 100)
 
@@ -84,18 +87,19 @@ function Ball:draw()
 	-- self.shape:draw()
 
 	if self.selected or self.order then
-		local sections = self.order or 5
-		local spacing = sections > 1 and math.rad(15) or 0 -- gap between arcs in radians
+		local sections = self.order or 9
+		local spacing = sections == 1 and 0 or self.order and math.rad(20) or math.rad(15)
 
 		local arc_size = (2 * math.pi - sections * spacing) / sections
 		local radius = self.rs + gh * 0.02
 		local line_width = 6
+		local color = self.order and green[0] or blue[0]
 
 		for i = 0, sections - 1 do
 			local start_angle = i * (arc_size + spacing) + math.sin(love.timer.getTime())
 			local end_angle = start_angle + arc_size
 
-			graphics.arc("open", self.x, self.y, radius, start_angle, end_angle, red[0], line_width)
+			graphics.arc("open", self.x, self.y, radius, start_angle, end_angle, color, line_width)
 		end
 	end
 	graphics.circle(self.x, self.y, self.rs, self.is_enemy and red[0] or black[0])
@@ -133,8 +137,7 @@ function Text_Bubble:init(args)
 	local x = self.x + math.sin(angle) * initial_pop_distance
 	local y = self.y + math.cos(angle) * initial_pop_distance
 	trigger:tween(self.duration * 0.3, self, { x = x, y = y }, math.cubic_out, function()
-		trigger:tween(self.duration * 0.6, self, { x = self.target.x, y = self.target.y, r = 4 * math.pi }, math
-		.cubic_in, function()
+		trigger:tween(self.duration * 0.6, self, { x = self.target.x, y = self.target.y, r = 4 * math.pi }, math.cubic_in, function()
 			self.text.dead = true
 			self.text = nil
 

@@ -44,7 +44,7 @@ function Game:on_enter(from, args)
 		table.insert(pockets, {
 			color = i % 2 == 0 and c1:clone() or c2:clone(),
 			type = i == 1 --
-				and Pocket_Type.Jackpot
+					and Pocket_Type.Jackpot
 				or i == math.floor(num_pockets / 2) and Pocket_Type.Void
 				or Pocket_Type.Normal,
 			value = i - 1,
@@ -128,29 +128,29 @@ function Game:on_enter(from, args)
 			type = random:table(Ball_Type),
 		}),
 	})
-	self.enemy_holder:setup(3, 2, {
-		Ball({
-			group = self.main,
-			x = gw * 0.5,
-			y = gh * 0.5,
-			rs = ball_radius,
-			type = random:table(Ball_Type),
-		}),
-		Ball({
-			group = self.main,
-			x = gw * 0.5,
-			y = gh * 0.5,
-			rs = ball_radius,
-			type = random:table(Ball_Type),
-		}),
-	})
+	-- self.enemy_holder:setup(3, 2, {
+	-- 	Ball({
+	-- 		group = self.main,
+	-- 		x = gw * 0.5,
+	-- 		y = gh * 0.5,
+	-- 		rs = ball_radius,
+	-- 		type = random:table(Ball_Type),
+	-- 	}),
+	-- 	Ball({
+	-- 		group = self.main,
+	-- 		x = gw * 0.5,
+	-- 		y = gh * 0.5,
+	-- 		rs = ball_radius,
+	-- 		type = random:table(Ball_Type),
+	-- 	}),
+	-- })
 
 	self.enemy = Character({
 		group = self.main,
 		x = gw * 0.75,
 		y = gh * 0.2,
+		holder = self.enemy_holder,
 		money = 2,
-		damage = 0,
 		max_hp = 4,
 		portrait = {
 			name = "[red]Angry [p_blue1]Bob",
@@ -169,12 +169,13 @@ function Game:on_enter(from, args)
 		},
 	})
 
+	self.enemy:load_next_enemy()
+
 	self.player = Character({
 		group = self.main,
 		x = gw * 0.85,
 		y = gh * 0.9,
 		money = 5,
-		damage = 0,
 		max_hp = 10,
 	})
 
@@ -314,6 +315,11 @@ function Game:update(dt)
 		self.results_time = 0.1
 	end
 
+	if input.x.pressed then
+		local new_enemy_loaded = self.enemy:load_next_enemy()
+		print("loaded:", new_enemy_loaded)
+	end
+
 	if self.try_get_results and self.wheel:all_balls_stopped() and not self.balls_enabled then
 		self.wheel:enable_ball_selection(self.num_balls_per_selection)
 		self.balls_enabled = true
@@ -397,11 +403,12 @@ function Game:update(dt)
 						if result.event == "on_score" then
 							target.money = target.money + result.value
 						elseif result.event == "on_damage" then
-							target.damage = target.damage + result.value
+							target = ball.is_enemy and self.player or self.enemy -- deal damage to opposite unit
+							target:take_damage(result.value)
 						elseif result.event == "on_health" then
-							target.hp = target.hp + result.value
+							target:heal(result.value)
 						elseif result.event == "on_armour" then
-							target.armour = target.armour + result.value
+							target:armour_up(result.value)
 						end
 					end)
 				end)
@@ -429,30 +436,13 @@ function Game:update(dt)
 				end)
 			end
 		end)
-		-- self.waiting_on_ball = ball
 	end
 
-	-- if self.waiting_on_ball and self.waiting_on_ball:is_done() then
-	-- 	self.waiting_on_ball.pocket.color = self.prev_pocket_color
-	-- 	self.processing_result = false
-	--
-	-- 	if #self.results == 0 then
-	-- 		-- just proceesed the last ball, return the balls to their respective holders
-	-- 		trigger:after(0.5, function()
-	-- 			sfx.boop:play({ pitch = 1.3, volume = 0.35 })
-	-- 			for _, ball in ipairs(self.wheel.balls) do
-	-- 				if ball.is_enemy then
-	-- 					self.enemy_holder:insert(ball)
-	-- 				else
-	-- 					self.player_holder:insert(ball)
-	-- 				end
-	-- 			end
-	--
-	-- 			self.wheel.balls = {}
-	-- 		end)
-	-- 	end
-	-- 	self.waiting_on_ball = nil
-	-- end
+	if self.player.has_died then
+		self:loss()
+	elseif self.enemy.has_died then
+		self:win()
+	end
 
 	self:update_game_object(dt * slow_amount)
 	star_group:update(dt * slow_amount)
@@ -465,11 +455,14 @@ function Game:update(dt)
 end
 
 function Game:play_animation(ball_result, ball, duration, iteration)
+	local target = ball_result.event == "on_damage" --
+			and (ball.is_enemy and self.player or self.enemy) --
+		or (ball.is_enemy and self.enemy or self.player)
 	Text_Bubble({
 		group = self.ui,
 		x = ball.x,
 		y = ball.y,
-		target = ball.is_enemy and self.enemy or self.player,
+		target = target,
 		result = ball_result,
 		duration = duration,
 		iteration = iteration,
@@ -477,57 +470,66 @@ function Game:play_animation(ball_result, ball, duration, iteration)
 end
 
 function Game:win()
-	self.won = true
-	print("gj, you won")
+	if not self.won then
+		self.won = true
+		print("gj, you won")
 
-	if self.song then
-		self.song:stop()
+		-- if there are more enemies or infinite mode, spawn next enemy
+		-- else popup a victory screen to play again or go back to main menu
 	end
 
-	scene_transition(self, {
-		x = gw / 2,
-		y = gh / 2,
-		type = "circle",
-		target = {
-			scene = Level_Select,
-			name = "level_select",
-			args = {
-				clear_music = true,
-			},
-		},
-		display = {
-			text = "gg wp! loading...",
-			font = pixul_font,
-			alignment = "center",
-		},
-	})
+	-- if self.song then
+	-- 	self.song:stop()
+	-- end
+	--
+	-- scene_transition(self, {
+	-- 	x = gw / 2,
+	-- 	y = gh / 2,
+	-- 	type = "circle",
+	-- 	target = {
+	-- 		scene = Level_Select,
+	-- 		name = "level_select",
+	-- 		args = {
+	-- 			clear_music = true,
+	-- 		},
+	-- 	},
+	-- 	display = {
+	-- 		text = "gg wp! loading...",
+	-- 		font = pixul_font,
+	-- 		alignment = "center",
+	-- 	},
+	-- })
 end
 
 function Game:loss()
-	self.lost = true
-	print("booo, you lost")
+	if not self.lost then
+		self.lost = true
 
-	if self.song then
-		self.song:stop()
+		print("booo, you lost")
+		-- play end game screen, try again or go back to menu
 	end
 
-	scene_transition(self, {
-		x = gw / 2,
-		y = gh / 2,
-		type = "circle",
-		target = {
-			scene = MainMenu,
-			name = "mainmenu",
-			args = {
-				clear_music = true,
-			},
-		},
-		display = {
-			text = "ripperonis, you lost. loading...",
-			font = pixul_font,
-			alignment = "center",
-		},
-	})
+	-- if self.song then
+	-- 	self.song:stop()
+	-- end
+	--
+	-- scene_transition(self, {
+	-- 	x = gw / 2,
+	-- 	y = gh / 2,
+	-- 	type = "circle",
+	-- 	target = {
+	-- 		scene = MainMenu,
+	-- 		name = "mainmenu",
+	-- 		args = {
+	-- 			clear_music = true,
+	-- 		},
+	-- 	},
+	-- 	display = {
+	-- 		text = "ripperonis, you lost. loading...",
+	-- 		font = pixul_font,
+	-- 		alignment = "center",
+	-- 	},
+	-- })
 end
 
 function Game:draw()
