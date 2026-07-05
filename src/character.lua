@@ -6,16 +6,14 @@ function Character:init(args)
 	self.armour = 3
 	self.hp = self.max_hp
 	self.color = random:color()
+	self.money = self.money or 0
 
 	self.hp_text = Text({ { text = "hallo", font = pixul_font, alignment = "center" } }, global_text_tags)
-	self.money_text = Text({ { text = "its me", font = pixul_font, alignment = "center" } }, global_text_tags)
-	-- self.damage_text = Text({ { text = "its me", font = pixul_font, alignment = "center" } }, global_text_tags)
+	self.money_text = Text({ { text = "hallo", font = pixul_font, alignment = "center" } }, global_text_tags)
 
-	if self.portrait then
-		self.name_text = Text({ --
-			{ text = self.portrait.name, font = pixul_font, alignment = "center" },
-		}, global_text_tags)
-	end
+	self.name_text = Text({ --
+		{ text = "", font = pixul_font, alignment = "center" },
+	}, global_text_tags)
 end
 
 -- function Character:get_damage()
@@ -90,7 +88,15 @@ function Character:draw()
 		local width = gw * 0.2
 		local height = gh * 0.4 + 15
 		graphics.rectangle(self.portrait.x, self.portrait.y, width, height, 3, 3, white[0])
-		graphics.rectangle(self.portrait.x, self.portrait.y, width - 6, height - 6, 3, 3, self.portrait.background.color)
+		graphics.rectangle(
+			self.portrait.x,
+			self.portrait.y,
+			width - 6,
+			height - 6,
+			3,
+			3,
+			self.portrait.background.color
+		)
 
 		if self.animation then
 			self.animation:draw( --
@@ -171,7 +177,12 @@ Enemies = {
 			animation = function()
 				return Animation(
 					0.4, --
-					AnimationFrames(sprite.alien1, 16, 32, { { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 }, { 6, 1 } }),
+					AnimationFrames(
+						sprite.alien1,
+						16,
+						32,
+						{ { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 }, { 6, 1 } }
+					),
 					"loop",
 					{}
 				)

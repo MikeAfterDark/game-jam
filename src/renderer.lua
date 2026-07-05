@@ -821,20 +821,34 @@ function TextBox:init(args)
 	self:init_game_object(args)
 	self.text = Text(args.lines, global_text_tags)
 	self.w, self.h = args.w or self.text.w, args.h or self.text.h
-
-	if self.scroll_box then
-		self.max_scroll = math.max(0, self.text.h - self.h + self.text.line_height / 2)
-		self.scroll_offset = 0
-		self.scroll_velocity = 0
-		self.scroll_speed = args.scroll_speed or 300
-		self.scroll_damping = args.scroll_damping or 8 -- how quickly it slows down
-		self.scroll_ease = args.scroll_ease or math.cubic_out
-	end
 end
 
 function TextBox:update(dt)
 	self:update_game_object(dt)
 	self.text:update(dt)
+end
+
+function TextBox:set_text(new_text)
+	new_text = table.map(new_text, function(v)
+		v.wrap = self.w
+		return v
+	end)
+	self.text:set_text(new_text)
+end
+
+function TextBox:draw()
+	if self.visible == false then
+		return
+	end
+	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.x)
+
+	local rounded = 5
+	local background_color = self.is_enemy and red[0] or blue[0]
+	graphics.rectangle(self.x, self.y, self.w + 10, self.h + 10, rounded, rounded, background_color)
+	graphics.rectangle(self.x, self.y, self.w + 5, self.h + 5, rounded, rounded, black[0])
+	local y = self.top_aligned and self.y - self.text.h / 2 or self.y
+	self.text:draw(self.x, y, self.r, self.sx, self.sy)
+	graphics.pop()
 end
 
 --

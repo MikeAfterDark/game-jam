@@ -30,8 +30,12 @@ function Ball:update(dt)
 		self.animation:update(dt)
 	end
 
-	if self.selected and input.select.pressed then
+	if self.selected and input.select.pressed and not self.is_enemy then
 		self.order = self.activation_source:selected_ball(self)
+	end
+
+	if self.selected then
+		main.current.hovered_ball = self
 	end
 end
 
@@ -93,7 +97,7 @@ function Ball:draw()
 		local arc_size = (2 * math.pi - sections * spacing) / sections
 		local radius = self.rs + gh * 0.02
 		local line_width = 6
-		local color = self.order and green[0] or blue[0]
+		local color = self.order and green[0] or self.is_enemy and red[0] or blue[0]
 
 		for i = 0, sections - 1 do
 			local start_angle = i * (arc_size + spacing) + math.sin(love.timer.getTime())
@@ -137,12 +141,18 @@ function Text_Bubble:init(args)
 	local x = self.x + math.sin(angle) * initial_pop_distance
 	local y = self.y + math.cos(angle) * initial_pop_distance
 	trigger:tween(self.duration * 0.3, self, { x = x, y = y }, math.cubic_out, function()
-		trigger:tween(self.duration * 0.6, self, { x = self.target.x, y = self.target.y, r = 4 * math.pi }, math.cubic_in, function()
-			self.text.dead = true
-			self.text = nil
+		trigger:tween(
+			self.duration * 0.6,
+			self,
+			{ x = self.target.x, y = self.target.y, r = 4 * math.pi },
+			math.cubic_in,
+			function()
+				self.text.dead = true
+				self.text = nil
 
-			self.dead = true
-		end)
+				self.dead = true
+			end
+		)
 	end)
 end
 
@@ -188,7 +198,7 @@ Ball_Type = {
 	starter_damage_ball = {
 		id = "starter damage ball",
 		name = "Rock",
-		description = "starter rock, deals # damage",
+		description = "starter rock, deals 1 damage",
 		rarity = Rarity.Starter,
 		size = 1,
 		uses = 10,
@@ -208,7 +218,7 @@ Ball_Type = {
 	damage_stone = {
 		id = "damage stone",
 		name = "Stone",
-		description = "damage stone, deals # damage",
+		description = "damage stone, deals 1 + ([yellow]pocket[white]/15) damage",
 		rarity = Rarity.Common,
 		size = 1,
 		uses = 3,

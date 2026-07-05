@@ -158,9 +158,9 @@ function Wheel:enable_ball_selection(num_balls)
 	sfx.boop:play({ pitch = 0.6, volume = 0.35 })
 
 	for i, ball in ipairs(self.balls) do
-		if not ball.is_enemy then
-			ball:activate_mouse(self, Ball_Interaction_Mode.Wheel_Selection)
-		end
+		-- if not ball.is_enemy then
+		ball:activate_mouse(self, Ball_Interaction_Mode.Wheel_Selection)
+		-- end
 	end
 
 	self.t:every_immediate(1.3, function()

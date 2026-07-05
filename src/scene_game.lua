@@ -150,23 +150,23 @@ function Game:on_enter(from, args)
 		x = gw * 0.75,
 		y = gh * 0.2,
 		holder = self.enemy_holder,
-		money = 2,
-		max_hp = 4,
-		portrait = {
-			name = "[red]Angry [p_blue1]Bob",
-			background = {
-				color = Color("#063000"),
-			},
-			animation = Animation(
-				0.4, --
-				AnimationFrames(sprite.alien1, 16, 32, { { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 }, { 6, 1 } }),
-				"loop",
-				{}
-			),
-			x = gw * 0.87,
-			y = gh * 0.2,
-			draw_size = 7,
-		},
+		-- money = 2,
+		-- max_hp = 4,
+		-- portrait = {
+		-- 	name = "[red]Angry [p_blue1]Bob",
+		-- 	background = {
+		-- 		color = Color("#063000"),
+		-- 	},
+		-- 	animation = Animation(
+		-- 		0.4, --
+		-- 		AnimationFrames(sprite.alien1, 16, 32, { { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 }, { 6, 1 } }),
+		-- 		"loop",
+		-- 		{}
+		-- 	),
+		-- 	x = gw * 0.87,
+		-- 	y = gh * 0.2,
+		-- 	draw_size = 7,
+		-- },
 	})
 
 	self.enemy:load_next_enemy()
@@ -277,6 +277,28 @@ function Game:on_enter(from, args)
 		v.force_update = true
 	end
 
+	local popup_width = gw * 0.2
+	self.info_popup = TextBox({
+		group = self.main,
+		visible = false,
+		x = gw * 0.87,
+		y = gh * 0.6,
+		w = popup_width,
+		h = gh * 0.3,
+		lines = {
+			{
+				text = "boo",
+				font = pixul_font,
+				wrap = popup_width,
+			},
+			{
+				text = "iits me and some really long text that I don't expect anyone to be able to read but who knows maybe this actually renders properly or somethingts me and some really long text that I don't expect anyone to be able to read but who knows maybe this actually renders properly or something",
+				font = small_pixul_font,
+				wrap = popup_width,
+			},
+		},
+	})
+
 	-- if layer underneath this one has layer_type == "game" and the same music type then dont push
 	local layer = main.ui_layer_stack:peek()
 	if layer and (layer.music_type ~= self.music_type) then
@@ -299,8 +321,8 @@ end
 function Game:update(dt)
 	camera:follow_object(self.camera_tracker)
 
-	local paused = main:get("settings").in_pause
-	local game_over = self.won or self.lost
+	-- local paused = main:get("settings").in_pause
+	-- local game_over = self.won or self.lost
 	-- if not paused and not game_over then
 	run_time = run_time + dt
 	-- end
@@ -323,6 +345,33 @@ function Game:update(dt)
 	if self.try_get_results and self.wheel:all_balls_stopped() and not self.balls_enabled then
 		self.wheel:enable_ball_selection(self.num_balls_per_selection)
 		self.balls_enabled = true
+	end
+
+	if self.hovered_ball and self.hovered_ball.selected then
+		if
+			self.hovered_ball.mode == Ball_Interaction_Mode.Wheel_Selection
+			and self.info_popup.id ~= self.hovered_ball.id
+		then
+			self.info_popup.visible = true
+			self.info_popup.id = self.hovered_ball.id
+			self.info_popup.spring:pull(0.1, 500, 10)
+
+			self.info_popup:set_text({
+				{ text = self.hovered_ball.type.name, font = pixul_font },
+				{ text = self.hovered_ball.type.description, font = small_pixul_font },
+			})
+			self.info_popup.is_enemy = self.hovered_ball.is_enemy
+
+			-- else
+			-- self.info_popup.visible = false
+		end
+	elseif not self.hovered_ball or not self.hovered_ball.selected then
+		if self.info_popup.visible then
+			self.info_popup.visible = false
+			self.info_popup.id = nil
+			self.info_popup.is_enemy = nil
+		end
+		-- self.hovered_ball = nil
 	end
 
 	if self.send_balls_to_wheel and not self.loading_ball then
@@ -539,13 +588,13 @@ function Game:draw()
 	self.effects:draw()
 	self.ui:draw()
 
-	graphics.draw_with_mask(function()
-		star_canvas:draw(0, 0, 0, 1, 1)
-	end, function()
-		camera:attach()
-		graphics.rectangle(gw / 2, gh / 2, self.w, self.h, nil, nil, fg[0])
-		camera:detach()
-	end, true)
+	-- graphics.draw_with_mask(function()
+	-- 	star_canvas:draw(0, 0, 0, 1, 1)
+	-- end, function()
+	-- 	camera:attach()
+	-- 	graphics.rectangle(gw / 2, gh / 2, self.w, self.h, nil, nil, fg[0])
+	-- 	camera:detach()
+	-- end, true)
 
 	if self.won or self.died then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
