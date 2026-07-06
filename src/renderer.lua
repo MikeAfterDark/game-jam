@@ -821,11 +821,25 @@ function TextBox:init(args)
 	self:init_game_object(args)
 	self.text = Text(args.lines, global_text_tags)
 	self.w, self.h = args.w or self.text.w, args.h or self.text.h
+
+	if self.hoverable then
+		local mouse_grace = 20
+		self.shape = Rectangle(self.x, self.y, self.w + mouse_grace, self.h + mouse_grace)
+		self.interact_with_mouse = true
+	end
+
+	if self.button then
+		self.button.parent = self
+	end
 end
 
 function TextBox:update(dt)
 	self:update_game_object(dt)
 	self.text:update(dt)
+
+	-- if self.button then
+	-- 	self.button:update(dt)
+	-- end
 end
 
 function TextBox:set_text(new_text)
@@ -836,6 +850,53 @@ function TextBox:set_text(new_text)
 	self.text:set_text(new_text)
 end
 
+function TextBox:set_object(obj)
+	self.visible = true
+	self.obj = obj
+	self.obj_id = obj.id
+	self.is_enemy = obj.is_enemy
+
+	self:set_text({
+		{ text = obj.type.name,        font = pixul_font },
+		{ text = obj.type.description, font = small_pixul_font },
+	})
+	self.spring:pull(0.01, 500, 10)
+end
+
+function TextBox:clear_object(force)
+	if self.visible and (force or not (self.selected and self.hoverable)) then
+		self.visible = false
+		self.obj_id = nil
+		self.is_enemy = nil
+
+		if self.button then
+			self.button.visible = false
+		end
+	end
+end
+
+function TextBox:on_mouse_enter()
+	self.selected = true
+end
+
+function TextBox:on_mouse_exit()
+	self.selected = false
+end
+
+function TextBox:position_holder_popup()
+	local dir = (self.is_enemy and 1 or -1)
+	self.y = self.obj.y + 0.5 * self.w * dir
+	self.x = self.obj.x
+	self.shape:move_to(self.x, self.y)
+
+	local button_dist = gh * 0.06 * dir
+	local button_x = self.obj.x
+	local button_y = self.obj.y + button_dist
+	self.button.x = button_x
+	self.button.y = button_y
+	self.button.shape:move_to(button_x, button_y)
+end
+
 function TextBox:draw()
 	if self.visible == false then
 		return
@@ -843,11 +904,16 @@ function TextBox:draw()
 	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.x)
 
 	local rounded = 5
-	local background_color = self.is_enemy and red[0] or blue[0]
+	local background_color = --[[ self.selected and green[0] or ]]
+		self.is_enemy and red[0] or blue[0]
 	graphics.rectangle(self.x, self.y, self.w + 10, self.h + 10, rounded, rounded, background_color)
 	graphics.rectangle(self.x, self.y, self.w + 5, self.h + 5, rounded, rounded, black[0])
 	local y = self.top_aligned and self.y - self.text.h / 2 or self.y
 	self.text:draw(self.x, y, self.r, self.sx, self.sy)
+
+	if self.button then
+		self.button:draw()
+	end
 	graphics.pop()
 end
 

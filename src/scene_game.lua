@@ -44,7 +44,7 @@ function Game:on_enter(from, args)
 		table.insert(pockets, {
 			color = i % 2 == 0 and c1:clone() or c2:clone(),
 			type = i == 1 --
-					and Pocket_Type.Jackpot
+				and Pocket_Type.Jackpot
 				or i == math.floor(num_pockets / 2) and Pocket_Type.Void
 				or Pocket_Type.Normal,
 			value = i - 1,
@@ -128,6 +128,8 @@ function Game:on_enter(from, args)
 			type = random:table(Ball_Type),
 		}),
 	})
+	self.player_holder:enable_ball_selection()
+
 	-- self.enemy_holder:setup(3, 2, {
 	-- 	Ball({
 	-- 		group = self.main,
@@ -150,25 +152,7 @@ function Game:on_enter(from, args)
 		x = gw * 0.75,
 		y = gh * 0.2,
 		holder = self.enemy_holder,
-		-- money = 2,
-		-- max_hp = 4,
-		-- portrait = {
-		-- 	name = "[red]Angry [p_blue1]Bob",
-		-- 	background = {
-		-- 		color = Color("#063000"),
-		-- 	},
-		-- 	animation = Animation(
-		-- 		0.4, --
-		-- 		AnimationFrames(sprite.alien1, 16, 32, { { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 }, { 6, 1 } }),
-		-- 		"loop",
-		-- 		{}
-		-- 	),
-		-- 	x = gw * 0.87,
-		-- 	y = gh * 0.2,
-		-- 	draw_size = 7,
-		-- },
 	})
-
 	self.enemy:load_next_enemy()
 
 	self.player = Character({
@@ -179,55 +163,11 @@ function Game:on_enter(from, args)
 		max_hp = 10,
 	})
 
-	-- local y = self.player.y
-	-- local x_offset = gw * 0.08
-	-- local size = gh * 0.13
-	-- local w = size
-	-- local h = size * 0.4
-	-- self.attack_button = collect_into(
-	-- 	self.game_ui_elements,
-	-- 	RectangleButton({
-	-- 		group = self.game_ui,
-	-- 		x = self.player.x - x_offset,
-	-- 		y = self.player.y - gh * 0.13,
-	-- 		w = w,
-	-- 		h = h,
-	-- 		fg_color = "black",
-	-- 		bg_color = "red",
-	-- 		title_text = "ATK",
-	-- 		action = function(b)
-	-- 			b.spring:pull(0.2, 200, 10)
-	-- 			local damage = self.player:get_damage()
-	-- 			self.enemy:take_damage(damage)
-	-- 		end,
-	-- 	})
-	-- )
-	--
-	-- self.armour_button = collect_into(
-	-- 	self.game_ui_elements,
-	-- 	RectangleButton({
-	-- 		group = self.game_ui,
-	-- 		x = self.player.x,
-	-- 		y = self.player.y - gh * 0.13,
-	-- 		w = w,
-	-- 		h = h,
-	-- 		fg_color = "black",
-	-- 		bg_color = "blue",
-	-- 		title_text = "ARMR",
-	-- 		action = function(b)
-	-- 			b.spring:pull(0.2, 200, 10)
-	--
-	-- 			local armour = 1
-	-- 			self.player:armour_up(armour)
-	-- 		end,
-	-- 	})
-	-- )
-
 	local y_dist = gh * 0.03
 	self.spin_button = collect_into(
 		self.game_ui_elements,
 		Button({
-			group = self.game_ui,
+			group = self.main,
 			x = self.wheel.x,
 			y = self.wheel.y - y_dist,
 			fg_color = "black",
@@ -236,6 +176,8 @@ function Game:on_enter(from, args)
 			action = function(b)
 				b.spring:pull(0.2, 200, 10)
 				self.wheel:spin(5)
+				self.player_holder:disable_ball_selection()
+				self.enemy_holder:disable_ball_selection()
 				-- b.locked = true
 			end,
 		})
@@ -244,7 +186,7 @@ function Game:on_enter(from, args)
 	self.select_button = collect_into(
 		self.game_ui_elements,
 		Button({
-			group = self.game_ui,
+			group = self.main,
 			x = self.wheel.x,
 			y = self.wheel.y + y_dist,
 			fg_color = "black",
@@ -256,7 +198,8 @@ function Game:on_enter(from, args)
 				if
 					self.try_get_results --
 					and self.wheel:all_balls_stopped()
-					and self.wheel:all_balls_selected()
+					-- and self.wheel:all_balls_selected()
+					and self.wheel:any_balls_selected()
 					and #self.results == 0
 				then
 					self.try_get_results = false
@@ -269,13 +212,6 @@ function Game:on_enter(from, args)
 			end,
 		})
 	)
-	for _, v in pairs(self.game_ui_elements) do
-		-- v.group = ui_group
-		-- ui_group:add(v)
-
-		v.layer = ui_interaction_layer.Game
-		v.force_update = true
-	end
 
 	local popup_width = gw * 0.2
 	self.info_popup = TextBox({
@@ -287,17 +223,62 @@ function Game:on_enter(from, args)
 		h = gh * 0.3,
 		lines = {
 			{
-				text = "boo",
+				text = "title",
 				font = pixul_font,
 				wrap = popup_width,
 			},
 			{
-				text = "iits me and some really long text that I don't expect anyone to be able to read but who knows maybe this actually renders properly or somethingts me and some really long text that I don't expect anyone to be able to read but who knows maybe this actually renders properly or something",
+				text = "description",
 				font = small_pixul_font,
 				wrap = popup_width,
 			},
 		},
 	})
+
+	self.holder_popup = TextBox({
+		group = self.main,
+		visible = false,
+		hoverable = true,
+		x = gw * 0.5,
+		y = gh * 0.5,
+		w = popup_width,
+		h = gh * 0.3,
+		lines = {
+			{
+				text = "title",
+				font = pixul_font,
+				wrap = popup_width,
+			},
+			{
+				text = "description",
+				font = small_pixul_font,
+				wrap = popup_width,
+			},
+		},
+		button = collect_into(
+			self.game_ui_elements,
+			Button({
+				visible = false,
+				group = self.main,
+				x = gh * 0.1,
+				y = gh * 0.1,
+				fg_color = "black",
+				bg_color = "green",
+				button_text = "sell $#",
+				action = function(b)
+					b.spring:pull(0.2, 200, 10)
+					self:sell(b.parent.obj)
+					-- b.parent:clear_object()
+					-- b.locked = true
+				end,
+			})
+		),
+	})
+
+	for _, v in pairs(self.game_ui_elements) do
+		v.layer = ui_interaction_layer.Game
+		v.force_update = true
+	end
 
 	-- if layer underneath this one has layer_type == "game" and the same music type then dont push
 	local layer = main.ui_layer_stack:peek()
@@ -335,6 +316,9 @@ function Game:update(dt)
 		self.wheel.is_spun_up = false
 		self.send_balls_to_wheel = true
 		self.results_time = 0.1
+
+		self.player_holder:disable_ball_selection()
+		self.enemy_holder:disable_ball_selection()
 	end
 
 	if input.x.pressed then
@@ -348,30 +332,17 @@ function Game:update(dt)
 	end
 
 	if self.hovered_ball and self.hovered_ball.selected then
-		if
-			self.hovered_ball.mode == Ball_Interaction_Mode.Wheel_Selection
-			and self.info_popup.id ~= self.hovered_ball.id
-		then
-			self.info_popup.visible = true
-			self.info_popup.id = self.hovered_ball.id
-			self.info_popup.spring:pull(0.1, 500, 10)
+		if self.hovered_ball.mode == Ball_Interaction_Mode.Wheel_Selection and self.info_popup.id ~= self.hovered_ball.id then
+			self.info_popup:set_object(self.hovered_ball)
+		elseif self.hovered_ball.mode == Ball_Interaction_Mode.Ball_Holder and self.holder_popup.id ~= self.hovered_ball.id then
+			self.holder_popup:set_object(self.hovered_ball)
+			self.holder_popup.button.visible = not self.hovered_ball.is_enemy
 
-			self.info_popup:set_text({
-				{ text = self.hovered_ball.type.name, font = pixul_font },
-				{ text = self.hovered_ball.type.description, font = small_pixul_font },
-			})
-			self.info_popup.is_enemy = self.hovered_ball.is_enemy
-
-			-- else
-			-- self.info_popup.visible = false
+			self.holder_popup:position_holder_popup()
 		end
 	elseif not self.hovered_ball or not self.hovered_ball.selected then
-		if self.info_popup.visible then
-			self.info_popup.visible = false
-			self.info_popup.id = nil
-			self.info_popup.is_enemy = nil
-		end
-		-- self.hovered_ball = nil
+		self.info_popup:clear_object()
+		self.holder_popup:clear_object()
 	end
 
 	if self.send_balls_to_wheel and not self.loading_ball then
@@ -481,6 +452,9 @@ function Game:update(dt)
 						end
 					end
 
+					self.player_holder:enable_ball_selection()
+					self.enemy_holder:enable_ball_selection()
+
 					self.wheel.balls = {}
 				end)
 			end
@@ -503,9 +477,20 @@ function Game:update(dt)
 	self.end_ui:update(dt * slow_amount)
 end
 
+function Game:sell(ball)
+	local sale_price = ball.type.rarity.value * (ball.type.sell_mult or 1)
+	self.player.money = self.player.money + sale_price
+
+	self:play_animation(ball_result, ball, duration, iteration)
+
+	ball.dead = true
+	self.player_holder:remove(ball)
+	self.holder_popup:clear_object(true)
+end
+
 function Game:play_animation(ball_result, ball, duration, iteration)
-	local target = ball_result.event == "on_damage" --
-			and (ball.is_enemy and self.player or self.enemy) --
+	local target = ball_result.event == "on_damage"  --
+		and (ball.is_enemy and self.player or self.enemy) --
 		or (ball.is_enemy and self.enemy or self.player)
 	Text_Bubble({
 		group = self.ui,

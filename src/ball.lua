@@ -30,7 +30,12 @@ function Ball:update(dt)
 		self.animation:update(dt)
 	end
 
-	if self.selected and input.select.pressed and not self.is_enemy then
+	if
+		self.selected --
+		and input.select.pressed
+		and not self.is_enemy
+		and self.mode == Ball_Interaction_Mode.Wheel_Selection
+	then
 		self.order = self.activation_source:selected_ball(self)
 	end
 
@@ -41,6 +46,7 @@ end
 
 Ball_Interaction_Mode = {
 	Wheel_Selection = 1,
+	Ball_Holder = 2,
 }
 
 function Ball:activate_mouse(source, mode)
@@ -141,18 +147,13 @@ function Text_Bubble:init(args)
 	local x = self.x + math.sin(angle) * initial_pop_distance
 	local y = self.y + math.cos(angle) * initial_pop_distance
 	trigger:tween(self.duration * 0.3, self, { x = x, y = y }, math.cubic_out, function()
-		trigger:tween(
-			self.duration * 0.6,
-			self,
-			{ x = self.target.x, y = self.target.y, r = 4 * math.pi },
-			math.cubic_in,
-			function()
-				self.text.dead = true
-				self.text = nil
+		trigger:tween(self.duration * 0.6, self, { x = self.target.x, y = self.target.y, r = 4 * math.pi }, math
+		.cubic_in, function()
+			self.text.dead = true
+			self.text = nil
 
-				self.dead = true
-			end
-		)
+			self.dead = true
+		end)
 	end)
 end
 

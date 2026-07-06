@@ -39,6 +39,22 @@ function Holder:insert(ball)
 	self.slots[ball.index].ball = ball
 end
 
+function Holder:disable_ball_selection()
+	for i, slot in ipairs(self.slots) do
+		if slot.ball then
+			slot.ball:deactivate_mouse()
+		end
+	end
+end
+
+function Holder:enable_ball_selection()
+	for i, slot in ipairs(self.slots) do
+		if slot.ball then
+			slot.ball:activate_mouse(self, Ball_Interaction_Mode.Ball_Holder)
+		end
+	end
+end
+
 function Holder:next_ball()
 	for i, slot in ipairs(self.slots) do
 		local ball = slot.ball
@@ -47,6 +63,14 @@ function Holder:next_ball()
 			ball:set_damping(0)
 			ball:set_velocity(25 * i, 0)
 			return ball
+		end
+	end
+end
+
+function Holder:remove(ball)
+	for i, slot in ipairs(self.slots) do
+		if slot.ball == ball then
+			slot.ball = nil
 		end
 	end
 end

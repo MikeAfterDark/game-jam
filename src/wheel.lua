@@ -172,6 +172,10 @@ function Wheel:enable_ball_selection(num_balls)
 	end, 0, function() end, "ball_selection_bounce")
 end
 
+function Wheel:any_balls_selected()
+	return #self.selected_balls > 0
+end
+
 function Wheel:all_balls_selected()
 	if #self.selected_balls == self.max_num_selected_balls then
 		for i, ball in ipairs(self.balls) do
@@ -206,6 +210,9 @@ function Wheel:results()
 	-- play the selected_balls in their selection order then
 	-- play the enemy balls based on angle, from low to high
 	self.t:cancel("ball_selection_bounce")
+	for i, ball in ipairs(self.balls) do
+		ball:deactivate_mouse()
+	end
 
 	self.balls = table.map(self.balls, function(ball)
 		local angle = Vector(ball.x, ball.y):angle_to(self)

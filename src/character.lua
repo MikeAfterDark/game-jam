@@ -88,7 +88,7 @@ function Character:draw()
 		local width = gw * 0.2
 		local height = gh * 0.4 + 15
 		graphics.rectangle(self.portrait.x, self.portrait.y, width, height, 3, 3, white[0])
-		graphics.rectangle(
+		graphics.rectangle( --
 			self.portrait.x,
 			self.portrait.y,
 			width - 6,
@@ -149,6 +149,8 @@ function Character:load_next_enemy()
 			)
 		end
 		self.holder:setup(#balls, #balls, balls)
+		self.holder:enable_ball_selection()
+
 		self.spring:pull(0.2, 500, 10)
 	end
 
@@ -156,7 +158,7 @@ function Character:load_next_enemy()
 end
 
 Enemies = {
-	{
+	{ -- Angry Bob:
 		money = 1,
 		max_hp = 10,
 		armour = 1,
@@ -177,12 +179,7 @@ Enemies = {
 			animation = function()
 				return Animation(
 					0.4, --
-					AnimationFrames(
-						sprite.alien1,
-						16,
-						32,
-						{ { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 }, { 6, 1 } }
-					),
+					AnimationFrames(sprite.alien1, 16, 32, { { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 }, { 6, 1 } }),
 					"loop",
 					{}
 				)
