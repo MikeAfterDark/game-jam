@@ -79,10 +79,13 @@ function Ball:trigger(...)
 	self.uses = self.uses - 1
 
 	local results = {}
-	for i, event in ipairs(Ball_Event) do
-		local fn = self.type[event] or Ball_Defaults[event]
+	for _, event in ipairs(Ball_Event_Order) do
+		local fn = self.type[event.id] or Ball_Defaults[event.id]
 		local value = fn and (fn(self, ...) or 0) or 0
-		table.insert(results, { event = event, value = value })
+		results[#results + 1] = {
+			event = event,
+			value = value,
+		}
 	end
 	return results
 end
@@ -133,10 +136,7 @@ function Text_Bubble:init(args)
 	self:init_game_object(args)
 
 	local event = self.result.event
-	self.color = event == "on_score" and "yellow" --
-		or event == "on_damage" and "red"
-		or event == "on_health" and "green"
-		or event == "on_armour" and "blue"
+	self.color = event.color
 	local text = "[black]" .. tostring(self.result.value)
 	self.text = Text({
 		{ text = text, font = small_pixul_font, alignment = "center" },
@@ -181,11 +181,21 @@ Rarity = {
 }
 
 Ball_Event = {
-	"on_score",
-	"on_damage",
-	"on_health",
-	"on_armour",
-	"on_collision",
+	On_Score = { id = "on_score", color = "yellow" },
+	On_Damage = { id = "on_damage", color = "red" },
+	On_Health = { id = "on_health", color = "green" },
+	On_Armour = { id = "on_armour", color = "blue" },
+	On_Collision = { id = "on_collision", color = "purple" },
+	On_Sale = { id = "on_sale", color = "yellow" },
+}
+
+Ball_Event_Order = {
+	Ball_Event.On_Score,
+	Ball_Event.On_Damage,
+	Ball_Event.On_Health,
+	Ball_Event.On_Armour,
+	Ball_Event.On_Collision,
+	Ball_Event.On_Sale,
 }
 
 Ball_Defaults = {

@@ -479,17 +479,28 @@ end
 
 function Game:sell(ball)
 	local sale_price = ball.type.rarity.value * (ball.type.sell_mult or 1)
-	self.player.money = self.player.money + sale_price
 
-	self:play_animation(ball_result, ball, duration, iteration)
-
-	ball.dead = true
-	self.player_holder:remove(ball)
+	local duration = 1
+	self:play_animation( --
+		{             --
+			event = Ball_Event.On_Sale,
+			value = sale_price,
+		},
+		ball,
+		duration,
+		1
+	)
 	self.holder_popup:clear_object(true)
+	self.player_holder:remove(ball)
+	ball.dead = true
+
+	trigger:after(0.8 * duration, function()
+		self.player.money = self.player.money + sale_price
+	end)
 end
 
 function Game:play_animation(ball_result, ball, duration, iteration)
-	local target = ball_result.event == "on_damage"  --
+	local target = ball_result.event == Ball_Event.On_Damage --
 		and (ball.is_enemy and self.player or self.enemy) --
 		or (ball.is_enemy and self.enemy or self.player)
 	Text_Bubble({

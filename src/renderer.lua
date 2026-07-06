@@ -851,16 +851,18 @@ function TextBox:set_text(new_text)
 end
 
 function TextBox:set_object(obj)
-	self.visible = true
-	self.obj = obj
-	self.obj_id = obj.id
-	self.is_enemy = obj.is_enemy
+	if self.obj_id ~= obj.id then
+		self.visible = true
+		self.obj = obj
+		self.obj_id = obj.id
+		self.is_enemy = obj.is_enemy
 
-	self:set_text({
-		{ text = obj.type.name,        font = pixul_font },
-		{ text = obj.type.description, font = small_pixul_font },
-	})
-	self.spring:pull(0.01, 500, 10)
+		self:set_text({
+			{ text = obj.type.name,        font = pixul_font },
+			{ text = obj.type.description, font = small_pixul_font },
+		})
+		self.spring:pull(0.04, 500, 10)
+	end
 end
 
 function TextBox:clear_object(force)
