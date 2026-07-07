@@ -180,6 +180,7 @@ Rarity = {
 	Unique = { value = 5, name = "Divine" },
 }
 
+--------- if adding any new ball_events make sure to add them to Ball_Event_Order
 Ball_Event = {
 	On_Score = { id = "on_score", color = "yellow" },
 	On_Damage = { id = "on_damage", color = "red" },
@@ -197,6 +198,7 @@ Ball_Event_Order = {
 	Ball_Event.On_Collision,
 	Ball_Event.On_Sale,
 }
+---------
 
 Ball_Defaults = {
 	on_score = function(ball)

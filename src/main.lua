@@ -21,6 +21,7 @@ require("wheel")
 require("ball")
 require("holder")
 require("character")
+require("shop")
 
 -- ui
 -- require("circle_menu")

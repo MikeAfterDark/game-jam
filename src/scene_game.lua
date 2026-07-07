@@ -13,7 +13,7 @@ function Game:on_enter(from, args)
 	self.floor = Group()
 	-- self.main = Group()
 	self.main = Group():set_as_physics_world(32, 0, 0, { "wheel", "ball" })
-	self.shop_group = Group():set_as_physics_world(32, 0, 0, { "drawer", "ball" })
+	self.shop = Group():set_as_physics_world(32, 0, 0, { "drawer", "ball" })
 	self.game_ui = Group()
 	self.effects = Group()
 	self.ui = Group()
@@ -127,25 +127,22 @@ function Game:on_enter(from, args)
 			rs = ball_radius,
 			type = random:table(Ball_Type),
 		}),
+		Ball({
+			group = self.main,
+			x = gw * 0.5,
+			y = gh * 0.5,
+			rs = ball_radius,
+			type = random:table(Ball_Type),
+		}),
+		Ball({
+			group = self.main,
+			x = gw * 0.5,
+			y = gh * 0.5,
+			rs = ball_radius,
+			type = random:table(Ball_Type),
+		}),
 	})
 	self.player_holder:enable_ball_selection()
-
-	-- self.enemy_holder:setup(3, 2, {
-	-- 	Ball({
-	-- 		group = self.main,
-	-- 		x = gw * 0.5,
-	-- 		y = gh * 0.5,
-	-- 		rs = ball_radius,
-	-- 		type = random:table(Ball_Type),
-	-- 	}),
-	-- 	Ball({
-	-- 		group = self.main,
-	-- 		x = gw * 0.5,
-	-- 		y = gh * 0.5,
-	-- 		rs = ball_radius,
-	-- 		type = random:table(Ball_Type),
-	-- 	}),
-	-- })
 
 	self.enemy = Character({
 		group = self.main,
@@ -161,6 +158,14 @@ function Game:on_enter(from, args)
 		y = gh * 0.9,
 		money = 5,
 		max_hp = 10,
+	})
+
+	self.ball_shop = Shop({
+		group = self.shop,
+		x = gw * 0.15,
+		y = gh * 0.5,
+		w = gw * 0.2,
+		h = gh * 0.35,
 	})
 
 	local y_dist = gh * 0.03
@@ -471,6 +476,7 @@ function Game:update(dt)
 	star_group:update(dt * slow_amount)
 	self.floor:update(dt * slow_amount)
 	self.main:update(dt * slow_amount * self.main_slow_amount)
+	self.shop:update(dt * slow_amount * self.main_slow_amount)
 	self.game_ui:update(dt * slow_amount)
 	self.effects:update(dt * slow_amount)
 	self.ui:update(dt * slow_amount)
@@ -580,6 +586,7 @@ end
 function Game:draw()
 	self.floor:draw()
 	self.main:draw()
+	self.shop:draw()
 	self.game_ui:draw()
 	self.effects:draw()
 	self.ui:draw()
@@ -600,6 +607,7 @@ end
 
 function Game:on_exit()
 	self.main:destroy()
+	self.shop:destroy()
 	self.game_ui:destroy()
 	self.effects:destroy()
 	self.ui:destroy()
