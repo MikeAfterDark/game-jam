@@ -349,14 +349,14 @@ function Game:update(dt)
 
 	if self.hovered_ball and self.hovered_ball.selected then
 		local ball = self.hovered_ball
-		if ball.mode == Ball_Interaction_Mode.Wheel_Selection and self.info_popup.id ~= ball.id then
+		if ball.mode == Ball_Interaction_Mode.Wheel_Selection and self.info_popup.obj_id ~= ball.id then
 			self.info_popup:set_object(ball)
-		elseif ball.mode == Ball_Interaction_Mode.Ball_Holder and self.holder_popup.id ~= ball.id then
+		elseif ball.mode == Ball_Interaction_Mode.Ball_Holder and self.holder_popup.obj_id ~= ball.id then
 			self.holder_popup:set_object(ball)
 			self.holder_popup.button.visible = not ball.is_enemy
 
 			self.holder_popup:position_holder_popup()
-		elseif ball.mode == Ball_Interaction_Mode.Shop_Drawer and self.shop_popup.id ~=fuuuuu
+			-- elseif ball.mode == Ball_Interaction_Mode.Shop_Drawer and self.shop_popup.obj_id ~= ball.id then
 		end
 	elseif not self.hovered_ball or not self.hovered_ball.selected then
 		self.info_popup:clear_object()

@@ -78,10 +78,10 @@ function Ball:on_mouse_enter()
 	self.selected = true
 
 	if self.mode == Ball_Interaction_Mode.Shop_Drawer then
-		self.prev_velocity_x, self.prev_velocity_y = self:get_velocity()
+		-- self.prev_velocity_x, self.prev_velocity_y = self:get_velocity()
 		-- self.prev_mass = self.mass
-		self:set_velocity(0, 0)
 		-- self.freeze_physics = true
+		-- self:set_velocity(0, 0)
 		self.frozen_x = self.x
 		self.frozen_y = self.y
 	end
@@ -92,7 +92,8 @@ function Ball:on_mouse_exit()
 	self.selected = false
 
 	if self.mode == Ball_Interaction_Mode.Shop_Drawer then
-		self:set_velocity(self.prev_velocity_x, self.prev_velocity_y)
+		-- self:set_velocity(self.prev_velocity_x, self.prev_velocity_y)
+		self:move_towards_mouse(-200)
 		-- self.mass = self.prev_mass
 		-- self.freeze_physics = false
 	end
