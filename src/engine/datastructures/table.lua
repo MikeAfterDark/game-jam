@@ -290,6 +290,23 @@ function table.reduce(t, f, dv, ...)
   return memo
 end
 
+-- same as above but for dictionaries
+function table.reduce_dict(t, f, dv, ...)
+    local memo = dv
+    local first = true
+
+    for k, v in pairs(t) do
+        if memo == nil and first then
+            memo = v
+            first = false
+        else
+            memo = f(memo, v, k, ...)
+        end
+    end
+
+    return memo
+end
+
 -- Applies function f to all array elements without changing the array
 function table.foreach(t, f, ...)
   for k, v in ipairs(t) do
@@ -343,6 +360,16 @@ function table.select(t, f, ...)
   for i = 1, #t do
     if f(t[i], i, ...) then
       table.insert(out, t[i])
+    end
+  end
+  return out
+end
+
+function table.select_dict(t, f, ...)
+  local out = {}
+  for k, v in pairs(t) do
+    if f(v, i, ...) then
+      table.insert(out, v)
     end
   end
   return out

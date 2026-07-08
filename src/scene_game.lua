@@ -6,6 +6,11 @@ function Game:init(name)
 	self:init_game_object()
 end
 
+Group_Layers = {
+	Main = 1,
+	Shop = 2,
+}
+
 function Game:on_enter(from, args)
 	camera.x, camera.y = gw * 0.5, gh * 0.5
 	camera.r = 0
@@ -18,6 +23,9 @@ function Game:on_enter(from, args)
 	self.effects = Group()
 	self.ui = Group()
 	self.end_ui = Group():no_camera()
+
+	self.main.layer = Group_Layers.Main
+	self.shop.layer = Group_Layers.Shop
 
 	self.main_slow_amount = 1
 	slow_amount = 1
@@ -164,8 +172,10 @@ function Game:on_enter(from, args)
 		group = self.shop,
 		x = gw * 0.15,
 		y = gh * 0.5,
-		w = gw * 0.2,
-		h = gh * 0.35,
+		w = gw * 0.3,
+		h = gh * 0.4,
+		left_limit = gw * 0.1,
+		right_limit = gw * 0.3,
 	})
 
 	local y_dist = gh * 0.03
@@ -305,6 +315,7 @@ function Game:on_enter(from, args)
 end
 
 function Game:update(dt)
+	mouse.group_layer = 0
 	camera:follow_object(self.camera_tracker)
 
 	-- local paused = main:get("settings").in_pause
@@ -337,13 +348,15 @@ function Game:update(dt)
 	end
 
 	if self.hovered_ball and self.hovered_ball.selected then
-		if self.hovered_ball.mode == Ball_Interaction_Mode.Wheel_Selection and self.info_popup.id ~= self.hovered_ball.id then
-			self.info_popup:set_object(self.hovered_ball)
-		elseif self.hovered_ball.mode == Ball_Interaction_Mode.Ball_Holder and self.holder_popup.id ~= self.hovered_ball.id then
-			self.holder_popup:set_object(self.hovered_ball)
-			self.holder_popup.button.visible = not self.hovered_ball.is_enemy
+		local ball = self.hovered_ball
+		if ball.mode == Ball_Interaction_Mode.Wheel_Selection and self.info_popup.id ~= ball.id then
+			self.info_popup:set_object(ball)
+		elseif ball.mode == Ball_Interaction_Mode.Ball_Holder and self.holder_popup.id ~= ball.id then
+			self.holder_popup:set_object(ball)
+			self.holder_popup.button.visible = not ball.is_enemy
 
 			self.holder_popup:position_holder_popup()
+		elseif ball.mode == Ball_Interaction_Mode.Shop_Drawer and self.shop_popup.id ~=fuuuuu
 		end
 	elseif not self.hovered_ball or not self.hovered_ball.selected then
 		self.info_popup:clear_object()
@@ -472,15 +485,25 @@ function Game:update(dt)
 		self:win()
 	end
 
-	self:update_game_object(dt * slow_amount)
-	star_group:update(dt * slow_amount)
-	self.floor:update(dt * slow_amount)
-	self.main:update(dt * slow_amount * self.main_slow_amount)
-	self.shop:update(dt * slow_amount * self.main_slow_amount)
-	self.game_ui:update(dt * slow_amount)
-	self.effects:update(dt * slow_amount)
-	self.ui:update(dt * slow_amount)
+	-- self:update_game_object(dt * slow_amount)
+	-- star_group:update(dt * slow_amount)
+	-- self.floor:update(dt * slow_amount)
+	-- self.main:update(dt * slow_amount * self.main_slow_amount)
+	-- self.shop:update(dt * slow_amount * self.main_slow_amount)
+	-- self.game_ui:update(dt * slow_amount)
+	-- self.effects:update(dt * slow_amount)
+	-- self.ui:update(dt * slow_amount)
+	-- self.end_ui:update(dt * slow_amount)
+
 	self.end_ui:update(dt * slow_amount)
+	self.ui:update(dt * slow_amount)
+	self.effects:update(dt * slow_amount)
+	self.game_ui:update(dt * slow_amount)
+	self.shop:update(dt * slow_amount * self.main_slow_amount)
+	self.main:update(dt * slow_amount * self.main_slow_amount)
+	self.floor:update(dt * slow_amount)
+	star_group:update(dt * slow_amount)
+	self:update_game_object(dt * slow_amount)
 end
 
 function Game:sell(ball)

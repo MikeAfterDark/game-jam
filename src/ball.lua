@@ -17,6 +17,7 @@ function Ball:init(args)
 	self:set_friction(0)
 
 	self:set_mass(1)
+	self:set_bullet(true)
 
 	self.color = random:color()
 	self.animation = self.type.animation and self.type.animation() or nil
@@ -39,6 +40,12 @@ function Ball:update(dt)
 		self.order = self.activation_source:selected_ball(self)
 	end
 
+	if self.selected and self.mode == Ball_Interaction_Mode.Shop_Drawer then
+		self:set_position(self.frozen_x, self.frozen_y)
+		-- self:set_velocity(0, 0)
+		-- self:set_mass(10000)
+	end
+
 	if self.selected then
 		main.current.hovered_ball = self
 	end
@@ -47,6 +54,7 @@ end
 Ball_Interaction_Mode = {
 	Wheel_Selection = 1,
 	Ball_Holder = 2,
+	Shop_Drawer = 3,
 }
 
 function Ball:activate_mouse(source, mode)
@@ -68,11 +76,26 @@ function Ball:on_mouse_enter()
 	self.spring:pull(0.2, 500, 10)
 	sfx.boop:play({ pitch = random:float(0.94, 1.14), volume = 0.5 })
 	self.selected = true
+
+	if self.mode == Ball_Interaction_Mode.Shop_Drawer then
+		self.prev_velocity_x, self.prev_velocity_y = self:get_velocity()
+		-- self.prev_mass = self.mass
+		self:set_velocity(0, 0)
+		-- self.freeze_physics = true
+		self.frozen_x = self.x
+		self.frozen_y = self.y
+	end
 end
 
 function Ball:on_mouse_exit()
 	sfx.tick:play({ pitch = random:float(0.94, 1.14), volume = 0.5 })
 	self.selected = false
+
+	if self.mode == Ball_Interaction_Mode.Shop_Drawer then
+		self:set_velocity(self.prev_velocity_x, self.prev_velocity_y)
+		-- self.mass = self.prev_mass
+		-- self.freeze_physics = false
+	end
 end
 
 function Ball:trigger(...)
@@ -93,6 +116,12 @@ end
 function Ball:freeze(x, y)
 	self:set_velocity(0, 0)
 	self:set_position(x or self.x, y or self.y)
+end
+
+function Ball:resize(new_radius)
+	local radius = new_radius * self.type.size
+	self:change_circle_radius(radius)
+	self.rs = radius
 end
 
 function Ball:draw()
@@ -172,12 +201,44 @@ function Text_Bubble:draw()
 end
 
 Rarity = {
-	Starter = { value = 0, name = "" },
-	Common = { value = 1, name = "" },
-	Uncommmon = { value = 2, name = "Unusual" },
-	Rare = { value = 3, name = "Shiny" },
-	Legendary = { value = 4, name = "Steel" },
-	Unique = { value = 5, name = "Divine" },
+	Starter = {
+		shop_odds = 0,
+		value = 0,
+		name = "",
+	},
+	Common = {
+		shop_odds = 1,
+		value = 1,
+		name = "Average",
+	},
+	Uncommon = {
+		shop_odds = 0.5,
+		value = 2,
+		name = "Unusual",
+	},
+	Rare = {
+		shop_odds = 0.25,
+		value = 3,
+		name = "Shiny",
+	},
+	Legendary = {
+		shop_odds = 0.125,
+		value = 4,
+		name = "Steel",
+	},
+	Unique = {
+		shop_odds = 0,
+		value = 5,
+		name = "Divine",
+	},
+}
+Rarity_Ranks = {
+	Rarity.Unique,
+	Rarity.Legendary,
+	Rarity.Rare,
+	Rarity.Uncommon,
+	Rarity.Common,
+	Rarity.Starter,
 }
 
 --------- if adding any new ball_events make sure to add them to Ball_Event_Order

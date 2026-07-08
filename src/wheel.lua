@@ -110,6 +110,11 @@ function Wheel:new_ball(ball, left_side_entrance)
 	local dir = (left_side_entrance and -1 or 1)
 	local x = self.x + 0.98 * self.rs * dir
 	ball:freeze(x, self.y)
+	ball:set_restitution(1)
+	ball:set_damping(0.5)
+	ball:set_friction(0)
+	ball:set_mass(1)
+
 	ball:apply_impulse(-dir * 200, 1 * 800) --self.spinrate)
 end
 
