@@ -108,7 +108,7 @@ function Wheel:new_ball(ball, left_side_entrance)
 	table.insert(self.balls, ball)
 
 	local dir = (left_side_entrance and -1 or 1)
-	local x = self.x + 0.98 * self.rs * dir
+	local x = self.x + 0.90 * self.rs * dir
 	ball:freeze(x, self.y)
 	ball:set_restitution(1)
 	ball:set_damping(0.5)

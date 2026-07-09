@@ -825,7 +825,6 @@ function TextBox:init(args)
 	if self.hoverable then
 		local mouse_grace = 20
 		self.shape = Rectangle(self.x, self.y, self.w + mouse_grace, self.h + mouse_grace)
-		self.interact_with_mouse = true
 	end
 
 	if self.button then
@@ -836,7 +835,17 @@ end
 function TextBox:update(dt)
 	self:update_game_object(dt)
 	self.text:update(dt)
+	self.interact_with_mouse = self.visible
 
+	if self.share_selection and self.obj and self.selected then
+		self.obj.selected = true
+	end
+	-- 	if self.obj.selected then
+	-- 		self.selected = true
+	-- 	else
+	-- 		self.obj.selected = self.selected
+	-- 	end
+	-- end
 	-- if self.button then
 	-- 	self.button:update(dt)
 	-- end
@@ -858,7 +867,7 @@ function TextBox:set_object(obj)
 		self.is_enemy = obj.is_enemy
 
 		self:set_text({
-			{ text = obj.type.name,        font = pixul_font },
+			{ text = obj.type.name, font = pixul_font },
 			{ text = obj.type.description, font = small_pixul_font },
 		})
 		self.spring:pull(0.04, 500, 10)
@@ -866,9 +875,14 @@ function TextBox:set_object(obj)
 end
 
 function TextBox:clear_object(force)
-	if self.visible and (force or not (self.selected and self.hoverable)) then
+	if force or (self.visible and not (self.selected and self.hoverable)) then
 		self.visible = false
+		self.selected = false
+		if self.share_selection then
+			self.obj.selected = false
+		end
 		self.obj_id = nil
+		self.obj = nil
 		self.is_enemy = nil
 
 		if self.button then
@@ -883,17 +897,35 @@ end
 
 function TextBox:on_mouse_exit()
 	self.selected = false
+
+	if self.share_selection and self.obj then
+		self.obj.selected = false
+	end
 end
 
 function TextBox:position_holder_popup()
 	local dir = (self.is_enemy and 1 or -1)
-	self.y = self.obj.y + 0.5 * self.w * dir
 	self.x = self.obj.x
+	self.y = self.obj.y + 0.6 * self.h * dir
 	self.shape:move_to(self.x, self.y)
 
 	local button_dist = gh * 0.06 * dir
 	local button_x = self.obj.x
 	local button_y = self.obj.y + button_dist
+	self.button.x = button_x
+	self.button.y = button_y
+	self.button.shape:move_to(button_x, button_y)
+end
+
+function TextBox:position_shop_popup()
+	local dir = 1
+	self.x = self.obj.x + 0.65 * self.w
+	self.y = self.obj.y
+	self.shape:move_to(self.x, self.y)
+
+	local button_dist = gh * 0.06 * dir
+	local button_x = self.x
+	local button_y = self.y + 0.40 * self.h
 	self.button.x = button_x
 	self.button.y = button_y
 	self.button.shape:move_to(button_x, button_y)
@@ -906,8 +938,7 @@ function TextBox:draw()
 	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.x)
 
 	local rounded = 5
-	local background_color = --[[ self.selected and green[0] or ]]
-		self.is_enemy and red[0] or blue[0]
+	local background_color = self.selected and green[0] or self.is_enemy and red[0] or blue[0]
 	graphics.rectangle(self.x, self.y, self.w + 10, self.h + 10, rounded, rounded, background_color)
 	graphics.rectangle(self.x, self.y, self.w + 5, self.h + 5, rounded, rounded, black[0])
 	local y = self.top_aligned and self.y - self.text.h / 2 or self.y

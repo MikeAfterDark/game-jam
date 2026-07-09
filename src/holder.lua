@@ -27,6 +27,7 @@ function Holder:setup(total_slots, open_slots, balls)
 		end
 
 		table.insert(self.slots, {
+			index = i,
 			open = i <= open_slots,
 			ball = ball,
 		})
@@ -35,8 +36,29 @@ function Holder:setup(total_slots, open_slots, balls)
 	self.w = #self.slots * self.slot_size
 end
 
+function Holder:has_room()
+	return table.any( --
+		self.slots,
+		function(slot)
+			return (slot.open and slot.ball == nil)
+		end
+	) or false
+end
+
 function Holder:insert(ball)
-	self.slots[ball.index].ball = ball
+	local ball_radius = gh * 0.02
+	ball:resize(ball_radius)
+	ball.mode = Ball_Interaction_Mode.Ball_Holder
+
+	if ball.index then
+		self.slots[ball.index].ball = ball
+	else
+		local slot = table.select(self.slots, function(slot)
+			return slot.open and slot.ball == nil
+		end)[1]
+
+		slot.ball = ball
+	end
 end
 
 function Holder:disable_ball_selection()
@@ -80,6 +102,7 @@ function Holder:draw()
 	graphics.rectangle(self.x, self.y, self.w, self.h, 3, 3, self.color, 3)
 
 	local base_x = self.x - (#self.slots + 1) * self.slot_size / 2
+	local count = 0
 	for i, slot in ipairs(self.slots) do
 		local index = self.is_enemy and i or (#self.slots - i + 1)
 		local x = base_x + index * self.slot_size
@@ -87,9 +110,12 @@ function Holder:draw()
 		local color = slot.open and green[0] or red[0]
 		graphics.rectangle(x, self.y, self.slot_size, self.slot_size, 2, 2, color, 3)
 
+		-- this is weird, move to update or better yet, insert
 		local ball = slot.ball
 		if ball then
 			ball:freeze(x, self.y)
+			count = count + 1
+			-- print(love.timer.getTime(), count, ball.x, ball.y)
 		end
 	end
 

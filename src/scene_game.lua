@@ -9,6 +9,8 @@ end
 Group_Layers = {
 	Main = 1,
 	Shop = 2,
+	Shop_UI = 3,
+	Shelf = 4,
 }
 
 function Game:on_enter(from, args)
@@ -26,6 +28,7 @@ function Game:on_enter(from, args)
 
 	self.main.layer = Group_Layers.Main
 	self.shop.layer = Group_Layers.Shop
+	self.game_ui.layer = Group_Layers.Shop_UI
 
 	self.main_slow_amount = 1
 	slow_amount = 1
@@ -52,7 +55,7 @@ function Game:on_enter(from, args)
 		table.insert(pockets, {
 			color = i % 2 == 0 and c1:clone() or c2:clone(),
 			type = i == 1 --
-				and Pocket_Type.Jackpot
+					and Pocket_Type.Jackpot
 				or i == math.floor(num_pockets / 2) and Pocket_Type.Void
 				or Pocket_Type.Normal,
 			value = i - 1,
@@ -172,10 +175,19 @@ function Game:on_enter(from, args)
 		group = self.shop,
 		x = gw * 0.15,
 		y = gh * 0.5,
-		w = gw * 0.3,
+		w = gw * 0.2,
 		h = gh * 0.4,
-		left_limit = gw * 0.1,
-		right_limit = gw * 0.3,
+		left_limit = gw * 0.00,
+		right_limit = gw * 0.19,
+	})
+
+	self.shelf = Shelf({
+		group = self.game_ui,
+		x = 0,
+		y = gh * 0.5,
+		w = gw * 0.2,
+		h = gh,
+		color = orange1[0],
 	})
 
 	local y_dist = gh * 0.03
@@ -290,6 +302,47 @@ function Game:on_enter(from, args)
 		),
 	})
 
+	self.shop_popup = TextBox({
+		group = self.game_ui,
+		visible = false,
+		hoverable = true,
+		share_selection = true,
+		x = gw * 0.5,
+		y = gh * 0.5,
+		w = popup_width,
+		h = gh * 0.3,
+		lines = {
+			{
+				text = "title",
+				font = pixul_font,
+				wrap = popup_width,
+			},
+			{
+				text = "description",
+				font = small_pixul_font,
+				wrap = popup_width,
+			},
+		},
+		button = collect_into(
+			self.game_ui_elements,
+			Button({
+				visible = false,
+				group = self.game_ui,
+				x = gh * 0.1,
+				y = gh * 0.1,
+				fg_color = "bg",
+				bg_color = "green",
+				button_text = "buy $#",
+				action = function(b)
+					b.spring:pull(0.2, 200, 10)
+					self:buy(b.parent.obj)
+					-- b.parent:clear_object()
+					-- b.locked = true
+				end,
+			})
+		),
+	})
+
 	for _, v in pairs(self.game_ui_elements) do
 		v.layer = ui_interaction_layer.Game
 		v.force_update = true
@@ -354,13 +407,19 @@ function Game:update(dt)
 		elseif ball.mode == Ball_Interaction_Mode.Ball_Holder and self.holder_popup.obj_id ~= ball.id then
 			self.holder_popup:set_object(ball)
 			self.holder_popup.button.visible = not ball.is_enemy
-
 			self.holder_popup:position_holder_popup()
-			-- elseif ball.mode == Ball_Interaction_Mode.Shop_Drawer and self.shop_popup.obj_id ~= ball.id then
+		elseif ball.mode == Ball_Interaction_Mode.Shop_Drawer then
+			if self.shop_popup.obj_id ~= ball.id then
+				self.shop_popup:set_object(ball)
+				self.shop_popup.button.visible = true
+				self.shop_popup:position_shop_popup()
+			end
+			self.shop_popup.button.locked = not self:can_buy_ball(self.hovered_ball)
 		end
 	elseif not self.hovered_ball or not self.hovered_ball.selected then
 		self.info_popup:clear_object()
 		self.holder_popup:clear_object()
+		self.shop_popup:clear_object()
 	end
 
 	if self.send_balls_to_wheel and not self.loading_ball then
@@ -418,7 +477,7 @@ function Game:update(dt)
 		self.prev_pocket_color = ball.pocket.color
 		-- ball.pocket.color = ball.pocket.color:clone():lighten(0.3)
 
-		local ball_results = ball:trigger()
+		local ball_results = ball:trigger({})
 
 		local time_per_result = 0.2
 		local result_counter = 0
@@ -506,12 +565,36 @@ function Game:update(dt)
 	self:update_game_object(dt * slow_amount)
 end
 
+function Game:can_buy_ball(ball)
+	return self.player.money >= ball:buy_price() and self.player_holder:has_room()
+end
+
+function Game:buy(ball)
+	if self:can_buy_ball(ball) then
+		self.shop_popup:clear_object(true)
+		self.shop_popup.selected = false
+		self.ball_shop:remove(ball)
+		ball.dead = true
+		self.player.money = self.player.money - ball:buy_price()
+
+		-- TODO:
+		local new_ball = Ball({
+			group = self.main,
+			type = ball.type,
+		}) -- clone the ball onto the self.main group
+		new_ball:trigger({ Ball_Event.On_Buy })
+
+		sfx.boop:play({ pitch = 0.6, volume = 0.35 })
+		self.player_holder:insert(new_ball)
+	end
+end
+
 function Game:sell(ball)
-	local sale_price = ball.type.rarity.value * (ball.type.sell_mult or 1)
+	local sale_price = ball:sell_price()
 
 	local duration = 1
 	self:play_animation( --
-		{             --
+		{ --
 			event = Ball_Event.On_Sale,
 			value = sale_price,
 		},
@@ -524,13 +607,14 @@ function Game:sell(ball)
 	ball.dead = true
 
 	trigger:after(0.8 * duration, function()
+		sfx.boop:play({ pitch = 0.6, volume = 0.35 })
 		self.player.money = self.player.money + sale_price
 	end)
 end
 
 function Game:play_animation(ball_result, ball, duration, iteration)
 	local target = ball_result.event == Ball_Event.On_Damage --
-		and (ball.is_enemy and self.player or self.enemy) --
+			and (ball.is_enemy and self.player or self.enemy) --
 		or (ball.is_enemy and self.enemy or self.player)
 	Text_Bubble({
 		group = self.ui,

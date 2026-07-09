@@ -23,7 +23,14 @@ function Shop:init(args)
 	self:set_restitution(0.9)
 	self:set_friction(0)
 
-	self.interact_with_mouse = true
+	self.handle = Handle({
+		group = self.group,
+		parent = self,
+		offset_x = w + gw * 0.0125,
+		offset_y = 0,
+		w = gw * 0.025,
+		h = gh * 0.1,
+	})
 
 	self.balls = {}
 end
@@ -31,54 +38,35 @@ end
 function Shop:update(dt)
 	self:update_game_object(dt)
 
-	if self.selected and input.select.down then
-		local mouse_x, mouse_y = self.group:get_mouse_position()
-		local x = math.min(self.right_limit, math.max(self.left_limit, self.x + (mouse_x - (self.mouse_x or mouse_x))))
-		self.x = x
-		self.mouse_x = mouse_x
-		local targetX = self.x
-		local currentX = self.body:getX()
-
-		local vx = (targetX - currentX) / dt
-
-		-- self.body:setLinearVelocity(vx, 0)
-		self:set_velocity(vx, 0)
-		-- self:set_position(self.x, self.y)
-	end
-
-	if not self.selected or input.select.released or not input.select.down then
-		self.mouse_x = nil
-		self:set_velocity(0, 0)
-	end
-
 	if self.x == self.left_limit and not self.rolled then
 		self.rolled = true
 		self:roll()
-		print("rerolled")
 	end
 
 	if self.x ~= self.left_limit and self.rolled then
 		self.rolled = false
-		print("shopping")
 	end
 end
 
+function Shop:remove(ball)
+	table.delete(self.balls, ball)
+end
+
 function Shop:roll()
+	print("rolling")
 	for i, ball in ipairs(self.balls) do
 		ball.dead = true
 	end
 	self.balls = {}
 
 	local sum_of_odds = table.reduce_dict(Rarity, function(memo, v)
-		return memo + v.shop_odds
+		return memo + (v.shop_odds or 0)
 	end, 0)
 
 	local odds = random:float(0, sum_of_odds)
-	print(sum_of_odds, odds)
 	local sum = 0
 	for i = 1, #Rarity_Ranks do
-		sum = sum + Rarity_Ranks[i].shop_odds
-		print(sum, Rarity_Ranks[i].name)
+		sum = sum + (Rarity_Ranks[i].shop_odds or 0)
 
 		if odds < sum then
 			self.rarity = Rarity_Ranks[i]
@@ -116,19 +104,112 @@ function Shop:roll()
 	end
 end
 
-function Shop:on_mouse_enter()
-	self.selected = true
-end
-
-function Shop:on_mouse_exit()
-	self.selected = false
-end
-
 function Shop:draw()
 	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.x)
 
 	local color = self.selected and green[0] or blue[0]
 	graphics.rectangle(self.x, self.y, self.w + 10, self.h + 10, 5, 5, color)
-	graphics.rectangle(self.x, self.y, self.w + 5, self.h + 5, 5, 5, black[0])
+	graphics.rectangle(self.x, self.y, self.w + 5, self.h + 5, 5, 5, bg[0])
+	graphics.pop()
+end
+
+---
+---
+---
+---
+---
+
+Handle = Object:extend()
+Handle:implement(GameObject)
+function Handle:init(args)
+	self:init_game_object(args)
+
+	self.parent = args.parent
+	self.w = args.w
+	self.h = args.h
+	self.shape = Rectangle(self.parent.x + self.offset_x, self.parent.y + self.offset_y, self.w, self.h)
+
+	self.interact_with_mouse = true
+end
+
+function Handle:update(dt)
+	self:update_game_object(dt)
+
+	self.x = self.parent.x + self.offset_x
+	self.y = self.parent.y + self.offset_y
+	self.shape:move_to(self.x, self.y)
+
+	if self.selected and input.select.down then
+		holding_handle = true
+		local mouse_x = self.group:get_mouse_position()
+
+		if not self.mouse_x then
+			self.mouse_x = mouse_x
+		end
+
+		local dx = mouse_x - self.mouse_x
+		self.mouse_x = mouse_x
+
+		self.parent.x = math.min(self.parent.right_limit, math.max(self.parent.left_limit, self.parent.x + dx))
+
+		local targetX = self.parent.x
+		local currentX = self.parent.body:getX()
+		local vx = (targetX - currentX) / dt
+
+		self.parent:set_velocity(vx, 0)
+	else
+		holding_handle = false
+		self.mouse_x = nil
+		self.parent:set_velocity(0, 0)
+	end
+
+	if not input.select.down and self.mouse_left then
+		self.selected = false
+	end
+end
+
+function Handle:on_mouse_enter()
+	self.selected = true
+	self.mouse_left = false
+end
+
+function Handle:on_mouse_exit()
+	if not input.select.down then
+		self.selected = false
+	end
+	self.mouse_left = true
+end
+
+function Handle:draw()
+	graphics.push(self.x, self.y, self.r, self.parent.spring.x, self.parent.spring.x)
+
+	local color = self.selected and green[0] or blue[0]
+
+	graphics.rectangle(self.x, self.y, self.w + 10, self.h + 10, 5, 5, color)
+	graphics.rectangle(self.x, self.y, self.w + 5, self.h + 5, 5, 5, bg[0])
+
+	graphics.pop()
+end
+
+---
+---
+---
+---
+
+Shelf = Object:extend()
+Shelf:implement(GameObject)
+function Shelf:init(args)
+	self:init_game_object(args)
+	self.shape = Rectangle(self.x, self.y, self.w, self.h)
+	self.interact_with_mouse = true -- stop mouse collisions under it
+end
+
+function Shelf:update(dt)
+	self:update_game_object(dt)
+end
+
+function Shelf:draw()
+	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.x)
+	graphics.rectangle(self.x, self.y, self.w, self.h, 5, 5, self.color)
 	graphics.pop()
 end

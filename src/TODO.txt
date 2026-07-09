@@ -169,12 +169,8 @@ Felicia Playtest [2026-05-22]:
 
 
 
-Serious Jam Game:
-- Shop + ball info+buy popups
-- Player-holder ball info+sell popups (and changing the balls order?)
-- new gameplay: Roll all balls, enemy has X balls, player chooses X player balls to trigger after stop, and in what order, then player balls trigger, then enemy balls
+Serious Jam Game todo:
+- buy/sell amounts calculations in descriptions
+- more info in descriptions (uses)
+- shop costs to 'open' on handle
 - wheel: jackpot, ball consuming, and other pocket types
-
-
--- trigger enemy balls, trigger selected balls in selected order
-

@@ -42,8 +42,7 @@ function Ball:update(dt)
 
 	if self.selected and self.mode == Ball_Interaction_Mode.Shop_Drawer then
 		self:set_position(self.frozen_x, self.frozen_y)
-		-- self:set_velocity(0, 0)
-		-- self:set_mass(10000)
+		self:set_velocity(0, 0)
 	end
 
 	if self.selected then
@@ -73,18 +72,29 @@ function Ball:deactivate_mouse()
 end
 
 function Ball:on_mouse_enter()
+	if holding_handle then
+		return
+	end
 	self.spring:pull(0.2, 500, 10)
 	sfx.boop:play({ pitch = random:float(0.94, 1.14), volume = 0.5 })
 	self.selected = true
 
 	if self.mode == Ball_Interaction_Mode.Shop_Drawer then
-		-- self.prev_velocity_x, self.prev_velocity_y = self:get_velocity()
-		-- self.prev_mass = self.mass
-		-- self.freeze_physics = true
-		-- self:set_velocity(0, 0)
 		self.frozen_x = self.x
 		self.frozen_y = self.y
 	end
+end
+
+function Ball:on_mouse_stay()
+	if self.mode == Ball_Interaction_Mode.Shop_Drawer then
+		self.frozen_x = self.x
+		self.frozen_y = self.y
+	end
+
+	if holding_handle then
+		return
+	end
+	self.selected = true
 end
 
 function Ball:on_mouse_exit()
@@ -92,18 +102,19 @@ function Ball:on_mouse_exit()
 	self.selected = false
 
 	if self.mode == Ball_Interaction_Mode.Shop_Drawer then
-		-- self:set_velocity(self.prev_velocity_x, self.prev_velocity_y)
-		self:move_towards_mouse(-200)
-		-- self.mass = self.prev_mass
-		-- self.freeze_physics = false
+		trigger:after(0.05, function()
+			if not self.selected then
+				self:move_towards_mouse(-200)
+			end
+		end)
 	end
 end
 
-function Ball:trigger(...)
+function Ball:trigger(events, ...)
 	self.uses = self.uses - 1
 
 	local results = {}
-	for _, event in ipairs(Ball_Event_Order) do
+	for _, event in ipairs(#events > 0 and events or Ball_Event_Order) do
 		local fn = self.type[event.id] or Ball_Defaults[event.id]
 		local value = fn and (fn(self, ...) or 0) or 0
 		results[#results + 1] = {
@@ -112,6 +123,14 @@ function Ball:trigger(...)
 		}
 	end
 	return results
+end
+
+function Ball:buy_price()
+	return self.type.rarity.value * (self.type.cost_mult or 1)
+end
+
+function Ball:sell_price()
+	return self.type.rarity.value * (self.type.sell_mult or 1)
 end
 
 function Ball:freeze(x, y)
@@ -136,7 +155,7 @@ function Ball:draw()
 		local arc_size = (2 * math.pi - sections * spacing) / sections
 		local radius = self.rs + gh * 0.02
 		local line_width = 6
-		local color = self.order and green[0] or self.is_enemy and red[0] or blue[0]
+		local color = self.selected and green[0] or self.is_enemy and red[0] or blue[0]
 
 		for i = 0, sections - 1 do
 			local start_angle = i * (arc_size + spacing) + math.sin(love.timer.getTime())
@@ -177,13 +196,22 @@ function Text_Bubble:init(args)
 	local x = self.x + math.sin(angle) * initial_pop_distance
 	local y = self.y + math.cos(angle) * initial_pop_distance
 	trigger:tween(self.duration * 0.3, self, { x = x, y = y }, math.cubic_out, function()
-		trigger:tween(self.duration * 0.6, self, { x = self.target.x, y = self.target.y, r = 4 * math.pi }, math
-		.cubic_in, function()
-			self.text.dead = true
-			self.text = nil
+		trigger:tween(
+			self.duration * 0.6,
+			self,
+			{
+				x = self.target.x,
+				y = self.target.y,
+				r = 4 * math.pi,
+			},
+			math.cubic_in,
+			function()
+				self.text.dead = true
+				self.text = nil
 
-			self.dead = true
-		end)
+				self.dead = true
+			end
+		)
 	end)
 end
 
@@ -203,7 +231,7 @@ end
 
 Rarity = {
 	Starter = {
-		shop_odds = 0,
+		-- shop_odds = 0,
 		value = 0,
 		name = "",
 	},
@@ -213,22 +241,22 @@ Rarity = {
 		name = "Average",
 	},
 	Uncommon = {
-		shop_odds = 0.5,
+		-- shop_odds = 0.5,
 		value = 2,
 		name = "Unusual",
 	},
 	Rare = {
-		shop_odds = 0.25,
+		-- shop_odds = 0.25,
 		value = 3,
 		name = "Shiny",
 	},
 	Legendary = {
-		shop_odds = 0.125,
+		-- shop_odds = 0.125,
 		value = 4,
 		name = "Steel",
 	},
 	Unique = {
-		shop_odds = 0,
+		-- shop_odds = 0,
 		value = 5,
 		name = "Divine",
 	},
@@ -250,6 +278,7 @@ Ball_Event = {
 	On_Armour = { id = "on_armour", color = "blue" },
 	On_Collision = { id = "on_collision", color = "purple" },
 	On_Sale = { id = "on_sale", color = "yellow" },
+	On_Buy = { id = "on_buy", color = "green" },
 }
 
 Ball_Event_Order = {
@@ -259,12 +288,16 @@ Ball_Event_Order = {
 	Ball_Event.On_Armour,
 	Ball_Event.On_Collision,
 	Ball_Event.On_Sale,
+	Ball_Event.On_Buy,
 }
 ---------
 
 Ball_Defaults = {
 	on_score = function(ball)
 		return ball.pocket.value
+	end,
+	on_buy = function(ball)
+		return 0
 	end,
 }
 

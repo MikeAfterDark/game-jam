@@ -25,79 +25,91 @@ end
 -- So in the case above, the object would automatically have its .x, .y and .v attributes set to 100 and its .r attribute set to math.pi/4.
 GameObject = Object:extend()
 function GameObject:init_game_object(args)
-    for k, v in pairs(args or {}) do
-        self[k] = v
-    end
-    if self.group then
-        self.group:add(self)
-    end
-    self.x, self.y = self.x or 0, self.y or 0
-    self.r = self.r or 0
-    self.sx, self.sy = self.sx or 1, self.sy or 1
-    self.id = self.id or random:uid()
-    self.t = Trigger()
-    self.springs = Springs()
-    self.flashes = Flashes()
-    self.hfx = HitFX(self)
-    self.spring = Spring(1)
-    return self
+	for k, v in pairs(args or {}) do
+		self[k] = v
+	end
+	if self.group then
+		self.group:add(self)
+	end
+	self.x, self.y = self.x or 0, self.y or 0
+	self.r = self.r or 0
+	self.sx, self.sy = self.sx or 1, self.sy or 1
+	self.id = self.id or random:uid()
+	self.t = Trigger()
+	self.springs = Springs()
+	self.flashes = Flashes()
+	self.hfx = HitFX(self)
+	self.spring = Spring(1)
+	return self
 end
 
 function GameObject:update_game_object(dt)
-    self.t:update(dt)
-    self.springs:update(dt)
-    self.flashes:update(dt)
-    self.hfx:update(dt)
-    self.spring:update(dt)
-    if self.body then
-        self:update_physics(dt)
-    end
+	self.t:update(dt)
+	self.springs:update(dt)
+	self.flashes:update(dt)
+	self.hfx:update(dt)
+	self.spring:update(dt)
+	if self.body then
+		self:update_physics(dt)
+	end
 
-    if self.shape then
-        if self.shape.vertices and self.body then
-            self.shape.vertices = { self.body:getWorldPoints(self.fixture:getShape():getPoints()) }
-            self.shape:get_centroid()
-        end
-        if self.body then
-            self.shape:move_to(self:get_position())
-        end
+	if self.shape then
+		if self.shape.vertices and self.body then
+			self.shape.vertices = { self.body:getWorldPoints(self.fixture:getShape():getPoints()) }
+			self.shape:get_centroid()
+		end
+		if self.body then
+			self.shape:move_to(self:get_position())
+		end
 
-        if self.interact_with_mouse then
-            local colliding_with_mouse = self.shape:is_colliding_with_point( --
-                self.group:get_mouse_position()
-            )
+		if self.interact_with_mouse then
+			local colliding_with_mouse = self.shape:is_colliding_with_point( --
+				self.group:get_mouse_position()
+			)
 
-            if
-                colliding_with_mouse --
-                and (not self.group.layer or mouse.group_layer <= self.group.layer)
-            then
-                mouse.group_layer = self.group.layer
+			if
+				colliding_with_mouse --
+				and (
+					not self.group.layer --
+					or (mouse.group_layer or 0) <= self.group.layer
+				)
+			then
+				mouse.group_layer = self.group.layer
 
-                if colliding_with_mouse and not self.colliding_with_mouse then
-                    self.colliding_with_mouse = true
-                    if self.on_mouse_enter then
-                        self:on_mouse_enter()
-                    end
-                end
-                if self.colliding_with_mouse then
-                    if self.on_mouse_stay then
-                        self:on_mouse_stay()
-                    end
-                end
-            end
+				if colliding_with_mouse and not self.colliding_with_mouse then
+					self.colliding_with_mouse = true
+					if self.on_mouse_enter then
+						self:on_mouse_enter()
+					end
+				end
+				if self.colliding_with_mouse then
+					if self.on_mouse_stay then
+						self:on_mouse_stay()
+					end
+				end
+			end
 
-            if self.colliding_with_mouse and (not colliding_with_mouse or mouse.group_layer > self.group.layer) then
-                self.colliding_with_mouse = false
-                if self.on_mouse_exit then
-                    self:on_mouse_exit()
-                end
-            end
-        end
-    end
+			if
+				self.colliding_with_mouse --
+				and (
+					not colliding_with_mouse --
+					or (
+						self.group.layer --
+						and (mouse.group_layer or 0) > self.group.layer
+					)
+				)
+			then
+				self.colliding_with_mouse = false
+				if self.on_mouse_exit then
+					self:on_mouse_exit()
+				end
+			end
+		end
+	end
 end
 
 function GameObject:draw_game_object()
-    if self.body then
-        self:draw_physics()
-    end
+	if self.body then
+		self:draw_physics()
+	end
 end

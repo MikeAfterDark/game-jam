@@ -155,7 +155,7 @@ function Button:draw()
 		self.shape.h,
 		4,
 		4, --
-		self.locked and _G[self.fg_color][-8] or _G[self.bg_color][0]
+		self.locked and _G[self.fg_color][-2] or _G[self.bg_color][0]
 	)
 	self.text:draw(self.x, self.y + 3, 0, 1, 1)
 	graphics.pop()
@@ -203,12 +203,8 @@ function InputButton:init(args)
 	ButtonBase.init(self, args)
 
 	self.shape = Rectangle(self.x, self.y, args.w or (pixul_font:get_text_width(self.button_text) + 8), pixul_font.h + 4)
-	self.action_text = Text(
-	{ { text = "[" .. self.fg_color .. "]" .. self.description_text, font = pixul_font, alignment = "center" } },
-		global_text_tags)
-	self.input_text = Text(
-	{ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } },
-		global_text_tags)
+	self.action_text = Text({ { text = "[" .. self.fg_color .. "]" .. self.description_text, font = pixul_font, alignment = "center" } }, global_text_tags)
+	self.input_text = Text({ { text = "[" .. self.fg_color .. "]" .. self.button_text, font = pixul_font, alignment = "center" } }, global_text_tags)
 end
 
 function InputButton:update(dt)
@@ -238,8 +234,7 @@ function InputButton:draw()
 
 	local halfway = self.separator_length
 	local separator_height = self.y + 8
-	graphics.dashed_line(self.x - halfway, separator_height, self.x + halfway, separator_height, 4, 1,
-		_G[self.bg_color][0], 1)
+	graphics.dashed_line(self.x - halfway, separator_height, self.x + halfway, separator_height, 4, 1, _G[self.bg_color][0], 1)
 end
 
 function InputButton:on_mouse_enter()
