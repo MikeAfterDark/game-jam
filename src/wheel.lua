@@ -204,7 +204,7 @@ function Wheel:spin(speed)
 	self.sfx_distance = 0
 	self.spin_max_speed = speed
 	self.ball_dampening = 0.4
-	trigger:tween(2, self, { spinrate = speed }, math.cubic_in, function()
+	self.t:tween(2, self, { spinrate = speed }, math.cubic_in, function()
 		self.is_spun_up = true
 	end)
 end
@@ -212,8 +212,8 @@ end
 function Wheel:stop()
 	self.spinning = false
 	local time_to_stop = 3
-	trigger:tween(time_to_stop, self, { spinrate = 0 }, math.cubic_out, function() end)
-	trigger:tween(time_to_stop - 0.5, self, { ball_dampening = 3.5 }, math.linear, function() end)
+	self.t:tween(time_to_stop, self, { spinrate = 0 }, math.cubic_out, function() end)
+	self.t:tween(time_to_stop - 0.5, self, { ball_dampening = 3.5 }, math.linear, function() end)
 end
 
 function Wheel:results()

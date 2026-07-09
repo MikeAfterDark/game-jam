@@ -97,7 +97,7 @@ function Ball:on_mouse_exit()
 	self.selected = false
 
 	if self.mode == Ball_Interaction_Mode.Shop_Drawer then
-		trigger:after(0.05, function()
+		self.t:after(0.05, function()
 			if not self.selected then
 				self:move_towards_mouse(-200)
 			end
@@ -194,8 +194,8 @@ function Text_Bubble:init(args)
 	local initial_pop_distance = gh * 0.04
 	local x = self.x + math.sin(angle) * initial_pop_distance
 	local y = self.y + math.cos(angle) * initial_pop_distance
-	trigger:tween(self.duration * 0.3, self, { x = x, y = y }, math.cubic_out, function()
-		trigger:tween(
+	self.t:tween(self.duration * 0.3, self, { x = x, y = y }, math.cubic_out, function()
+		self.t:tween(
 			self.duration * 0.6,
 			self,
 			{
@@ -214,7 +214,9 @@ function Text_Bubble:init(args)
 	end)
 end
 
-function Text_Bubble:update(dt) end
+function Text_Bubble:update(dt)
+	self:update_game_object(dt)
+end
 
 function Text_Bubble:draw()
 	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.x)
@@ -287,7 +289,7 @@ Ball_Event_Order = {
 	Ball_Event.On_Damage,
 	Ball_Event.On_Sale,
 	Ball_Event.On_Buy,
-	-- Ball_Event.On_Consume, -- must be externally triggered
+	-- Ball_Event.On_Consume, -- must be externally self.ted
 }
 ---------
 

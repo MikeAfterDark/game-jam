@@ -290,13 +290,13 @@ function init()
 		{ id = "audio_zoo", destination = AudioZoo }, -- todo: fix
 	}
 
-	main:add(Settings("settings"))
-	main:go_to("settings", {})
 	-- main:add(Intro("intro"))
 	-- main:add(Game("intro"))
 	-- main:add(Level_Select("intro"))
 	-- main:add(MainMenu("intro"))
 	-- main:go_to("intro")
+	main:add(Settings("settings"))
+	main:go_to("settings", {})
 	main:add(Game("game"))
 	main:go_to("game", { clear_music = true })
 
@@ -1056,6 +1056,8 @@ end
 
 function pause_game(self)
 	self.in_pause = true
+
+	slow_amount = 0
 	input.select.pressed = false
 	input:set_mouse_visible(true)
 	local ui_layer = ui_interaction_layer.Paused
@@ -1241,9 +1243,9 @@ end
 function unpause_game(self)
 	self.in_pause = false
 	pop_ui_layer(self)
-	trigger:tween(0.0, _G, { slow_amount = 1 }, math.linear, function()
-		slow_amount = 1
-	end)
+	-- trigger:tween(0.0, _G, { slow_amount = 1 }, math.linear, function()
+	slow_amount = 1
+	-- end)
 end
 
 function close_credits(self)

@@ -23,19 +23,19 @@ function Intro:on_enter(from, args)
 	self.song = music.intro:play({ volume = 0.2 })
 
 	self.logo = { x = gw * 0.5, y = gh * 0.6 }
-	trigger:tween(1.2, self.logo, { y = gh / 2 }, math.cubic_in_out)     -- positioning title text to center at the start
-	trigger:after(0.1, function()
-		trigger:tween(0.4, self, { opacity = 0 }, math.quad_in_out, function() -- lowering foreground opactiy
-			trigger:after(1, function()
-				trigger:tween(2, self.logo, { y = -gh }, math.cubic_in_out) -- moving title text up at the end
+	self.t:tween(1.2, self.logo, { y = gh / 2 }, math.cubic_in_out)     -- positioning title text to center at the start
+	self.t:after(0.1, function()
+		self.t:tween(0.4, self, { opacity = 0 }, math.quad_in_out, function() -- lowering foreground opactiy
+			self.t:after(1, function()
+				self.t:tween(2, self.logo, { y = -gh }, math.cubic_in_out) -- moving title text up at the end
 			end)
 		end)
 		if not self.transitioning then
-			trigger:tween(4, self, { intro_song_volume = 0 }, math.quad_out, function() end, self.intro_song_volume_uid) -- fading the audio
+			self.t:tween(4, self, { intro_song_volume = 0 }, math.quad_out, function() end, self.intro_song_volume_uid) -- fading the audio
 		end
 	end)
 
-	trigger:after(1.5, function()
+	self.t:after(1.5, function()
 		self.intro_complete = true
 	end)
 end
@@ -50,7 +50,7 @@ function Intro:update(dt)
 	intro.volume = self.intro_song_volume
 
 	if (self.intro_complete or input.escape.pressed) and not self.transitioning then
-		trigger:tween(0.5, self, { intro_song_volume = 0 }, math.quad_out, function()
+		self.t:tween(0.5, self, { intro_song_volume = 0 }, math.quad_out, function()
 			self.song:stop()
 		end, self.intro_song_volume_uid) -- fading/stopping the audio
 

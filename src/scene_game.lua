@@ -29,6 +29,7 @@ function Game:on_enter(from, args)
 	self.main.layer = Group_Layers.Main
 	self.shop.layer = Group_Layers.Shop
 	self.game_ui.layer = Group_Layers.Shop_UI
+	self.interaction_layer = ui_interaction_layer.Game
 
 	self.main_slow_amount = 1
 	slow_amount = 1
@@ -183,11 +184,11 @@ function Game:on_enter(from, args)
 
 	self.ball_shop = Shop({
 		group = self.shop,
-		x = gw * 0.15,
+		x = gw * 0.0,
 		y = gh * 0.5,
 		w = gw * 0.2,
 		h = gh * 0.4,
-		left_limit = gw * 0.00,
+		left_limit = 0,
 		right_limit = gw * 0.19,
 	})
 
@@ -474,13 +475,13 @@ function Game:update(dt)
 		if ball then
 			sfx.boop:play({ pitch = 1.3 - (0.7 * t), volume = 0.35 })
 
-			trigger:after(self.results_time, function()
+			self.t:after(self.results_time, function()
 				self.loading_ball = false
 				self.balls_enabled = false
 			end)
 		else
 			self.loading_ball = false
-			trigger:after(2, function()
+			self.t:after(2, function()
 				self.wheel:stop()
 				self.try_get_results = true
 			end)
@@ -513,19 +514,19 @@ function Game:update(dt)
 		local elapsed_time = 0
 		for i, result in ipairs(ball_results) do
 			if result.value ~= 0 then
-				trigger:after(elapsed_time, function()
+				self.t:after(elapsed_time, function()
 					ball.spring:pull(0.2, 500, 10)
 					sfx.boop:play({ pitch = 1.3 - (0.7 * t), volume = 0.35 })
 
 					ball.pocket.color = ball.pocket.color:clone():lighten(0.3)
-					trigger:after(time_per_result * 0.7, function()
+					self.t:after(time_per_result * 0.7, function()
 						ball.pocket.color = self.prev_pocket_color
 					end)
 
 					local animation_duration = 1.4
 					self:play_animation(result, ball, animation_duration, i) -- animation unrelated to the 'logic'
 
-					trigger:after(animation_duration * 0.9, function()
+					self.t:after(animation_duration * 0.9, function()
 						local target = ball.is_enemy and self.enemy or self.player
 						local event = result.event
 
@@ -546,12 +547,12 @@ function Game:update(dt)
 			end
 		end
 
-		trigger:after(result_counter * time_per_result, function()
+		self.t:after(result_counter * time_per_result, function()
 			self.processing_result = false
 
 			if #self.results == 0 then
 				-- just proceesed the last ball, return the balls to their respective holders
-				trigger:after(0.5, function()
+				self.t:after(0.5, function()
 					sfx.boop:play({ pitch = 1.3, volume = 0.35 })
 					for _, ball in ipairs(self.wheel.balls) do
 						if ball.is_enemy then
@@ -648,7 +649,7 @@ function Game:sell(ball)
 	self.player_holder:remove(ball)
 	ball.dead = true
 
-	trigger:after(0.8 * duration, function()
+	self.t:after(0.8 * duration, function()
 		sfx.boop:play({ pitch = 0.6, volume = 0.35 })
 		self.player.money = self.player.money + sale_price
 	end)

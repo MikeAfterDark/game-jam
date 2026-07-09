@@ -53,7 +53,7 @@ function GameObject:update_game_object(dt)
 		self:update_physics(dt)
 	end
 
-	if self.shape then
+	if dt > 0 and self.shape then
 		if self.shape.vertices and self.body then
 			self.shape.vertices = { self.body:getWorldPoints(self.fixture:getShape():getPoints()) }
 			self.shape:get_centroid()
@@ -68,11 +68,11 @@ function GameObject:update_game_object(dt)
 			)
 
 			if
-				colliding_with_mouse --
-				and (
-					not self.group.layer --
-					or (mouse.group_layer or 0) <= self.group.layer
-				)
+			    colliding_with_mouse --
+			    and (
+				    not self.group.layer --
+				    or (mouse.group_layer or 0) <= self.group.layer
+			    )
 			then
 				mouse.group_layer = self.group.layer
 
@@ -90,14 +90,14 @@ function GameObject:update_game_object(dt)
 			end
 
 			if
-				self.colliding_with_mouse --
-				and (
-					not colliding_with_mouse --
-					or (
-						self.group.layer --
-						and (mouse.group_layer or 0) > self.group.layer
-					)
-				)
+			    self.colliding_with_mouse --
+			    and (
+				    not colliding_with_mouse --
+				    or (
+					    self.group.layer --
+					    and (mouse.group_layer or 0) > self.group.layer
+				    )
+			    )
 			then
 				self.colliding_with_mouse = false
 				if self.on_mouse_exit then

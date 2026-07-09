@@ -83,7 +83,7 @@ function Circle_Slider:expand(grow)
 	local size = grow and self.size or 0
 	self.expanded = grow
 	self.shape.rs = size
-	trigger:tween(0.1, self, { visible_size = size }, math.expo_out, function()
+	self.t:tween(0.1, self, { visible_size = size }, math.expo_out, function()
 		self.visible_size = size
 	end)
 end

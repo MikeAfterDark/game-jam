@@ -129,7 +129,7 @@ function Circle_Menu:expand(grow)
 	local size = grow and self.size or 0
 	self.expanded = grow
 	self.shape.rs = size
-	trigger:tween(0.4, self, { visible_size = size }, math.expo_out, function()
+	self.t:tween(0.4, self, { visible_size = size }, math.expo_out, function()
 		self.ready = self.expanded
 	end)
 end

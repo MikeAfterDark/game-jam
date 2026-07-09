@@ -4,6 +4,13 @@ function Settings:init(name)
     self:init_state(name)
 end
 
+Settings_Group_Layer = {
+    Pause = 996,
+    Credits = 997,
+    Options = 998,
+    Keybinding = 999,
+}
+
 function Settings:on_enter(from, args)
     self.persistent_update = true
     self.persistent_draw = true
@@ -12,6 +19,11 @@ function Settings:on_enter(from, args)
     self.options_ui = Group():no_camera()
     self.keybinding_ui = Group():no_camera()
     self.credits = Group():no_camera()
+
+    self.paused_ui.layer = Settings_Group_Layer.Pause
+    self.options_ui.layer = Settings_Group_Layer.Options
+    self.keybinding_ui.layer = Settings_Group_Layer.Keybinding
+    self.credits.layer = Settings_Group_Layer.Credits
 
     self.ui_elements = {}
     main.ui_layer_stack:push({
@@ -47,13 +59,13 @@ function Settings:update(dt)
         self.credits:update(0)
     end
 
-    self.paused_ui:update(dt * slow_amount)
-    self.options_ui:update(dt * slow_amount)
     if self.in_keybinding then
         update_keybind_button_display(self)
     end
     self.keybinding_ui:update(dt * slow_amount)
     self.credits:update(dt * slow_amount)
+    self.options_ui:update(dt * slow_amount)
+    self.paused_ui:update(dt * slow_amount)
 end
 
 function Settings:draw()

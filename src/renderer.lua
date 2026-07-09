@@ -951,10 +951,11 @@ function TextBox:draw()
 	local y = self.top_aligned and self.y - self.text.h / 2 or self.y
 	self.text:draw(self.x, y, self.r, self.sx, self.sy)
 
+	graphics.pop()
+
 	if self.button then
 		self.button:draw()
 	end
-	graphics.pop()
 end
 
 --
