@@ -86,11 +86,6 @@ function Ball:on_mouse_enter()
 end
 
 function Ball:on_mouse_stay()
-	if self.mode == Ball_Interaction_Mode.Shop_Drawer then
-		self.frozen_x = self.x
-		self.frozen_y = self.y
-	end
-
 	if holding_handle then
 		return
 	end
