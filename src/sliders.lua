@@ -56,9 +56,9 @@ function Slider:update(dt)
 		return
 	end
 
-	if self.hovered and input.m1.pressed then
+	if self.hovered and input.select.pressed then
 		self.dragging = true
-	elseif input.m1.released then
+	elseif input.select.released then
 		self.dragging = false
 	end
 

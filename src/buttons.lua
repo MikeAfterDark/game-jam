@@ -22,34 +22,34 @@ function ButtonBase:update(dt)
 	end
 
 	if self.hold_button then
-		if self.selected and input.m1.pressed then
+		if self.selected and input.select.pressed then
 			self.press_time = love.timer.getTime()
 			self.spring:pull(0.2, 200, 10)
 		end
 		if self.press_time then
-			if input.m1.down and love.timer.getTime() - self.press_time > self.hold_button then
+			if input.select.down and love.timer.getTime() - self.press_time > self.hold_button then
 				self:action()
 				self.press_time = nil
 				self.spring:pull(0.1, 200, 10)
 			end
 		end
-		if self.selected and input.m1.released and self.press_time then
+		if self.selected and input.select.released and self.press_time then
 			self.press_time = nil
 			self.spring:pull(0.1, 200, 10)
 		end
 	else
-		if self.selected and input.m1.pressed then
+		if self.selected and input.select.pressed then
 			if self.action then
 				-- random:table(ui_click):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 				self:action()
 			end
 		end
-		if self.selected and input.m2.pressed then
-			if self.action_2 then
-				-- random:table(ui_click):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
-				self:action_2()
-			end
-		end
+		-- if self.selected and input.m2.pressed then
+		-- 	if self.action_2 then
+		-- 		-- random:table(ui_click):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+		-- 		self:action_2()
+		-- 	end
+		-- end
 	end
 end
 

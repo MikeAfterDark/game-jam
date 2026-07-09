@@ -44,50 +44,9 @@ function init()
 			default = { "m1", "m2" },
 			input = state.input.select,
 		},
-		up = {
-			text = "Up",
-			default = { "up", "w" },
-			input = state.input.up,
-		},
-		down = {
-			text = "Down",
-			default = { "down", "s" },
-			input = state.input.down,
-		},
-		left = {
-			text = "Left",
-			default = { "left", "a" },
-			input = state.input.left,
-		},
-		right = {
-			text = "Right",
-			default = { "right", "d" },
-			input = state.input.right,
-		},
-		arix = {
-			text = "Arix",
-			default = { "q" },
-			input = state.input.arix,
-		},
-		myon = {
-			text = "Myon",
-			default = { "e" },
-			input = state.input.myon,
-		},
-		spacebar = {
-			text = "Spacebar",
-			default = { "space" },
-			input = state.input.spacebar,
-		},
 	}
 	options_keys_display_order = {
-		"up",
-		"down",
-		"left",
-		"right",
-		"arix",
-		"myon",
-		"spacebar",
+		"select",
 	}
 	for action, key in pairs(controls) do
 		input:bind(action, key.input or key.default)
@@ -144,8 +103,6 @@ function init()
 			name = "[blue]art",
 			items = {
 				person.Mikey,
-				person.Apezilla,
-				person.Patrick,
 			},
 		},
 	}
@@ -427,7 +384,7 @@ end
 
 function open_options(self)
 	self.in_options = true
-	input.m1.pressed = false
+	input.select.pressed = false
 	input:set_mouse_visible(true)
 	local ui_layer = ui_interaction_layer.Options
 	local ui_group = self.options_ui
@@ -656,52 +613,16 @@ function open_options(self)
 	)
 	button_offset = button_offset + button_distance
 
-	self.time_offset_text = collect_into(
-		self.options_ui_elements,
-		Text2({
-			group = ui_group,
-			x = column_x[column],
-			y = gh / 2 + button_offset - gh * 0.02,
-			lines = { { text = "[fg]Audio Offset: " .. tostring(math.ceil((state.global_time_offset or 0) * 1000)) .. "ms", font = small_pixul_font } },
-		})
-	)
-	self.time_offset_slider = collect_into(
-		self.options_ui_elements,
-		Slider({
-			group = ui_group,
-			x = column_x[column],
-			y = gh / 2 + button_offset,
-			length = gw * 0.20,
-			thickness = gw * 0.01,
-			fg_color = "fg",
-			bg_color = "bg",
-			rotation = 0,
-			max_sections = 50, -- recommend factors of length that are < length/2
-			spacing = slider_spacing - 6,
-			value = state.global_time_offset or 0,
-			range_start = -0.25,
-			range_end = 0.25,
-			text = self.time_offset_text,
-			action = function(b, v)
-				state.global_time_offset = v
-				system.save_state()
-
-				b.text:set_text({ { text = "[fg]Audio Offset: " .. tostring(math.ceil(v * 1000)) .. "ms", font = small_pixul_font } })
-			end,
-		})
-	)
-	button_offset = button_offset + button_distance
-	--
-	-- self.visual_offset_text = collect_into(
+	-- self.time_offset_text = collect_into(
 	-- 	self.options_ui_elements,
 	-- 	Text2({
 	-- 		group = ui_group,
 	-- 		x = column_x[column],
 	-- 		y = gh / 2 + button_offset - gh * 0.02,
-	-- 		lines = { { text = "[fg]Visual Offset: " .. tostring(math.ceil((state.visual_offset or 0) * 1000)) .. "ms", font = small_pixul_font } },
+	-- 		lines = { { text = "[fg]Audio Offset: " .. tostring(math.ceil((state.global_time_offset or 0) * 1000)) .. "ms", font = small_pixul_font } },
 	-- 	})
 	-- )
-	-- self.visual_offset_slider = collect_into(
+	-- self.time_offset_slider = collect_into(
 	-- 	self.options_ui_elements,
 	-- 	Slider({
 	-- 		group = ui_group,
@@ -714,125 +635,161 @@ function open_options(self)
 	-- 		rotation = 0,
 	-- 		max_sections = 50, -- recommend factors of length that are < length/2
 	-- 		spacing = slider_spacing - 6,
-	-- 		value = state.visual_offset or 0,
+	-- 		value = state.global_time_offset or 0,
 	-- 		range_start = -0.25,
 	-- 		range_end = 0.25,
-	-- 		text = self.visual_offset_text,
+	-- 		text = self.time_offset_text,
 	-- 		action = function(b, v)
-	-- 			state.visual_offset = v
+	-- 			state.global_time_offset = v
 	-- 			system.save_state()
 	--
-	-- 			b.text:set_text({
-	-- 				{ text = "[fg]Visual Offset: " .. tostring(math.ceil((state.visual_offset or 0) * 1000)) .. "ms", font = small_pixul_font },
-	-- 			})
+	-- 			b.text:set_text({ { text = "[fg]Audio Offset: " .. tostring(math.ceil(v * 1000)) .. "ms", font = small_pixul_font } })
 	-- 		end,
 	-- 	})
 	-- )
 	-- button_offset = button_offset + button_distance
-
-	self.enemies_act_every_beat_button = collect_into(
-		self.options_ui_elements,
-		Button({
-			x = column_x[column],
-			y = gh / 2 + button_offset,
-			w = gw * 0.20,
-			button_text = tostring(state.enemies_act_every_beat and "enemies every beat" or "enemies got turns"),
-			fg_color = "bg",
-			bg_color = "fg",
-			action = function(b)
-				state.enemies_act_every_beat = not state.enemies_act_every_beat
-				system.save_state()
-				b:set_text(tostring(state.enemies_act_every_beat and "enemies every beat" or "enemies got turns"))
-			end,
-		})
-	)
-	button_offset = button_offset + button_distance
-
-	self.enemies_act_at_end_of_round_button = collect_into(
-		self.options_ui_elements,
-		Button({
-			x = column_x[column],
-			y = gh / 2 + button_offset,
-			w = gw * 0.20,
-			button_text = tostring(state.enemies_act_at_end_of_round and "enemies go last" or "enemies initiative"),
-			fg_color = "bg",
-			bg_color = "fg",
-			action = function(b)
-				state.enemies_act_at_end_of_round = not state.enemies_act_at_end_of_round
-				system.save_state()
-				b:set_text(tostring(state.enemies_act_at_end_of_round and "enemies go last" or "enemies initiative"))
-			end,
-		})
-	)
-	button_offset = button_offset + button_distance
-
-	self.enemies_only_move_when_player_doesnt_button = collect_into(
-		self.options_ui_elements,
-		Button({
-			x = column_x[column],
-			y = gh / 2 + button_offset,
-			w = gw * 0.20,
-			button_text = tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or "dont freeze"),
-			fg_color = "bg",
-			bg_color = "fg",
-			action = function(b)
-				state.enemies_only_move_when_player_doesnt = not state.enemies_only_move_when_player_doesnt
-				system.save_state()
-				b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or
-				"dont freeze"))
-			end,
-		})
-	)
-	button_offset = button_offset + button_distance
-
-	self.timeline_speed_text = collect_into(
-		self.options_ui_elements,
-		Text2({
-			group = ui_group,
-			x = column_x[column],
-			y = gh / 2 + button_offset - gh * 0.02,
-			lines = { { text = "[fg]Timeline Speed:", font = small_pixul_font } },
-		})
-	)
-	self.timeline_speed_slider = collect_into(
-		self.options_ui_elements,
-		Slider({
-			group = ui_group,
-			x = column_x[column],
-			y = gh / 2 + button_offset,
-			length = gw * 0.20,
-			thickness = gw * 0.01,
-			fg_color = "fg",
-			bg_color = "bg",
-			rotation = 0,
-			max_sections = 15, -- recommend factors of length that are < length/2
-			spacing = slider_spacing,
-			value = state.timeline_speed or 0.5,
-			action = function(b)
-				state.timeline_speed = b.value
-				system.save_state()
-			end,
-		})
-	)
-	button_offset = button_offset + button_distance
-
-	self.spacebar_controls_button = collect_into(
-		self.options_ui_elements,
-		Button({
-			x = column_x[column],
-			y = gh / 2 + button_offset,
-			w = gw * 0.20,
-			button_text = tostring(state.spacebar_controls and "spacebar controls" or "timeline controls"),
-			fg_color = "bg",
-			bg_color = "fg",
-			action = function(b)
-				state.spacebar_controls = not state.spacebar_controls
-				system.save_state()
-				b:set_text(tostring(state.spacebar_controls and "spacebar controls" or "timeline controls"))
-			end,
-		})
-	)
-	button_offset = button_offset + button_distance
+	-- --
+	-- -- self.visual_offset_text = collect_into(
+	-- -- 	self.options_ui_elements,
+	-- -- 	Text2({
+	-- -- 		group = ui_group,
+	-- -- 		x = column_x[column],
+	-- -- 		y = gh / 2 + button_offset - gh * 0.02,
+	-- -- 		lines = { { text = "[fg]Visual Offset: " .. tostring(math.ceil((state.visual_offset or 0) * 1000)) .. "ms", font = small_pixul_font } },
+	-- -- 	})
+	-- -- )
+	-- -- self.visual_offset_slider = collect_into(
+	-- -- 	self.options_ui_elements,
+	-- -- 	Slider({
+	-- -- 		group = ui_group,
+	-- -- 		x = column_x[column],
+	-- -- 		y = gh / 2 + button_offset,
+	-- -- 		length = gw * 0.20,
+	-- -- 		thickness = gw * 0.01,
+	-- -- 		fg_color = "fg",
+	-- -- 		bg_color = "bg",
+	-- -- 		rotation = 0,
+	-- -- 		max_sections = 50, -- recommend factors of length that are < length/2
+	-- -- 		spacing = slider_spacing - 6,
+	-- -- 		value = state.visual_offset or 0,
+	-- -- 		range_start = -0.25,
+	-- -- 		range_end = 0.25,
+	-- -- 		text = self.visual_offset_text,
+	-- -- 		action = function(b, v)
+	-- -- 			state.visual_offset = v
+	-- -- 			system.save_state()
+	-- --
+	-- -- 			b.text:set_text({
+	-- -- 				{ text = "[fg]Visual Offset: " .. tostring(math.ceil((state.visual_offset or 0) * 1000)) .. "ms", font = small_pixul_font },
+	-- -- 			})
+	-- -- 		end,
+	-- -- 	})
+	-- -- )
+	-- -- button_offset = button_offset + button_distance
+	--
+	-- self.enemies_act_every_beat_button = collect_into(
+	-- 	self.options_ui_elements,
+	-- 	Button({
+	-- 		x = column_x[column],
+	-- 		y = gh / 2 + button_offset,
+	-- 		w = gw * 0.20,
+	-- 		button_text = tostring(state.enemies_act_every_beat and "enemies every beat" or "enemies got turns"),
+	-- 		fg_color = "bg",
+	-- 		bg_color = "fg",
+	-- 		action = function(b)
+	-- 			state.enemies_act_every_beat = not state.enemies_act_every_beat
+	-- 			system.save_state()
+	-- 			b:set_text(tostring(state.enemies_act_every_beat and "enemies every beat" or "enemies got turns"))
+	-- 		end,
+	-- 	})
+	-- )
+	-- button_offset = button_offset + button_distance
+	--
+	-- self.enemies_act_at_end_of_round_button = collect_into(
+	-- 	self.options_ui_elements,
+	-- 	Button({
+	-- 		x = column_x[column],
+	-- 		y = gh / 2 + button_offset,
+	-- 		w = gw * 0.20,
+	-- 		button_text = tostring(state.enemies_act_at_end_of_round and "enemies go last" or "enemies initiative"),
+	-- 		fg_color = "bg",
+	-- 		bg_color = "fg",
+	-- 		action = function(b)
+	-- 			state.enemies_act_at_end_of_round = not state.enemies_act_at_end_of_round
+	-- 			system.save_state()
+	-- 			b:set_text(tostring(state.enemies_act_at_end_of_round and "enemies go last" or "enemies initiative"))
+	-- 		end,
+	-- 	})
+	-- )
+	-- button_offset = button_offset + button_distance
+	--
+	-- self.enemies_only_move_when_player_doesnt_button = collect_into(
+	-- 	self.options_ui_elements,
+	-- 	Button({
+	-- 		x = column_x[column],
+	-- 		y = gh / 2 + button_offset,
+	-- 		w = gw * 0.20,
+	-- 		button_text = tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or "dont freeze"),
+	-- 		fg_color = "bg",
+	-- 		bg_color = "fg",
+	-- 		action = function(b)
+	-- 			state.enemies_only_move_when_player_doesnt = not state.enemies_only_move_when_player_doesnt
+	-- 			system.save_state()
+	-- 			b:set_text(tostring(state.enemies_only_move_when_player_doesnt and "freeze during player" or
+	-- 			"dont freeze"))
+	-- 		end,
+	-- 	})
+	-- )
+	-- button_offset = button_offset + button_distance
+	--
+	-- self.timeline_speed_text = collect_into(
+	-- 	self.options_ui_elements,
+	-- 	Text2({
+	-- 		group = ui_group,
+	-- 		x = column_x[column],
+	-- 		y = gh / 2 + button_offset - gh * 0.02,
+	-- 		lines = { { text = "[fg]Timeline Speed:", font = small_pixul_font } },
+	-- 	})
+	-- )
+	-- self.timeline_speed_slider = collect_into(
+	-- 	self.options_ui_elements,
+	-- 	Slider({
+	-- 		group = ui_group,
+	-- 		x = column_x[column],
+	-- 		y = gh / 2 + button_offset,
+	-- 		length = gw * 0.20,
+	-- 		thickness = gw * 0.01,
+	-- 		fg_color = "fg",
+	-- 		bg_color = "bg",
+	-- 		rotation = 0,
+	-- 		max_sections = 15, -- recommend factors of length that are < length/2
+	-- 		spacing = slider_spacing,
+	-- 		value = state.timeline_speed or 0.5,
+	-- 		action = function(b)
+	-- 			state.timeline_speed = b.value
+	-- 			system.save_state()
+	-- 		end,
+	-- 	})
+	-- )
+	-- button_offset = button_offset + button_distance
+	--
+	-- self.spacebar_controls_button = collect_into(
+	-- 	self.options_ui_elements,
+	-- 	Button({
+	-- 		x = column_x[column],
+	-- 		y = gh / 2 + button_offset,
+	-- 		w = gw * 0.20,
+	-- 		button_text = tostring(state.spacebar_controls and "spacebar controls" or "timeline controls"),
+	-- 		fg_color = "bg",
+	-- 		bg_color = "fg",
+	-- 		action = function(b)
+	-- 			state.spacebar_controls = not state.spacebar_controls
+	-- 			system.save_state()
+	-- 			b:set_text(tostring(state.spacebar_controls and "spacebar controls" or "timeline controls"))
+	-- 		end,
+	-- 	})
+	-- )
+	-- button_offset = button_offset + button_distance
 
 	-- self.wall_toggle_controls = collect_into(
 	-- 	self.options_ui_elements,
@@ -1099,7 +1056,7 @@ end
 
 function pause_game(self)
 	self.in_pause = true
-	input.m1.pressed = false
+	input.select.pressed = false
 	input:set_mouse_visible(true)
 	local ui_layer = ui_interaction_layer.Paused
 	local ui_group = self.paused_ui
@@ -1309,8 +1266,8 @@ function pop_ui_layer(self)
 end
 
 function open_credits(self)
-	input.m1.pressed = false
-	input.m1.down = false
+	input.select.pressed = false
+	input.select.down = false
 	local ui_layer = ui_interaction_layer.Credits
 	local ui_group = self.credits
 	self.credits_ui_elements = {}
