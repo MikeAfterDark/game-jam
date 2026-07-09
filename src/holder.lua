@@ -50,15 +50,20 @@ function Holder:insert(ball)
 	ball:resize(ball_radius)
 	ball.mode = Ball_Interaction_Mode.Ball_Holder
 
-	if ball.index then
-		self.slots[ball.index].ball = ball
-	else
-		local slot = table.select(self.slots, function(slot)
-			return slot.open and slot.ball == nil
-		end)[1]
+	-- local slot = nil
+	-- if ball.index then
+	-- 	self.slots[ball.index].ball = ball
+	-- else if not ball.index
+	local slot = table.select(self.slots, function(slot)
+		return slot.open and slot.ball == nil
+	end)[1]
 
+	if slot then
 		slot.ball = ball
+	else
+		ball:trigger({ Ball_Event.On_Consume })
 	end
+	-- end
 end
 
 function Holder:disable_ball_selection()

@@ -15,6 +15,7 @@ function Wheel:init(args)
 		x = self.x,
 		y = self.y,
 		rs = self.rs * 0.2,
+		parent = self,
 	})
 
 	local segments = 64
@@ -57,6 +58,10 @@ function Wheel:init(args)
 	self.sfx_distance = 0
 	self.last_tick_sfx = 0
 	self.tick_sfx_interval = 0.2
+end
+
+function Wheel:set_mode(mode)
+	self.center:set_mode(mode)
 end
 
 function Wheel:update(dt)
@@ -271,6 +276,13 @@ function Wheel:draw()
 	graphics.pop()
 end
 
+---
+---
+---
+---
+---
+---
+
 WheelCenter = Object:extend()
 WheelCenter:implement(GameObject)
 WheelCenter:implement(Physics)
@@ -281,13 +293,56 @@ function WheelCenter:init(args)
 
 	self:set_restitution(0.8)
 	self:set_friction(0)
+	self.interact_with_mouse = true
+
+	self.text = Text({
+		{ text = "", font = pixul_font, alignment = "center" },
+	}, global_text_tags)
 end
 
 function WheelCenter:update(dt)
 	self:update_game_object(dt)
 	self:update_physics(dt)
+
+	if self.action_check then
+		self.locked = self.action_check()
+		-- print(self.locked)
+	end
+
+	if not self.locked and self.selected and input.select.pressed and self.action then
+		self.action(self)
+		self.locked = true
+	end
+end
+
+function WheelCenter:set_mode(mode)
+	self.text:set_text({
+		{
+			text = mode.text,
+			font = pixul_font,
+			alignment = "center",
+		},
+	})
+	self.action = mode.action
+	self.action_check = mode.action_check
+	self.locked = false
+	self.spring:pull(0.2, 200, 10)
+end
+
+function WheelCenter:on_mouse_enter()
+	self.selected = true
+end
+
+function WheelCenter:on_mouse_exit()
+	self.selected = false
 end
 
 function WheelCenter:draw()
-	graphics.circle(self.x, self.y, self.rs, brown1[0])
+	graphics.push(self.x, self.y, self.parent.r, self.spring.x, self.spring.x)
+
+	local color = self.locked and bg[0] or self.selected and green[0] or brown1[0]
+	graphics.circle(self.x, self.y, self.rs, black[0])
+	graphics.circle(self.x, self.y, self.rs - 5, color)
+	self.text:draw(self.x + -0, self.y + 2, 0, 1, 1)
+	graphics.pop()
 end

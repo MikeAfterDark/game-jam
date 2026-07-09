@@ -55,7 +55,7 @@ function Game:on_enter(from, args)
 		table.insert(pockets, {
 			color = i % 2 == 0 and c1:clone() or c2:clone(),
 			type = i == 1 --
-					and Pocket_Type.Jackpot
+				and Pocket_Type.Jackpot
 				or i == math.floor(num_pockets / 2) and Pocket_Type.Void
 				or Pocket_Type.Normal,
 			value = i - 1,
@@ -86,6 +86,16 @@ function Game:on_enter(from, args)
 		pockets = pockets,
 		balls = balls,
 	})
+	self.wheel:set_mode({
+		text = "Spin",
+		action = function(b)
+			b.spring:pull(0.2, 200, 10)
+			self.wheel:spin(5)
+			self.player_holder:disable_ball_selection()
+			self.enemy_holder:disable_ball_selection()
+		end,
+	})
+
 	self.results = {}
 
 	self.player_holder = Holder({
@@ -187,58 +197,58 @@ function Game:on_enter(from, args)
 		y = gh * 0.5,
 		w = gw * 0.2,
 		h = gh,
-		color = orange1[0],
+		color = bg[4],
 	})
 
 	local y_dist = gh * 0.03
-	self.spin_button = collect_into(
-		self.game_ui_elements,
-		Button({
-			group = self.main,
-			x = self.wheel.x,
-			y = self.wheel.y - y_dist,
-			fg_color = "black",
-			bg_color = "green",
-			button_text = "Spin",
-			action = function(b)
-				b.spring:pull(0.2, 200, 10)
-				self.wheel:spin(5)
-				self.player_holder:disable_ball_selection()
-				self.enemy_holder:disable_ball_selection()
-				-- b.locked = true
-			end,
-		})
-	)
+	-- self.spin_button = collect_into(
+	-- 	self.game_ui_elements,
+	-- 	Button({
+	-- 		group = self.main,
+	-- 		x = self.wheel.x,
+	-- 		y = self.wheel.y - y_dist,
+	-- 		fg_color = "black",
+	-- 		bg_color = "green",
+	-- 		button_text = "Spin",
+	-- 		action = function(b)
+	-- 			b.spring:pull(0.2, 200, 10)
+	-- 			self.wheel:spin(5)
+	-- 			self.player_holder:disable_ball_selection()
+	-- 			self.enemy_holder:disable_ball_selection()
+	-- 			-- b.locked = true
+	-- 		end,
+	-- 	})
+	-- )
 
-	self.select_button = collect_into(
-		self.game_ui_elements,
-		Button({
-			group = self.main,
-			x = self.wheel.x,
-			y = self.wheel.y + y_dist,
-			fg_color = "black",
-			bg_color = "green",
-			button_text = "Select",
-			action = function(b)
-				b.spring:pull(0.2, 200, 10)
-
-				if
-					self.try_get_results --
-					and self.wheel:all_balls_stopped()
-					-- and self.wheel:all_balls_selected()
-					and self.wheel:any_balls_selected()
-					and #self.results == 0
-				then
-					self.try_get_results = false
-					self.results = self.wheel:results()
-					self.results_time = 0.4
-					-- b.locked = true
-				else
-					sfx.boop:play({ pitch = 0.6, volume = 0.35 })
-				end
-			end,
-		})
-	)
+	-- self.select_button = collect_into(
+	-- 	self.game_ui_elements,
+	-- 	Button({
+	-- 		group = self.main,
+	-- 		x = self.wheel.x,
+	-- 		y = self.wheel.y + y_dist,
+	-- 		fg_color = "black",
+	-- 		bg_color = "green",
+	-- 		button_text = "Select",
+	-- 		action = function(b)
+	-- 			b.spring:pull(0.2, 200, 10)
+	--
+	-- 			if
+	-- 				self.try_get_results --
+	-- 				and self.wheel:all_balls_stopped()
+	-- 				-- and self.wheel:all_balls_selected()
+	-- 				and self.wheel:any_balls_selected()
+	-- 				and #self.results == 0
+	-- 			then
+	-- 				self.try_get_results = false
+	-- 				self.results = self.wheel:results()
+	-- 				self.results_time = 0.4
+	-- 				-- b.locked = true
+	-- 			else
+	-- 				sfx.boop:play({ pitch = 0.6, volume = 0.35 })
+	-- 			end
+	-- 		end,
+	-- 	})
+	-- )
 
 	local popup_width = gw * 0.2
 	self.info_popup = TextBox({
@@ -397,6 +407,21 @@ function Game:update(dt)
 
 	if self.try_get_results and self.wheel:all_balls_stopped() and not self.balls_enabled then
 		self.wheel:enable_ball_selection(self.num_balls_per_selection)
+		self.wheel:set_mode({
+			text = "select",
+			action_check = function()
+				return not self.wheel:any_balls_selected()
+				-- return self.wheel:all_balls_selected()
+			end,
+			action = function()
+				self.try_get_results = false
+				self.results = self.wheel:results()
+				self.results_time = 0.4
+				-- b.locked = true
+				-- else
+				sfx.boop:play({ pitch = 0.6, volume = 0.35 })
+			end,
+		})
 		self.balls_enabled = true
 	end
 
@@ -404,14 +429,18 @@ function Game:update(dt)
 		local ball = self.hovered_ball
 		if ball.mode == Ball_Interaction_Mode.Wheel_Selection and self.info_popup.obj_id ~= ball.id then
 			self.info_popup:set_object(ball)
+			--
 		elseif ball.mode == Ball_Interaction_Mode.Ball_Holder and self.holder_popup.obj_id ~= ball.id then
 			self.holder_popup:set_object(ball)
 			self.holder_popup.button.visible = not ball.is_enemy
 			self.holder_popup:position_holder_popup()
+			self.holder_popup.button:set_text("Sell $" .. self.hovered_ball:sell_price())
+			--
 		elseif ball.mode == Ball_Interaction_Mode.Shop_Drawer then
 			if self.shop_popup.obj_id ~= ball.id then
 				self.shop_popup:set_object(ball)
 				self.shop_popup.button.visible = true
+				self.shop_popup.button:set_text("Buy $" .. self.hovered_ball:buy_price())
 				self.shop_popup:position_shop_popup()
 			end
 			self.shop_popup.button.locked = not self:can_buy_ball(self.hovered_ball)
@@ -495,16 +524,19 @@ function Game:update(dt)
 
 					local animation_duration = 1.4
 					self:play_animation(result, ball, animation_duration, i) -- animation unrelated to the 'logic'
+
 					trigger:after(animation_duration * 0.9, function()
 						local target = ball.is_enemy and self.enemy or self.player
-						if result.event == "on_score" then
+						local event = result.event
+
+						if event == Ball_Event.On_Score then
 							target.money = target.money + result.value
-						elseif result.event == "on_damage" then
+						elseif event == Ball_Event.On_Damage then
 							target = ball.is_enemy and self.player or self.enemy -- deal damage to opposite unit
 							target:take_damage(result.value)
-						elseif result.event == "on_health" then
+						elseif event == Ball_Event.On_Health then
 							target:heal(result.value)
-						elseif result.event == "on_armour" then
+						elseif event == Ball_Event.On_Armour then
 							target:armour_up(result.value)
 						end
 					end)
@@ -531,6 +563,16 @@ function Game:update(dt)
 
 					self.player_holder:enable_ball_selection()
 					self.enemy_holder:enable_ball_selection()
+
+					self.wheel:set_mode({
+						text = "Spin",
+						action = function(b)
+							b.spring:pull(0.2, 200, 10)
+							self.wheel:spin(5)
+							self.player_holder:disable_ball_selection()
+							self.enemy_holder:disable_ball_selection()
+						end,
+					})
 
 					self.wheel.balls = {}
 				end)
@@ -594,7 +636,7 @@ function Game:sell(ball)
 
 	local duration = 1
 	self:play_animation( --
-		{ --
+		{             --
 			event = Ball_Event.On_Sale,
 			value = sale_price,
 		},
@@ -614,7 +656,7 @@ end
 
 function Game:play_animation(ball_result, ball, duration, iteration)
 	local target = ball_result.event == Ball_Event.On_Damage --
-			and (ball.is_enemy and self.player or self.enemy) --
+		and (ball.is_enemy and self.player or self.enemy) --
 		or (ball.is_enemy and self.enemy or self.player)
 	Text_Bubble({
 		group = self.ui,

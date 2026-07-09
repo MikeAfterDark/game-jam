@@ -41,7 +41,7 @@ function Ball:update(dt)
 	end
 
 	if self.selected and self.mode == Ball_Interaction_Mode.Shop_Drawer then
-		self:set_position(self.frozen_x, self.frozen_y)
+		self:set_position((self.frozen_x or self.x), (self.frozen_y or self.y))
 		self:set_velocity(0, 0)
 	end
 
@@ -106,7 +106,7 @@ function Ball:on_mouse_exit()
 end
 
 function Ball:trigger(events, ...)
-	self.uses = self.uses - 1
+	-- self.uses = self.uses - 1 -- TODO: move to On_Use event
 
 	local results = {}
 	for _, event in ipairs(#events > 0 and events or Ball_Event_Order) do
@@ -134,9 +134,11 @@ function Ball:freeze(x, y)
 end
 
 function Ball:resize(new_radius)
-	local radius = new_radius * self.type.size
-	self:change_circle_radius(radius)
-	self.rs = radius
+	if not self.dead then
+		local radius = new_radius * self.type.size
+		self:change_circle_radius(radius)
+		self.rs = radius
+	end
 end
 
 function Ball:draw()
@@ -160,10 +162,12 @@ function Ball:draw()
 		end
 	end
 	graphics.circle(self.x, self.y, self.rs, self.is_enemy and red[0] or black[0])
-	graphics.circle(self.x, self.y, self.rs * 0.70, self.color)
 
 	if self.animation then
-		self.animation:draw(self.x, self.y, self.r, 1, 1, 0, 0)
+		local scale = 1
+		self.animation:draw(self.x, self.y, self.r, scale, scale, 0, 0)
+	else
+		graphics.circle(self.x, self.y, self.rs * 0.80, self.color)
 	end
 	graphics.pop()
 end
@@ -226,7 +230,6 @@ end
 
 Rarity = {
 	Starter = {
-		-- shop_odds = 0,
 		value = 0,
 		name = "",
 	},
@@ -251,7 +254,6 @@ Rarity = {
 		name = "Steel",
 	},
 	Unique = {
-		-- shop_odds = 0,
 		value = 5,
 		name = "Divine",
 	},
@@ -271,23 +273,31 @@ Ball_Event = {
 	On_Damage = { id = "on_damage", color = "red" },
 	On_Health = { id = "on_health", color = "green" },
 	On_Armour = { id = "on_armour", color = "blue" },
-	On_Collision = { id = "on_collision", color = "purple" },
 	On_Sale = { id = "on_sale", color = "yellow" },
 	On_Buy = { id = "on_buy", color = "green" },
+	On_Use = { id = "on_use", color = "bg" },
+	On_Consume = { id = "on_consume", color = "purple1" },
 }
 
 Ball_Event_Order = {
+	Ball_Event.On_Use,
 	Ball_Event.On_Score,
-	Ball_Event.On_Damage,
 	Ball_Event.On_Health,
 	Ball_Event.On_Armour,
-	Ball_Event.On_Collision,
+	Ball_Event.On_Damage,
 	Ball_Event.On_Sale,
 	Ball_Event.On_Buy,
+	-- Ball_Event.On_Consume, -- must be externally triggered
 }
 ---------
 
 Ball_Defaults = {
+	on_consume = function(ball)
+		ball.dead = true -- TODO: make sure this also removes references elsewere
+	end,
+	on_use = function(ball)
+		ball.uses = ball.uses - 1
+	end,
 	on_score = function(ball)
 		return ball.pocket.value
 	end,

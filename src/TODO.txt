@@ -174,3 +174,5 @@ Serious Jam Game todo:
 - more info in descriptions (uses)
 - shop costs to 'open' on handle
 - wheel: jackpot, ball consuming, and other pocket types
+
+wip: wheel-spin/select buttons

@@ -178,64 +178,272 @@ function Text:format_text()
 	end
 end
 
+-- function Text:parse(text_data)
+-- 	local processed = {} -- hybrid word/character wrapping
+--
+-- 	for _, line in ipairs(text_data) do
+-- 		if line.wrap and line.font then
+-- 			local font, wrap = line.font, line.wrap
+-- 			local current, w = "", 0
+-- 			for word in line.text:gmatch("%S+") do
+-- 				local ww = font:get_text_width(word .. " ")
+-- 				if ww > wrap then -- per character
+-- 					for i = 1, #word do
+-- 						local c = word:sub(i, i)
+-- 						local cw = font:get_text_width(c)
+-- 						if w + cw > wrap and current ~= "" then
+-- 							table.insert(processed, {
+-- 								text = current,
+-- 								font = font,
+-- 								alignment = line.alignment,
+-- 								alignment_width = line.alignment_width,
+-- 								wrap = wrap,
+-- 							})
+-- 							current, w = c, cw
+-- 						else
+-- 							current, w = current .. c, w + cw
+-- 						end
+-- 					end
+-- 					current, w = current .. " ", w + font:get_text_width(" ")
+-- 				elseif w + ww > wrap and current ~= "" then -- per word
+-- 					table.insert(processed, {
+-- 						text = current,
+-- 						font = font,
+-- 						alignment = line.alignment,
+-- 						alignment_width = line.alignment_width,
+-- 						wrap = wrap,
+-- 					})
+-- 					current, w = word .. " ", ww
+-- 				else
+-- 					current, w = current .. word .. " ", w + ww
+-- 				end
+-- 			end
+-- 			table.insert(processed, {
+-- 				text = current,
+-- 				font = font,
+-- 				alignment = line.alignment,
+-- 				alignment_width = line.alignment_width,
+-- 				wrap = wrap,
+-- 			})
+-- 		else
+-- 			table.insert(processed, line)
+-- 		end
+-- 	end
+-- 	text_data = processed
+--
+-- 	for _, line in ipairs(text_data) do
+-- 		local tags = {}
+-- 		for i, tags_text, j in line.text:gmatch("()%[(.-)%]()") do
+-- 			if tags_text == "" then
+-- 				table.insert(tags, { i = tonumber(i), j = tonumber(j) - 1 })
+-- 				line.tags = tags
+-- 			else
+-- 				local local_tags = {}
+-- 				for tag in tags_text:gmatch("[%w_]+") do
+-- 					table.insert(local_tags, tag)
+-- 				end
+-- 				table.insert(tags, { i = tonumber(i), j = tonumber(j) - 1, tags = local_tags })
+-- 				line.tags = tags
+-- 			end
+-- 		end
+-- 		if not line.tags then
+-- 			line.tags = {}
+-- 		end
+-- 	end
+--
+-- 	for _, line in ipairs(text_data) do
+-- 		line.characters = {}
+-- 		local current_tags = nil
+-- 		for i = 1, #line.text do
+-- 			local c = line.text:sub(i, i)
+-- 			local inside_tags = false
+-- 			for _, tag in ipairs(line.tags) do
+-- 				if i >= tag.i and i <= tag.j then
+-- 					inside_tags = true
+-- 					current_tags = tag.tags
+-- 					break
+-- 				end
+-- 			end
+-- 			if not inside_tags then
+-- 				table.insert(line.characters,
+-- 					{ character = c, visible = true, tags = current_tags or {} })
+-- 			end
+-- 		end
+-- 	end
+--
+-- 	for _, line in ipairs(text_data) do
+-- 		local raw_text = ""
+-- 		for _, character in ipairs(line.characters) do
+-- 			raw_text = raw_text .. character.character
+-- 		end
+-- 		line.raw_text = raw_text
+-- 	end
+--
+-- 	return text_data
+-- end
+
 function Text:parse(text_data)
-	local processed = {} -- hybrid word/character wrapping
-	-- for _, line in ipairs(text_data) do
-	-- 	if line.wrap then
-	-- 		local font, wrap = line.front, line.wrap
-	-- 		local current, w = "", 0
-	-- 		local tag = line.text:match("%[(.-)%]")
-	-- 		local rest_of_line = line.text:gsub("^%[.-%]%s*", "") -- removes it and any following space
-	-- 		print(tag, "rest: ", rest_of_line)
-	-- 		for word in line.text:gmatch("%S+") do
-	-- 			print("words:", word)
-	-- 		end
-	-- 	end
-	-- end
+	for _, line in ipairs(text_data) do
+		local tags = {}
+
+		for i, tags_text, j in line.text:gmatch("()%[(.-)%]()") do
+			if tags_text == "" then
+				table.insert(tags, {
+					i = tonumber(i),
+					j = tonumber(j) - 1,
+				})
+			else
+				local local_tags = {}
+
+				for tag in tags_text:gmatch("[%w_]+") do
+					table.insert(local_tags, tag)
+				end
+
+				table.insert(tags, {
+					i = tonumber(i),
+					j = tonumber(j) - 1,
+					tags = local_tags,
+				})
+			end
+		end
+
+		line.tags = tags
+		line.characters = {}
+
+		local current_tags = nil
+
+		for i = 1, #line.text do
+			local c = line.text:sub(i, i)
+
+			local inside_tag = false
+
+			for _, tag in ipairs(tags) do
+				if i >= tag.i and i <= tag.j then
+					inside_tag = true
+					current_tags = tag.tags
+					break
+				end
+			end
+
+			if not inside_tag then
+				table.insert(line.characters, {
+					character = c,
+					visible = true,
+					tags = current_tags or {},
+				})
+			end
+		end
+	end
+
+	local processed = {}
 
 	for _, line in ipairs(text_data) do
 		if line.wrap and line.font then
-			local font, wrap = line.font, line.wrap
-			local current, w = "", 0
-			for word in line.text:gmatch("%S+") do
-				local ww = font:get_text_width(word .. " ")
-				if ww > wrap then -- per character
-					for i = 1, #word do
-						local c = word:sub(i, i)
-						local cw = font:get_text_width(c)
-						if w + cw > wrap and current ~= "" then
+			local font = line.font
+			local wrap = line.wrap
+
+			local current = {}
+			local current_width = 0
+
+			local i = 1
+
+			while i <= #line.characters do
+				local ch = line.characters[i]
+
+				-- whitespace
+				if ch.character:match("%s") then
+					local cw = font:get_text_width(ch.character)
+
+					if current_width + cw > wrap and #current > 0 then
+						local new_line = {
+							font = font,
+							alignment = line.alignment,
+							alignment_width = line.alignment_width,
+							wrap = wrap,
+							characters = current,
+						}
+
+						table.insert(processed, new_line)
+
+						current = {}
+						current_width = 0
+					else
+						table.insert(current, ch)
+						current_width = current_width + cw
+					end
+
+					i = i + 1
+				else
+					-- collect one visible word
+					local word = {}
+					local word_text = ""
+					local word_width = 0
+
+					while i <= #line.characters do
+						local c = line.characters[i]
+
+						if c.character:match("%s") then
+							break
+						end
+
+						table.insert(word, c)
+						word_text = word_text .. c.character
+						word_width = word_width + font:get_text_width(c.character)
+
+						i = i + 1
+					end
+
+					-- word fits?
+					if word_width <= wrap then
+						if current_width + word_width > wrap and #current > 0 then
 							table.insert(processed, {
-								text = current,
 								font = font,
 								alignment = line.alignment,
 								alignment_width = line.alignment_width,
 								wrap = wrap,
+								characters = current,
 							})
-							current, w = c, cw
-						else
-							current, w = current .. c, w + cw
+
+							current = {}
+							current_width = 0
+						end
+
+						for _, c in ipairs(word) do
+							table.insert(current, c)
+						end
+
+						current_width = current_width + word_width
+					else
+						-- character wrap for oversized words
+						for _, c in ipairs(word) do
+							local cw = font:get_text_width(c.character)
+
+							if current_width + cw > wrap and #current > 0 then
+								table.insert(processed, {
+									font = font,
+									alignment = line.alignment,
+									alignment_width = line.alignment_width,
+									wrap = wrap,
+									characters = current,
+								})
+
+								current = {}
+								current_width = 0
+							end
+
+							table.insert(current, c)
+							current_width = current_width + cw
 						end
 					end
-					current, w = current .. " ", w + font:get_text_width(" ")
-				elseif w + ww > wrap and current ~= "" then -- per word
-					table.insert(processed, {
-						text = current,
-						font = font,
-						alignment = line.alignment,
-						alignment_width = line.alignment_width,
-						wrap = wrap,
-					})
-					current, w = word .. " ", ww
-				else
-					current, w = current .. word .. " ", w + ww
 				end
 			end
+
 			table.insert(processed, {
-				text = current,
 				font = font,
 				alignment = line.alignment,
 				alignment_width = line.alignment_width,
 				wrap = wrap,
+				characters = current,
 			})
 		else
 			table.insert(processed, line)
@@ -244,51 +452,15 @@ function Text:parse(text_data)
 	text_data = processed
 
 	for _, line in ipairs(text_data) do
-		local tags = {}
-		for i, tags_text, j in line.text:gmatch("()%[(.-)%]()") do
-			if tags_text == "" then
-				table.insert(tags, { i = tonumber(i), j = tonumber(j) - 1 })
-				line.tags = tags
-			else
-				local local_tags = {}
-				for tag in tags_text:gmatch("[%w_]+") do
-					table.insert(local_tags, tag)
-				end
-				table.insert(tags, { i = tonumber(i), j = tonumber(j) - 1, tags = local_tags })
-				line.tags = tags
-			end
-		end
-		if not line.tags then
-			line.tags = {}
-		end
-	end
+		local raw = {}
 
-	for _, line in ipairs(text_data) do
-		line.characters = {}
-		local current_tags = nil
-		for i = 1, #line.text do
-			local c = line.text:sub(i, i)
-			local inside_tags = false
-			for _, tag in ipairs(line.tags) do
-				if i >= tag.i and i <= tag.j then
-					inside_tags = true
-					current_tags = tag.tags
-					break
-				end
-			end
-			if not inside_tags then
-				table.insert(line.characters,
-					{ character = c, visible = true, tags = current_tags or {} })
-			end
+		for _, c in ipairs(line.characters) do
+			raw[#raw + 1] = c.character
 		end
-	end
 
-	for _, line in ipairs(text_data) do
-		local raw_text = ""
-		for _, character in ipairs(line.characters) do
-			raw_text = raw_text .. character.character
-		end
-		line.raw_text = raw_text
+		line.raw_text = table.concat(raw)
+		line.text = line.raw_text
+		line.tags = {}
 	end
 
 	return text_data

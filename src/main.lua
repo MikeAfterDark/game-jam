@@ -414,7 +414,7 @@ function love.run()
 	global_game_height = 270 * global_game_scale
 
 	return engine_run({
-		game_name = "Rhythm",
+		game_name = "Prototype",
 		window_width = "max",
 		window_height = "max",
 	})

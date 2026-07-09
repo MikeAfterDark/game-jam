@@ -140,6 +140,11 @@ end
 
 local invisible = Color(1, 1, 1, 0)
 global_text_tags = {
+	orange1 = TextTag({
+		draw = function(c, i, text)
+			graphics.set_color(orange1[0])
+		end,
+	}),
 	black = TextTag({
 		draw = function(c, i, text)
 			graphics.set_color(black[0])
@@ -867,8 +872,10 @@ function TextBox:set_object(obj)
 		self.is_enemy = obj.is_enemy
 
 		self:set_text({
-			{ text = obj.type.name, font = pixul_font },
-			{ text = obj.type.description, font = small_pixul_font },
+			{ text = obj.type.name,                      font = pixul_font },
+			{ text = obj.type.description,               font = small_pixul_font },
+			{ text = "",                                 font = small_pixul_font },
+			{ text = "[orange1]uses left: " .. obj.uses, font = small_pixul_font },
 		})
 		self.spring:pull(0.04, 500, 10)
 	end

@@ -137,6 +137,14 @@ function Character:load_next_enemy()
 		self.hp = enemy.max_hp
 		self.armour = enemy.armour or 0
 
+		self.name_text:set_text({
+			{
+				text = self.portrait.name,
+				font = pixul_font,
+				alignment = "center",
+			},
+		})
+
 		-- setup balls from ball types
 		local balls = {}
 		for i, ball_type in ipairs(enemy.balls) do

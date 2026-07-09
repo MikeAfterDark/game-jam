@@ -53,7 +53,6 @@ function Shop:remove(ball)
 end
 
 function Shop:roll()
-	print("rolling")
 	for i, ball in ipairs(self.balls) do
 		ball.dead = true
 	end
