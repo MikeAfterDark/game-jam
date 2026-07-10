@@ -383,7 +383,7 @@ function Game:update(dt)
 	camera:follow_object(self.camera_tracker)
 
 	local paused = main:get("settings").in_pause
-	local game_over = self.won or self.lost
+	local game_over = false --self.won or self.lost
 	if not paused and not game_over then
 		run_time = run_time + dt
 	end
@@ -408,6 +408,8 @@ function Game:update(dt)
 
 	-- setup the wheel for user input to select what balls they want active
 	if self.try_get_results and self.wheel:all_balls_stopped() and not self.balls_enabled then
+		self.try_get_results = false
+
 		self.wheel:enable_ball_selection(self.num_balls_per_selection)
 		self.wheel:set_mode({
 			text = "select",
@@ -416,12 +418,9 @@ function Game:update(dt)
 				-- return self.wheel:all_balls_selected()
 			end,
 			action = function()
-				self.try_get_results = false
 				self.results = self.wheel:results()
 				self.results_time = 0.4
 				self.next_result_time = run_time
-				-- b.locked = true
-				-- else
 				sfx.boop:play({ pitch = 0.6, volume = 0.35 })
 			end,
 		})
