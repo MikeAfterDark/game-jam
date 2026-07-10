@@ -46,6 +46,15 @@ function Shop:update(dt)
 	if self.x ~= self.left_limit and self.rolled then
 		self.rolled = false
 	end
+
+	local x1, y1, x2, y2 = self.shape:get_bounds()
+	local cx, cy = self.shape:get_centroid()
+	table.foreach(self.balls, function(ball)
+		if ball.x < x1 or ball.x > x2 or ball.y < y1 or ball.y > y2 then
+			ball:set_velocity(0, 0) -- stop it from escaping again
+			ball:set_position(cx, cy)
+		end
+	end)
 end
 
 function Shop:remove(ball)
@@ -140,8 +149,8 @@ function Handle:update(dt)
 
 	if self.selected and input.select.down then
 		holding_handle = true
-		local mouse_x = self.group:get_mouse_position()
 
+		local mouse_x = self.group:get_mouse_position()
 		if not self.mouse_x then
 			self.mouse_x = mouse_x
 		end
@@ -156,7 +165,7 @@ function Handle:update(dt)
 		local vx = (targetX - currentX) / dt
 
 		self.parent:set_velocity(vx, 0)
-	else
+	elseif holding_handle then
 		holding_handle = false
 		self.mouse_x = nil
 		self.parent:set_velocity(0, 0)
