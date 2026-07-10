@@ -106,8 +106,6 @@ function Ball:on_mouse_exit()
 end
 
 function Ball:trigger(events, ...)
-	-- self.uses = self.uses - 1 -- TODO: move to On_Use event
-
 	local results = {}
 	for _, event in ipairs(#events > 0 and events or Ball_Event_Order) do
 		local fn = self.type[event.id] or Ball_Defaults[event.id]
@@ -279,6 +277,7 @@ Ball_Event = {
 	On_Buy = { id = "on_buy", color = "green" },
 	On_Use = { id = "on_use", color = "bg" },
 	On_Consume = { id = "on_consume", color = "purple1" },
+	On_Nullify_Next_Trigger = { id = "on_nullify_next_trigger", color = "bg" },
 }
 
 Ball_Event_Order = {
@@ -289,7 +288,7 @@ Ball_Event_Order = {
 	Ball_Event.On_Damage,
 	Ball_Event.On_Sale,
 	Ball_Event.On_Buy,
-	-- Ball_Event.On_Consume, -- must be externally self.ted
+	-- Ball_Event.On_Consume, -- must be externally triggered
 }
 ---------
 
@@ -340,8 +339,24 @@ Ball_Type = {
 		cost_mult = 1.3,
 		sell_mult = 0.5,
 		on_damage = function(self)
-			return 1 + math.floor(self.pocket.value / 15)
+			return 1 + math.ceil(self.pocket.value / 15)
 		end,
 		sprite = function() end,
 	},
+
+	-- null_ball = {
+	-- 	id = "null ball",
+	-- 	name = "Nulliball",
+	-- 	description = "nullifies the next ball's trigger in this pocket when triggered",
+	-- 	rarity = Rarity.Uncommon,
+	-- 	size = 1,
+	-- 	uses = 2,
+	-- 	cost_mult = 2.3,
+	-- 	sell_mult = 0.8,
+	-- 	on_nullify_next_trigger = function(self)
+	-- 		self.pocket.null_next_trigger = true -- TODO: implement this (but better)
+	-- 		return 1
+	-- 	end,
+	-- 	sprite = function() end,
+	-- },
 }

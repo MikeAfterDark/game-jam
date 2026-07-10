@@ -284,21 +284,21 @@ function init()
 
 	-- can comfortably fit 14 scenes atm on main menu
 	debug_scenes = {
-		{ id = "intro",     destination = Intro },
-		{ id = "main_menu", destination = MainMenu },
-		{ id = "game",      destination = Game },
-		{ id = "audio_zoo", destination = AudioZoo }, -- todo: fix
+		-- { id = "intro",     destination = Intro },
+		-- { id = "main_menu", destination = MainMenu },
+		-- { id = "game",      destination = Game },
+		-- { id = "audio_zoo", destination = AudioZoo }, -- todo: fix
 	}
 
-	-- main:add(Intro("intro"))
+	main:add(Settings("settings"))
+	main:go_to("settings", {})
+	main:add(Intro("intro"))
 	-- main:add(Game("intro"))
 	-- main:add(Level_Select("intro"))
 	-- main:add(MainMenu("intro"))
-	-- main:go_to("intro")
-	main:add(Settings("settings"))
-	main:go_to("settings", {})
-	main:add(Game("game"))
-	main:go_to("game", { clear_music = true })
+	main:go_to("intro")
+	-- main:add(Game("game"))
+	-- main:go_to("game", { clear_music = true })
 
 	state.player_time_offset = state.player_time_offset or {}
 

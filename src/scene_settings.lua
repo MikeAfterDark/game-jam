@@ -34,7 +34,7 @@ function Settings:on_enter(from, args)
 end
 
 function Settings:update(dt)
-    if main.current:is(MainMenu) then
+    if main.current:is(MainMenu) or main.current:is(Intro) then
         return
     end
 

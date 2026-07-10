@@ -382,11 +382,11 @@ function Game:update(dt)
 	mouse.group_layer = 0
 	camera:follow_object(self.camera_tracker)
 
-	-- local paused = main:get("settings").in_pause
-	-- local game_over = self.won or self.lost
-	-- if not paused and not game_over then
-	run_time = run_time + dt
-	-- end
+	local paused = main:get("settings").in_pause
+	local game_over = self.won or self.lost
+	if not paused and not game_over then
+		run_time = run_time + dt
+	end
 
 	if input.z.pressed then
 		self.wheel:spin(5)
@@ -406,6 +406,7 @@ function Game:update(dt)
 		print("loaded:", new_enemy_loaded)
 	end
 
+	-- setup the wheel for user input to select what balls they want active
 	if self.try_get_results and self.wheel:all_balls_stopped() and not self.balls_enabled then
 		self.wheel:enable_ball_selection(self.num_balls_per_selection)
 		self.wheel:set_mode({
@@ -418,6 +419,7 @@ function Game:update(dt)
 				self.try_get_results = false
 				self.results = self.wheel:results()
 				self.results_time = 0.4
+				self.next_result_time = run_time
 				-- b.locked = true
 				-- else
 				sfx.boop:play({ pitch = 0.6, volume = 0.35 })
@@ -426,6 +428,7 @@ function Game:update(dt)
 		self.balls_enabled = true
 	end
 
+	-- all the info boxes and popups stuffs
 	if self.hovered_ball and self.hovered_ball.selected then
 		local ball = self.hovered_ball
 		if ball.mode == Ball_Interaction_Mode.Wheel_Selection and self.info_popup.obj_id ~= ball.id then
@@ -452,6 +455,7 @@ function Game:update(dt)
 		self.shop_popup:clear_object()
 	end
 
+	-- send the balls from the holders to the wheel, if we aren't already...
 	if self.send_balls_to_wheel and not self.loading_ball then
 		self.loading_ball = true
 
@@ -488,97 +492,84 @@ function Game:update(dt)
 		end
 	end
 
-	-- Processing results after wheel:results()
-	if
-		#self.results > 0 and not self.processing_result --[[ and not self.waiting_on_ball ]]
-	then
-		self.processing_result = true
+	-- process each ball result one by one, then return the balls to the holders and
+	-- reset temp wheel mods
+	self.next_result_time = self.next_result_time or 0
+	self.ball_results = self.ball_results or {}
+	self.num_ball_results = self.num_ball_results or 0
+	if (#self.results > 0 or #self.ball_results > 0) and self.next_result_time < run_time then
+		local time_per_result = 0.1
+		self.next_result_time = run_time + time_per_result
 
-		if self.results_time > 0.1 then
-			self.results_time = self.results_time * 0.9
-		end
-		local ball = table.shift(self.results)
-
-		-- ball.spring:pull(0.2, 500, 10)
-
-		local t = self.results_time / 0.5
-		-- sfx.boop:play({ pitch = 1.3 - (0.7 * t), volume = 0.35 })
-
-		self.prev_pocket_color = ball.pocket.color
-		-- ball.pocket.color = ball.pocket.color:clone():lighten(0.3)
-
-		local ball_results = ball:trigger({})
-
-		local time_per_result = 0.2
-		local result_counter = 0
-		local elapsed_time = 0
-		for i, result in ipairs(ball_results) do
-			if result.value ~= 0 then
-				self.t:after(elapsed_time, function()
-					ball.spring:pull(0.2, 500, 10)
-					sfx.boop:play({ pitch = 1.3 - (0.7 * t), volume = 0.35 })
-
-					ball.pocket.color = ball.pocket.color:clone():lighten(0.3)
-					self.t:after(time_per_result * 0.7, function()
-						ball.pocket.color = self.prev_pocket_color
-					end)
-
-					local animation_duration = 1.4
-					self:play_animation(result, ball, animation_duration, i) -- animation unrelated to the 'logic'
-
-					self.t:after(animation_duration * 0.9, function()
-						local target = ball.is_enemy and self.enemy or self.player
-						local event = result.event
-
-						if event == Ball_Event.On_Score then
-							target.money = target.money + result.value
-						elseif event == Ball_Event.On_Damage then
-							target = ball.is_enemy and self.player or self.enemy -- deal damage to opposite unit
-							target:take_damage(result.value)
-						elseif event == Ball_Event.On_Health then
-							target:heal(result.value)
-						elseif event == Ball_Event.On_Armour then
-							target:armour_up(result.value)
-						end
-					end)
-				end)
-				result_counter = result_counter + 1
-				elapsed_time = elapsed_time + time_per_result + (result.duration or 0)
-			end
+		while #self.ball_results == 0 and #self.results > 0 do
+			self.ball_to_process = table.shift(self.results)
+			_, self.ball_results = table.reject(self.ball_to_process:trigger({}), function(result)
+				return result.value == 0
+			end)
+			self.num_ball_results = #self.ball_results
+			self.prev_pocket_color = self.ball_to_process.pocket.color
 		end
 
-		self.t:after(result_counter * time_per_result, function()
-			self.processing_result = false
+		if #self.ball_results > 0 then
+			local result = table.shift(self.ball_results)
+			local ball = self.ball_to_process
 
-			if #self.results == 0 then
-				-- just proceesed the last ball, return the balls to their respective holders
-				self.t:after(0.5, function()
-					sfx.boop:play({ pitch = 1.3, volume = 0.35 })
-					for _, ball in ipairs(self.wheel.balls) do
-						if ball.is_enemy then
-							self.enemy_holder:insert(ball)
-						else
-							self.player_holder:insert(ball)
-						end
+			sfx.boop:play({ pitch = 1.3 - 0.7, volume = 0.35 })
+			ball.spring:pull(0.2, 500, 10)
+			ball.pocket.color = ball.pocket.color:clone():lighten(0.3)
+
+			self.t:after(time_per_result * 0.7, function()
+				ball.pocket.color = self.prev_pocket_color
+			end)
+
+			local animation_duration = 1.4
+			local iteration = self.num_ball_results - #self.ball_results
+			self:play_animation(result, ball, animation_duration, iteration) -- animation unrelated to the 'logic'
+
+			self.t:after(animation_duration * 0.9, function()
+				local target = ball.is_enemy and self.enemy or self.player
+				local event = result.event
+
+				if event == Ball_Event.On_Score then
+					target.money = target.money + result.value
+				elseif event == Ball_Event.On_Damage then
+					target = ball.is_enemy and self.player or self.enemy -- deal damage to opposite unit
+					target:take_damage(result.value)
+				elseif event == Ball_Event.On_Health then
+					target:heal(result.value)
+				elseif event == Ball_Event.On_Armour then
+					target:armour_up(result.value)
+				end
+			end)
+		end
+
+		if #self.ball_results == 0 and #self.results == 0 then
+			self.t:after(0.5, function()
+				sfx.boop:play({ pitch = 1.3, volume = 0.35 })
+				for _, ball in ipairs(self.wheel.balls) do
+					if ball.is_enemy then
+						self.enemy_holder:insert(ball)
+					else
+						self.player_holder:insert(ball)
 					end
+				end
 
-					self.player_holder:enable_ball_selection()
-					self.enemy_holder:enable_ball_selection()
+				self.player_holder:enable_ball_selection()
+				self.enemy_holder:enable_ball_selection()
 
-					self.wheel:set_mode({
-						text = "Spin",
-						action = function(b)
-							b.spring:pull(0.2, 200, 10)
-							self.wheel:spin(5)
-							self.player_holder:disable_ball_selection()
-							self.enemy_holder:disable_ball_selection()
-						end,
-					})
+				self.wheel:set_mode({
+					text = "Spin",
+					action = function(b)
+						b.spring:pull(0.2, 200, 10)
+						self.wheel:spin(5)
+						self.player_holder:disable_ball_selection()
+						self.enemy_holder:disable_ball_selection()
+					end,
+				})
 
-					self.wheel.balls = {}
-				end)
-			end
-		end)
+				self.wheel.balls = {}
+			end)
+		end
 	end
 
 	if self.player.has_died then
@@ -597,6 +588,8 @@ function Game:update(dt)
 	-- self.ui:update(dt * slow_amount)
 	-- self.end_ui:update(dt * slow_amount)
 
+	-- reversed order so that mouse + group-interaction layer system works (jank but welp),
+	-- top-to-bottom order
 	self.end_ui:update(dt * slow_amount)
 	self.ui:update(dt * slow_amount)
 	self.effects:update(dt * slow_amount)

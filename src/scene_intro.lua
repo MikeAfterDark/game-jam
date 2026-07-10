@@ -46,6 +46,7 @@ function Intro:on_exit()
 end
 
 function Intro:update(dt)
+	self:update_game_object(dt)
 	run_time = run_time + dt
 	intro.volume = self.intro_song_volume
 
@@ -72,8 +73,9 @@ end
 
 function Intro:draw()
 	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, Color(0, 0, 0, 1)) -- black background
-	self.main:draw()
-	sprite.logo:draw(self.logo.x, self.logo.y, 0, 3, 3, 0, 0, Color(1, 1, 1, 1))
+	-- self.main:draw()
+	local size = 1.6
+	sprite.logo:draw(self.logo.x, self.logo.y, 0, size, size, 0, 0, Color(1, 1, 1, 1))
 	-- function Image:draw(x, y, r, sx, sy, ox, oy, color)
 	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, Color(0, 0, 0, self.opacity)) -- fade foreground
 end
