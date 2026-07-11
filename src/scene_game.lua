@@ -88,7 +88,7 @@ function Game:on_enter(from, args)
 		balls = balls,
 	})
 	self.wheel:set_mode({
-		text = "Spin",
+		mode = WheelCenter_Mode.Spin,
 		action = function(b)
 			b.spring:pull(0.2, 200, 10)
 			self.wheel:spin(5)
@@ -412,7 +412,7 @@ function Game:update(dt)
 
 		self.wheel:enable_ball_selection(self.num_balls_per_selection)
 		self.wheel:set_mode({
-			text = "select",
+			mode = WheelCenter_Mode.Select,
 			action_check = function()
 				return not self.wheel:any_balls_selected()
 				-- return self.wheel:all_balls_selected()
@@ -557,7 +557,7 @@ function Game:update(dt)
 				self.enemy_holder:enable_ball_selection()
 
 				self.wheel:set_mode({
-					text = "Spin",
+					mode = WheelCenter_Mode.Spin,
 					action = function(b)
 						b.spring:pull(0.2, 200, 10)
 						self.wheel:spin(5)

@@ -161,7 +161,10 @@ function init()
 		logo = Image("logo"),
 
 		starter_rock = Image(sprite_folder .. "starter_rock"),
+		heal_ball = Image(sprite_folder .. "heal_ball"),
+		armour_ball = Image(sprite_folder .. "armour_ball"),
 		alien1 = Image(sprite_folder .. "alien1"),
+		damage_ball = Image(sprite_folder .. "damage_ball"),
 		-- damage_stone = Image(sprite_folder .. "/damage_stone"),
 	}
 
@@ -292,13 +295,12 @@ function init()
 
 	main:add(Settings("settings"))
 	main:go_to("settings", {})
-	main:add(Intro("intro"))
-	-- main:add(Game("intro"))
-	-- main:add(Level_Select("intro"))
-	-- main:add(MainMenu("intro"))
-	main:go_to("intro")
-	-- main:add(Game("game"))
-	-- main:go_to("game", { clear_music = true })
+
+	-- main:add(Intro("intro"))
+	-- main:go_to("intro")
+
+	main:add(Game("game"))
+	main:go_to("game", { clear_music = true })
 
 	state.player_time_offset = state.player_time_offset or {}
 

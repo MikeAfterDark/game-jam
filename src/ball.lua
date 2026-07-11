@@ -159,14 +159,15 @@ function Ball:draw()
 			graphics.arc("open", self.x, self.y, radius, start_angle, end_angle, color, line_width)
 		end
 	end
-	graphics.circle(self.x, self.y, self.rs, self.is_enemy and red[0] or black[0])
 
 	if self.animation then
-		local scale = 1
+		local scale = self.rs * 0.127
+		-- print(self.r)
 		self.animation:draw(self.x, self.y, self.r, scale, scale, 0, 0)
 	else
-		graphics.circle(self.x, self.y, self.rs * 0.80, self.color)
+		graphics.circle(self.x, self.y, self.rs, self.color)
 	end
+	graphics.circle(self.x, self.y, self.rs, self.is_enemy and red[0] or black[0], 4)
 	graphics.pop()
 end
 
@@ -312,7 +313,7 @@ Ball_Type = {
 	starter_damage_ball = {
 		id = "starter damage ball",
 		name = "Rock",
-		description = "starter rock, deals 1 damage",
+		description = "starter rock, [red]deals 1 damage",
 		rarity = Rarity.Starter,
 		size = 1,
 		uses = 10,
@@ -329,10 +330,10 @@ Ball_Type = {
 		end,
 	},
 
-	damage_stone = {
-		id = "damage stone",
-		name = "Stone",
-		description = "damage stone, deals 1 + ([yellow]pocket[white]/15) damage",
+	damage_ball = {
+		id = "damage ball",
+		name = "Damage Ball",
+		description = "[red]deals 1[white] + ([yellow]pocket/15[white]) [red]damage",
 		rarity = Rarity.Common,
 		size = 1,
 		uses = 3,
@@ -341,7 +342,58 @@ Ball_Type = {
 		on_damage = function(self)
 			return 1 + math.ceil(self.pocket.value / 15)
 		end,
-		sprite = function() end,
+		animation = function()
+			return Animation(
+				random:float(0.2, 0.4), --
+				AnimationFrames(sprite.damage_ball, 16, 16, { { 1, 1 } }),
+				"loop",
+				{}
+			)
+		end,
+	},
+
+	heal_ball = {
+		id = "heal ball",
+		name = "Heal Ball",
+		description = "[green]heals 2[white] + ([yellow]pocket/5[white]) [green]damage",
+		rarity = Rarity.Common,
+		size = 1,
+		uses = 2,
+		cost_mult = 1.3,
+		sell_mult = 0.5,
+		on_heal = function(self)
+			return 2 + math.ceil(self.pocket.value / 5)
+		end,
+		animation = function()
+			return Animation(
+				random:float(0.2, 0.4), --
+				AnimationFrames(sprite.heal_ball, 16, 16, { { 1, 1 } }),
+				"loop",
+				{}
+			)
+		end,
+	},
+
+	armour_ball = {
+		id = "armour ball",
+		name = "Armour Ball",
+		description = "[blue]grants 2[white] + ([yellow]pocket/10[white]) [blue]armour",
+		rarity = Rarity.Common,
+		size = 1,
+		uses = 2,
+		cost_mult = 1.3,
+		sell_mult = 0.5,
+		on_armour = function(self)
+			return 2 + math.ceil(self.pocket.value / 10)
+		end,
+		animation = function()
+			return Animation(
+				random:float(0.2, 0.4), --
+				AnimationFrames(sprite.armour_ball, 16, 16, { { 1, 1 } }),
+				"loop",
+				{}
+			)
+		end,
 	},
 
 	-- null_ball = {

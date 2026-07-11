@@ -58,6 +58,9 @@ function Wheel:init(args)
 	self.sfx_distance = 0
 	self.last_tick_sfx = 0
 	self.tick_sfx_interval = 0.2
+
+	self.max_num_selected_balls = 0
+	self.selected_balls = {}
 end
 
 function Wheel:set_mode(mode)
@@ -84,6 +87,8 @@ function Wheel:update(dt)
 
 				local strength = -self.spinrate * 10 * dist / self.r
 				ball:apply_force(fx * strength, fy * strength)
+				-- ball:set_angular_velocity(100)
+				ball.r = ball.r - dt * self.spinrate
 			end
 		end
 	end
@@ -249,8 +254,9 @@ function Wheel:results()
 		end
 	end
 
+	local results = table.shallow_copy(self.selected_balls)
 	local results = table.append(
-		self.selected_balls,
+		results,
 		table.select(self.balls, function(ball)
 			return ball.is_enemy
 		end)
@@ -298,6 +304,7 @@ function WheelCenter:init(args)
 	self.text = Text({
 		{ text = "", font = pixul_font, alignment = "center" },
 	}, global_text_tags)
+	self.mode = WheelCenter_Mode.Spin
 end
 
 function WheelCenter:update(dt)
@@ -313,18 +320,34 @@ function WheelCenter:update(dt)
 		self.action(self)
 		self.locked = true
 	end
+
+	self.text:set_text(self.mode(self))
 end
 
-function WheelCenter:set_mode(mode)
-	self.text:set_text({
-		{
-			text = mode.text,
-			font = pixul_font,
-			alignment = "center",
-		},
-	})
-	self.action = mode.action
-	self.action_check = mode.action_check
+WheelCenter_Mode = {
+	Spin = function(self)
+		return { { text = "Spin", font = pixul_font, alignment = "center" } }
+	end,
+	Select = function(self)
+		return {
+			{ --
+				text = "Select",
+				font = pixul_font,
+				alignment = "center",
+			},
+			{ --
+				text = tostring(#self.parent.selected_balls) .. "/" .. tostring(self.parent.max_num_selected_balls),
+				font = small_pixul_font,
+				alignment = "center",
+			},
+		}
+	end,
+}
+
+function WheelCenter:set_mode(new_mode)
+	self.mode = new_mode.mode
+	self.action = new_mode.action
+	self.action_check = new_mode.action_check
 	self.locked = false
 	self.spring:pull(0.2, 200, 10)
 end
