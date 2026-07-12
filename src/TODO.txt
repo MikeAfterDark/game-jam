@@ -166,10 +166,11 @@ Felicia Playtest [2026-05-22]:
 
 
 
-
-
-
 Serious Jam Game todo:
 - shop costs to 'open' on handle
 - win/lose modal doesn't stop interaction with the game
 - wheel: other pocket types: jackpot, ball consuming, etc (permanent and temporary effects)
+
+- More Balls + balancing
+- More Enemies + balancing
+-

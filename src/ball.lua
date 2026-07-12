@@ -272,7 +272,7 @@ Rarity_Ranks = {
 Ball_Event = {
 	On_Score = { id = "on_score", color = "yellow" },
 	On_Damage = { id = "on_damage", color = "red" },
-	On_Health = { id = "on_health", color = "green" },
+	On_Heal = { id = "on_heal", color = "green" },
 	On_Armour = { id = "on_armour", color = "blue" },
 	On_Sale = { id = "on_sale", color = "yellow" },
 	On_Buy = { id = "on_buy", color = "green" },
@@ -284,7 +284,7 @@ Ball_Event = {
 Ball_Event_Order = {
 	Ball_Event.On_Use,
 	Ball_Event.On_Score,
-	Ball_Event.On_Health,
+	Ball_Event.On_Heal,
 	Ball_Event.On_Armour,
 	Ball_Event.On_Damage,
 	Ball_Event.On_Sale,

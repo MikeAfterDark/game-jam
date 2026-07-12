@@ -534,7 +534,7 @@ function Game:update(dt)
 				elseif event == Ball_Event.On_Damage then
 					target = ball.is_enemy and self.player or self.enemy -- deal damage to opposite unit
 					target:take_damage(result.value)
-				elseif event == Ball_Event.On_Health then
+				elseif event == Ball_Event.On_Heal then
 					target:heal(result.value)
 				elseif event == Ball_Event.On_Armour then
 					target:armour_up(result.value)

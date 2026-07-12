@@ -49,6 +49,7 @@ function Holder:insert(ball)
 	local ball_radius = gh * 0.02
 	ball:resize(ball_radius)
 	ball.mode = Ball_Interaction_Mode.Ball_Holder
+	ball.r = 0
 
 	-- local slot = nil
 	-- if ball.index then

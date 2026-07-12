@@ -115,6 +115,8 @@ function Wheel:update(dt)
 end
 
 function Wheel:new_ball(ball, left_side_entrance)
+	local ball_radius = gh * 0.03
+	ball:resize(ball_radius)
 	table.insert(self.balls, ball)
 
 	local dir = (left_side_entrance and -1 or 1)
