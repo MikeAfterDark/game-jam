@@ -20,11 +20,11 @@ function AnimationFrames:init(image, frame_w, frame_h, frames_list)
 			table.insert(frames_list, { i, 1 })
 		end
 		self.frames_list = frames_list
-	-- elseif not self.frames_list then -- 1 row
-	--   local frames_list = {}
-	--   for i = 1, math.floor(self.source.w/self.frame_w) do table.insert(frames_list, {i, 1}) end
-	--   self.frames_list = frames_list
-	-- end
+		-- elseif not self.frames_list then -- 1 row
+		--   local frames_list = {}
+		--   for i = 1, math.floor(self.source.w/self.frame_w) do table.insert(frames_list, {i, 1}) end
+		--   self.frames_list = frames_list
+		-- end
 	elseif not self.frames_list then -- 1 col
 		local frames_list = {}
 		for i = 1, math.floor(self.source.h / self.frame_h) do
@@ -141,11 +141,11 @@ function AnimationLogic:update(dt)
 				self.frame = self.frame + 2 * self.direction
 			end
 			if self.actions and self.actions[0] then
-				self.actions[0]()
+				self.actions[0](self)
 			end
 		end
 		if self.actions and self.actions[self.frame] then
-			self.actions[self.frame]()
+			self.actions[self.frame](self)
 		end
 	end
 end
@@ -169,4 +169,11 @@ end
 
 function Animation:draw(x, y, r, sx, sy, ox, oy, color)
 	self.animation_frames:draw(self.animation_logic.frame, x, y, r, sx, sy, ox, oy, color)
+end
+
+function Animation:reset()
+	self.animation_logic.frame = 1
+	self.animation_logic.timer = 0
+	self.animation_logic.direction = 1
+	self.animation_logic.dead = false
 end

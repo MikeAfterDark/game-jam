@@ -120,7 +120,7 @@ function Game:on_enter(from, args)
 		color = red[0],
 	})
 
-	self.player_holder:setup(9, 4, {
+	self.player_holder:setup(9, 8, {
 		Ball({
 			group = self.main,
 			x = gw * 0.5,
@@ -188,6 +188,7 @@ function Game:on_enter(from, args)
 		y = gh * 0.5,
 		w = gw * 0.2,
 		h = gh * 0.4,
+		player = self.player,
 		left_limit = 0,
 		right_limit = gw * 0.19,
 	})
@@ -378,6 +379,13 @@ function Game:on_enter(from, args)
 	self.num_balls_per_selection = 3
 end
 
+function Game:next_round()
+	local has_enemy = self.enemy:load_next_enemy()
+	print(has_enemy)
+	-- reset wheel/balls etc
+	return has_enemy
+end
+
 function Game:update(dt)
 	mouse.group_layer = 0
 	camera:follow_object(self.camera_tracker)
@@ -392,7 +400,12 @@ function Game:update(dt)
 		self.wheel:spin(5)
 	end
 
+	if input.x.pressed then
+		self.enemy.has_died = true
+	end
+
 	if self.wheel.is_spun_up then
+		self.ball_shop:close()
 		self.wheel.is_spun_up = false
 		self.send_balls_to_wheel = true
 		self.results_time = 0.1
@@ -571,10 +584,15 @@ function Game:update(dt)
 		end
 	end
 
-	if self.player.has_died then
-		self:loss()
-	elseif self.enemy.has_died then
-		self:win()
+	if not (self.lost or self.won) then
+		if self.player.has_died then
+			self:loss()
+		elseif self.enemy.has_died then
+			local can_continue = self:next_round()
+			if not can_continue then
+				self:win()
+			end
+		end
 	end
 
 	-- self:update_game_object(dt * slow_amount)

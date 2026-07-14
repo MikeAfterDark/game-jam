@@ -26,10 +26,10 @@ function Shop:init(args)
 	self.handle = Handle({
 		group = self.group,
 		parent = self,
-		offset_x = w + gw * 0.0125,
+		offset_x = w + gw * 0.038,
 		offset_y = 0,
-		w = gw * 0.025,
-		h = gh * 0.1,
+		w = gw * 0.06,
+		h = gh * 0.07,
 	})
 
 	self.balls = {}
@@ -38,13 +38,15 @@ end
 function Shop:update(dt)
 	self:update_game_object(dt)
 
-	if self.x == self.left_limit and not self.rolled then
+	if self.x <= self.left_limit and not self.rolled then
 		self.rolled = true
 		self:roll()
+		self.cost_to_open = (self.cost_to_open or 0) + 1
 	end
 
-	if self.x ~= self.left_limit and self.rolled then
+	if self.x > self.left_limit and self.rolled then
 		self.rolled = false
+		self.player.money = self.player.money - self.cost_to_open
 	end
 
 	local x1, y1, x2, y2 = self.shape:get_bounds()
@@ -55,6 +57,14 @@ function Shop:update(dt)
 			ball:set_position(cx, cy)
 		end
 	end)
+end
+
+function Shop:can_open_shop()
+	return self.cost_to_open < self.player.money
+end
+
+function Shop:close()
+	self.x = self.left_limit
 end
 
 function Shop:remove(ball)
@@ -136,6 +146,9 @@ function Handle:init(args)
 	self.w = args.w
 	self.h = args.h
 	self.shape = Rectangle(self.parent.x + self.offset_x, self.parent.y + self.offset_y, self.w, self.h)
+	self.text = Text({
+		{ text = "", font = pixul_font, alignment = "center" },
+	}, global_text_tags)
 
 	self.interact_with_mouse = true
 end
@@ -147,24 +160,44 @@ function Handle:update(dt)
 	self.y = self.parent.y + self.offset_y
 	self.shape:move_to(self.x, self.y)
 
+	local can_open = self.parent:can_open_shop()
+	local text_color = can_open and "yellow" or "red"
+	self.text:set_text({
+		{
+			text = "[" .. text_color .. "]$" .. self.parent.cost_to_open,
+			font = pixul_font,
+			alignment = "center",
+		},
+	})
+
 	if self.selected and input.select.down then
-		holding_handle = true
+		if can_open or not self.parent.rolled then
+			holding_handle = true
 
-		local mouse_x = self.group:get_mouse_position()
-		if not self.mouse_x then
+			local mouse_x = self.group:get_mouse_position()
+			if not self.mouse_x then
+				self.mouse_x = mouse_x
+			end
+
+			local dx = mouse_x - self.mouse_x
 			self.mouse_x = mouse_x
+
+			self.parent.x = math.min(self.parent.right_limit, math.max(self.parent.left_limit, self.parent.x + dx))
+
+			local targetX = self.parent.x
+			local currentX = self.parent.body:getX()
+			local vx = (targetX - currentX) / dt
+
+			self.parent:set_velocity(vx, 0)
+		elseif not can_open then
+			self.selected = false
+			holding_handle = false
+			self.parent:set_velocity(0, 0)
+			if input.select.pressed then
+				self.spring:pull(0.2, 500, 10)
+				sfx.tick:play({ pitch = random:float(0.95, 1.05), volume = 0.3 })
+			end
 		end
-
-		local dx = mouse_x - self.mouse_x
-		self.mouse_x = mouse_x
-
-		self.parent.x = math.min(self.parent.right_limit, math.max(self.parent.left_limit, self.parent.x + dx))
-
-		local targetX = self.parent.x
-		local currentX = self.parent.body:getX()
-		local vx = (targetX - currentX) / dt
-
-		self.parent:set_velocity(vx, 0)
 	elseif holding_handle then
 		holding_handle = false
 		self.mouse_x = nil
@@ -188,13 +221,21 @@ function Handle:on_mouse_exit()
 	self.mouse_left = true
 end
 
+function Handle:on_mouse_stay()
+	self.selected = true
+end
+
 function Handle:draw()
-	graphics.push(self.x, self.y, self.r, self.parent.spring.x, self.parent.spring.x)
+	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.x)
 
 	local color = self.selected and green[0] or blue[0]
 
 	graphics.rectangle(self.x, self.y, self.w + 10, self.h + 10, 5, 5, color)
 	graphics.rectangle(self.x, self.y, self.w + 5, self.h + 5, 5, 5, bg[0])
+
+	if self.parent.rolled then
+		self.text:draw(self.x, self.y, self.r, 1, 1)
+	end
 
 	graphics.pop()
 end

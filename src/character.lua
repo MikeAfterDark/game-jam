@@ -26,6 +26,10 @@ function Character:take_damage(damage)
 	local post_armour = self.armour - damage
 	self.armour = math.max(0, post_armour)
 
+	if self.animations then
+		self.animation = self.animations.hurt
+	end
+
 	if post_armour < 0 then
 		self.hp = math.max(0, self.hp + post_armour)
 
@@ -50,6 +54,11 @@ end
 
 function Character:update(dt)
 	self:update_game_object(dt)
+
+	if self.animations and (self.animation == self.animations.hurt or self.animation == self.animations.spawn) and self.animation.animation_logic.dead then
+		self.animation = self.animations.idle
+		self.animation:reset()
+	end
 
 	local armour_text = self.armour > 0 and "[blue]+" .. tostring(self.armour) .. " " or ""
 	self.hp_text:set_text({
@@ -127,12 +136,15 @@ function Character:load_next_enemy()
 
 	local enemy = Enemies[self.enemy_index]
 	if enemy then
+		self.has_died = false
 		self.portrait = enemy.portrait
 		self.portrait.x = gw * 0.87
 		self.portrait.y = gh * 0.2
 		self.portrait.draw_size = 7
 
-		self.animation = enemy.portrait.animation()
+		self.animations = enemy.portrait.animations()
+		self.animation = self.animations.spawn
+		-- self.animation = enemy.portrait.animation()
 		self.max_hp = enemy.max_hp
 		self.hp = enemy.max_hp
 		self.armour = enemy.armour or 0
@@ -181,6 +193,77 @@ Enemies = {
 		},
 		portrait = {
 			name = "[red]Angry [p_blue1]Bob",
+			background = {
+				color = Color("#063000"),
+			},
+			animations = function()
+				return {
+					idle = Animation(
+						0.4,
+						AnimationFrames(sprite.alien1, 16, 32, {
+							{ 1, 1 },
+							{ 2, 1 },
+							{ 3, 1 },
+							{ 4, 1 },
+							{ 5, 1 },
+							{ 6, 1 },
+						}),
+						"loop"
+					),
+
+					spawn = Animation(
+						0.08,
+						AnimationFrames(sprite.alien1, 16, 32, {
+							{ 1, 2 },
+							{ 2, 2 },
+							{ 3, 2 },
+							{ 4, 2 },
+							{ 5, 2 },
+							{ 6, 2 },
+						}),
+						"once"
+					),
+
+					hurt = Animation(
+						0.06,
+						AnimationFrames(sprite.alien1, 16, 32, {
+							{ 1, 3 },
+							{ 2, 3 },
+							{ 3, 3 },
+							{ 4, 3 },
+							{ 5, 3 },
+							{ 6, 3 },
+						}),
+						"once"
+					),
+
+					death = Animation(
+						0.12,
+						AnimationFrames(sprite.alien1, 16, 32, {
+							{ 1, 4 },
+							{ 2, 4 },
+							{ 3, 4 },
+							{ 4, 4 },
+							{ 5, 4 },
+							{ 6, 4 },
+						}),
+						"once"
+					),
+				}
+			end,
+		},
+	},
+
+	{ -- Angry Bob:
+		money = 1,
+		max_hp = 20,
+		armour = 10,
+		balls = {
+			Ball_Type.starter_damage_ball,
+			Ball_Type.starter_damage_ball,
+		},
+		portrait = {
+			name = "[green]Happy [p_blue1]Bob",
 			background = {
 				color = Color("#063000"),
 			},

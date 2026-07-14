@@ -615,6 +615,24 @@ function open_options(self)
 	)
 	button_offset = button_offset + button_distance
 
+	-- self.ball_selection_mode = collect_into(
+	-- 	self.options_ui_elements,
+	-- 	Button({
+	-- 		x = column_x[column],
+	-- 		y = gh / 2 + button_offset,
+	-- 		w = gw * 0.20,
+	-- 		button_text = tostring(state.group_selection_mode and "pick group" or "one at a time"),
+	-- 		fg_color = "bg",
+	-- 		bg_color = "fg",
+	-- 		action = function(b)
+	-- 			state.group_selection_mode = not state.group_selection_mode
+	-- 			system.save_state()
+	-- 			b:set_text(state.group_selection_mode and "pick group" or "one at a time")
+	-- 		end,
+	-- 	})
+	-- )
+	-- button_offset = button_offset + button_distance
+
 	-- self.time_offset_text = collect_into(
 	-- 	self.options_ui_elements,
 	-- 	Text2({
