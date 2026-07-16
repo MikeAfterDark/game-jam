@@ -269,6 +269,7 @@ function init()
 		AudioTest = 10,
 		Character_Setup = 11,
 		Group_Selection = 12,
+		End = 13,
 	}
 
 	main = Main()
@@ -296,11 +297,11 @@ function init()
 	main:add(Settings("settings"))
 	main:go_to("settings", {})
 
-	-- main:add(Intro("intro"))
-	-- main:go_to("intro")
+	main:add(Intro("intro"))
+	main:go_to("intro")
 
-	main:add(Game("game"))
-	main:go_to("game", { clear_music = true })
+	-- main:add(Game("game"))
+	-- main:go_to("game", { clear_music = true })
 
 	state.player_time_offset = state.player_time_offset or {}
 

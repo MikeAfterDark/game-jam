@@ -161,6 +161,7 @@ function Animation:init(delay, animation_frames, loop_mode, actions)
 	self.loop_mode = loop_mode
 	self.actions = actions
 	self.animation_logic = AnimationLogic(self.delay, self.animation_frames.size, self.loop_mode, self.actions)
+	self.duration = self.delay * self.animation_frames.size
 end
 
 function Animation:update(dt)

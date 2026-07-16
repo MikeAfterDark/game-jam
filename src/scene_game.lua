@@ -11,6 +11,8 @@ Group_Layers = {
 	Shop = 2,
 	Shop_UI = 3,
 	Shelf = 4,
+
+	Cover = 999,
 }
 
 function Game:on_enter(from, args)
@@ -29,7 +31,7 @@ function Game:on_enter(from, args)
 	self.main.layer = Group_Layers.Main
 	self.shop.layer = Group_Layers.Shop
 	self.game_ui.layer = Group_Layers.Shop_UI
-	self.interaction_layer = ui_interaction_layer.Game
+	self.end_ui.layer = Group_Layers.Cover
 
 	self.main_slow_amount = 1
 	slow_amount = 1
@@ -200,6 +202,19 @@ function Game:on_enter(from, args)
 		w = gw * 0.2,
 		h = gh,
 		color = bg[4],
+	})
+
+	self.end_game_cover = RectangleCover({
+		group = self.end_ui,
+		x = gw * 0.5,
+		y = gh * 0.5,
+		w = gw,
+		h = gh,
+		color = Color(0.1, 0.1, 0.1, 0.9),
+		update_action = function(cover)
+			cover.interact_with_mouse = cover.visible
+		end,
+		visible = false,
 	})
 
 	local y_dist = gh * 0.03
@@ -401,7 +416,14 @@ function Game:update(dt)
 	end
 
 	if input.x.pressed then
-		self.enemy.has_died = true
+		self.enemy:die()
+	end
+
+	if input.c.pressed then
+		self:win()
+	end
+	if input.v.pressed then
+		self:loss()
 	end
 
 	if self.wheel.is_spun_up then
@@ -412,11 +434,6 @@ function Game:update(dt)
 
 		self.player_holder:disable_ball_selection()
 		self.enemy_holder:disable_ball_selection()
-	end
-
-	if input.x.pressed then
-		local new_enemy_loaded = self.enemy:load_next_enemy()
-		print("loaded:", new_enemy_loaded)
 	end
 
 	-- setup the wheel for user input to select what balls they want active
@@ -683,7 +700,19 @@ end
 function Game:win()
 	if not self.won then
 		self.won = true
+		self.end_game_cover.visible = true
 		print("gj, you won")
+
+		self.win_text = Text2({ --
+			group = self.end_ui,
+			x = gw * 0.5,
+			y = gh * 0.4,
+			lines = {
+				{ text = "[cbyc2]You Win! GG", font = fat_title_font, alignment = "center" },
+			},
+		}, global_text_tags)
+
+		self:setup_endgame_ui()
 
 		-- if there are more enemies or infinite mode, spawn next enemy
 		-- else popup a victory screen to play again or go back to main menu
@@ -715,6 +744,23 @@ end
 function Game:loss()
 	if not self.lost then
 		self.lost = true
+		self.end_game_cover.visible = true
+
+		self.loss_text = Text2({ --
+			group = self.end_ui,
+			x = gw * 0.5,
+			y = gh * 0.4,
+			lines = {
+				{ text = "[cbyc]You Lost", font = fat_title_font, alignment = "center" },
+			},
+		}, global_text_tags)
+
+		self:setup_endgame_ui()
+		-- You Lost
+		--
+		-- play again (reload Game)
+		-- credits
+		-- back to menu
 
 		print("booo, you lost")
 		-- play end game screen, try again or go back to menu
@@ -743,6 +789,52 @@ function Game:loss()
 	-- })
 end
 
+function Game:setup_endgame_ui()
+	local ui_layer = ui_interaction_layer.End
+	local ui_group = self.end_ui
+	self.end_ui_elements = {}
+	main.ui_layer_stack:push({
+		layer = ui_layer,
+		layer_has_music = true,
+		music_type = "loss",
+		ui_elements = self.end_ui_elements,
+	})
+
+	self.play_again_button = collect_into(
+		self.end_ui_elements,
+		Button({
+			group = ui_group,
+			x = gw * 0.5,
+			y = gh * 0.6,
+			fg_color = "bg",
+			bg_color = "green",
+			button_text = "play again",
+			action = function(b)
+				scene_transition(self, {
+					x = gw / 2,
+					y = gh / 2,
+					type = "circle",
+					target = {
+						scene = Game,
+						name = "game",
+						args = { clear_music = true },
+					},
+					display = {
+						text = "loading...",
+						font = pixul_font,
+						alignment = "center",
+					},
+				})
+			end,
+		})
+	)
+
+	for _, v in pairs(self.end_ui_elements) do
+		v.layer = ui_layer
+		v.force_update = true
+	end
+end
+
 function Game:draw()
 	self.floor:draw()
 	self.main:draw()
@@ -759,9 +851,9 @@ function Game:draw()
 	-- 	camera:detach()
 	-- end, true)
 
-	if self.won or self.died then
-		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
-	end
+	-- if self.won or self.died then -- replaced by self.end_game_cover
+	-- 	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
+	-- end
 	self.end_ui:draw()
 end
 

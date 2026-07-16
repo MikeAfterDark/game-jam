@@ -674,9 +674,16 @@ end
 
 function RectangleCover:update(dt)
 	self:update_game_object(dt)
+
+	if self.update_action then
+		self.update_action(self, dt)
+	end
 end
 
 function RectangleCover:draw()
+	if self.visible == false then
+		return
+	end
 	graphics.push(self.x, self.y, self.r)
 	self.shape:draw(self.color)
 	graphics.pop()

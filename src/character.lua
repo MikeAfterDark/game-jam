@@ -16,12 +16,6 @@ function Character:init(args)
 	}, global_text_tags)
 end
 
--- function Character:get_damage()
--- 	local damage = self.damage
--- 	self.damage = 0
--- 	return damage
--- end
-
 function Character:take_damage(damage)
 	local post_armour = self.armour - damage
 	self.armour = math.max(0, post_armour)
@@ -48,8 +42,13 @@ function Character:heal(health)
 end
 
 function Character:die()
-	self.has_died = true
-	print("im ded")
+	self.animation = self.animations.death
+	local time = self.animation.duration
+	print("waiting for: ", time)
+	self.t:after(time, function()
+		self.has_died = true
+		print("im ded")
+	end)
 end
 
 function Character:update(dt)
@@ -201,19 +200,6 @@ Enemies = {
 					idle = Animation(
 						0.4,
 						AnimationFrames(sprite.alien1, 16, 32, {
-							{ 1, 1 },
-							{ 2, 1 },
-							{ 3, 1 },
-							{ 4, 1 },
-							{ 5, 1 },
-							{ 6, 1 },
-						}),
-						"loop"
-					),
-
-					spawn = Animation(
-						0.08,
-						AnimationFrames(sprite.alien1, 16, 32, {
 							{ 1, 2 },
 							{ 2, 2 },
 							{ 3, 2 },
@@ -221,11 +207,24 @@ Enemies = {
 							{ 5, 2 },
 							{ 6, 2 },
 						}),
+						"loop"
+					),
+
+					spawn = Animation(
+						0.08,
+						AnimationFrames(sprite.alien1, 16, 32, {
+							{ 1, 4 },
+							{ 2, 4 },
+							{ 3, 4 },
+							{ 4, 4 },
+							{ 5, 4 },
+							{ 6, 4 },
+						}),
 						"once"
 					),
 
 					hurt = Animation(
-						0.06,
+						0.1,
 						AnimationFrames(sprite.alien1, 16, 32, {
 							{ 1, 3 },
 							{ 2, 3 },
@@ -240,12 +239,12 @@ Enemies = {
 					death = Animation(
 						0.12,
 						AnimationFrames(sprite.alien1, 16, 32, {
-							{ 1, 4 },
-							{ 2, 4 },
-							{ 3, 4 },
-							{ 4, 4 },
-							{ 5, 4 },
-							{ 6, 4 },
+							{ 1, 1 },
+							{ 2, 1 },
+							{ 3, 1 },
+							{ 4, 1 },
+							{ 5, 1 },
+							{ 6, 1 },
 						}),
 						"once"
 					),
@@ -267,13 +266,60 @@ Enemies = {
 			background = {
 				color = Color("#063000"),
 			},
-			animation = function()
-				return Animation(
-					0.4, --
-					AnimationFrames(sprite.alien1, 16, 32, { { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 }, { 6, 1 } }),
-					"loop",
-					{}
-				)
+			animations = function()
+				return {
+					idle = Animation(
+						0.4,
+						AnimationFrames(sprite.alien1, 16, 32, {
+							{ 1, 2 },
+							{ 2, 2 },
+							{ 3, 2 },
+							{ 4, 2 },
+							{ 5, 2 },
+							{ 6, 2 },
+						}),
+						"loop"
+					),
+
+					spawn = Animation(
+						0.08,
+						AnimationFrames(sprite.alien1, 16, 32, {
+							{ 1, 4 },
+							{ 2, 4 },
+							{ 3, 4 },
+							{ 4, 4 },
+							{ 5, 4 },
+							{ 6, 4 },
+						}),
+						"once"
+					),
+
+					hurt = Animation(
+						0.1,
+						AnimationFrames(sprite.alien1, 16, 32, {
+							{ 1, 3 },
+							{ 2, 3 },
+							{ 3, 3 },
+							{ 4, 3 },
+							{ 5, 3 },
+							{ 6, 3 },
+						}),
+						"once"
+					),
+
+					death = Animation(
+						0.12,
+						AnimationFrames(sprite.alien1, 16, 32, {
+							{ 1, 1 },
+							{ 2, 1 },
+							{ 3, 1 },
+							{ 4, 1 },
+							{ 5, 1 },
+							{ 6, 1 },
+						}),
+						"once"
+					),
+				}
 			end,
 		},
 	},
