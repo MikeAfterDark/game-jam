@@ -162,10 +162,6 @@ Felicia Playtest [2026-05-22]:
 
 
 
-- revamp resume + apply to at leat 10 positions
-- work on game
-- go to gym
-
 
 Serious Jam Game todo:
 - More Balls + balancing

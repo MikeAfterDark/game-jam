@@ -63,8 +63,11 @@ function Shop:can_open_shop()
 	return self.cost_to_open < self.player.money
 end
 
+-- TODO: this
 function Shop:close()
+	print(self.x)
 	self.x = self.left_limit
+	print(self.x)
 end
 
 function Shop:remove(ball)

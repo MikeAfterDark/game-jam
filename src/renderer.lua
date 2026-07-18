@@ -877,14 +877,19 @@ function TextBox:set_object(obj)
 		self.obj = obj
 		self.obj_id = obj.id
 		self.is_enemy = obj.is_enemy
+		self.t:cancel("popup")
+		self.t:cancel("popup_button")
 
 		self:set_text({
-			{ text = obj.type.name,                      font = pixul_font },
-			{ text = obj.type.description,               font = small_pixul_font },
-			{ text = "",                                 font = small_pixul_font },
+			{ text = obj.type.name, font = pixul_font },
+			{ text = obj.type.description, font = small_pixul_font },
+			{ text = "", font = small_pixul_font },
 			{ text = "[orange1]uses left: " .. obj.uses, font = small_pixul_font },
 		})
-		self.spring:pull(0.04, 500, 10)
+
+		if self.button then
+			self.button.visible = false
+		end
 	end
 end
 
@@ -899,6 +904,8 @@ function TextBox:clear_object(force)
 		self.obj = nil
 		self.is_enemy = nil
 
+		self.t:cancel("popup")
+		self.t:cancel("popup_button")
 		if self.button then
 			self.button.visible = false
 		end
@@ -917,52 +924,64 @@ function TextBox:on_mouse_exit()
 	end
 end
 
-function TextBox:position_holder_popup()
-	local dir = (self.is_enemy and 1 or -1)
+function TextBox:popup_at(x, y, button_visible)
 	self.x = self.obj.x
-	self.y = self.obj.y + 0.6 * self.h * dir
-	self.shape:move_to(self.x, self.y)
+	self.y = self.obj.y
 
-	local button_dist = gh * 0.06 * dir
-	local button_x = self.obj.x
-	local button_y = self.obj.y + button_dist
+	self.shape:move_to(x, y)
+
+	local button_x = x
+	local button_y = y + 0.40 * self.h
 	self.button.x = button_x
 	self.button.y = button_y
 	self.button.shape:move_to(button_x, button_y)
+
+	local popup_duration = 0.2
+	self.scale = 0
+	self.t:tween(popup_duration, self, { scale = 1, x = x, y = y }, math.back_out, function() end, "popup")
+	self.t:after(popup_duration * 0.6, function()
+		self.button.spring.x = 1.2
+		self.button.visible = button_visible
+	end, "popup_button")
+end
+
+function TextBox:position_holder_popup()
+	local dir = self.obj.is_enemy and 1 or -1
+	self:popup_at( --
+		self.obj.x,
+		self.obj.y + 0.6 * self.h * dir,
+		not self.obj.is_enemy
+	)
 end
 
 function TextBox:position_shop_popup()
-	local dir = 1
-	self.x = self.obj.x + 0.65 * self.w
-	self.y = self.obj.y
-	self.shape:move_to(self.x, self.y)
-
-	local button_dist = gh * 0.06 * dir
-	local button_x = self.x
-	local button_y = self.y + 0.40 * self.h
-	self.button.x = button_x
-	self.button.y = button_y
-	self.button.shape:move_to(button_x, button_y)
+	self:popup_at( --
+		self.obj.x + 0.65 * self.w,
+		self.obj.y,
+		true
+	)
 end
 
 function TextBox:draw()
 	if self.visible == false then
 		return
 	end
-	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.x)
+	-- graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.x)
 
 	local rounded = 5
 	local background_color = self.selected and green[0] or self.is_enemy and red[0] or blue[0]
+
+	graphics.push(self.x, self.y, self.r, self.scale, self.scale)
 	graphics.rectangle(self.x, self.y, self.w + 10, self.h + 10, rounded, rounded, background_color)
 	graphics.rectangle(self.x, self.y, self.w + 5, self.h + 5, rounded, rounded, black[0])
 	local y = self.top_aligned and self.y - self.text.h / 2 or self.y
 	self.text:draw(self.x, y, self.r, self.sx, self.sy)
 
-	graphics.pop()
-
 	if self.button then
 		self.button:draw()
 	end
+	graphics.pop()
+	-- graphics.pop()
 end
 
 --

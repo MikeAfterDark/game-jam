@@ -58,7 +58,7 @@ function Game:on_enter(from, args)
 		table.insert(pockets, {
 			color = i % 2 == 0 and c1:clone() or c2:clone(),
 			type = i == 1 --
-				and Pocket_Type.Jackpot
+					and Pocket_Type.Jackpot
 				or i == math.floor(num_pockets / 2) and Pocket_Type.Void
 				or Pocket_Type.Normal,
 			value = i - 1,
@@ -465,14 +465,13 @@ function Game:update(dt)
 			--
 		elseif ball.mode == Ball_Interaction_Mode.Ball_Holder and self.holder_popup.obj_id ~= ball.id then
 			self.holder_popup:set_object(ball)
-			self.holder_popup.button.visible = not ball.is_enemy
+			-- self.holder_popup.button.visible = not ball.is_enemy
 			self.holder_popup:position_holder_popup()
 			self.holder_popup.button:set_text("Sell $" .. self.hovered_ball:sell_price())
 			--
 		elseif ball.mode == Ball_Interaction_Mode.Shop_Drawer then
 			if self.shop_popup.obj_id ~= ball.id then
 				self.shop_popup:set_object(ball)
-				self.shop_popup.button.visible = true
 				self.shop_popup.button:set_text("Buy $" .. self.hovered_ball:buy_price())
 				self.shop_popup:position_shop_popup()
 			end
@@ -664,7 +663,7 @@ function Game:sell(ball)
 
 	local duration = 1
 	self:play_animation( --
-		{             --
+		{ --
 			event = Ball_Event.On_Sale,
 			value = sale_price,
 		},
@@ -684,7 +683,7 @@ end
 
 function Game:play_animation(ball_result, ball, duration, iteration)
 	local target = ball_result.event == Ball_Event.On_Damage --
-		and (ball.is_enemy and self.player or self.enemy) --
+			and (ball.is_enemy and self.player or self.enemy) --
 		or (ball.is_enemy and self.enemy or self.player)
 	Text_Bubble({
 		group = self.ui,
