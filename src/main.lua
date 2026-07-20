@@ -114,7 +114,7 @@ function init()
 	sfx = {
 		-- earthquake = Sound("temp/earthquake-end.mp3", sfx_tag),
 		-- tile_mouse_enter = Sound(sfx_folder .. "Tile mouse enter.flac", sfx_tag),
-		--
+
 		boop = Sound(sfx_folder .. "floraphonic-bloop-1-184019.ogg", sfx_tag),
 		tick = Sound(sfx_folder .. "u_a4gfvwagf1-tick-sound-effect-1-336779.ogg", sfx_tag),
 	}

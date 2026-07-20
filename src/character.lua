@@ -14,6 +14,7 @@ function Character:init(args)
 	self.name_text = Text({ --
 		{ text = "", font = pixul_font, alignment = "center" },
 	}, global_text_tags)
+	self.animations = {}
 end
 
 function Character:take_damage(damage)
@@ -43,7 +44,7 @@ end
 
 function Character:die()
 	self.animation = self.animations.death
-	local time = self.animation.duration
+	local time = self.animation and self.animation.duration or 0
 	print("waiting for: ", time)
 	self.t:after(time, function()
 		self.has_died = true
@@ -54,7 +55,12 @@ end
 function Character:update(dt)
 	self:update_game_object(dt)
 
-	if self.animations and (self.animation == self.animations.hurt or self.animation == self.animations.spawn) and self.animation.animation_logic.dead then
+	if
+		self.is_enemy
+		and self.animations
+		and (self.animation == self.animations.hurt or self.animation == self.animations.spawn)
+		and self.animation.animation_logic.dead
+	then
 		self.animation = self.animations.idle
 		self.animation:reset()
 	end

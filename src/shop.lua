@@ -65,9 +65,9 @@ end
 
 -- TODO: this
 function Shop:close()
-	print(self.x)
+	print("shop is supposed to close")
 	self.x = self.left_limit
-	print(self.x)
+	-- print(self.x)
 end
 
 function Shop:remove(ball)

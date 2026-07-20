@@ -58,7 +58,7 @@ function Game:on_enter(from, args)
 		table.insert(pockets, {
 			color = i % 2 == 0 and c1:clone() or c2:clone(),
 			type = i == 1 --
-					and Pocket_Type.Jackpot
+				and Pocket_Type.Jackpot
 				or i == math.floor(num_pockets / 2) and Pocket_Type.Void
 				or Pocket_Type.Normal,
 			value = i - 1,
@@ -170,6 +170,7 @@ function Game:on_enter(from, args)
 
 	self.enemy = Character({
 		group = self.main,
+		is_enemy = true,
 		x = gw * 0.75,
 		y = gh * 0.2,
 		holder = self.enemy_holder,
@@ -663,7 +664,7 @@ function Game:sell(ball)
 
 	local duration = 1
 	self:play_animation( --
-		{ --
+		{             --
 			event = Ball_Event.On_Sale,
 			value = sale_price,
 		},
@@ -683,7 +684,7 @@ end
 
 function Game:play_animation(ball_result, ball, duration, iteration)
 	local target = ball_result.event == Ball_Event.On_Damage --
-			and (ball.is_enemy and self.player or self.enemy) --
+		and (ball.is_enemy and self.player or self.enemy) --
 		or (ball.is_enemy and self.enemy or self.player)
 	Text_Bubble({
 		group = self.ui,

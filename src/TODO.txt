@@ -159,11 +159,14 @@ Felicia Playtest [2026-05-22]:
 
 
 
-
+Bugs:
+- options (keybinding) is broken cuz 'select' shenanigans
+- self.player death crashes cuz ties to play death animation
 
 
 
 Serious Jam Game todo:
+- "Consumed" Resource: balls that are consumed can be used for scaling vs curent enemy, resets after each combat
 - More Balls + balancing
 - More Enemies + balancing
 - tutorial
@@ -171,3 +174,10 @@ Serious Jam Game todo:
 - future design: Balatro-Hand selection VS Slay the Spire per-card playstyle (select X balls to play VS select a ball, triggers, select another ball, etc
 - future design: wheel: other pocket types: jackpot, ball consuming, etc (permanent and temporary effects)
 - future design: enemy selection screen, special mod shop
+
+Post-Playtesting with Apezilla:
+- Pocket numbers need their own colour for text/display cohesion
+- Holder slots should be explained (can't buy)
+- Shop handle should "lock" the player's mouse to it (hide mouse and snap it to the handle on release)
+- Shop should close on "Spin" press
+-

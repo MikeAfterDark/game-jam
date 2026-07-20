@@ -314,12 +314,13 @@ function WheelCenter:update(dt)
 	self:update_physics(dt)
 
 	if self.action_check then
-		self.locked = self.action_check()
+		self.locked = self.force_locked or self.action_check()
 		-- print(self.locked)
 	end
 
 	if not self.locked and self.selected and input.select.pressed and self.action then
 		self.action(self)
+		self.force_locked = true
 		self.locked = true
 	end
 
@@ -350,6 +351,7 @@ function WheelCenter:set_mode(new_mode)
 	self.mode = new_mode.mode
 	self.action = new_mode.action
 	self.action_check = new_mode.action_check
+	self.force_locked = false
 	self.locked = false
 	self.spring:pull(0.2, 200, 10)
 end
