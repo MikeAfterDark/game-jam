@@ -1,0 +1,16 @@
+{a8842601-ccdc-42d7-9e56-202e2b62195e} bank:/Master
+{309906d5-bda7-0e95-181f-aad0da911fc6} bank:/Master.strings
+{f4a35048-bd6c-4cb5-b78c-98496e1bd5ea} bus:/
+{f3573abc-18b8-4cca-ab1e-ff515ed86070} bus:/Ambience
+{24f92740-c115-4204-96ab-6fbddda494bd} bus:/Music
+{afaf2424-3b28-468e-aed0-021569ed7f01} bus:/NPC
+{b6de0ef1-9332-410e-ac15-42469e80066f} bus:/Object
+{e8ddf277-da3c-4959-822b-2116da20aaf4} bus:/Player
+{d8a3fbc3-2a56-4a4d-b899-ebdf3882e8c2} bus:/Reverb
+{caf8ffad-e976-465d-b9d7-662fd5c1624c} bus:/UI
+{d9fb36ef-b826-48dc-8e47-2c9f8b940b63} event:/amb/amb_wind
+{9cae1034-4014-40f2-aefc-36a06da59d82} event:/mus/mus_fallen_leaves
+{4ce765a3-95d6-46c8-a968-e98e24ddc275} event:/obj/obj_collide
+{f318e7da-b8df-4550-b67c-6b9ced43d935} event:/plr/plr_leafblower_ctrl
+{bc333a86-e287-42cc-b639-3d9704fc9879} parameter:/Intensity
+{25bbe6fe-e52c-4a9a-ad1d-79536dc3a17e} parameter:/MusicState
