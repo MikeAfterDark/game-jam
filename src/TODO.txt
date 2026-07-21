@@ -161,7 +161,6 @@ Felicia Playtest [2026-05-22]:
 
 Bugs:
 - options (keybinding) is broken cuz 'select' shenanigans
-- self.player death crashes cuz ties to play death animation
 
 
 
