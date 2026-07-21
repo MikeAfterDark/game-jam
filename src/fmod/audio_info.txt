@@ -1,0 +1,95 @@
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+
+BANKS -> EVENTS -> ASSETS
+general structure in FMOD.
+
+>assets are the audio files
+>events process the assets
+>banks group the events 
+
+------------------------
+
+EVENT CATEGORIES
+how events are sorted.
+
+>amb	-> 	ambience/environment
+>obj	-> 	objects
+>ui    	-> 	menus
+>npc	-> 	npcs/enemies
+>plr	-> 	player/items
+>mus	-> 	music
+
+------------------------
+
+BANKS
+used to load/unload groups of events. we'll only use 1 for the jam.
+
+>Master
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+
+SFX TYPES
+>one-shots
+>loops
+>music
+
+------------------------
+
+ONE-SHOTS
+basic SFX that play once.
+
+>play event
+
+>uses STUDIO_STOP_IMMEDIATE
+
+------------------------
+
+LOOPS
+plays in a loop, with optional fade-in and fade-out. uses sustain points.
+
+>play event
+>call keyOff() to trigger fade-out
+
+>use STUDIO_STOP_ALLOWFADEOUT
+
+------------------------
+
+MUSIC
+plays music on a loop. can end immediately or when beat finishes. can queue subzones. uses MusicState parameter to set section.
+
+>set MusicState
+>play event
+>set MusicState (7 queues outro)
+
+>use STUDIO_STOP_ALLOWFADEOUT
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+
+EVENT NAMES
+>amb_wind (loop, no sustain point, Intensity)
+>mus_fallen_leaves (song, uses loop points, MusicState)
+>obj_collide (one-shot)
+>plr_leafblower_ctrl (loop, uses sustain point)
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+
+PARAMETERS
+used to pass values (floats) into FMOD to edit SFX in real-time. usually set by code or colliders in-engine.
+
+MusicState (0-7, discrete, local)
+>queues which section of music to loop
+>0 is default
+>1-6 is other sections, if applicable
+>7 is outro
+
+Intensity (0-1, continuous, local)
+>edits the intensity of a sound
+>0 is low
+>1 is high
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
