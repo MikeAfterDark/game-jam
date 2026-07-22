@@ -1,0 +1,19 @@
+Library: https://github.com/Waissi/fmodlua-library
+clone: git@github.com:Waissi/fmodlua-library.git
+
+Library is for FMOD version 2.02
+
+Version 2.03 has:
+ grep -R "F_CALLBACK" $LINUX_API/core/inc
+/home/mike/code/FMOD/fmodstudioapi20313linux/api//core/inc/fmod.cs:    public delegate float  CB_3D_ROLLOFF_CALLBACK   (IntPtr channelcontrol, float distance);
+/home/mike/code/FMOD/fmodstudioapi20313linux/api//core/inc/fmod.cs:        public RESULT set3DRolloffCallback(CB_3D_ROLLOFF_CALLBACK callback)
+/home/mike/code/FMOD/fmodstudioapi20313linux/api//core/inc/fmod.cs:        private static extern RESULT FMOD5_System_Set3DRolloffCallback      (IntPtr system, CB_3D_ROLLOFF_CALLBACK callback);
+/home/mike/code/FMOD/fmodstudioapi20313linux/api//core/inc/fmod.h:FMOD_RESULT F_API FMOD_System_Set3DRolloffCallback      (FMOD_SYSTEM *system, FMOD_3D_ROLLOFF_CALLBACK callback);
+/home/mike/code/FMOD/fmodstudioapi20313linux/api//core/inc/fmod_common.h:typedef float       (F_CALL *FMOD_3D_ROLLOFF_CALLBACK)      (FMOD_CHANNELCONTROL *channelcontrol, float distance);
+/home/mike/code/FMOD/fmodstudioapi20313linux/api//core/inc/fmod.hpp:        FMOD_RESULT F_API set3DRolloffCallback    (FMOD_3D_ROLLOFF_CALLBACK callback);
+
+which breaks on fmod_lua.c for 'F_CALLBACK'
+
+
+This kind of FMOD integration wouldn't work with lovejs which builds the lua project, and web builds don't dynamically include
+dlls, so unless you fork lovejs and integrate FMOD into it then it ain't gonna work
