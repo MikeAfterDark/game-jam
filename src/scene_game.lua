@@ -63,7 +63,8 @@ function Game:on_enter(from, args)
 	self.planet = {
 		x = gw * 0.5,
 		y = gh * 0.5,
-		radius = gh * 0.35,
+		radius = gh * 0.20,
+		rotation = 0,
 	}
 	self.ships = {}
 	self.ship_spawn_interval = 0.1
@@ -76,17 +77,28 @@ function Game:on_enter(from, args)
 	--		if timer == 0 and clicked, launch,
 	--		else if timer > 0 and clicked then fail
 	--		else if timer < 0 then explode
+	--
+
+	self.level_timer = 3 * 60 -- in seconds
+	self.level_timer_text = Text({
+		{ --
+			text = "",
+			font = pixul_font,
+			alignment = "center",
+		},
+	}, global_text_tags)
 end
 
 function Game:spawn_ship(data)
 	print("spawning ship")
+	local size = gh * 0.07
 	table.insert(
 		self.ships,
 		Ship({
 			group = self.main,
 			planet = self.planet,
-			w = 15,
-			h = 30,
+			w = size,
+			h = size * 2,
 			r = data.angle,
 			time = data.time,
 		})
@@ -103,14 +115,22 @@ function Game:update(dt)
 		run_time = run_time + dt
 	end
 
+	-- clear the ships table of any dead ships
 	_, self.ships = table.reject(self.ships, function(ship)
 		return ship.dead
 	end)
 
+	local planet_speed = slow_amount * dt * 0
+	local planet_rotation_speed = 3
+	self.planet.rotation = self.planet.rotation + planet_speed / 16
+	self.planet.x = self.planet.x + math.sin(self.planet.rotation * planet_rotation_speed) * planet_speed
+	self.planet.y = self.planet.y + math.cos(self.planet.rotation * planet_rotation_speed) * planet_speed
+
+	--  Spawn new ships timer
 	if self.last_ship_spawn_time < run_time then
 		self.last_ship_spawn_time = run_time + self.ship_spawn_interval
 
-		local angle_spread = math.pi * 0.05
+		local angle_spread = math.pi * 0.2
 		local attempts = 3
 		local open_angle
 
@@ -131,6 +151,11 @@ function Game:update(dt)
 			})
 		end
 	end
+
+	self.level_timer = self.level_timer - slow_amount * dt
+	self.level_timer_text:set_text({
+		{ text = string.format("%d", self.level_timer), font = large_pixul_font, alignment = "center" },
+	})
 
 	-- self:update_game_object(dt * slow_amount)
 	-- star_group:update(dt * slow_amount)
@@ -249,10 +274,15 @@ end
 
 function Game:draw()
 	graphics.circle(self.planet.x, self.planet.y, self.planet.radius, green[0])
+	graphics.circle(self.planet.x, self.planet.y, 5, black[0])
 	self.floor:draw()
 	self.main:draw()
 	self.game_ui:draw()
 	self.effects:draw()
+
+	if not self.won then
+		self.level_timer_text:draw(gw * 0.1, gh * 0.1, 0, 1, 1)
+	end
 	self.ui:draw()
 
 	-- graphics.draw_with_mask(function()
