@@ -41,7 +41,7 @@ function init()
 		},
 	}
 	options_keys_display_order = {
-		"select",
+		-- "select", -- don't show this so users can't mess with buttons in keybinding
 	}
 	for action, key in pairs(controls) do
 		input:bind(action, key.input or key.default)
@@ -369,7 +369,7 @@ function love.run()
 	global_game_height = 270 * global_game_scale
 
 	return engine_run({
-		game_name = "Prototype",
+		game_name = "GMTK2026",
 		window_width = "max",
 		window_height = "max",
 	})

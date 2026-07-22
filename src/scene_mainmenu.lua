@@ -146,7 +146,7 @@ function MainMenu:setup_title_menu()
 			y = gh * 0.35,
 			lines = {
 				{
-					text = "[wavy_rainbow]Prototype",
+					text = "[wavy_rainbow]GMTK 2026",
 					font = fat_title_font,
 					alignment = "center",
 				},
