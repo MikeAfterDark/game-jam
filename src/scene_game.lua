@@ -21,15 +21,13 @@ function Game:on_enter(from, args)
 
 	self.floor = Group()
 	-- self.main = Group()
-	self.main = Group():set_as_physics_world(32, 0, 0, { "wheel", "ball" })
-	self.shop = Group():set_as_physics_world(32, 0, 0, { "drawer", "ball" })
+	self.main = Group()
 	self.game_ui = Group()
 	self.effects = Group()
 	self.ui = Group()
 	self.end_ui = Group():no_camera()
 
 	self.main.layer = Group_Layers.Main
-	self.shop.layer = Group_Layers.Shop
 	self.game_ui.layer = Group_Layers.Shop_UI
 	self.end_ui.layer = Group_Layers.Cover
 
@@ -62,14 +60,37 @@ function Game:on_enter(from, args)
 		ui_elements = self.game_ui_elements,
 	})
 
-	self.num_balls_per_selection = 3
+	self.planet = {
+		x = gw * 0.5,
+		y = gh * 0.5,
+		radius = gh * 0.35,
+	}
+	self.ships = {}
+	self.ship_spawn_interval = 1
+	self.last_ship_spawn_time = run_time + 0.3
+	-- planet: art
+	-- rocket ships
+	--		ship with mouse collider
+	--		countdown
+	--
+	--		if timer == 0 and clicked, launch,
+	--		else if timer > 0 and clicked then fail
+	--		else if timer < 0 then explode
 end
 
-function Game:next_round()
-	local has_enemy = self.enemy:load_next_enemy()
-	print(has_enemy)
-	-- reset wheel/balls etc
-	return has_enemy
+function Game:spawn_ship(data)
+	print("spawning ship")
+	table.insert(
+		self.ships,
+		Ship({
+			group = self.main,
+			planet = self.planet,
+			w = 15,
+			h = 30,
+			r = data.angle,
+			time = data.time,
+		})
+	)
 end
 
 function Game:update(dt)
@@ -82,11 +103,19 @@ function Game:update(dt)
 		run_time = run_time + dt
 	end
 
+	if self.last_ship_spawn_time < run_time then
+		self.last_ship_spawn_time = run_time + self.ship_spawn_interval
+		-- self.angle = self.angle and self.angle + math.pi / 8 or 0
+		self:spawn_ship({
+			angle = random:float(0, 2 * math.pi),
+			time = random:int(5, 10),
+		})
+	end
+
 	-- self:update_game_object(dt * slow_amount)
 	-- star_group:update(dt * slow_amount)
 	-- self.floor:update(dt * slow_amount)
 	-- self.main:update(dt * slow_amount * self.main_slow_amount)
-	-- self.shop:update(dt * slow_amount * self.main_slow_amount)
 	-- self.game_ui:update(dt * slow_amount)
 	-- self.effects:update(dt * slow_amount)
 	-- self.ui:update(dt * slow_amount)
@@ -98,7 +127,6 @@ function Game:update(dt)
 	self.ui:update(dt * slow_amount)
 	self.effects:update(dt * slow_amount)
 	self.game_ui:update(dt * slow_amount)
-	self.shop:update(dt * slow_amount * self.main_slow_amount)
 	self.main:update(dt * slow_amount * self.main_slow_amount)
 	self.floor:update(dt * slow_amount)
 	star_group:update(dt * slow_amount)
@@ -200,9 +228,9 @@ function Game:setup_endgame_ui()
 end
 
 function Game:draw()
+	graphics.circle(self.planet.x, self.planet.y, self.planet.radius, green[0])
 	self.floor:draw()
 	self.main:draw()
-	self.shop:draw()
 	self.game_ui:draw()
 	self.effects:draw()
 	self.ui:draw()
@@ -223,7 +251,6 @@ end
 
 function Game:on_exit()
 	self.main:destroy()
-	self.shop:destroy()
 	self.game_ui:destroy()
 	self.effects:destroy()
 	self.ui:destroy()
