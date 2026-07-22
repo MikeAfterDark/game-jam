@@ -66,7 +66,7 @@ function Game:on_enter(from, args)
 		radius = gh * 0.35,
 	}
 	self.ships = {}
-	self.ship_spawn_interval = 1
+	self.ship_spawn_interval = 0.1
 	self.last_ship_spawn_time = run_time + 0.3
 	-- planet: art
 	-- rocket ships
@@ -103,13 +103,33 @@ function Game:update(dt)
 		run_time = run_time + dt
 	end
 
+	_, self.ships = table.reject(self.ships, function(ship)
+		return ship.dead
+	end)
+
 	if self.last_ship_spawn_time < run_time then
 		self.last_ship_spawn_time = run_time + self.ship_spawn_interval
-		-- self.angle = self.angle and self.angle + math.pi / 8 or 0
-		self:spawn_ship({
-			angle = random:float(0, 2 * math.pi),
-			time = random:int(5, 10),
-		})
+
+		local angle_spread = math.pi * 0.05
+		local attempts = 3
+		local open_angle
+
+		repeat
+			open_angle = random:float(0, 2 * math.pi)
+			attempts = attempts - 1
+		until attempts < 0
+			or not table.any(self.ships, function(ship)
+				local diff = math.abs(ship.r - open_angle)
+				diff = math.min(diff, 2 * math.pi - diff) -- shortest angular distance
+				return diff < angle_spread
+			end)
+
+		if attempts >= 0 then
+			self:spawn_ship({
+				angle = open_angle,
+				time = random:int(5, 10),
+			})
+		end
 	end
 
 	-- self:update_game_object(dt * slow_amount)
