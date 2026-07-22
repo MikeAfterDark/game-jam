@@ -17,11 +17,6 @@ require("scene_intro")
 -- require("scene_character_setup")
 
 -- game objects
-require("wheel")
-require("ball")
-require("holder")
-require("character")
-require("shop")
 
 -- ui
 -- require("circle_menu")
