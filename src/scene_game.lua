@@ -210,8 +210,11 @@ function Game:update(dt)
 		{ text = string.format("%d", self.level_timer), font = large_pixul_font, alignment = "center" },
 	})
 	if self.level_timer < 0 then
-		table.foreach(self.ships, function(ship)
-			ship.freeze_time = true
+		table.foreach(self.ships, function(obj)
+			obj.freeze_time = true
+		end)
+		table.foreach(self.obstacles, function(obj)
+			obj.freeze_time = true
 		end)
 
 		self:win()

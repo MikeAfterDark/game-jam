@@ -41,13 +41,14 @@ function Obstacle:update(dt)
 		self.time = self.time - 1
 	end
 
-	self.time = self.time - dt
+	self.time = self.freeze_time and self.time or (self.time - dt)
 	if self.time < 1 then
 		self.dead = true
+		sfx.obj.asteroid_destroy:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	end
 
 	self.text:set_text({
-		{ text = string.format("%d", self.time), font = large_pixul_font, alignment = "center" },
+		{ text = string.format("%d", self.time), font = huge_pixul_font, alignment = "center" },
 	})
 	self.text:update(dt)
 end
@@ -70,6 +71,6 @@ function Obstacle:draw()
 	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.x)
 	graphics.circle(self.x, self.y, self.rs, self.selected and red[0] or white[0])
 	graphics.circle(self.x, self.y, self.rs * 0.9, black[0])
-	self.text:draw(self.x, self.y, 0, 1, 1)
+	self.text:draw(self.x, self.y + self.text.h / 8, 0, 1, 1)
 	graphics.pop()
 end

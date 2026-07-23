@@ -58,6 +58,13 @@ function init()
 			color = "green",
 		}, -- dev
 
+		at_the_tone = {
+			name = "at the tone",
+			nickname = "at the tone",
+			url = "https://at-the-tone.neocities.org/",
+			color = "yellow",
+		}, --
+
 		Apezilla = {
 			name = 'David "Apezilla" Browne',
 			nickname = "Apezilla",
@@ -86,15 +93,15 @@ function init()
 
 	credits = {
 		{
-			name = "[fg]devs",
+			name = "[fg]dev",
 			items = {
 				person.Mikey,
 			},
 		},
 		{
-			name = "[green]music",
+			name = "[green]music & sfx",
 			items = {
-				person.Mikey,
+				person.at_the_tone,
 			},
 		},
 		{
@@ -128,6 +135,7 @@ function init()
 			},
 		},
 		obj = {
+			asteroid_destroy = Sound(sfx_folder .. "obj/obj_asteroid_destroy.flac", sfx_tag),
 			ufo = Sound(sfx_folder .. "obj/obj_ufo.flac", sfx_tag),
 			rocket_launch = Sound(sfx_folder .. "obj/obj_rocket_launch.flac", sfx_tag),
 			rocket_fail = Sound(sfx_folder .. "obj/obj_rocket_fail.flac", sfx_tag),
