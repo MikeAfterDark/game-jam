@@ -26,7 +26,7 @@ function Ship:update(dt)
 	self.time = self.time > 1 and (self.time - dt) or self.time - dt / 2
 	if self.time < 1 and not self.played_alarm_sfx then
 		self.played_alarm_sfx = true
-		sfx.alert.incoming:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+		-- sfx.alert.incoming:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 	end
 
 	self.text:set_text({
