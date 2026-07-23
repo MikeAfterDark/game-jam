@@ -1,0 +1,7 @@
+obj_rocket_fail
+BOMB SHELTER BANGS.WAV by metrostock99 -- https://freesound.org/s/203260/ -- License: Creative Commons 0
+Explosion_01.wav by tommccann -- https://freesound.org/s/235968/ -- License: Creative Commons 0
+
+obj_rocket_launch
+Rocket Launch by gracenew -- https://freesound.org/s/857959/ -- License: Creative Commons 0
+Rocket Launch.flac by qubodup -- https://freesound.org/s/182794/ -- License: Creative Commons 0
