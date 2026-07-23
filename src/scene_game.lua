@@ -73,12 +73,19 @@ function Game:on_enter(from, args)
 		visible = false,
 	})
 
-	self.planet = {
+	self.planet = Planet({
+		group = self.main,
 		x = gw * 0.5,
 		y = gh * 0.5,
-		radius = gh * 0.20,
-		rotation = 0,
-	}
+		rs = gh * 0.20,
+		r = 0,
+	})
+	-- self.planet = {
+	-- 	x = gw * 0.5,
+	-- 	y = gh * 0.5,
+	-- 	radius = gh * 0.20,
+	-- 	rotation = 0,
+	-- }
 	self.ships = {}
 	self.ship_spawn_interval = 0.1
 	self.last_ship_spawn_time = run_time + 0.3
@@ -93,6 +100,7 @@ function Game:on_enter(from, args)
 	--
 
 	self.level_timer = 3 * 60 -- in seconds
+	-- self.level_timer = 0.1 * 60 -- in seconds
 	self.level_timer_text = Text({
 		{
 			text = "",
@@ -133,17 +141,11 @@ function Game:update(dt)
 		return ship.dead
 	end)
 
-	local planet_speed = slow_amount * dt * 0.3
-	local planet_rotation_speed = 10
-	self.planet.rotation = self.planet.rotation + planet_speed / 16
-	self.planet.x = self.planet.x + math.sin(self.planet.rotation * planet_rotation_speed) * planet_rotation_speed * planet_speed
-	self.planet.y = self.planet.y + math.cos(self.planet.rotation * planet_rotation_speed) * planet_rotation_speed * planet_speed
-
 	--  Spawn new ships timer
-	if self.last_ship_spawn_time < run_time then
+	if self.last_ship_spawn_time < run_time and not self.won then
 		self.last_ship_spawn_time = run_time + self.ship_spawn_interval
 
-		local angle_spread = math.pi * 0.2
+		local angle_spread = math.pi * 0.1
 		local attempts = 3
 		local open_angle
 
@@ -160,7 +162,7 @@ function Game:update(dt)
 		if attempts >= 0 then
 			self:spawn_ship({
 				angle = open_angle,
-				time = random:int(5, 10),
+				time = random:int(3, 5),
 			})
 		end
 	end
@@ -170,6 +172,10 @@ function Game:update(dt)
 		{ text = string.format("%d", self.level_timer), font = large_pixul_font, alignment = "center" },
 	})
 	if self.level_timer < 0 then
+		table.foreach(self.ships, function(ship)
+			ship.freeze_time = true
+		end)
+
 		self:win()
 	end
 
@@ -198,7 +204,7 @@ function Game:win()
 	if not self.won then
 		self.won = true
 		self.end_game_cover.visible = true
-		slow_amount = 0
+		-- slow_amount = 0
 		print("gj, you won")
 
 		self.win_text = Text2({ --
@@ -290,8 +296,6 @@ function Game:setup_endgame_ui()
 end
 
 function Game:draw()
-	graphics.circle(self.planet.x, self.planet.y, self.planet.radius, green[0])
-	graphics.circle(self.planet.x, self.planet.y, 5, black[0])
 	self.floor:draw()
 	self.main:draw()
 	self.game_ui:draw()

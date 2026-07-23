@@ -74,11 +74,11 @@ function Slider:update(dt)
 		if current_section ~= prev_section then
 			self._last_section = current_section
 
-			local pitch = current_section / self.max_sections + 0.5
+			local pitch = (current_section / self.max_sections + 0.1) * 1.0
 			if self.increment_sfx then
 				self.increment_sfx:play({ pitch = pitch, volume = 0.5 })
 			else
-				random:table(sfx.ui.hover):play({ pitch = pitch, volume = 0.5 })
+				random:table(sfx.ui.click):play({ pitch = pitch, volume = 0.5 })
 			end
 
 			if self.action then
@@ -167,6 +167,7 @@ function Slider:on_mouse_enter()
 	-- buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	self.hovered = true
 	-- random:table(sfx.ui.hover):play({ volume = 0.5 })
+	--
 	random:table(sfx.ui.hover):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 	self.spring:pull(0.2, 200, 10)
 end

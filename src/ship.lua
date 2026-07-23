@@ -5,8 +5,8 @@ function Ship:init(args)
 
 	local scale = 1.00
 	local size = self.h / 2
-	self.x = self.planet.x + (self.planet.radius + size) * math.sin(self.r)
-	self.y = self.planet.y - (self.planet.radius + size) * math.cos(self.r)
+	self.x = self.planet.x + (self.planet.rs + size) * math.sin(self.r)
+	self.y = self.planet.y - (self.planet.rs + size) * math.cos(self.r)
 
 	self.shape = Rectangle(self.x, self.y, self.w, self.h, self.r)
 	self.text = Text({
@@ -23,7 +23,11 @@ end
 function Ship:update(dt)
 	self:update_game_object(dt)
 
-	self.time = self.time > 1 and (self.time - dt) or self.time - dt / 2
+	self.time = self.freeze_time --
+			and self.time
+		or self.time > 1 and (self.time - dt)
+		or self.time - dt / 2
+
 	if self.time < 1 and not self.played_alarm_sfx then
 		self.played_alarm_sfx = true
 		-- sfx.alert.incoming:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
@@ -36,20 +40,21 @@ function Ship:update(dt)
 
 	if not self.flying then
 		local size = self.h / 2
-		self.x = self.planet.x + (self.planet.radius + size) * math.sin(self.r + self.planet.rotation)
-		self.y = self.planet.y - (self.planet.radius + size) * math.cos(self.r + self.planet.rotation)
+		self.x = self.planet.x + (self.planet.rs + size) * math.sin(self.r + self.planet.r)
+		self.y = self.planet.y - (self.planet.rs + size) * math.cos(self.r + self.planet.r)
 		self.shape:move_to(self.x, self.y)
 	end
 
 	if self.selected and input.m1.pressed then
 		if self.time >= 1 then
 			self.dead = true -- failed launch
+			sfx.obj.rocket_fail:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 		elseif not self.flying then
 			self.flying = true
 			self.selected = false
 			self.interact_with_mouse = false
 			local scale = gw
-			self.locked_rotation = self.planet.rotation
+			self.locked_rotation = self.planet.r
 			sfx.obj.rocket_launch:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 			self.t:tween(
 				2,
@@ -70,7 +75,8 @@ function Ship:update(dt)
 		print("im ded")
 		self.dead = true
 		sfx.obj.rocket_fail:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-		slow(0.5, 1, math.cubic_in)
+		slow(0.2, 0.6, math.expo_out)
+		camera:shake(2, 0.3, 120)
 	end
 end
 
@@ -88,7 +94,7 @@ function Ship:on_mouse_exit()
 end
 
 function Ship:draw()
-	graphics.push(self.x, self.y, self.r + (self.flying and self.locked_rotation or self.planet.rotation), self.spring.x, self.spring.x)
+	graphics.push(self.x, self.y, self.r + (self.flying and self.locked_rotation or self.planet.r), self.spring.x, self.spring.x)
 	-- self.shape:draw(self.color, 7)
 	if self.selected then
 		graphics.rectangle(self.x, self.y, self.w + 4, self.h + 4, 3, 3, white[0], 4)
