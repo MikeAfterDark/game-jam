@@ -105,7 +105,6 @@ function init()
 
 	sfx_tag = { tags = { sfx_control } }
 	local sfx_folder = "sfx/"
-	stim_cave_sfx = nil --Sound("sans-voice.mp3", sfx_tag)
 
 	sfx = {
 		-- earthquake = Sound("temp/earthquake-end.mp3", sfx_tag),
@@ -113,6 +112,27 @@ function init()
 
 		boop = Sound(sfx_folder .. "floraphonic-bloop-1-184019.ogg", sfx_tag),
 		tick = Sound(sfx_folder .. "u_a4gfvwagf1-tick-sound-effect-1-336779.ogg", sfx_tag),
+
+		ui = {
+			hover = {
+				hover1 = Sound(sfx_folder .. "ui/ui_menu_hover_1.flac", sfx_tag),
+				hover2 = Sound(sfx_folder .. "ui/ui_menu_hover_2.flac", sfx_tag),
+				hover3 = Sound(sfx_folder .. "ui/ui_menu_hover_3.flac", sfx_tag),
+			},
+			click = {
+				click1 = Sound(sfx_folder .. "ui/ui_menu_click_1.flac", sfx_tag),
+				click2 = Sound(sfx_folder .. "ui/ui_menu_click_2.flac", sfx_tag),
+				click3 = Sound(sfx_folder .. "ui/ui_menu_click_3.flac", sfx_tag),
+			},
+		},
+		obj = {
+			ufo = Sound(sfx_folder .. "obj/obj_ufo.flac", sfx_tag),
+			rocket_launch = Sound(sfx_folder .. "obj/obj_rocket_launch.flac", sfx_tag),
+			rocket_fail = Sound(sfx_folder .. "obj/obj_rocket_fail.flac", sfx_tag),
+		},
+		alert = {
+			incoming = Sound(sfx_folder .. "alert/alert_incoming.flac", sfx_tag),
+		},
 	}
 
 	--

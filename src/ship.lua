@@ -23,7 +23,12 @@ end
 function Ship:update(dt)
 	self:update_game_object(dt)
 
-	self.time = self.time - dt
+	self.time = self.time > 1 and (self.time - dt) or self.time - dt / 2
+	if self.time < 1 and not self.played_alarm_sfx then
+		self.played_alarm_sfx = true
+		sfx.alert.incoming:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+	end
+
 	self.text:set_text({
 		{ text = string.format("%d", self.time), font = large_pixul_font, alignment = "center" },
 	})
@@ -45,6 +50,7 @@ function Ship:update(dt)
 			self.interact_with_mouse = false
 			local scale = gw
 			self.locked_rotation = self.planet.rotation
+			sfx.obj.rocket_launch:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 			self.t:tween(
 				2,
 				self,
@@ -63,12 +69,18 @@ function Ship:update(dt)
 	if self.time < 0 and not self.flying then
 		print("im ded")
 		self.dead = true
+		sfx.obj.rocket_fail:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+		slow(0.5, 1, math.cubic_in)
 	end
 end
 
 function Ship:on_mouse_enter()
 	self.selected = true
 	self.spring:pull(0.05, 500, 10)
+end
+
+function Ship:on_mouse_stay()
+	self.selected = true
 end
 
 function Ship:on_mouse_exit()
@@ -84,6 +96,10 @@ function Ship:draw()
 	graphics.rectangle(self.x, self.y, self.w, self.h, 3, 3, self.color, 4)
 
 	if not self.flying then
+		if self.time <= 1 and self.time >= 0 then
+			local h = self.h - (self.time * self.h)
+			graphics.rectangle(self.x, self.y, self.w, h, 1, 1, Color(1, 0, 0, 0.6))
+		end
 		self.text:draw(self.x, self.y - self.h * 0.7, 0, self.sx, self.sy)
 	end
 

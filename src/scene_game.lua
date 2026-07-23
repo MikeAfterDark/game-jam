@@ -60,6 +60,19 @@ function Game:on_enter(from, args)
 		ui_elements = self.game_ui_elements,
 	})
 
+	self.end_game_cover = RectangleCover({
+		group = self.end_ui,
+		x = gw * 0.5,
+		y = gh * 0.5,
+		w = gw,
+		h = gh,
+		color = Color(0.1, 0.1, 0.1, 0.9),
+		update_action = function(cover)
+			cover.interact_with_mouse = cover.visible
+		end,
+		visible = false,
+	})
+
 	self.planet = {
 		x = gw * 0.5,
 		y = gh * 0.5,
@@ -81,7 +94,7 @@ function Game:on_enter(from, args)
 
 	self.level_timer = 3 * 60 -- in seconds
 	self.level_timer_text = Text({
-		{ --
+		{
 			text = "",
 			font = pixul_font,
 			alignment = "center",
@@ -120,11 +133,11 @@ function Game:update(dt)
 		return ship.dead
 	end)
 
-	local planet_speed = slow_amount * dt * 0
-	local planet_rotation_speed = 3
+	local planet_speed = slow_amount * dt * 0.3
+	local planet_rotation_speed = 10
 	self.planet.rotation = self.planet.rotation + planet_speed / 16
-	self.planet.x = self.planet.x + math.sin(self.planet.rotation * planet_rotation_speed) * planet_speed
-	self.planet.y = self.planet.y + math.cos(self.planet.rotation * planet_rotation_speed) * planet_speed
+	self.planet.x = self.planet.x + math.sin(self.planet.rotation * planet_rotation_speed) * planet_rotation_speed * planet_speed
+	self.planet.y = self.planet.y + math.cos(self.planet.rotation * planet_rotation_speed) * planet_rotation_speed * planet_speed
 
 	--  Spawn new ships timer
 	if self.last_ship_spawn_time < run_time then
@@ -156,6 +169,9 @@ function Game:update(dt)
 	self.level_timer_text:set_text({
 		{ text = string.format("%d", self.level_timer), font = large_pixul_font, alignment = "center" },
 	})
+	if self.level_timer < 0 then
+		self:win()
+	end
 
 	-- self:update_game_object(dt * slow_amount)
 	-- star_group:update(dt * slow_amount)
@@ -182,6 +198,7 @@ function Game:win()
 	if not self.won then
 		self.won = true
 		self.end_game_cover.visible = true
+		slow_amount = 0
 		print("gj, you won")
 
 		self.win_text = Text2({ --

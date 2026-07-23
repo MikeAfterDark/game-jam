@@ -41,6 +41,7 @@ function ButtonBase:update(dt)
 		if self.selected and input.select.pressed then
 			if self.action then
 				-- random:table(ui_click):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+				random:table(sfx.ui.click):play({ volume = 0.5 })
 				self:action()
 			end
 		end
@@ -61,7 +62,8 @@ function ButtonBase:on_mouse_enter()
 	if self.enter_sfx then
 		self.enter_sfx:play({ pitch = random:float(0.94, 1.14), volume = 0.5 })
 	else
-		-- random:table(ui_hover):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+		random:table(sfx.ui.hover):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+		-- random:table(sfx.ui.hover):play({ volume = 0.5 })
 	end
 
 	-- buttonHover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
@@ -247,8 +249,7 @@ function InputButton:draw()
 
 	local halfway = self.separator_length
 	local separator_height = self.y + 8
-	graphics.dashed_line(self.x - halfway, separator_height, self.x + halfway, separator_height, 4, 1,
-		_G[self.bg_color][0], 1)
+	graphics.dashed_line(self.x - halfway, separator_height, self.x + halfway, separator_height, 4, 1, _G[self.bg_color][0], 1)
 end
 
 function InputButton:on_mouse_enter()
