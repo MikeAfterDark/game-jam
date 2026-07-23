@@ -8,9 +8,7 @@ end
 
 Group_Layers = {
 	Main = 1,
-	Shop = 2,
-	Shop_UI = 3,
-	Shelf = 4,
+	Space_Junk = 2,
 
 	Cover = 999,
 }
@@ -22,13 +20,14 @@ function Game:on_enter(from, args)
 	self.floor = Group()
 	-- self.main = Group()
 	self.main = Group()
+	self.obstacle = Group():set_as_physics_world(32, 0, 0, { "obstacle" })
 	self.game_ui = Group()
 	self.effects = Group()
 	self.ui = Group()
 	self.end_ui = Group():no_camera()
 
 	self.main.layer = Group_Layers.Main
-	self.game_ui.layer = Group_Layers.Shop_UI
+	self.obstacle.layer = Group_Layers.Space_Junk
 	self.end_ui.layer = Group_Layers.Cover
 
 	self.main_slow_amount = 1
@@ -80,15 +79,15 @@ function Game:on_enter(from, args)
 		rs = gh * 0.20,
 		r = 0,
 	})
-	-- self.planet = {
-	-- 	x = gw * 0.5,
-	-- 	y = gh * 0.5,
-	-- 	radius = gh * 0.20,
-	-- 	rotation = 0,
-	-- }
+
 	self.ships = {}
 	self.ship_spawn_interval = 0.1
 	self.last_ship_spawn_time = run_time + 0.3
+
+	self.obstacles = {}
+	self.obstacle_spawn_interval = 3
+	self.last_obstacle_spawn_time = run_time + 0.4
+
 	-- planet: art
 	-- rocket ships
 	--		ship with mouse collider
@@ -122,6 +121,32 @@ function Game:spawn_ship(data)
 			h = size * 2,
 			r = data.angle,
 			time = data.time,
+		})
+	)
+end
+
+function Game:spawn_obstacle(data)
+	print("spawning obstacle")
+
+	local horizontal = random:bool()
+	local size = random:float(gh * 0.13, gh * 0.4)
+
+	local x, y
+	if horizontal then
+		x = gw * 0.5 + random:sign() * (gw * 0.5 + size)
+		y = random:float(0, gh)
+	else
+		x = random:float(0, gw)
+		y = gh * 0.5 + random:sign() * (gh * 0.5 + size)
+	end
+
+	table.insert(
+		self.obstacles,
+		Obstacle({
+			group = self.obstacle,
+			x = x,
+			y = y,
+			rs = size,
 		})
 	)
 end
@@ -167,6 +192,19 @@ function Game:update(dt)
 		end
 	end
 
+	-- self.obstacles = {}
+	-- self.obstacle_spawn_interval = 0.1
+	-- self.last_obstacle_spawn_time = run_time + 0.4
+	--  Spawn new obstacles timer
+	if self.last_obstacle_spawn_time < run_time and not self.won then
+		self.last_obstacle_spawn_time = run_time + self.obstacle_spawn_interval
+
+		self:spawn_obstacle({
+			-- angle = open_angle,
+			-- time = random:int(3, 5),
+		})
+	end
+
 	self.level_timer = self.level_timer - slow_amount * dt
 	self.level_timer_text:set_text({
 		{ text = string.format("%d", self.level_timer), font = large_pixul_font, alignment = "center" },
@@ -194,6 +232,7 @@ function Game:update(dt)
 	self.ui:update(dt * slow_amount)
 	self.effects:update(dt * slow_amount)
 	self.game_ui:update(dt * slow_amount)
+	self.obstacle:update(dt * slow_amount * self.main_slow_amount)
 	self.main:update(dt * slow_amount * self.main_slow_amount)
 	self.floor:update(dt * slow_amount)
 	star_group:update(dt * slow_amount)
@@ -298,6 +337,7 @@ end
 function Game:draw()
 	self.floor:draw()
 	self.main:draw()
+	self.obstacle:draw()
 	self.game_ui:draw()
 	self.effects:draw()
 
@@ -322,12 +362,14 @@ end
 
 function Game:on_exit()
 	self.main:destroy()
+	self.obstacle:destroy()
 	self.game_ui:destroy()
 	self.effects:destroy()
 	self.ui:destroy()
 	self.end_ui:destroy()
 
 	self.main = nil
+	self.obstacle = nil
 	self.game_ui = nil
 	self.effects = nil
 	self.ui = nil

@@ -75,13 +75,13 @@ function Ship:update(dt)
 		print("im ded")
 		self.dead = true
 		sfx.obj.rocket_fail:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-		slow(0.2, 0.6, math.expo_out)
 		camera:shake(2, 0.3, 120)
 	end
 end
 
 function Ship:on_mouse_enter()
 	self.selected = true
+	random:table(sfx.ui.hover):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 	self.spring:pull(0.05, 500, 10)
 end
 

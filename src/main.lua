@@ -19,6 +19,7 @@ require("scene_intro")
 -- game objects
 require("ship")
 require("planet")
+require("obstacle")
 
 -- ui
 -- require("circle_menu")
