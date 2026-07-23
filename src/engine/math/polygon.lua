@@ -108,9 +108,13 @@ end
 -- Rotates the polygon to the given amount
 -- polygon:set_rotation(math.pi/4) -> rotates the polygon to 45 degrees around its center (if set) or 0
 function Polygon:set_rotation(r, ox, oy)
+	local d = r - (self.r or 0)
+
 	for i = 1, #self.vertices, 2 do
-		self.vertices[i], self.vertices[i + 1] = math.rotate_point(self.vertices[i], self.vertices[i + 1], r, ox or self.cx or 0, oy or self.cy or 0)
+		self.vertices[i], self.vertices[i + 1] = math.rotate_point(self.vertices[i], self.vertices[i + 1], d, ox or self.cx or 0, oy or self.cy or 0)
 	end
+
+	self.r = r
 end
 
 -- Returns the polygons size.

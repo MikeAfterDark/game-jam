@@ -8,7 +8,7 @@ function Ship:init(args)
 	self.x = self.planet.x + (self.planet.rs + size) * math.sin(self.r)
 	self.y = self.planet.y - (self.planet.rs + size) * math.cos(self.r)
 
-	self.shape = Rectangle(self.x, self.y, self.w, self.h, self.r)
+	self.shape = Rectangle(self.x, self.y, self.w, self.h, self.r + self.planet.r)
 	self.text = Text({
 		{ --
 			text = "",
@@ -43,6 +43,8 @@ function Ship:update(dt)
 		self.x = self.planet.x + (self.planet.rs + size) * math.sin(self.r + self.planet.r)
 		self.y = self.planet.y - (self.planet.rs + size) * math.cos(self.r + self.planet.r)
 		self.shape:move_to(self.x, self.y)
+		self.shape:get_centroid()
+		self.shape:set_rotation(self.r + self.planet.r)
 	end
 
 	if self.selected and input.m1.pressed then
@@ -72,7 +74,6 @@ function Ship:update(dt)
 	end
 
 	if self.time < 0 and not self.flying then
-		print("im ded")
 		self.dead = true
 		sfx.obj.rocket_fail:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 		camera:shake(2, 0.3, 120)
@@ -95,7 +96,7 @@ end
 
 function Ship:draw()
 	graphics.push(self.x, self.y, self.r + (self.flying and self.locked_rotation or self.planet.r), self.spring.x, self.spring.x)
-	-- self.shape:draw(self.color, 7)
+
 	if self.selected then
 		graphics.rectangle(self.x, self.y, self.w + 4, self.h + 4, 3, 3, white[0], 4)
 	end
@@ -110,4 +111,5 @@ function Ship:draw()
 	end
 
 	graphics.pop()
+	-- self.shape:draw()
 end

@@ -21,7 +21,6 @@ function Obstacle:init(args)
 	self:set_mass(self.rs * self.rs)
 	self:set_bullet(true)
 
-	self.time = 10
 	self.interact_with_mouse = true
 
 	self.text = Text({

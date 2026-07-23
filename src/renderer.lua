@@ -75,10 +75,15 @@ function renderer_init()
 	pixul_font = Font("PixulBrush", 8 * global_game_scale)
 	small_pixul_font = Font("PixulBrush", 4 * global_game_scale)
 	mystery_font = Font("BoldPixels", 8 * global_game_scale)
+
 	background_canvas = Canvas(gw, gh)
+	background_shader = Shader(nil, "background.frag")
+
 	main_canvas = Canvas(gw, gh, { stencil = true })
+
 	shadow_canvas = Canvas(gw, gh)
 	shadow_shader = Shader(nil, "shadow.frag")
+
 	star_canvas = Canvas(gw, gh, { stencil = true })
 	star_group = Group()
 	star_positions = {}
@@ -97,11 +102,15 @@ function renderer_draw(draw_action, shadow_draw_action)
 		star_group:draw()
 	end)
 
+	background_shader:send("time", love.timer.getTime())
 	background_canvas:draw_to(function()
 		camera:attach()
-		-- bg_gradient:draw(gw / 2, gh / 2, global_game_width, global_game_height)
-		-- bg_gradient:draw(gw / 2, gh * 1.5, global_game_width, global_game_height)
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, 0, 0, background_color)
+
+		background_shader:set()
+		main_canvas:draw2(0, 0, 0, 1, 1)
+		background_shader:unset()
+
 		camera:detach()
 	end)
 

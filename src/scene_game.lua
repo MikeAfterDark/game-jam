@@ -110,7 +110,7 @@ function Game:on_enter(from, args)
 end
 
 function Game:spawn_ship(data)
-	print("spawning ship")
+	-- print("spawning ship")
 	local size = gh * 0.07
 	table.insert(
 		self.ships,
@@ -126,18 +126,17 @@ function Game:spawn_ship(data)
 end
 
 function Game:spawn_obstacle(data)
-	print("spawning obstacle")
+	-- print("spawning obstacle")
 
 	local horizontal = random:bool()
-	local size = random:float(gh * 0.13, gh * 0.4)
 
 	local x, y
 	if horizontal then
-		x = gw * 0.5 + random:sign() * (gw * 0.5 + size)
+		x = gw * 0.5 + random:sign() * (gw * 0.5 + data.size)
 		y = random:float(0, gh)
 	else
 		x = random:float(0, gw)
-		y = gh * 0.5 + random:sign() * (gh * 0.5 + size)
+		y = gh * 0.5 + random:sign() * (gh * 0.5 + data.size)
 	end
 
 	table.insert(
@@ -146,7 +145,8 @@ function Game:spawn_obstacle(data)
 			group = self.obstacle,
 			x = x,
 			y = y,
-			rs = size,
+			rs = data.size,
+			time = data.time,
 		})
 	)
 end
@@ -200,8 +200,9 @@ function Game:update(dt)
 		self.last_obstacle_spawn_time = run_time + self.obstacle_spawn_interval
 
 		self:spawn_obstacle({
-			-- angle = open_angle,
-			-- time = random:int(3, 5),
+
+			size = random:float(gh * 0.13, gh * 0.4),
+			time = random:int(8, 10),
 		})
 	end
 
