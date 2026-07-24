@@ -110,24 +110,23 @@ function Game:on_enter(from, args)
 end
 
 function Game:spawn_ship(data)
-	-- print("spawning ship")
-	local size = gh * 0.07
-	table.insert(
-		self.ships,
-		Ship({
-			group = self.main,
-			planet = self.planet,
-			w = size,
-			h = size * 2,
-			r = data.angle,
-			time = data.time,
-		})
-	)
+	-- -- print("spawning ship")
+	-- local size = gh * 0.07
+	-- table.insert(
+	-- 	self.ships,
+	-- 	Ship({
+	-- 		group = self.main,
+	-- 		planet = self.planet,
+	-- 		w = size,
+	-- 		h = size * 2,
+	-- 		r = data.angle,
+	-- 		time = data.time,
+	-- 	})
+	-- )
 end
 
 function Game:spawn_obstacle(data)
 	-- print("spawning obstacle")
-
 	local horizontal = random:bool()
 
 	local x, y
@@ -143,8 +142,8 @@ function Game:spawn_obstacle(data)
 		self.obstacles,
 		Obstacle({
 			group = self.obstacle,
-			x = x,
-			y = y,
+			x = gw / 2,
+			y = gh / 2,
 			rs = data.size,
 			time = data.time,
 		})

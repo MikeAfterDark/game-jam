@@ -28,7 +28,9 @@ function AnimationFrames:init(image, frame_w, frame_h, frames_list)
 	elseif not self.frames_list then -- 1 col
 		local frames_list = {}
 		for i = 1, math.floor(self.source.h / self.frame_h) do
-			table.insert(frames_list, { 1, i })
+			for j = 1, math.floor(self.source.w / self.frame_w) do
+				table.insert(frames_list, { j, i })
+			end
 		end
 		self.frames_list = frames_list
 	end

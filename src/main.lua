@@ -112,13 +112,10 @@ function init()
 		},
 	}
 
-	sfx_tag = { tags = { sfx_control } }
+	local sfx_tag = { tags = { sfx_control } }
 	local sfx_folder = "sfx/"
 
 	sfx = {
-		-- earthquake = Sound("temp/earthquake-end.mp3", sfx_tag),
-		-- tile_mouse_enter = Sound(sfx_folder .. "Tile mouse enter.flac", sfx_tag),
-
 		boop = Sound(sfx_folder .. "floraphonic-bloop-1-184019.ogg", sfx_tag),
 		tick = Sound(sfx_folder .. "u_a4gfvwagf1-tick-sound-effect-1-336779.ogg", sfx_tag),
 
@@ -145,30 +142,12 @@ function init()
 		},
 	}
 
-	--
-	-- META SONGS
-	--
-	music_jam_folder = "music_jam/"
 	music_fade = 0
 	music_tag = { tags = { music_control } } -- for volume control
-
-	song_playing = false
-
-	-- intro_song = Sound(sfx_folder .. "Intro Jingle.flac", { tags = { intro } })
-
 	music = {
-		-- megalovania = Sound("temp/megalovania.ogg", music_tag),
 		intro = Sound(sfx_folder .. "Intro Jingle.flac", { tags = { intro } }),
 	}
-	-- song_stim_cave = Sound(
-	-- 	music_jam_folder .. "Guitar slop.mp3",
-	-- 	music_tag, --
-	-- 	{ name = "Guitar Slop", artists = { person.Sul } }
-	-- )
 
-	--
-	-- GAMEPLAY SONGS
-	--
 	music_songs = {
 		main = { sfx.extra },
 		tutorial = { sfx.extra },
@@ -180,101 +159,12 @@ function init()
 	}
 
 	sprite_folder = "sprites/"
-
-	-- load images:
-	-- wall_arrow_particle = Image("wall_arrow_particle")
 	sprite = {
 		logo = Image("logo"),
 
-		starter_rock = Image(sprite_folder .. "starter_rock"),
-		heal_ball = Image(sprite_folder .. "heal_ball"),
-		armour_ball = Image(sprite_folder .. "armour_ball"),
-		alien1 = Image(sprite_folder .. "alien1"),
-		damage_ball = Image(sprite_folder .. "damage_ball"),
-		-- damage_stone = Image(sprite_folder .. "/damage_stone"),
+		planet = Animation(1 / 24, AnimationFrames(Image(sprite_folder .. "planet"), 128, 128), "loop"),
+		asteroid = Animation(1 / 24, AnimationFrames(Image(sprite_folder .. "128asteroid"), 128, 128), "loop"),
 	}
-
-	-- local tiles_folder = "tiles/"
-	-- tile_sprites = {
-	-- 	cover = { Image(tiles_folder .. "tile_cover") },
-	-- 	large_cover = { Image(tiles_folder .. "large_tile_cover") },
-	--
-	-- 	asteroid = { Image(tiles_folder .. "asteroid") },
-	-- 	blue_grass = { Image(tiles_folder .. "blue_grass") },
-	-- 	grass = { Image(tiles_folder .. "grass") },
-	-- 	sun = { Image(tiles_folder .. "literally_just_the_sun") },
-	-- 	sand = { Image(tiles_folder .. "sand") },
-	-- 	snow = { Image(tiles_folder .. "snow") },
-	-- 	stone = { Image(tiles_folder .. "stone") },
-	-- 	water = { Animation(3, AnimationFrames(Image(tiles_folder .. "liquid2"), 64, 64), "loop"), Color(0.3, 0.4, 0.9, 0.7) },
-	-- 	lava = { Animation(15, AnimationFrames(Image(tiles_folder .. "liquid2"), 64, 64), "loop"), Color(0.8, 0.4, 0.2, 0.9) },
-	-- }
-	--
-	-- local buildings_folder = "buildings/"
-	-- building_sprites = {
-	-- 	castle = { Image(buildings_folder .. "castle") },
-	-- 	dwelling = { Image(buildings_folder .. "dwelling") },
-	-- 	farm = { Image(buildings_folder .. "farm") },
-	-- 	market = { Image(buildings_folder .. "market") },
-	-- 	necromancer = { Image(buildings_folder .. "necromancer") },
-	-- 	ship = { Image(buildings_folder .. "ship") },
-	-- 	tent = { Image(buildings_folder .. "tent") },
-	-- }
-	-- shop_sprites = {
-	-- 	shop_slot = { Image("black_hole_gray") },
-	-- 	lock = { Image("lock") },
-	-- }
-	--
-	-- board_shapes = {}
-	-- local dir = "board_shapes"
-	--
-	-- local function rgb(r, g, b)
-	-- 	return r * 65536 + g * 256 + b
-	-- end
-	--
-	-- local function key(r, g, b)
-	-- 	return rgb(math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5), math.floor(b * 255 + 0.5))
-	-- end
-	--
-	-- local color_to_tile = { -- must be type's object name
-	-- 	[rgb(255, 0, 0)] = "Grass",
-	-- 	[rgb(0, 255, 0)] = "Water",
-	-- 	[rgb(255, 255, 255)] = "random",
-	-- }
-	--
-	-- for _, file in ipairs(love.filesystem.getDirectoryItems(dir)) do
-	-- 	if file:match("%.png$") then
-	-- 		local name = file:gsub("%.png$", "")
-	-- 		local img = love.image.newImageData(dir .. "/" .. file)
-	--
-	-- 		local w, h = img:getWidth(), img:getHeight()
-	-- 		local shape = {}
-	--
-	-- 		for y = 0, h - 1 do
-	-- 			local row = {}
-	-- 			for x = 0, w - 1 do
-	-- 				local r, g, b, a = img:getPixel(x, y)
-	-- 				local tile = color_to_tile[key(r, g, b)]
-	--
-	-- 				if type(tile) == "function" then
-	-- 					row[x + 1] = tile(x, y) -- run special action
-	-- 				elseif tile == "random" then
-	-- 					row[x + 1] = random:table(Tile_Type)
-	-- 				elseif type(tile) == "string" then
-	-- 					row[x + 1] = Tile_Type[tile]
-	-- 				else
-	-- 					row[x + 1] = nil -- empty tile
-	-- 				end
-	--
-	-- 				if row[x + 1] == nil then
-	-- 					row[x + 1] = false
-	-- 				end
-	-- 			end
-	-- 			shape[y + 1] = row
-	-- 		end
-	-- 		table.insert(board_shapes, shape)
-	-- 	end
-	-- end
 
 	-- set logic init
 	slow_amount = 1

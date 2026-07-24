@@ -105,7 +105,7 @@ function renderer_draw(draw_action, shadow_draw_action)
 	background_shader:send("time", love.timer.getTime())
 	background_canvas:draw_to(function()
 		camera:attach()
-		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, 0, 0, background_color)
+		-- graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, 0, 0, background_color)
 
 		background_shader:set()
 		main_canvas:draw2(0, 0, 0, 1, 1)
@@ -118,19 +118,19 @@ function renderer_draw(draw_action, shadow_draw_action)
 		draw_action()
 	end)
 
-	shadow_canvas:draw_to(function()
-		-- shadow_draw_action()
-		graphics.set_color(white[0])
-		shadow_shader:set()
-		main_canvas:draw2(0, 0, 0, 1, 1)
-		shadow_shader:unset()
-	end)
+	-- shadow_canvas:draw_to(function()
+	-- 	-- shadow_draw_action()
+	-- 	graphics.set_color(white[0])
+	-- 	shadow_shader:set()
+	-- 	main_canvas:draw2(0, 0, 0, 1, 1)
+	-- 	shadow_shader:unset()
+	-- end)
 
 	local x, y = 0, 0
 	background_canvas:draw(x, y, 0, sx, sy)
 
 	local shadow_offset = 2.5
-	shadow_canvas:draw(x + shadow_offset * sx, y + shadow_offset * sy, 0, sx, sy)
+	-- shadow_canvas:draw(x + shadow_offset * sx, y + shadow_offset * sy, 0, sx, sy)
 	main_canvas:draw(x, y, 0, sx, sy)
 end
 

@@ -6,18 +6,33 @@
   <link rel="icon" href="data:;base64,=">
 
   <style>
+    /* html, body { */
+    /*   margin: 0; */
+    /*   padding: 0; */
+    /*   background: #000; */
+    /*   overflow: hidden; */
+    /*   height: 100%; */
+    /* } */
+
     html, body {
-      margin: 0;
-      padding: 0;
-      background: #000;
-      overflow: hidden;
-      height: 100%;
+        margin:0;
+        width:100%;
+        height:100%;
+    }
+
+    body {
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        background:black;
+        overflow:hidden;
     }
 
     canvas {
       display: block;
-      margin: 0 auto;
-      background: #000;
+      /* margin: 0 auto; */
+      background: #000; 
+      image-rendering: pixelated;
     }
 
     /* Loading screen styles */
@@ -56,12 +71,30 @@
   </div>
 
   <!-- Game Canvas -->
-  <canvas id="canvas" style="width: 100%; height: 100%;"></canvas>
+  <canvas id="canvas"></canvas>
 
   <script>
     window.onerror = function (message, source, lineno, colno, error) {
       console.error("Game error:", message);
     };
+
+    const GAME_WIDTH = 16;
+    const GAME_HEIGHT = 9;
+
+    function resizeCanvas() {
+        const canvas = document.getElementById("canvas");
+
+        const scale = Math.min(
+            window.innerWidth / GAME_WIDTH,
+            window.innerHeight / GAME_HEIGHT
+        );
+        
+        canvas.style.width = (GAME_WIDTH * scale) + "px";
+        canvas.style.height = (GAME_HEIGHT * scale) + "px";
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
 
     var Module = {
       arguments: ["./game.love"],
@@ -71,6 +104,7 @@
       locateFile: function (path) { return path; },
       onRuntimeInitialized: function () {
         hideLoadingScreen();
+        resizeCanvas();
       }
     };
 

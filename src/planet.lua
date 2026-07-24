@@ -5,10 +5,12 @@ function Planet:init(args)
 	self.shape = Circle(self.x, self.y, self.rs)
 
 	self.planet_speed = 0.3
+	self.animation = sprite.planet
 end
 
 function Planet:update(dt)
 	self:update_game_object(dt)
+	self.animation:update(dt)
 
 	local planet_speed = slow_amount * dt * self.planet_speed
 	local planet_rotation_speed = 10
@@ -19,7 +21,10 @@ end
 
 function Planet:draw()
 	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.x)
-	graphics.circle(self.x, self.y, self.rs, green[0])
-	graphics.circle(self.x, self.y, 5, black[0])
+	graphics.circle(self.x, self.y, self.rs, red[0])
+
+	local sprite_scale = 1.685
+	self.animation:draw(self.x, self.y, self.r, sprite_scale, sprite_scale, 1, 1)
+	graphics.circle(self.x, self.y, self.rs, black[0], 5)
 	graphics.pop()
 end
