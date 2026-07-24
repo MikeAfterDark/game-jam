@@ -162,11 +162,12 @@ function init()
 	}
 
 	sprite_folder = "sprites/"
+	local animation_speed = 2 / 24
 	sprite = {
 		logo = Image("logo"),
 
-		planet = Animation(1 / 24, AnimationFrames(Image(sprite_folder .. "planet"), 128, 128), "loop"),
-		asteroid = Animation(1 / 24, AnimationFrames(Image(sprite_folder .. "128asteroid"), 128, 128), "loop"),
+		planet = Animation(animation_speed, AnimationFrames(Image(sprite_folder .. "planet"), 128, 128), "loop"),
+		asteroid = Animation(animation_speed, AnimationFrames(Image(sprite_folder .. "128asteroid"), 128, 128), "loop"),
 	}
 
 	-- set logic init

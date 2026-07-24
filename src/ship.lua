@@ -17,14 +17,16 @@ function Ship:init(args)
 		},
 	}, global_text_tags)
 	self.interact_with_mouse = true
-	self.color = random:color()
+	self.is_golden = random:bool(50)
+
+	self.color = self.is_golden and yellow[0] or white[0] --random:color()
 end
 
 function Ship:update(dt)
 	self:update_game_object(dt)
 
-	self.time = self.freeze_time --
-			and self.time
+	self.time = self.freeze_time and self.time --
+		or self.is_golden and self.time - dt * 1.5
 		or self.time > 1 and (self.time - dt)
 		or self.time - dt / 2
 

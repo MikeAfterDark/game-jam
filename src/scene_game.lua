@@ -26,8 +26,10 @@ function Game:on_enter(from, args)
 	self.ui = Group()
 	self.end_ui = Group():no_camera()
 
-	self.main.layer = Group_Layers.Main
-	self.obstacle.layer = Group_Layers.Space_Junk
+	-- self.main.layer = Group_Layers.Main
+	-- self.obstacle.layer = Group_Layers.Space_Junk
+	self.main.layer = Group_Layers.Space_Junk
+	self.obstacle.layer = Group_Layers.Main
 	self.end_ui.layer = Group_Layers.Cover
 
 	self.main_slow_amount = 1
@@ -100,6 +102,7 @@ function Game:on_enter(from, args)
 
 	self.level_timer = 3 * 60 -- in seconds
 	-- self.level_timer = 0.1 * 60 -- in seconds
+
 	self.level_timer_text = Text({
 		{
 			text = "",
@@ -110,19 +113,19 @@ function Game:on_enter(from, args)
 end
 
 function Game:spawn_ship(data)
-	-- -- print("spawning ship")
-	-- local size = gh * 0.07
-	-- table.insert(
-	-- 	self.ships,
-	-- 	Ship({
-	-- 		group = self.main,
-	-- 		planet = self.planet,
-	-- 		w = size,
-	-- 		h = size * 2,
-	-- 		r = data.angle,
-	-- 		time = data.time,
-	-- 	})
-	-- )
+	-- print("spawning ship")
+	local size = gh * 0.07
+	table.insert(
+		self.ships,
+		Ship({
+			group = self.main,
+			planet = self.planet,
+			w = size,
+			h = size * 2,
+			r = data.angle,
+			time = data.time,
+		})
+	)
 end
 
 function Game:spawn_obstacle(data)
@@ -235,8 +238,8 @@ function Game:update(dt)
 	self.ui:update(dt * slow_amount)
 	self.effects:update(dt * slow_amount)
 	self.game_ui:update(dt * slow_amount)
-	self.obstacle:update(dt * slow_amount * self.main_slow_amount)
 	self.main:update(dt * slow_amount * self.main_slow_amount)
+	self.obstacle:update(dt * slow_amount * self.main_slow_amount)
 	self.floor:update(dt * slow_amount)
 	star_group:update(dt * slow_amount)
 	self:update_game_object(dt * slow_amount)
@@ -339,8 +342,8 @@ end
 
 function Game:draw()
 	self.floor:draw()
-	self.main:draw()
 	self.obstacle:draw()
+	self.main:draw()
 	self.game_ui:draw()
 	self.effects:draw()
 
