@@ -133,12 +133,13 @@ function init()
 		},
 		obj = {
 			asteroid_destroy = Sound(sfx_folder .. "obj/obj_asteroid_destroy.flac", sfx_tag),
-			ufo = Sound(sfx_folder .. "obj/obj_ufo.flac", sfx_tag),
+			asteroid_hit = Sound(sfx_folder .. "obj/obj_asteroid_hit.flac", sfx_tag),
 			rocket_launch = Sound(sfx_folder .. "obj/obj_rocket_launch.flac", sfx_tag),
 			rocket_fail = Sound(sfx_folder .. "obj/obj_rocket_fail.flac", sfx_tag),
-		},
-		alert = {
-			incoming = Sound(sfx_folder .. "alert/alert_incoming.flac", sfx_tag),
+
+			missile_appear = Sound(sfx_folder .. "obj/obj_missile_appear.flac", sfx_tag),
+			missile_disappear = Sound(sfx_folder .. "obj/obj_missile_disappear.flac", sfx_tag),
+			missile_explode = Sound(sfx_folder .. "obj/obj_missile_explode.flac", sfx_tag),
 		},
 	}
 
@@ -166,7 +167,8 @@ function init()
 	sprite = {
 		logo = Image("logo"),
 
-		space_background = Image(sprite_folder .. "space_background2"),
+		space_background = Image(sprite_folder .. "space_background4"),
+		rocket = Image(sprite_folder .. "rocket"),
 		planet = Animation(animation_speed, AnimationFrames(Image(sprite_folder .. "planet"), 128, 128), "loop"),
 		asteroid = Animation(animation_speed, AnimationFrames(Image(sprite_folder .. "128asteroid"), 128, 128), "loop"),
 	}

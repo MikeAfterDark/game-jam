@@ -87,7 +87,7 @@ function Game:on_enter(from, args)
 	self.last_ship_spawn_time = run_time + 0.3
 
 	self.obstacles = {}
-	self.obstacle_spawn_interval = 8
+	self.obstacle_spawn_interval = 5
 	self.last_obstacle_spawn_time = run_time + 0.4
 
 	-- planet: art
@@ -175,7 +175,7 @@ function Game:update(dt)
 	if self.last_ship_spawn_time < run_time and not self.won then
 		self.last_ship_spawn_time = run_time + self.ship_spawn_interval
 
-		local angle_spread = math.pi * 0.15
+		local angle_spread = math.pi * 0.1
 		local attempts = 3
 		local open_angle
 
@@ -192,7 +192,7 @@ function Game:update(dt)
 		if attempts >= 0 then
 			self:spawn_ship({
 				angle = open_angle,
-				time = random:int(3, 5),
+				time = random:int(4, 4),
 			})
 		end
 	end
@@ -200,6 +200,7 @@ function Game:update(dt)
 	-- Spawn new obstacles
 	if self.last_obstacle_spawn_time < run_time and not self.won then
 		self.last_obstacle_spawn_time = run_time + self.obstacle_spawn_interval
+		self.obstacle_spawn_interval = random:int(4, 9)
 
 		self:spawn_obstacle({
 
@@ -343,8 +344,18 @@ end
 function Game:draw()
 	self.floor:draw()
 	self.obstacle:draw()
-	local scale = 4
-	sprite.space_background:draw(gw / 2, gh / 2, 0, scale, scale, 0, 0, Color(1, 1, 1, 0.4))
+
+	local scale = 2
+	local t = run_time / 8.0
+
+	local x = gw / 2 + gw * 0.12 * math.sin(t * 0.45) + gw * 0.05 * math.sin(t * 1.17 + 1.3) + gw * 0.02 * math.cos(t * 2.41)
+	local y = gh / 2 + gh * 0.10 * math.cos(t * 0.38 + 0.8) + gh * 0.06 * math.sin(t * 0.93) + gh * 0.03 * math.cos(t * 1.81 + 2.1)
+	local rot = 0.015 * math.sin(t * 0.22) + 0.008 * math.sin(t * 0.81 + 0.7) + 0.004 * math.cos(t * 1.57)
+
+	local opacity = 0.2
+	sprite.space_background:draw(x, y, rot, scale, scale, 0, 0, Color(1, 1, 1, opacity))
+	-- sprite.space_background:draw(x, x, -2 * rot, scale, scale, 0, 0, Color(1, 1, 1, opacity))
+	sprite.space_background:draw(y, x, -rot, scale, scale, 0, 0, Color(1, 1, 1, opacity))
 	self.main:draw()
 	self.game_ui:draw()
 	self.effects:draw()

@@ -1,1 +1,3 @@
-Planets: https://deep-fold.itch.io/pixel-planet-generator
+Planets: Deep-Fold: https://deep-fold.itch.io/pixel-planet-generator
+Background Dust: Deep-fold: https://deep-fold.itch.io/space-background-generator
+Rocket: Hangman: https://opengameart.org/content/rocket-1

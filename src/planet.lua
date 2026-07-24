@@ -23,10 +23,11 @@ end
 
 function Planet:draw()
 	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.x)
-	graphics.circle(self.x, self.y, self.rs, red[0])
+	graphics.circle(self.x, self.y, self.rs, black[0])
+	-- graphics.circle(self.x, self.y, self.rs, red[0]) -- debug
 
-	local sprite_scale = 1.685
-	self.animation:draw(self.x, self.y, self.r, sprite_scale, sprite_scale, 1, 1)
-	graphics.circle(self.x, self.y, self.rs, black[0], 5)
+	local sprite_scale = 1.680
+	self.animation:draw(self.x + 1, self.y + 1, self.r, sprite_scale, sprite_scale, 1, 1)
+	graphics.circle(self.x, self.y, self.rs, black[0], 3)
 	graphics.pop()
 end
