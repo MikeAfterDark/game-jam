@@ -87,7 +87,7 @@ function Game:on_enter(from, args)
 	self.last_ship_spawn_time = run_time + 0.3
 
 	self.obstacles = {}
-	self.obstacle_spawn_interval = 3
+	self.obstacle_spawn_interval = 8
 	self.last_obstacle_spawn_time = run_time + 0.4
 
 	-- planet: art
@@ -175,7 +175,7 @@ function Game:update(dt)
 	if self.last_ship_spawn_time < run_time and not self.won then
 		self.last_ship_spawn_time = run_time + self.ship_spawn_interval
 
-		local angle_spread = math.pi * 0.1
+		local angle_spread = math.pi * 0.15
 		local attempts = 3
 		local open_angle
 

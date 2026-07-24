@@ -17,18 +17,23 @@ function Ship:init(args)
 		},
 	}, global_text_tags)
 	self.interact_with_mouse = true
-	self.is_golden = random:bool(50)
+	self.is_golden = random:bool(9)
+	self.is_rocket = not self.is_golden and random:bool(15)
+	if self.is_rocket then
+		self.time = 1
+	end
 
-	self.color = self.is_golden and yellow[0] or white[0] --random:color()
+	self.color = self.is_golden and yellow[0] or self.is_rocket and red[0] or white[0] --random:color()
 end
 
 function Ship:update(dt)
 	self:update_game_object(dt)
 
 	self.time = self.freeze_time and self.time --
-		or self.is_golden and self.time - dt * 1.5
+		or self.is_golden and self.time - dt * 1.25
+		or self.is_rocket and self.time - dt * 0.5
 		or self.time > 1 and (self.time - dt)
-		or self.time - dt / 2
+		or self.time - dt * 0.5
 
 	if self.time < 1 and not self.played_alarm_sfx then
 		self.played_alarm_sfx = true
@@ -50,10 +55,10 @@ function Ship:update(dt)
 	end
 
 	if self.selected and input.m1.pressed then
-		if self.time >= 1 then
+		if self.time >= 1 and not self.is_golden then
 			self.dead = true -- failed launch
 			sfx.obj.rocket_fail:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-		elseif not self.flying then
+		elseif self.time < 1 and not self.flying then
 			self.flying = true
 			self.selected = false
 			self.interact_with_mouse = false
@@ -109,7 +114,10 @@ function Ship:draw()
 			local h = self.h - (self.time * self.h)
 			graphics.rectangle(self.x, self.y, self.w, h, 1, 1, Color(1, 0, 0, 0.6))
 		end
-		self.text:draw(self.x, self.y - self.h * 0.7, 0, self.sx, self.sy)
+
+		if not self.is_rocket then
+			self.text:draw(self.x, self.y - self.h * 0.7, 0, self.sx, self.sy)
+		end
 	end
 
 	graphics.pop()

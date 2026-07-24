@@ -6,6 +6,7 @@ function Planet:init(args)
 
 	self.planet_speed = 0.3
 	self.animation = sprite.planet
+	self.interact_with_mouse = true
 end
 
 function Planet:update(dt)
@@ -17,6 +18,7 @@ function Planet:update(dt)
 	self.r = self.r + planet_speed / 16
 	self.x = self.x + math.sin(self.r * planet_rotation_speed) * planet_rotation_speed * planet_speed
 	self.y = self.y + math.cos(self.r * planet_rotation_speed) * planet_rotation_speed * planet_speed
+	self.shape:move_to(self.x, self.y)
 end
 
 function Planet:draw()
