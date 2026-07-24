@@ -129,7 +129,7 @@ function renderer_draw(draw_action, shadow_draw_action)
 	local x, y = 0, 0
 	background_canvas:draw(x, y, 0, sx, sy)
 
-	local shadow_offset = 2.5
+	-- local shadow_offset = 2.5
 	-- shadow_canvas:draw(x + shadow_offset * sx, y + shadow_offset * sy, 0, sx, sy)
 	main_canvas:draw(x, y, 0, sx, sy)
 end

@@ -45,13 +45,18 @@ function Obstacle:update(dt)
 		self.spring:pull(0.05, 500, 10)
 		camera:shake(2, 0.3, 120)
 		self.mouse_x, self.mouse_y = self.group:get_mouse_position()
-		sfx.obj.asteroid_destroy:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+
+		if self.time > 1 then --avoid playing the same sfx twice
+			sfx.obj.asteroid_destroy:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+		end
 	end
 
 	self.time = self.freeze_time and self.time or (self.time - dt)
 	if self.time < 1 then
 		self.dead = true
 		sfx.obj.asteroid_destroy:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+		local str = (self.rs / gh)
+		camera:shake(2 + 4 * str, 0.3 + str, 120)
 	end
 
 	self.text:set_text({

@@ -142,8 +142,8 @@ function Game:spawn_obstacle(data)
 		self.obstacles,
 		Obstacle({
 			group = self.obstacle,
-			x = gw / 2,
-			y = gh / 2,
+			x = x, --gw / 2,
+			y = y, --gh / 2,
 			rs = data.size,
 			time = data.time,
 		})
@@ -160,9 +160,12 @@ function Game:update(dt)
 		run_time = run_time + dt
 	end
 
-	-- clear the ships table of any dead ships
+	-- clear the obj tables of dead stuff
 	_, self.ships = table.reject(self.ships, function(ship)
 		return ship.dead
+	end)
+	_, self.obstacles = table.reject(self.obstacles, function(obstacle)
+		return obstacle.dead
 	end)
 
 	--  Spawn new ships timer
@@ -191,10 +194,7 @@ function Game:update(dt)
 		end
 	end
 
-	-- self.obstacles = {}
-	-- self.obstacle_spawn_interval = 0.1
-	-- self.last_obstacle_spawn_time = run_time + 0.4
-	--  Spawn new obstacles timer
+	-- Spawn new obstacles
 	if self.last_obstacle_spawn_time < run_time and not self.won then
 		self.last_obstacle_spawn_time = run_time + self.obstacle_spawn_interval
 

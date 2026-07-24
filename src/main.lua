@@ -144,8 +144,11 @@ function init()
 
 	music_fade = 0
 	music_tag = { tags = { music_control } } -- for volume control
+	local music_folder = "music/"
 	music = {
 		intro = Sound(sfx_folder .. "Intro Jingle.flac", { tags = { intro } }),
+
+		running_out_of_time = Sound(music_folder .. "mus_running_out_of_time.ogg"),
 	}
 
 	music_songs = {
