@@ -32,6 +32,7 @@ function Obstacle:init(args)
 		},
 	}, global_text_tags)
 	self.animation = sprite.asteroid
+	self.is_background = true
 end
 
 function Obstacle:update(dt)
@@ -41,9 +42,9 @@ function Obstacle:update(dt)
 
 	if self.selected and input.select.pressed then
 		self.time = self.time - 1
-		self.hit = run_time
 		self.spring:pull(0.05, 500, 10)
 		camera:shake(2, 0.3, 120)
+		self.hit = run_time
 		self.mouse_x, self.mouse_y = self.group:get_mouse_position()
 
 		if self.time > 1 then --avoid playing the same sfx twice
@@ -84,11 +85,11 @@ function Obstacle:draw()
 
 	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.x)
 	local sprite_scale = 0.0156 * self.rs
-	local b = 0.4
+	local b = self.is_background and 0.5 or 1
 	self.animation:draw(self.x, self.y, self.r, sprite_scale, sprite_scale, 1, 1, Color(b, b, b, 1))
 
 	local outline_color = self.selected and red[0]:clone() or black[0]:clone()
-	graphics.circle(self.x, self.y, self.rs, outline_color:darken(0.4), self.rs * 0.08)
+	graphics.circle(self.x, self.y, self.rs, self.is_background and outline_color:darken(0.4) or outline_color, self.rs * 0.08)
 	graphics.pop()
 
 	self.text:draw(self.x, self.y + self.text.h / 8, 0, 1, 1)

@@ -5,3 +5,10 @@
 
 
 Asteroids Explosions VFX
+Asteroids Collision VFX/SFX
+Background Asteroids Colours
+
+Missile Explosion VFX
+Rocket Fail-To-Launch VFX
+
+Option for Asteroids in the foreground?

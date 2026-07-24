@@ -171,6 +171,78 @@ function init()
 		rocket = Image(sprite_folder .. "rocket"),
 		planet = Animation(animation_speed, AnimationFrames(Image(sprite_folder .. "planet"), 128, 128), "loop"),
 		asteroid = Animation(animation_speed, AnimationFrames(Image(sprite_folder .. "128asteroid"), 128, 128), "loop"),
+
+		explosion = function()
+			return Animation(animation_speed, AnimationFrames(Image(sprite_folder .. "explosion"), 128, 128), "once")
+		end,
+
+		exhaust = {
+			small = {
+				start = function()
+					return Animation(
+						1 / 24,
+						AnimationFrames(
+							Image(sprite_folder .. "exhaust/exhaust1"),
+							128,
+							128,
+							{ { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 }, { 6, 1 } }
+						),
+						"once"
+					)
+				end,
+				loop = function()
+					return Animation(
+						1 / 24,
+						AnimationFrames(
+							Image(sprite_folder .. "exhaust/exhaust1"),
+							128,
+							128,
+							{ { 1, 2 }, { 2, 2 }, { 3, 2 }, { 4, 2 }, { 5, 2 }, { 6, 2 }, { 7, 2 } }
+						),
+						"loop"
+					)
+				end,
+			},
+
+			medium = {
+				start = function()
+					return Animation(
+						1 / 24,
+						AnimationFrames(
+							Image(sprite_folder .. "exhaust/exhaust2"),
+							128,
+							128,
+							{ { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 }, { 6, 1 }, { 7, 1 }, { 8, 1 }, { 9, 1 } }
+						),
+						"once"
+					)
+				end,
+				loop = function()
+					return Animation(
+						1 / 24,
+						AnimationFrames(Image(sprite_folder .. "exhaust/exhaust2"), 128, 128, { { 1, 2 }, { 2, 2 }, { 3, 2 }, { 4, 2 }, { 5, 2 } }),
+						"loop"
+					)
+				end,
+			},
+
+			large = {
+				start = function()
+					return Animation(
+						1 / 24,
+						AnimationFrames(Image(sprite_folder .. "exhaust/exhaust3"), 128, 128, { { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } }),
+						"once"
+					)
+				end,
+				loop = function()
+					return Animation(
+						1 / 24,
+						AnimationFrames(Image(sprite_folder .. "exhaust/exhaust3"), 128, 128, { { 1, 2 }, { 2, 2 }, { 3, 2 }, { 4, 2 }, { 5, 2 } }),
+						"loop"
+					)
+				end,
+			},
+		},
 	}
 
 	-- set logic init

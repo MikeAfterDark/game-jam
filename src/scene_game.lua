@@ -192,7 +192,7 @@ function Game:update(dt)
 		if attempts >= 0 then
 			self:spawn_ship({
 				angle = open_angle,
-				time = random:int(4, 4),
+				time = random:int(4, 7),
 			})
 		end
 	end
