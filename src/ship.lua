@@ -30,7 +30,7 @@ function Ship:update(dt)
 	self:update_game_object(dt)
 
 	self.time = self.freeze_time and self.time --
-		or self.is_golden and self.time - dt * 1.25
+		or self.is_golden and self.time - dt * 1.35
 		or self.is_rocket and self.time - dt * 0.5
 		or self.time > 1 and (self.time - dt)
 		or self.time - dt * 0.5
@@ -80,10 +80,20 @@ function Ship:update(dt)
 		end
 	end
 
-	if self.time < 0 and not self.flying then
-		self.dead = true
-		sfx.obj.rocket_fail:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-		camera:shake(2, 0.3, 120)
+	if self.time < 0 and not self.flying and not self.dying then
+		self.interact_with_mouse = false
+		self.dying = true
+
+		if self.is_rocket then
+			self.dead = true
+			sfx.obj.rocket_fail:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+			camera:shake(2, 0.3, 120)
+		else
+			self.t:tween(1, self, { w = 0, h = 0 }, math.cubic_in_out, function()
+				self.dead = true
+				sfx.obj.ufo:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+			end)
+		end
 	end
 end
 
@@ -115,7 +125,7 @@ function Ship:draw()
 			graphics.rectangle(self.x, self.y, self.w, h, 1, 1, Color(1, 0, 0, 0.6))
 		end
 
-		if not self.is_rocket then
+		if not self.is_rocket and not self.dying then
 			self.text:draw(self.x, self.y - self.h * 0.7, 0, self.sx, self.sy)
 		end
 	end

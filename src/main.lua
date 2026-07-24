@@ -166,6 +166,7 @@ function init()
 	sprite = {
 		logo = Image("logo"),
 
+		space_background = Image(sprite_folder .. "space_background2"),
 		planet = Animation(animation_speed, AnimationFrames(Image(sprite_folder .. "planet"), 128, 128), "loop"),
 		asteroid = Animation(animation_speed, AnimationFrames(Image(sprite_folder .. "128asteroid"), 128, 128), "loop"),
 	}

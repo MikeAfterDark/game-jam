@@ -10,7 +10,7 @@ function Obstacle:init(args)
 	local target_x = gw * random:float(0.4, 0.6)
 	local target_y = gh * random:float(0.4, 0.6)
 
-	local strength = 5
+	local strength = 10
 	local vel_x = (target_x - self.x) * strength
 	local vel_y = (target_y - self.y) * strength
 

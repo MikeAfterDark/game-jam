@@ -343,6 +343,8 @@ end
 function Game:draw()
 	self.floor:draw()
 	self.obstacle:draw()
+	local scale = 4
+	sprite.space_background:draw(gw / 2, gh / 2, 0, scale, scale, 0, 0, Color(1, 1, 1, 0.4))
 	self.main:draw()
 	self.game_ui:draw()
 	self.effects:draw()
