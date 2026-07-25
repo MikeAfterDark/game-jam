@@ -8,7 +8,9 @@ Asteroids Explosions VFX
 Asteroids Collision VFX/SFX
 Background Asteroids Colours
 
-Missile Explosion VFX
-Rocket Fail-To-Launch VFX
+WIP: Score and score bubbles, use new_hit in ship.lua, or any hit in obstacle
 
 Option for Asteroids in the foreground?
+
+Button for options
+Fullscreen on web itch breaks escape
