@@ -74,6 +74,23 @@ function Game:on_enter(from, args)
 		visible = false,
 	})
 
+	Button({
+		group = self.ui,
+		layer = ui_interaction_layer.Game,
+		x = gw * 0.9,
+		y = gh * 0.9,
+		w = gw * 0.2,
+		h = gh * 0.2,
+		image_path = "",
+		-- fg_color = "bg",
+		-- bg_color = "fg",
+		enter_sfx = sound[2],
+		hold_button = 0.3,
+		action = function()
+			sound[2]:play({ pitch = random:float(0.99, 1.01), volume = 0.5 })
+		end,
+	})
+
 	self.planet = Planet({
 		group = self.main,
 		x = gw * 0.5,

@@ -480,54 +480,56 @@ function open_options(self)
 		})
 	)
 
-	self.fullscreen_button = collect_into(
-		self.options_ui_elements,
-		Button({
-			x = column_x[column],
-			y = gh / 2 + button_offset,
-			w = 65 * global_game_scale,
-			button_text = tostring(state.fullscreen and "fullscreen" or "windowed"),
-			fg_color = "bg",
-			bg_color = "fg",
-			action = function(b)
-				state.fullscreen = not state.fullscreen
+	if not web then
+		self.fullscreen_button = collect_into(
+			self.options_ui_elements,
+			Button({
+				x = column_x[column],
+				y = gh / 2 + button_offset,
+				w = 65 * global_game_scale,
+				button_text = tostring(state.fullscreen and "fullscreen" or "windowed"),
+				fg_color = "bg",
+				bg_color = "fg",
+				action = function(b)
+					state.fullscreen = not state.fullscreen
 
-				b:set_text(tostring(state.fullscreen and "fullscreen" or "windowed"))
-				-- ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+					b:set_text(tostring(state.fullscreen and "fullscreen" or "windowed"))
+					-- ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 
-				local screen_width, screen_height = 960, 540
-				if state.fullscreen then
-					local _, _, flags = love.window.getMode()
-					screen_width, screen_height = love.window.getDesktopDimensions(flags.display)
-				end
+					local screen_width, screen_height = 960, 540
+					if state.fullscreen then
+						local _, _, flags = love.window.getMode()
+						screen_width, screen_height = love.window.getDesktopDimensions(flags.display)
+					end
 
-				ww, wh = screen_width, screen_height
-				sx, sy = screen_width / global_game_width, screen_height / global_game_height
-				state.sx, state.sy = sx, sy
-				setWindow({ width = screen_width, height = screen_height })
-			end,
-		})
-	)
-	button_offset = button_offset + button_distance
+					ww, wh = screen_width, screen_height
+					sx, sy = screen_width / global_game_width, screen_height / global_game_height
+					state.sx, state.sy = sx, sy
+					setWindow({ width = screen_width, height = screen_height })
+				end,
+			})
+		)
+		button_offset = button_offset + button_distance
 
-	self.vsync_button = collect_into(
-		self.options_ui_elements,
-		Button({
-			x = column_x[column],
-			y = gh / 2 + button_offset,
-			w = 65 * global_game_scale,
-			button_text = tostring(state.vsync and "vsync" or "no vsync"),
-			fg_color = "bg",
-			bg_color = "fg",
-			action = function(b)
-				state.vsync = not state.vsync
-				b:set_text(tostring(state.vsync and "vsync" or "no vsync"))
-				-- ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-				setWindow({ vsync = state.vsync })
-			end,
-		})
-	)
-	button_offset = button_offset + button_distance
+		self.vsync_button = collect_into(
+			self.options_ui_elements,
+			Button({
+				x = column_x[column],
+				y = gh / 2 + button_offset,
+				w = 65 * global_game_scale,
+				button_text = tostring(state.vsync and "vsync" or "no vsync"),
+				fg_color = "bg",
+				bg_color = "fg",
+				action = function(b)
+					state.vsync = not state.vsync
+					b:set_text(tostring(state.vsync and "vsync" or "no vsync"))
+					-- ui_switch1:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+					setWindow({ vsync = state.vsync })
+				end,
+			})
+		)
+		button_offset = button_offset + button_distance
+	end
 
 	-- self.screen_shake_button = collect_into(
 	-- 	self.options_ui_elements,
@@ -1270,6 +1272,9 @@ function close_credits(self)
 end
 
 function pop_ui_layer(self)
+	if main.ui_layer_stack:peek().is_settings then
+		return
+	end
 	stop_current_music(self)
 	local popped_layer = main.ui_layer_stack:pop()
 
