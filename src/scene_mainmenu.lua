@@ -99,7 +99,7 @@ function MainMenu:draw()
 	local size = 1.3
 	local t = love.timer.getTime()
 	local x = gw * 0.5 + math.cos(t * 0.9) * 1 + math.sin(t * 2.1) * 2
-	local y = gh * 0.25 + math.sin(t * 0.7) * 3 + math.cos(t * 1.6) * 3
+	local y = gh * 0.35 + math.sin(t * 0.7) * 3 + math.cos(t * 1.6) * 3
 	local rotation = math.sin(t * 0.5) * 0.06
 	sprite.game_logo:draw(x, y, rotation, size, size, 0, 0, Color(1, 1, 1, 1))
 
@@ -150,7 +150,7 @@ function MainMenu:setup_title_menu()
 		Text2({
 			group = ui_group,
 			x = gw / 2,
-			y = gh * 0.05,
+			y = gh * 0.12,
 			lines = {
 				{
 					text = "[wavy_rainbow]GMTK 2026",
@@ -193,7 +193,7 @@ function MainMenu:setup_title_menu()
 		Button({
 			group = ui_group,
 			x = core_ui_x_pos,
-			y = gh * 0.4 + button_offset,
+			y = gh * 0.5 + button_offset,
 			button_text = "Play",
 			fg_color = "bg",
 			bg_color = "green",
@@ -224,7 +224,7 @@ function MainMenu:setup_title_menu()
 		Button({
 			group = ui_group,
 			x = core_ui_x_pos,
-			y = gh * 0.4 + button_offset,
+			y = gh * 0.5 + button_offset,
 			button_text = "options",
 			fg_color = "bg",
 			bg_color = "fg",
