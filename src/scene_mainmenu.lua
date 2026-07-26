@@ -258,7 +258,7 @@ function MainMenu:setup_title_menu()
 			y = gh * 0.9,
 			button_text = "credits",
 			fg_color = "bg",
-			bg_color = "fg",
+			bg_color = "yellow",
 			action = function(b)
 				if not self.in_credits then
 					open_credits(self)
