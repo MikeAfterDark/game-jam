@@ -249,7 +249,8 @@ function InputButton:draw()
 
 	local halfway = self.separator_length
 	local separator_height = self.y + 8
-	graphics.dashed_line(self.x - halfway, separator_height, self.x + halfway, separator_height, 4, 1, _G[self.bg_color][0], 1)
+	graphics.dashed_line(self.x - halfway, separator_height, self.x + halfway, separator_height, 4, 1,
+		_G[self.bg_color][0], 1)
 end
 
 function InputButton:on_mouse_enter()
@@ -310,7 +311,7 @@ function RectangleButton:init(args)
 			})
 	end
 
-	if not self.no_image and self.image_path then
+	if not self.no_image and self.image_path and not self.image then
 		self.image = love.filesystem.getInfo(self.image_path) and Image(self.image_path, true) or nil
 	end
 end
@@ -348,7 +349,7 @@ function RectangleButton:draw()
 		--[[ self.selected and fg[0] or ]]
 		self.color
 	)
-	local scale = 1
+	local scale = self.image_scale
 	local color = _G["white"][0]
 	if self.image then
 		self.image:draw(self.x, self.y, 0, scale, scale, 0, 0, color)

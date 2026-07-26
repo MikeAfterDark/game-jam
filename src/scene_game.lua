@@ -81,8 +81,9 @@ function Game:on_enter(from, args)
 		y = gh * 0.05,
 		w = gh * 0.05,
 		h = gh * 0.05,
-		color = white[0],
-		-- image_path = "",
+		color = Color(0, 0, 0, 0),
+		image = sprite.gear_icon,
+		image_scale = 0.25,
 		-- fg_color = "bg",
 		-- bg_color = "fg",
 		-- enter_sfx = sound[2],
@@ -102,26 +103,33 @@ function Game:on_enter(from, args)
 	})
 
 	self.ships = {}
-	self.ship_spawn_interval = 0.1
-	self.last_ship_spawn_time = run_time + 0.3
-
 	self.obstacles = {}
-	self.obstacle_spawn_interval = 5
-	self.last_obstacle_spawn_time = run_time + 0.4
 
-	-- planet: art
-	-- rocket ships
-	--		ship with mouse collider
-	--		countdown
-	--
-	--		if timer == 0 and clicked, launch,
-	--		else if timer > 0 and clicked then fail
-	--		else if timer < 0 then explode
+	self.last_ship_spawn_time = run_time + 0.3
+	self.last_obstacle_spawn_time = run_time + 0.4
+	self.obstacle_spawn_interval = 5
 
 	self.level_timer = 206 -- in seconds
 	-- self.level_timer = 2 -- in seconds
 
+	self.ship_spawn_interval = 3
+	self.ship_spread = math.pi * 0.3
+	self.obstacle_value = 1
+	self.t:tween(self.level_timer * 0.9, self, {
+		ship_spawn_interval = 0.1,
+		ship_spread = math.pi * 0.1,
+		obstacle_value = 3,
+	}, math.sine_out)
+
 	self.level_timer_text = Text({
+		{
+			text = "",
+			font = pixul_font,
+			alignment = "center",
+		},
+	}, global_text_tags)
+
+	self.score_text = Text({
 		{
 			text = "",
 			font = pixul_font,
@@ -167,6 +175,7 @@ function Game:spawn_obstacle(data)
 			y = y, --gh / 2,
 			rs = data.size,
 			time = data.time,
+			value = self.obstacle_value,
 		})
 	)
 end
@@ -196,7 +205,6 @@ function Game:update(dt)
 	if self.last_ship_spawn_time < run_time and not self.won then
 		self.last_ship_spawn_time = run_time + self.ship_spawn_interval
 
-		local angle_spread = math.pi * 0.1
 		local attempts = 3
 		local open_angle
 
@@ -207,7 +215,7 @@ function Game:update(dt)
 			or not table.any(self.ships, function(ship)
 				local diff = math.abs(ship.r - open_angle)
 				diff = math.min(diff, 2 * math.pi - diff) -- shortest angular distance
-				return diff < angle_spread
+				return diff < self.ship_spread
 			end)
 
 		if attempts >= 0 then
@@ -244,6 +252,10 @@ function Game:update(dt)
 
 		self:win()
 	end
+
+	self.score_text:set_text({
+		{ text = string.format("[green]%d", self.planet.score), font = huge_pixul_font, alignment = "center" },
+	})
 
 	-- self:update_game_object(dt * slow_amount)
 	-- star_group:update(dt * slow_amount)
@@ -364,18 +376,26 @@ end
 
 function Game:draw()
 	self.floor:draw()
+	self.score_text:draw(gw * 0.5, gh * 0.95, 0, 1, 1, 0.3)
 	self.obstacle:draw()
 
 	local scale = 2
 	local t = run_time / 8.0
 
-	local x = gw / 2 + gw * 0.12 * math.sin(t * 0.45) + gw * 0.05 * math.sin(t * 1.17 + 1.3) +
-	gw * 0.02 * math.cos(t * 2.41)
-	local y = gh / 2 + gh * 0.10 * math.cos(t * 0.38 + 0.8) + gh * 0.06 * math.sin(t * 0.93) +
-	gh * 0.03 * math.cos(t * 1.81 + 2.1)
-	local rot = 0.015 * math.sin(t * 0.22) + 0.008 * math.sin(t * 0.81 + 0.7) + 0.004 * math.cos(t * 1.57)
-
+	local x = gw / 2 --
+		+ gw * 0.12 * math.sin(t * 0.45)
+		+ gw * 0.05 * math.sin(t * 1.17 + 1.3)
+		+ gw * 0.02 * math.cos(t * 2.41)
+	local y = gh / 2 --
+		+ gh * 0.10 * math.cos(t * 0.38 + 0.8)
+		+ gh * 0.06 * math.sin(t * 0.93)
+		+ gh * 0.03 * math.cos(t * 1.81 + 2.1)
+	local rot = 0.015 --
+		* math.sin(t * 0.22)
+		+ 0.008 * math.sin(t * 0.81 + 0.7)
+		+ 0.004 * math.cos(t * 1.57)
 	local opacity = 0.2
+
 	sprite.space_background:draw(x, y, rot, scale, scale, 0, 0, Color(1, 1, 1, opacity))
 	-- sprite.space_background:draw(x, x, -2 * rot, scale, scale, 0, 0, Color(1, 1, 1, opacity))
 	sprite.space_background:draw(y, x, -rot, scale, scale, 0, 0, Color(1, 1, 1, opacity))

@@ -54,7 +54,7 @@ function Obstacle:update(dt)
 				x = self.mouse_x,
 				y = self.mouse_y,
 				planet = main.current.planet,
-				score = random:int(2, 4),
+				score = math.floor(self.value),
 			})
 		end
 	end
@@ -68,7 +68,7 @@ function Obstacle:update(dt)
 			x = self.x,
 			y = self.y,
 			planet = main.current.planet,
-			score = random:int(10, 19),
+			score = 5 * math.floor(self.value),
 		})
 		self:set_velocity(0, 0)
 		self.fixture:setSensor(true)
@@ -110,11 +110,10 @@ function Obstacle:on_mouse_exit()
 end
 
 function Obstacle:draw()
-	graphics.circle(self.x, self.y, self.rs, black[0])
-
 	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.x)
 
 	if not self.explosion_animation then
+		graphics.circle(self.x, self.y, self.rs, black[0])
 		local sprite_scale = 0.0156 * self.rs
 		local b = self.is_background and 0.5 or 1
 		self.animation:draw(self.x, self.y, self.r, sprite_scale, sprite_scale, 1, 1, Color(b, b, b, 1))

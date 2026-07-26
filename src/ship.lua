@@ -101,14 +101,13 @@ function Ship:update(dt)
 		if self.time >= 1 and not self.is_golden then
 			self.new_hit = true
 
-			-- sfx.obj.missile_explode:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 			self.explosion_animation = sprite.explosion()
 			camera:shake(7, 0.2, 120)
 			self.hide_rocket = true
 			self.selected = false
 			self.interact_with_mouse = false
 			self.bad_hit = true
-			sfx.obj.missile_explode:play({ pitch = random:float(0.95, 1.05), volume = 0.2 })
+			sfx.obj.missile_explode:play({ pitch = random:float(0.95, 1.05), volume = 0.25 })
 		elseif self.time < 1 and not self.flying then
 			self.new_hit = true
 			self.flying = not self.is_rocket
@@ -117,7 +116,7 @@ function Ship:update(dt)
 			self.locked_rotation = self.planet.r
 
 			if self.is_rocket then
-				sfx.obj.missile_explode:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+				sfx.obj.missile_explode:play({ pitch = random:float(0.9, 1.2), volume = 0.25 })
 				self.explosion_animation = sprite.explosion()
 
 				camera:shake(7, 0.2, 120)
@@ -126,7 +125,7 @@ function Ship:update(dt)
 				self.interact_with_mouse = false
 				self.bad_hit = true
 			else
-				sfx.obj.rocket_launch:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+				sfx.obj.rocket_launch:play({ pitch = random:float(0.95, 1.05), volume = 0.55 })
 				self.exh_animation = self.exh_animations.start()
 				local scale = gw
 				self.t:tween(
@@ -154,7 +153,7 @@ function Ship:update(dt)
 			x = self.mouse_x,
 			y = self.mouse_y,
 			planet = self.planet,
-			score = score,
+			score = math.ceil((1 - self.time) * 10) * (self.is_golden and 5 or 1),
 		})
 	end
 
@@ -176,10 +175,10 @@ function Ship:update(dt)
 				x = self.x,
 				y = self.y,
 				planet = self.planet,
-				score = score,
+				score = 15,
 			})
 
-			sfx.obj.rocket_launch:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+			sfx.obj.rocket_launch:play({ pitch = random:float(0.95, 1.05), volume = 0.55 })
 			local scale = gw
 			self.t:tween(
 				2,
@@ -193,11 +192,6 @@ function Ship:update(dt)
 					self.dead = true
 				end
 			)
-
-			-- sfx.obj.missile_explode:play({ pitch = random:float(0.95, 1.05), volume = 0.2 })
-			-- self.explosion_animation = sprite.explosion()
-			-- self.hide_rocket = true
-			-- camera:shake(2, 0.3, 120)
 		else
 			sfx.obj.rocket_disappear:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 			self.t:tween(1, self, { scale = 0, w = 0, h = 0 }, math.cubic_in_out, function()
@@ -209,7 +203,7 @@ end
 
 function Ship:on_mouse_enter()
 	self.selected = true
-	sfx.obj.rocket_mouse_hover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+	sfx.obj.rocket_mouse_hover:play({ pitch = random:float(0.9, 1.2), volume = 0.55 })
 	self.spring:pull(0.05, 500, 10)
 end
 
