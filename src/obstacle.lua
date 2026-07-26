@@ -48,7 +48,7 @@ function Obstacle:update(dt)
 		self.mouse_x, self.mouse_y = self.group:get_mouse_position()
 
 		if self.time >= 1 then --avoid playing the same sfx twice
-			sfx.obj.asteroid_hit:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+			sfx.obj.asteroid_hit:play({ pitch = random:float(0.95, 1.05), volume = 0.45 })
 			ScoreBubble({
 				group = main.current.main,
 				x = self.mouse_x,

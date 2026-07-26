@@ -107,7 +107,7 @@ function Ship:update(dt)
 			self.selected = false
 			self.interact_with_mouse = false
 			self.bad_hit = true
-			sfx.obj.missile_explode:play({ pitch = random:float(0.95, 1.05), volume = 0.25 })
+			sfx.obj.missile_explode:play({ pitch = random:float(0.95, 1.05), volume = 0.3 })
 		elseif self.time < 1 and not self.flying then
 			self.new_hit = true
 			self.flying = not self.is_rocket
@@ -116,7 +116,7 @@ function Ship:update(dt)
 			self.locked_rotation = self.planet.r
 
 			if self.is_rocket then
-				sfx.obj.missile_explode:play({ pitch = random:float(0.9, 1.2), volume = 0.25 })
+				sfx.obj.missile_explode:play({ pitch = random:float(0.9, 1.2), volume = 0.3 })
 				self.explosion_animation = sprite.explosion()
 
 				camera:shake(7, 0.2, 120)
