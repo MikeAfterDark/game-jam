@@ -283,15 +283,21 @@ function Game:win()
 	if not self.won then
 		self.won = true
 		self.end_game_cover.visible = true
+
+		-- self.end_screen = sprite.end_game_screen
+		-- self.end_screen.group = self.end_ui
+		-- self.end_screen.shape = Rectangle(gw * 0.5, gh * 0.5, 0, gw, gh)
+		-- self.end_screen.interact_with_mouse = true
 		-- slow_amount = 0
-		print("gj, you won")
+		-- print("gj, you won")
 
 		self.win_text = Text2({ --
 			group = self.end_ui,
 			x = gw * 0.5,
 			y = gh * 0.4,
 			lines = {
-				{ text = "[cbyc2]You Win! GG", font = fat_title_font, alignment = "center" },
+				{ text = "[cbyc2]Thanks for playing!",                    font = fat_title_font, alignment = "center" },
+				{ text = "[green]Score: " .. tostring(self.planet.score), font = fat_font,       alignment = "center" },
 			},
 		}, global_text_tags)
 
@@ -419,6 +425,12 @@ function Game:draw()
 	-- if self.won or self.died then -- replaced by self.end_game_cover
 	-- 	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent)
 	-- end
+
+	if self.end_screen then
+		local scale = 1
+		self.end_screen:draw(gw * 0.5, gh * 0.5, 0, scale, scale)
+	end
+
 	self.end_ui:draw()
 end
 

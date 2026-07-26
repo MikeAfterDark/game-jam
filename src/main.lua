@@ -169,6 +169,8 @@ function init()
 		satelitte = Image(sprite_folder .. "Satelitte"),
 		astronauts = Image(sprite_folder .. "astronauts"),
 
+		end_game_screen = Image(sprite_folder .. "backgroundidea"),
+
 		rocket = Image(sprite_folder .. "rocket"),
 		planet = Animation(animation_speed, AnimationFrames(Image(sprite_folder .. "planet"), 128, 128), "loop"),
 		asteroid = Animation(animation_speed, AnimationFrames(Image(sprite_folder .. "128asteroid"), 128, 128), "loop"),
@@ -177,7 +179,7 @@ function init()
 			return Animation(animation_speed, AnimationFrames(Image(sprite_folder .. "explosion"), 128, 128), "once")
 		end,
 
-		tutorial = Animation(1 / 24, AnimationFrames(Image(sprite_folder .. "tutorial_spritesheet"), 960, 540), "once"),
+		tutorial = Animation(1 / 24, AnimationFrames(Image(sprite_folder .. "tutorial_spritesheet"), 960, 540), "loop"),
 
 		exhaust = {
 			small = {
