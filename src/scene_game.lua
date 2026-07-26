@@ -334,8 +334,8 @@ function Game:setup_endgame_ui()
 	self.end_ui_elements = {}
 	main.ui_layer_stack:push({
 		layer = ui_layer,
-		layer_has_music = false,
-		-- music_type = "loss",
+		layer_has_music = true,
+		music_type = "ambience",
 		ui_elements = self.end_ui_elements,
 	})
 

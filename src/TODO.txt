@@ -1,24 +1,23 @@
+Music:
+    menu theme
+    pause menu ambience?
 
+Main Menu:
+    Tutorial page
+    Pretty graphics (teaser, only asteroids?)
 
-
-
-BUGFIX:
-- Music slider affect SFX, not MUSIC
-
-
-
-WIP: Score and score bubbles, use new_hit in ship.lua, or any hit in obstacle
-
-TODO:
-- Tutorial mode: state bool option in game settings, plays tutorial if true, sets itself to off for future
-- Tutorial   :|
-- Score popups/bubbles-> go into the planet
-- Show score on end 
-
-Option for Asteroids in the foreground?
+Win screen:
+    Pretty Graphics
+    Statistics:
+        - Rockets Lauched
+        - Shuttles Launched
+        - Nukes Avoided
+        - Asteroids Destroyed
+        - Final Score
 
 
 Maybes:
--Asteroids Explosions VFX
 -Asteroids Collision VFX/SFX
--Background Asteroids Colours
+-Background Asteroids Colours/Textures
+
+

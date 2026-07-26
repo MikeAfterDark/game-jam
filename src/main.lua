@@ -72,31 +72,6 @@ function init()
 			url = "https://dcole.itch.io/",
 			color = "blue",
 		}, -- art
-
-		Apezilla = {
-			name = 'David "Apezilla" Browne',
-			nickname = "Apezilla",
-			url = "https://www.youtube.com/@davidbrowne003",
-			color = "red",
-		}, -- music
-		Patrick = {
-			name = "Patrick Montanari",
-			nickname = "Patrick",
-			url = "https://www.succulentsoundstudios.com/",
-			color = "yellow",
-		}, -- jazz improv
-		Tectonic = {
-			name = "TectonicHorizon",
-			nickname = "Tectonic",
-			url = "https://soundcloud.com/reedflow",
-			color = "p_blue1",
-		}, -- art/game design
-		Kai = {
-			name = "KaiaRadio",
-			nickname = "Kai",
-			url = "https://www.youtube.com/@KaiaRadio",
-			color = "blue",
-		}, -- sfx
 	}
 
 	credits = {
@@ -172,6 +147,8 @@ function init()
 		paused = { music.test },
 		options = { music.test },
 		credits = { music.test },
+
+		ambience = { music.test },
 	}
 
 	sprite_folder = "sprites/"
@@ -420,7 +397,7 @@ function open_options(self)
 		ui_elements = self.options_ui_elements,
 	})
 
-	local column_x = { gw / 4, gw / 2, 3 * gw / 4 }
+	local column_x = { gw / 2, gw / 2, 3 * gw / 4 }
 
 	local button_offset = -gh * 0.2
 	local button_distance = gh * 0.06
@@ -588,7 +565,12 @@ function open_options(self)
 			group = ui_group,
 			x = column_x[column],
 			y = gh / 2 + button_offset,
-			lines = { { text = "[fg]Controls:", font = pixul_font } },
+			lines = {
+				{
+					text = "" --[[ "[fg]Controls:" ]],
+					font = pixul_font,
+				},
+			},
 		})
 	)
 	button_offset = button_offset + button_distance
@@ -634,7 +616,12 @@ function open_options(self)
 			group = ui_group,
 			x = column_x[column],
 			y = gh / 2 + button_offset,
-			lines = { { text = "[fg]Game:", font = pixul_font } },
+			lines = {
+				{
+					text = "" --[[ "[fg]Game:" ]],
+					font = pixul_font,
+				},
+			},
 		})
 	)
 	button_offset = button_offset + button_distance
