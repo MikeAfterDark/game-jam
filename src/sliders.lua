@@ -78,7 +78,7 @@ function Slider:update(dt)
 			if self.increment_sfx then
 				self.increment_sfx:play({ pitch = pitch, volume = 0.5 })
 			else
-				random:table(sfx.ui.click):play({ pitch = pitch, volume = 0.5 })
+				random:table(sfx.ui.click):play({ pitch = pitch, volume = 0.45 })
 			end
 
 			if self.action then
@@ -162,13 +162,10 @@ function Slider:on_mouse_enter()
 	if not on_current_ui_layer(self) then
 		return
 	end
-	-- random:table(ui_hover):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 	-- buttonHover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 	-- buttonPop:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 	self.hovered = true
-	-- random:table(sfx.ui.hover):play({ volume = 0.5 })
-	--
-	random:table(sfx.ui.hover):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+	random:table(sfx.ui.hover):play({ pitch = random:float(0.9, 1.2), volume = 0.45 })
 	self.spring:pull(0.2, 200, 10)
 end
 

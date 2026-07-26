@@ -16,7 +16,7 @@ function ScoreBubble:init(args)
     self.scale = 1
 
     -- sfx.boop:play({ pitch = 0.8 + (self.score / 10), volume = 0.5 })
-    sfx.boop:play({ pitch = 0.8 + (self.score / 10), volume = 0.3 })
+    sfx.ui.points_earned:play({ pitch = 0.8 + (self.score / 10), volume = 0.3 })
     self.t:tween(self.duration, self, { x = self.planet.x, y = self.planet.y }, math.expo_out)
     self.t:after(self.duration * 0.5, function()
         self.t:tween(self.duration * 0.2, self, { scale = 0 }, math.back_in, function()

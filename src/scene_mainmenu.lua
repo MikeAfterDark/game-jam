@@ -101,7 +101,6 @@ function MainMenu:draw()
 	local x = gw * 0.5 + math.cos(t * 0.9) * 1 + math.sin(t * 2.1) * 2
 	local y = gh * 0.25 + math.sin(t * 0.7) * 3 + math.cos(t * 1.6) * 3
 	local rotation = math.sin(t * 0.5) * 0.06
-
 	sprite.game_logo:draw(x, y, rotation, size, size, 0, 0, Color(1, 1, 1, 1))
 
 	if self.in_options then

@@ -48,7 +48,7 @@ function Obstacle:update(dt)
 		self.mouse_x, self.mouse_y = self.group:get_mouse_position()
 
 		if self.time >= 1 then --avoid playing the same sfx twice
-			sfx.obj.asteroid_hit:play({ pitch = random:float(0.95, 1.05), volume = 0.45 })
+			sfx.obj.asteroid_hit:play({ pitch = random:float(0.95, 1.05), volume = 0.35 })
 			ScoreBubble({
 				group = main.current.main,
 				x = self.mouse_x,
@@ -75,7 +75,7 @@ function Obstacle:update(dt)
 
 		self.selected = false
 		self.interact_with_mouse = false
-		sfx.obj.asteroid_destroy:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+		sfx.obj.asteroid_destroy:play({ pitch = random:float(0.95, 1.05), volume = 0.45 })
 		local str = (self.rs / gh)
 		camera:shake(2 + 4 * str, 0.3 + str, 120)
 	end
@@ -97,7 +97,7 @@ end
 
 function Obstacle:on_mouse_enter()
 	self.selected = true
-	random:table(sfx.ui.hover):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+	random:table(sfx.ui.hover):play({ pitch = random:float(0.9, 1.2), volume = 0.45 })
 	self.spring:pull(0.05, 500, 10)
 end
 
