@@ -55,9 +55,9 @@ function Game:on_enter(from, args)
 
 	main.ui_layer_stack:push({
 		layer = ui_interaction_layer.Game,
-		layer_has_music = args.layer_has_music,
+		layer_has_music = true, --args.layer_has_music,
 		-- game = true,
-		music_type = args.music_type,
+		music_type = "game", --args.music_type,
 		ui_elements = self.game_ui_elements,
 	})
 
@@ -173,6 +173,9 @@ function Game:spawn_obstacle(data)
 end
 
 function Game:update(dt)
+	-- play_music({ volume = 0.5, pitch = 1 })
+	play_music({})
+
 	mouse.group_layer = 0
 	camera:follow_object(self.camera_tracker)
 
@@ -320,8 +323,8 @@ function Game:setup_endgame_ui()
 	self.end_ui_elements = {}
 	main.ui_layer_stack:push({
 		layer = ui_layer,
-		layer_has_music = true,
-		music_type = "loss",
+		layer_has_music = false,
+		-- music_type = "loss",
 		ui_elements = self.end_ui_elements,
 	})
 

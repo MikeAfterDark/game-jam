@@ -2,13 +2,23 @@
 
 
 
+BUGFIX:
+- Music slider affect SFX, not MUSIC
+
+
+
+WIP: Score and score bubbles, use new_hit in ship.lua, or any hit in obstacle
+
+TODO:
+- Tutorial mode: state bool option in game settings, plays tutorial if true, sets itself to off for future
+- Tutorial   :|
+- Score popups/bubbles-> go into the planet
+- Show score on end 
+
+Option for Asteroids in the foreground?
 
 
 Maybes:
 -Asteroids Explosions VFX
 -Asteroids Collision VFX/SFX
 -Background Asteroids Colours
-
-WIP: Score and score bubbles, use new_hit in ship.lua, or any hit in obstacle
-
-Option for Asteroids in the foreground?

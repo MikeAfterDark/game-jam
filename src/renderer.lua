@@ -68,6 +68,7 @@ function renderer_init()
 		music_control.volume = 0
 	end
 
+	small_fat_font = Font("FatPixelFont", 4 * global_game_scale)
 	fat_font = Font("FatPixelFont", 8 * global_game_scale)
 	fat_title_font = Font("FatPixelFont", 12 * global_game_scale)
 	huge_pixul_font = Font("PixulBrush", 32 * global_game_scale)
@@ -393,7 +394,7 @@ global_text_tags = {
 		end,
 
 		update = function(c, dt, i, text)
-			c.oy = math.sin(time * 4 + i * 0.9) * 4
+			c.oy = math.sin(time * 4 + i * 0.9) * 2
 
 			-- Rainbow wave
 			local t = time * 1.5 + i * 0.3
@@ -892,9 +893,9 @@ function TextBox:set_object(obj)
 		self.t:cancel("popup_button")
 
 		self:set_text({
-			{ text = obj.type.name, font = pixul_font },
-			{ text = obj.type.description, font = small_pixul_font },
-			{ text = "", font = small_pixul_font },
+			{ text = obj.type.name,                      font = pixul_font },
+			{ text = obj.type.description,               font = small_pixul_font },
+			{ text = "",                                 font = small_pixul_font },
 			{ text = "[orange1]uses left: " .. obj.uses, font = small_pixul_font },
 		})
 

@@ -47,12 +47,12 @@ function Obstacle:update(dt)
 		self.hit = run_time
 		self.mouse_x, self.mouse_y = self.group:get_mouse_position()
 
-		if self.time > 1 then --avoid playing the same sfx twice
+		if self.time >= 1 then --avoid playing the same sfx twice
 			sfx.obj.asteroid_hit:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 		end
 	end
 
-	self.time = self.freeze_time and self.time or (self.time - dt)
+	-- self.time = self.freeze_time and self.time or (self.time - dt)
 	if self.time < 1 then
 		self.dead = true
 		sfx.obj.asteroid_destroy:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
@@ -89,7 +89,8 @@ function Obstacle:draw()
 	self.animation:draw(self.x, self.y, self.r, sprite_scale, sprite_scale, 1, 1, Color(b, b, b, 1))
 
 	local outline_color = self.selected and red[0]:clone() or black[0]:clone()
-	graphics.circle(self.x, self.y, self.rs, self.is_background and outline_color:darken(0.4) or outline_color, self.rs * 0.08)
+	graphics.circle(self.x, self.y, self.rs, self.is_background and outline_color:darken(0.4) or outline_color,
+		self.rs * 0.08)
 	graphics.pop()
 
 	self.text:draw(self.x, self.y + self.text.h / 8, 0, 1, 1)

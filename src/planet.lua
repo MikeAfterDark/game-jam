@@ -7,6 +7,7 @@ function Planet:init(args)
 	self.planet_speed = 0.3
 	self.animation = sprite.planet
 	self.interact_with_mouse = true
+	self.score = 0
 end
 
 function Planet:update(dt)
@@ -21,12 +22,16 @@ function Planet:update(dt)
 	self.shape:move_to(self.x, self.y)
 end
 
+function Planet:add_score(score)
+	self.score = self.score + score
+end
+
 function Planet:draw()
 	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.x)
 	graphics.circle(self.x, self.y, self.rs, black[0])
 	-- graphics.circle(self.x, self.y, self.rs, red[0]) -- debug
 
-	local sprite_scale = 1.680
+	local sprite_scale = 1.675
 	self.animation:draw(self.x, self.y, self.r, sprite_scale, sprite_scale, 1, 1)
 	graphics.circle(self.x, self.y, self.rs, black[0], 3)
 	graphics.pop()

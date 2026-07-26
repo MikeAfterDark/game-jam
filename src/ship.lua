@@ -100,32 +100,82 @@ function Ship:update(dt)
 
 		if self.time >= 1 and not self.is_golden then
 			self.new_hit = true
+
+			-- sfx.obj.missile_explode:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+			self.explosion_animation = sprite.explosion()
+			camera:shake(7, 0.2, 120)
+			self.hide_rocket = true
+			self.selected = false
+			self.interact_with_mouse = false
+			self.bad_hit = true
+			sfx.obj.missile_explode:play({ pitch = random:float(0.95, 1.05), volume = 0.2 })
+		elseif self.time < 1 and not self.flying then
+			self.new_hit = true
+			self.flying = not self.is_rocket
+			self.selected = false
+			self.interact_with_mouse = false
+			self.locked_rotation = self.planet.r
+
 			if self.is_rocket then
-				sfx.obj.missile_disappear:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
-			else
-				sfx.obj.rocket_fail:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+				sfx.obj.missile_explode:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 				self.explosion_animation = sprite.explosion()
+
+				camera:shake(7, 0.2, 120)
 				self.hide_rocket = true
 				self.selected = false
 				self.interact_with_mouse = false
 				self.bad_hit = true
+			else
+				sfx.obj.rocket_launch:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+				self.exh_animation = self.exh_animations.start()
+				local scale = gw
+				self.t:tween(
+					2,
+					self,
+					{
+						x = self.planet.x + scale * math.sin(self.r + self.locked_rotation),
+						y = self.planet.y - scale * math.cos(self.r + self.locked_rotation),
+					},
+					math.circ_in,
+					function()
+						self.dead = true
+					end
+				)
 			end
-		elseif self.time < 1 and not self.flying then
-			self.new_hit = true
+		end
+	end
+
+	if self.new_hit and not self.bad_hit then
+		print("triggered for ", self.id, " good hit: ", not self.bad_hit)
+		self.new_hit = false
+		local score = random:int(1, 5)
+		local sign = self.bad_hit and "-" or "+"
+
+		ScoreBubble({
+			group = self.group,
+			x = self.x,
+			y = self.y,
+			r = self.r,
+			planet = self.planet,
+			value = score,
+			color = black[0], --not self.bad_hit and yellow[0] or red[0],
+		})
+	end
+
+	if self.time < 0 and not self.flying and not self.dying then
+		self.interact_with_mouse = false
+		self.selected = false
+		self.dying = true
+
+		if self.is_rocket then
 			self.flying = true
 			self.selected = false
 			self.interact_with_mouse = false
-			local scale = gw
+			self.exh_animation = self.exh_animations.start()
 			self.locked_rotation = self.planet.r
 
-			self.exh_animation = self.exh_animations.start()
-
-			if self.is_rocket then
-				sfx.obj.missile_explode:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
-				self.bad_hit = true
-			else
-				sfx.obj.rocket_launch:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-			end
+			sfx.obj.rocket_launch:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+			local scale = gw
 			self.t:tween(
 				2,
 				self,
@@ -138,24 +188,11 @@ function Ship:update(dt)
 					self.dead = true
 				end
 			)
-		end
-	end
 
-	if self.new_hit then
-		print("triggered for ", self.id, " good hit: ", not self.bad_hit)
-		self.new_hit = false
-	end
-
-	if self.time < 0 and not self.flying and not self.dying then
-		self.interact_with_mouse = false
-		self.selected = false
-		self.dying = true
-
-		if self.is_rocket then
-			sfx.obj.rocket_fail:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
-			self.explosion_animation = sprite.explosion()
-			self.hide_rocket = true
-			camera:shake(2, 0.3, 120)
+			-- sfx.obj.missile_explode:play({ pitch = random:float(0.95, 1.05), volume = 0.2 })
+			-- self.explosion_animation = sprite.explosion()
+			-- self.hide_rocket = true
+			-- camera:shake(2, 0.3, 120)
 		else
 			sfx.obj.rocket_disappear:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 			self.t:tween(1, self, { scale = 0, w = 0, h = 0 }, math.cubic_in_out, function()
@@ -190,8 +227,8 @@ function Ship:draw()
 
 	-- graphics.rectangle(self.x, self.y, self.w, self.h, 3, 3, self.color, 4)
 
-	local scale = 0.05 * self.scale
 	if not self.hide_rocket then
+		local scale = 0.6 * self.scale
 		local sprite_y = self.y + self.draw_height
 		-- self.sprite:draw(self.x, sprite_y, 0, scale * 1.1, scale * 1.1, 0, 0, red[0])
 		self.sprite:draw(self.x, sprite_y, 0, scale, scale, 0, 0, self.color)
@@ -201,11 +238,16 @@ function Ship:draw()
 		local exh_scale = 0.5
 		-- 1 = 1.3
 		-- 0.5 =
-		self.exh_animation:draw(self.x, self.y + self.h * 1, 0, exh_scale, exh_scale, 0, 0)
+		if self.is_golden then
+			self.exh_animation:draw(self.x - self.w / 4, self.y + self.h * 1, 0, exh_scale, exh_scale, 0, 0)
+			self.exh_animation:draw(self.x + self.w / 4, self.y + self.h * 1, 0, exh_scale, exh_scale, 0, 0)
+		else
+			self.exh_animation:draw(self.x, self.y + self.h * 1, 0, exh_scale, exh_scale, 0, 0)
+		end
 	end
 
 	if self.explosion_animation then
-		local explosion_scale = 0.8
+		local explosion_scale = self.is_rocket and 1.6 or 0.8
 		self.explosion_animation:draw(self.x, self.y, 0, explosion_scale, explosion_scale, 0, 0)
 	end
 
@@ -219,7 +261,7 @@ function Ship:draw()
 			local y = self.y + self.h / 2 - h / 2
 			graphics.rectangle(x, y, w, h, 1, 1, green[0])
 
-			local t = scale - (self.time * scale)
+			-- local t = scale - (self.time * scale)
 			-- self.sprite:draw(self.x, self.y, 0, scale, t, 0, 0, color)
 		end
 

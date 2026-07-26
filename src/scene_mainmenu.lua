@@ -96,6 +96,14 @@ end
 function MainMenu:draw()
 	self.main_menu_ui:draw()
 
+	local size = 1.3
+	local t = love.timer.getTime()
+	local x = gw * 0.5 + math.cos(t * 0.9) * 1 + math.sin(t * 2.1) * 2
+	local y = gh * 0.25 + math.sin(t * 0.7) * 3 + math.cos(t * 1.6) * 3
+	local rotation = math.sin(t * 0.5) * 0.06
+
+	sprite.game_logo:draw(x, y, rotation, size, size, 0, 0, Color(1, 1, 1, 1))
+
 	if self.in_options then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent_2)
 	end
@@ -143,11 +151,11 @@ function MainMenu:setup_title_menu()
 		Text2({
 			group = ui_group,
 			x = gw / 2,
-			y = gh * 0.35,
+			y = gh * 0.05,
 			lines = {
 				{
 					text = "[wavy_rainbow]GMTK 2026",
-					font = fat_title_font,
+					font = small_fat_font,
 					alignment = "center",
 				},
 			},

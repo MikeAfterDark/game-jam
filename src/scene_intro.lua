@@ -20,11 +20,10 @@ function Intro:on_enter(from, args)
 	self.intro_song_volume = 1
 	self.intro_song_volume_uid = random:uid()
 
-	self.song = music.intro:play({ volume = 0.2 })
-
 	self.logo = { x = gw * 0.5, y = gh * 0.6 }
-	self.t:tween(1.2, self.logo, { y = gh / 2 }, math.cubic_in_out)     -- positioning title text to center at the start
+	self.t:tween(1.2, self.logo, { y = gh / 2 }, math.cubic_in_out) -- positioning title text to center at the start
 	self.t:after(0.1, function()
+		self.song = music.intro:play({ volume = 0.4 })
 		self.t:tween(0.4, self, { opacity = 0 }, math.quad_in_out, function() -- lowering foreground opactiy
 			self.t:after(1, function()
 				self.t:tween(2, self.logo, { y = -gh }, math.cubic_in_out) -- moving title text up at the end
@@ -75,7 +74,7 @@ function Intro:draw()
 	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, Color(0, 0, 0, 1)) -- black background
 	-- self.main:draw()
 	local size = 1.6
-	sprite.logo:draw(self.logo.x, self.logo.y, 0, size, size, 0, 0, Color(1, 1, 1, 1))
+	sprite.team_logo:draw(self.logo.x, self.logo.y, 0, size, size, 0, 0, Color(1, 1, 1, 1))
 	-- function Image:draw(x, y, r, sx, sy, ox, oy, color)
 	graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, Color(0, 0, 0, self.opacity)) -- fade foreground
 end

@@ -20,6 +20,7 @@ require("scene_intro")
 require("ship")
 require("planet")
 require("obstacle")
+require("scorebubble")
 
 -- ui
 -- require("circle_menu")
@@ -141,8 +142,8 @@ function init()
 			rocket_launch = Sound(sfx_folder .. "obj/obj_rocket_launch.flac", sfx_tag),
 			rocket_fail = Sound(sfx_folder .. "obj/obj_rocket_fail.flac", sfx_tag),
 
-			missile_appear = Sound(sfx_folder .. "obj/obj_missile_appear.flac", sfx_tag),
-			missile_disappear = Sound(sfx_folder .. "obj/obj_missile_disappear.flac", sfx_tag),
+			-- missile_appear = Sound(sfx_folder .. "obj/obj_missile_appear.flac", sfx_tag),
+			-- missile_disappear = Sound(sfx_folder .. "obj/obj_missile_disappear.flac", sfx_tag),
 			missile_explode = Sound(sfx_folder .. "obj/obj_missile_explode.flac", sfx_tag),
 		},
 	}
@@ -151,29 +152,30 @@ function init()
 	music_tag = { tags = { music_control } } -- for volume control
 	local music_folder = "music/"
 	music = {
-		intro = Sound(sfx_folder .. "Intro Jingle.flac", { tags = { intro } }),
+		-- intro = Sound(sfx_folder .. "Intro Jingle.flac", { tags = { intro } }),
+		intro = Sound(sfx_folder .. "obj/obj_rocket_launch.flac", { tags = { intro } }),
 
-		running_out_of_time = Sound(music_folder .. "mus_running_out_of_time.ogg"),
+		test = Sound(sfx_folder .. "Intro Jingle.flac", music_tag),
+		running_out_of_time = Sound(music_folder .. "mus_running_out_of_time.ogg", music_tag),
 	}
 
 	music_songs = {
-		main = { sfx.extra },
-		tutorial = { sfx.extra },
-		stim_cave = { sfx.extra },
-		yellow = { sfx.extra },
-		paused = { sfx.extra },
-		options = { sfx.extra },
-		credits = { sfx.extra },
+		main = { music.test },
+		game = { music.running_out_of_time },
+		paused = { music.test },
+		options = { music.test },
+		credits = { music.test },
 	}
 
 	sprite_folder = "sprites/"
 	local animation_speed = 2 / 24
 	sprite = {
-		logo = Image("logo"),
+		team_logo = Image(sprite_folder .. "Logo_GMTK"),
+		game_logo = Image(sprite_folder .. "Logo_GMTK"),
 
 		space_background = Image(sprite_folder .. "space_background4"),
-		rocket_blue = Image(sprite_folder .. "Rocket_Blue"),
-		rocket_green = Image(sprite_folder .. "Rocket_Green"),
+		rocket_blue = Image(sprite_folder .. "rocket_redbomb"),
+		rocket_green = Image(sprite_folder .. "rocket_redbomb"),
 		rocket_nasa = Image(sprite_folder .. "Rocket_Nasa"),
 		rocket_orange = Image(sprite_folder .. "Rocket_Orange"),
 		rocket_red = Image(sprite_folder .. "Rocket_Red"),
@@ -298,7 +300,7 @@ function init()
 
 	-- can comfortably fit 14 scenes atm on main menu
 	debug_scenes = {
-		-- { id = "intro",     destination = Intro },
+		-- { id = "intro", destination = Intro },
 		-- { id = "main_menu", destination = MainMenu },
 		-- { id = "game",      destination = Game },
 		-- { id = "audio_zoo", destination = AudioZoo }, -- todo: fix
