@@ -177,6 +177,8 @@ function init()
 			return Animation(animation_speed, AnimationFrames(Image(sprite_folder .. "explosion"), 128, 128), "once")
 		end,
 
+		tutorial = Animation(1 / 24, AnimationFrames(Image(sprite_folder .. "tutorial_spritesheet"), 960, 540), "once"),
+
 		exhaust = {
 			small = {
 				start = function()

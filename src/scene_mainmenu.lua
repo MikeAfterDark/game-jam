@@ -28,6 +28,10 @@ function MainMenu:on_enter(from, args)
 
 	self.song_info_text = Text({ { text = "", font = pixul_font, alignment = "center" } }, global_text_tags)
 
+	-- self.t:after(1, function()
+	self.tutorial = sprite.tutorial
+	-- end)
+
 	-- UI positioning:
 	--
 	-- [title screen][stim cave]
@@ -67,6 +71,10 @@ function MainMenu:update(dt)
 		self.song_info_text:update(dt)
 	end
 
+	if self.tutorial then
+		self.tutorial:update(dt)
+	end
+
 	if input.escape.pressed then
 		if self.in_options then
 			if self.in_keybinding then
@@ -102,6 +110,11 @@ function MainMenu:draw()
 	local y = gh * 0.35 + math.sin(t * 0.7) * 3 + math.cos(t * 1.6) * 3
 	local rotation = math.sin(t * 0.5) * 0.06
 	sprite.game_logo:draw(x, y, rotation, size, size, 0, 0, Color(1, 1, 1, 1))
+
+	if self.tutorial then
+		local s = 0.5
+		self.tutorial:draw(gw * 0.7, gh * 0.8, math.sin(-t * 0.2) * 0.03, s, s)
+	end
 
 	if self.in_options then
 		graphics.rectangle(gw / 2, gh / 2, 2 * gw, 2 * gh, nil, nil, modal_transparent_2)
