@@ -113,6 +113,7 @@ function init()
 				click2 = Sound(sfx_folder .. "ui/ui_menu_click_2.flac", sfx_tag),
 				click3 = Sound(sfx_folder .. "ui/ui_menu_click_3.flac", sfx_tag),
 			},
+			points_earned = Sound(sfx_folder .. "ui/ui_points_earned.flac", sfx_tag),
 		},
 		obj = {
 			rocket_appear = Sound(sfx_folder .. "obj/obj_rocket_appear.flac", sfx_tag),
