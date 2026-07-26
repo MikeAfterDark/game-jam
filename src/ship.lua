@@ -79,7 +79,7 @@ function Ship:update(dt)
 
 	local text_color = self.time > 3 and "red" or self.time > 2 and "orange" or self.time > 1 and "yellow" or ""
 	local text = self.time > 1 and string.format("[" .. text_color .. "]%d", self.time) or self.time > 0 and "[green]GO!" or
-	"[purple]Miss"
+	"[purple]MISS"
 	self.text:set_text({
 		{ text = text, font = pixul_font, alignment = "center" },
 	})
@@ -146,19 +146,15 @@ function Ship:update(dt)
 	end
 
 	if self.new_hit and not self.bad_hit then
-		print("triggered for ", self.id, " good hit: ", not self.bad_hit)
 		self.new_hit = false
 		local score = random:int(1, 5)
-		local sign = self.bad_hit and "-" or "+"
 
 		ScoreBubble({
 			group = self.group,
-			x = self.x,
-			y = self.y,
-			r = self.r,
+			x = self.mouse_x,
+			y = self.mouse_y,
 			planet = self.planet,
-			value = score,
-			color = black[0], --not self.bad_hit and yellow[0] or red[0],
+			score = score,
 		})
 	end
 
@@ -173,6 +169,15 @@ function Ship:update(dt)
 			self.interact_with_mouse = false
 			self.exh_animation = self.exh_animations.start()
 			self.locked_rotation = self.planet.r
+
+			local score = random:int(1, 5)
+			ScoreBubble({
+				group = self.group,
+				x = self.x,
+				y = self.y,
+				planet = self.planet,
+				score = score,
+			})
 
 			sfx.obj.rocket_launch:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 			local scale = gw
@@ -234,7 +239,7 @@ function Ship:draw()
 		self.sprite:draw(self.x, sprite_y, 0, scale, scale, 0, 0, self.color)
 	end
 
-	if self.exh_animation then
+	if self.exh_animation and not self.explosion_animation then
 		local exh_scale = 0.5
 		-- 1 = 1.3
 		-- 0.5 =
@@ -248,7 +253,9 @@ function Ship:draw()
 
 	if self.explosion_animation then
 		local explosion_scale = self.is_rocket and 1.6 or 0.8
-		self.explosion_animation:draw(self.x, self.y, 0, explosion_scale, explosion_scale, 0, 0)
+		local color = self.is_rocket and Color(0.4, 1, 0.1, 1) or white[0]
+		local y = self.y + (self.is_rocket and -30 or 10)
+		self.explosion_animation:draw(self.x, y, 0, explosion_scale, explosion_scale, 0, 0, color)
 	end
 
 	if not self.flying and not self.hide_rocket then
@@ -267,7 +274,7 @@ function Ship:draw()
 
 		if not self.is_rocket and not self.hide_rocket then
 			graphics.push(self.x, self.y, 0, self.spring.x, self.spring.x)
-			local scale = self.scale * ((self.time < 1 and self.time > 0) and 1.5 or 1)
+			local scale = self.scale * ((self.time < 1 and self.time > 0) and 1.07 or 1)
 			self.text:draw(self.x, self.y - self.h * 0.7, 0, scale, scale)
 			graphics.pop()
 		end

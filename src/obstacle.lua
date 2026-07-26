@@ -49,15 +49,44 @@ function Obstacle:update(dt)
 
 		if self.time >= 1 then --avoid playing the same sfx twice
 			sfx.obj.asteroid_hit:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
+			ScoreBubble({
+				group = main.current.main,
+				x = self.mouse_x,
+				y = self.mouse_y,
+				planet = main.current.planet,
+				score = random:int(2, 4),
+			})
 		end
 	end
 
 	-- self.time = self.freeze_time and self.time or (self.time - dt)
-	if self.time < 1 then
-		self.dead = true
+	if self.time < 1 and not self.explosion_animation then
+		-- self.dead = true
+		self.explosion_animation = sprite.explosion()
+		ScoreBubble({
+			group = main.current.main,
+			x = self.x,
+			y = self.y,
+			planet = main.current.planet,
+			score = random:int(10, 19),
+		})
+		self:set_velocity(0, 0)
+		self.fixture:setSensor(true)
+
+		self.selected = false
+		self.interact_with_mouse = false
 		sfx.obj.asteroid_destroy:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 		local str = (self.rs / gh)
 		camera:shake(2 + 4 * str, 0.3 + str, 120)
+	end
+
+	if self.explosion_animation then
+		self.explosion_animation:update(dt)
+		if self.explosion_animation.animation_logic.dead then
+			self.explosion_animation.dead = true
+			self.explosion_animation = nil
+			self.dead = true
+		end
 	end
 
 	self.text:set_text({
@@ -84,16 +113,26 @@ function Obstacle:draw()
 	graphics.circle(self.x, self.y, self.rs, black[0])
 
 	graphics.push(self.x, self.y, self.r, self.spring.x, self.spring.x)
-	local sprite_scale = 0.0156 * self.rs
-	local b = self.is_background and 0.5 or 1
-	self.animation:draw(self.x, self.y, self.r, sprite_scale, sprite_scale, 1, 1, Color(b, b, b, 1))
 
-	local outline_color = self.selected and red[0]:clone() or black[0]:clone()
-	graphics.circle(self.x, self.y, self.rs, self.is_background and outline_color:darken(0.4) or outline_color,
-		self.rs * 0.08)
+	if not self.explosion_animation then
+		local sprite_scale = 0.0156 * self.rs
+		local b = self.is_background and 0.5 or 1
+		self.animation:draw(self.x, self.y, self.r, sprite_scale, sprite_scale, 1, 1, Color(b, b, b, 1))
+
+		local outline_color = self.selected and red[0]:clone() or black[0]:clone()
+		graphics.circle(self.x, self.y, self.rs, self.is_background and outline_color:darken(0.4) or outline_color,
+			self.rs * 0.08)
+	else
+		local explosion_scale = self.rs * 0.02
+		local color = white[0]:clone():darken(0.6)
+		local y = self.y
+		self.explosion_animation:draw(self.x, y, 0, explosion_scale, explosion_scale, 0, 0, color)
+	end
 	graphics.pop()
 
-	self.text:draw(self.x, self.y + self.text.h / 8, 0, 1, 1)
+	if not self.explosion_animation then
+		self.text:draw(self.x, self.y + self.text.h / 8, 0, 1, 1)
+	end
 
 	local hit = self.hit or 0
 	local hit_animation_duration = 0.15

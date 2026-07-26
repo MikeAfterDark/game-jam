@@ -66,6 +66,13 @@ function init()
 			color = "yellow",
 		}, --
 
+		Dani = {
+			name = "Dani Cole",
+			nickname = "Dani",
+			url = "https://dcole.itch.io/",
+			color = "blue",
+		}, -- art
+
 		Apezilla = {
 			name = 'David "Apezilla" Browne',
 			nickname = "Apezilla",
@@ -108,7 +115,7 @@ function init()
 		{
 			name = "[blue]art",
 			items = {
-				person.Mikey,
+				person.Dani,
 			},
 		},
 	}
@@ -170,8 +177,10 @@ function init()
 	sprite_folder = "sprites/"
 	local animation_speed = 2 / 24
 	sprite = {
-		team_logo = Image(sprite_folder .. "Logo_GMTK"),
 		game_logo = Image(sprite_folder .. "Logo_GMTK"),
+		team_logo = Image(sprite_folder .. "bird_logo"),
+
+		gear_icon = Image(sprite_folder .. "gear_icon"),
 
 		space_background = Image(sprite_folder .. "space_background4"),
 		rocket_blue = Image(sprite_folder .. "rocket_redbomb"),

@@ -117,10 +117,9 @@ function Game:on_enter(from, args)
 	--		if timer == 0 and clicked, launch,
 	--		else if timer > 0 and clicked then fail
 	--		else if timer < 0 then explode
-	--
 
-	self.level_timer = 3 * 60 -- in seconds
-	-- self.level_timer = 0.1 * 60 -- in seconds
+	self.level_timer = 206 -- in seconds
+	-- self.level_timer = 2 -- in seconds
 
 	self.level_timer_text = Text({
 		{
