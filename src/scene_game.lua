@@ -109,7 +109,7 @@ function Game:on_enter(from, args)
 	self.last_obstacle_spawn_time = run_time + 0.4
 	self.obstacle_spawn_interval = 5
 
-	self.level_timer = 206 -- in seconds
+	self.level_timer = 206.7 -- in seconds
 	-- self.level_timer = 2 -- in seconds
 
 	self.ship_spawn_interval = 3

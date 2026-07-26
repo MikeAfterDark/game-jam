@@ -137,7 +137,7 @@ function init()
 		-- intro = Sound(sfx_folder .. "Intro Jingle.flac", { tags = { intro } }),
 		intro = Sound(sfx_folder .. "obj/obj_rocket_launch.flac", { tags = { intro } }),
 
-		test = Sound(sfx_folder .. "Intro Jingle.flac", music_tag),
+		test = Sound(sfx_folder .. "amb/amb_space.ogg", music_tag),
 		running_out_of_time = Sound(music_folder .. "mus_running_out_of_time.ogg", music_tag),
 	}
 
@@ -372,7 +372,7 @@ function love.run()
 	global_game_height = 270 * global_game_scale
 
 	return engine_run({
-		game_name = "GMTK2026",
+		game_name = "Click to Launch",
 		window_width = "max",
 		window_height = "max",
 	})

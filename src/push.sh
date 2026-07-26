@@ -1,7 +1,7 @@
 #!/bin/bash
 
 name="gusakm"
-project="gmtk2026"
+project="click-to-launch"
 type=""
 
 butler push ../build/lovejs ${name}/${project}:web${type}

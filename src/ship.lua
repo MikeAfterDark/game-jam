@@ -94,7 +94,7 @@ function Ship:update(dt)
 		self.shape:set_rotation(self.r + self.planet.r)
 	end
 
-	if self.selected and input.m1.pressed then
+	if self.selected and input.select.pressed then
 		self.hit = run_time
 		self.mouse_x, self.mouse_y = self.group:get_mouse_position()
 
