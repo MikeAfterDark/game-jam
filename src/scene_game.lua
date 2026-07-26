@@ -74,22 +74,24 @@ function Game:on_enter(from, args)
 		visible = false,
 	})
 
-	--Button({
-	--	group = self.ui,
-	--	layer = ui_interaction_layer.Game,
-	--	x = gw * 0.9,
-	--	y = gh * 0.9,
-	--	w = gw * 0.2,
-	--	h = gh * 0.2,
-	--	image_path = "",
-	--	-- fg_color = "bg",
-	--	-- bg_color = "fg",
-	--	enter_sfx = sound[2],
-	--	hold_button = 0.3,
-	--	action = function()
-	--		sound[2]:play({ pitch = random:float(0.99, 1.01), volume = 0.5 })
-	--	end,
-	--})
+	self.options_buttton = RectangleButton({
+		group = self.ui,
+		layer = ui_interaction_layer.Game,
+		x = gw * 0.97,
+		y = gh * 0.05,
+		w = gh * 0.05,
+		h = gh * 0.05,
+		color = white[0],
+		-- image_path = "",
+		-- fg_color = "bg",
+		-- bg_color = "fg",
+		-- enter_sfx = sound[2],
+		-- hold_button = 0.3,
+		action = function()
+			sfx.boop:play({ pitch = random:float(0.99, 1.01), volume = 0.5 })
+			pause_game(main:get("settings"))
+		end,
+	})
 
 	self.planet = Planet({
 		group = self.main,
@@ -365,8 +367,10 @@ function Game:draw()
 	local scale = 2
 	local t = run_time / 8.0
 
-	local x = gw / 2 + gw * 0.12 * math.sin(t * 0.45) + gw * 0.05 * math.sin(t * 1.17 + 1.3) + gw * 0.02 * math.cos(t * 2.41)
-	local y = gh / 2 + gh * 0.10 * math.cos(t * 0.38 + 0.8) + gh * 0.06 * math.sin(t * 0.93) + gh * 0.03 * math.cos(t * 1.81 + 2.1)
+	local x = gw / 2 + gw * 0.12 * math.sin(t * 0.45) + gw * 0.05 * math.sin(t * 1.17 + 1.3) +
+	gw * 0.02 * math.cos(t * 2.41)
+	local y = gh / 2 + gh * 0.10 * math.cos(t * 0.38 + 0.8) + gh * 0.06 * math.sin(t * 0.93) +
+	gh * 0.03 * math.cos(t * 1.81 + 2.1)
 	local rot = 0.015 * math.sin(t * 0.22) + 0.008 * math.sin(t * 0.81 + 0.7) + 0.004 * math.cos(t * 1.57)
 
 	local opacity = 0.2

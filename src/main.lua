@@ -132,6 +132,10 @@ function init()
 			},
 		},
 		obj = {
+			rocket_appear = Sound(sfx_folder .. "obj/obj_rocket_appear.flac", sfx_tag),
+			rocket_disappear = Sound(sfx_folder .. "obj/obj_rocket_disappear.flac", sfx_tag),
+			rocket_mouse_hover = Sound(sfx_folder .. "obj/obj_rocket_hover.flac", sfx_tag),
+
 			asteroid_destroy = Sound(sfx_folder .. "obj/obj_asteroid_destroy.flac", sfx_tag),
 			asteroid_hit = Sound(sfx_folder .. "obj/obj_asteroid_hit.flac", sfx_tag),
 			rocket_launch = Sound(sfx_folder .. "obj/obj_rocket_launch.flac", sfx_tag),
@@ -168,6 +172,14 @@ function init()
 		logo = Image("logo"),
 
 		space_background = Image(sprite_folder .. "space_background4"),
+		rocket_blue = Image(sprite_folder .. "Rocket_Blue"),
+		rocket_green = Image(sprite_folder .. "Rocket_Green"),
+		rocket_nasa = Image(sprite_folder .. "Rocket_Nasa"),
+		rocket_orange = Image(sprite_folder .. "Rocket_Orange"),
+		rocket_red = Image(sprite_folder .. "Rocket_Red"),
+		satelitte = Image(sprite_folder .. "Satelitte"),
+		astronauts = Image(sprite_folder .. "astronauts"),
+
 		rocket = Image(sprite_folder .. "rocket"),
 		planet = Animation(animation_speed, AnimationFrames(Image(sprite_folder .. "planet"), 128, 128), "loop"),
 		asteroid = Animation(animation_speed, AnimationFrames(Image(sprite_folder .. "128asteroid"), 128, 128), "loop"),
@@ -220,7 +232,8 @@ function init()
 				loop = function()
 					return Animation(
 						1 / 24,
-						AnimationFrames(Image(sprite_folder .. "exhaust/exhaust2"), 128, 128, { { 1, 2 }, { 2, 2 }, { 3, 2 }, { 4, 2 }, { 5, 2 } }),
+						AnimationFrames(Image(sprite_folder .. "exhaust/exhaust2"), 128, 128,
+							{ { 1, 2 }, { 2, 2 }, { 3, 2 }, { 4, 2 }, { 5, 2 } }),
 						"loop"
 					)
 				end,
@@ -230,14 +243,16 @@ function init()
 				start = function()
 					return Animation(
 						1 / 24,
-						AnimationFrames(Image(sprite_folder .. "exhaust/exhaust3"), 128, 128, { { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } }),
+						AnimationFrames(Image(sprite_folder .. "exhaust/exhaust3"), 128, 128,
+							{ { 1, 1 }, { 2, 1 }, { 3, 1 }, { 4, 1 }, { 5, 1 } }),
 						"once"
 					)
 				end,
 				loop = function()
 					return Animation(
 						1 / 24,
-						AnimationFrames(Image(sprite_folder .. "exhaust/exhaust3"), 128, 128, { { 1, 2 }, { 2, 2 }, { 3, 2 }, { 4, 2 }, { 5, 2 } }),
+						AnimationFrames(Image(sprite_folder .. "exhaust/exhaust3"), 128, 128,
+							{ { 1, 2 }, { 2, 2 }, { 3, 2 }, { 4, 2 }, { 5, 2 } }),
 						"loop"
 					)
 				end,
@@ -1272,9 +1287,9 @@ function close_credits(self)
 end
 
 function pop_ui_layer(self)
-	if main.ui_layer_stack:peek().is_settings then
-		return
-	end
+	-- if main.ui_layer_stack:peek().is_settings then
+	-- 	return
+	-- end
 	stop_current_music(self)
 	local popped_layer = main.ui_layer_stack:pop()
 

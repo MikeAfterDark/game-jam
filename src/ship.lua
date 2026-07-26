@@ -17,22 +17,28 @@ function Ship:init(args)
 		},
 	}, global_text_tags)
 	self.interact_with_mouse = true
-	self.sprite = sprite.rocket
+
+	sfx.obj.rocket_appear:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 
 	self.is_golden = random:bool(9)
 	self.is_rocket = not self.is_golden and random:bool(15)
 	if self.is_rocket then
 		self.time = 1
 		self.exh_animations = sprite.exhaust.large
-		sfx.obj.missile_appear:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 	else
 		self.exh_animations = random:table({ sprite.exhaust.small, sprite.exhaust.medium })
 	end
 
+	self.sprite = self.is_golden and sprite.rocket_nasa
+		-- or self.is_rocket and random:table({ sprite.rocket_red, sprite.rocket_orange })
+		-- or random:table({ sprite.rocket_green, sprite.rocket_blue })
+		or self.is_rocket and random:table({ sprite.rocket_green, sprite.rocket_blue })
+		or random:table({ sprite.rocket_red, sprite.rocket_orange })
+
 	self.scale = 0
 	self.draw_height = self.h / 2
 	self.t:tween(0.4, self, { scale = 1, draw_height = 0 }, math.bounce_out, function() end)
-	self.color = self.is_golden and yellow[0] or self.is_rocket and red[0] or white[0] --random:color()
+	self.color = white[0] -- self.is_golden and yellow[0] or self.is_rocket and red[0] or white[0] --random:color()
 	self.spring:pull(0.05, 500, 10)
 end
 
@@ -72,7 +78,8 @@ function Ship:update(dt)
 	end
 
 	local text_color = self.time > 3 and "red" or self.time > 2 and "orange" or self.time > 1 and "yellow" or ""
-	local text = self.time > 1 and string.format("[" .. text_color .. "]%d", self.time) or self.time > 0 and "[green]GO!" or "[purple]Miss"
+	local text = self.time > 1 and string.format("[" .. text_color .. "]%d", self.time) or self.time > 0 and "[green]GO!" or
+	"[purple]Miss"
 	self.text:set_text({
 		{ text = text, font = pixul_font, alignment = "center" },
 	})
@@ -150,9 +157,9 @@ function Ship:update(dt)
 			self.hide_rocket = true
 			camera:shake(2, 0.3, 120)
 		else
+			sfx.obj.rocket_disappear:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 			self.t:tween(1, self, { scale = 0, w = 0, h = 0 }, math.cubic_in_out, function()
 				self.dead = true
-				-- sfx.obj.ufo:play({ pitch = random:float(0.95, 1.05), volume = 0.5 })
 			end)
 		end
 	end
@@ -160,7 +167,7 @@ end
 
 function Ship:on_mouse_enter()
 	self.selected = true
-	random:table(sfx.ui.hover):play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
+	sfx.obj.rocket_mouse_hover:play({ pitch = random:float(0.9, 1.2), volume = 0.5 })
 	self.spring:pull(0.05, 500, 10)
 end
 
@@ -173,7 +180,8 @@ function Ship:on_mouse_exit()
 end
 
 function Ship:draw()
-	graphics.push(self.x, self.y, self.r + (self.flying and self.locked_rotation or self.planet.r), self.spring.x, self.spring.x)
+	graphics.push(self.x, self.y, self.r + (self.flying and self.locked_rotation or self.planet.r), self.spring.x,
+		self.spring.x)
 
 	if self.selected then
 		local rounded = 20
@@ -185,6 +193,7 @@ function Ship:draw()
 	local scale = 0.05 * self.scale
 	if not self.hide_rocket then
 		local sprite_y = self.y + self.draw_height
+		-- self.sprite:draw(self.x, sprite_y, 0, scale * 1.1, scale * 1.1, 0, 0, red[0])
 		self.sprite:draw(self.x, sprite_y, 0, scale, scale, 0, 0, self.color)
 	end
 
