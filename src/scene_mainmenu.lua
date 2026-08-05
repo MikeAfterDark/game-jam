@@ -112,11 +112,11 @@ function MainMenu:draw()
 	sprite.game_logo:draw(x, y, rotation, size, size, 0, 0, Color(1, 1, 1, 1))
 
 	if self.tutorial then
-		local s = 0.3
-		local size = gw * 0.1
+		local s = 0.45
+		local size = gw * 0.
 		local r = 0 -- math.sin(-t * 0.2) * 0.03
-		graphics.rectangle(gw * 0.8, gh * 0.8, gw * 0.3, gh * 0.3, 0, 0, black[0])
-		self.tutorial:draw(gw * 0.8, gh * 0.8, r, s, s)
+		graphics.rectangle(gw * 0.78, gh * 0.8, gw * s, gh * s, 0, 0, black[0])
+		self.tutorial:draw(gw * 0.78, gh * 0.8, r, s, s)
 	end
 
 	if self.in_options then
